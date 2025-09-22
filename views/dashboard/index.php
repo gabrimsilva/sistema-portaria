@@ -40,8 +40,9 @@
         
         <!-- Main Sidebar -->
         <aside class="main-sidebar sidebar-dark-primary elevation-4">
-            <a href="/dashboard" class="brand-link text-center">
-                <img src="/logo.jpg" alt="Renner Logo" class="brand-image elevation-3" style="max-height: 45px; width: auto; border-radius: 8px; margin: 0 auto;" aria-label="Sistema de Controle de Acesso Renner">
+            <a href="/dashboard" class="brand-link">
+                <img src="/logo.jpg" alt="Renner Logo" class="brand-image img-circle elevation-3" style="width: 40px; height: 40px; object-fit: contain;">
+                <span class="brand-text font-weight-light">Controle Acesso</span>
             </a>
             
             <div class="sidebar">

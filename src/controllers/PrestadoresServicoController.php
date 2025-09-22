@@ -295,4 +295,49 @@ class PrestadoresServicoController {
         }
         exit;
     }
+    
+    public function saida() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            header('Content-Type: application/json');
+            
+            try {
+                CSRFProtection::verifyRequest();
+                $id = trim($_GET['id'] ?? $_POST['id'] ?? '');
+                
+                if (empty($id)) {
+                    echo json_encode(['success' => false, 'message' => 'ID é obrigatório']);
+                    return;
+                }
+                
+                // Buscar o prestador
+                $prestador = $this->db->fetch("SELECT * FROM prestadores_servico WHERE id = ?", [$id]);
+                
+                if (!$prestador) {
+                    echo json_encode(['success' => false, 'message' => 'Prestador não encontrado']);
+                    return;
+                }
+                
+                // Registrar saída
+                $this->db->query("
+                    UPDATE prestadores_servico 
+                    SET saida = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+                    WHERE id = ?
+                ", [$id]);
+                
+                echo json_encode([
+                    'success' => true, 
+                    'message' => 'Saída registrada com sucesso',
+                    'data' => [
+                        'id' => $id,
+                        'nome' => $prestador['nome']
+                    ]
+                ]);
+            } catch (Exception $e) {
+                echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+            }
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Método não permitido']);
+        }
+        exit;
+    }
 }

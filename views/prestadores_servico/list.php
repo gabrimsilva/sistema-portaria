@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="<?= CSRFProtection::generateToken() ?>">
     <title>Prestadores de Serviço - Sistema de Controle de Acesso</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css" rel="stylesheet">
@@ -40,7 +41,7 @@
         <!-- Main Sidebar -->
         <aside class="main-sidebar sidebar-dark-primary elevation-4">
             <a href="/dashboard" class="brand-link">
-                <img src="https://via.placeholder.com/33x33" alt="Logo" class="brand-image img-circle elevation-3">
+                <img src="/logo.jpg" alt="Renner Logo" class="brand-image img-circle elevation-3" style="width: 40px; height: 40px; object-fit: contain;">
                 <span class="brand-text font-weight-light">Controle Acesso</span>
             </a>
             

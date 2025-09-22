@@ -263,4 +263,49 @@ class ProfissionaisRennerController {
         }
         exit;
     }
+    
+    public function saida() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            header('Content-Type: application/json');
+            
+            try {
+                CSRFProtection::verifyRequest();
+                $id = trim($_GET['id'] ?? $_POST['id'] ?? '');
+                
+                if (empty($id)) {
+                    echo json_encode(['success' => false, 'message' => 'ID é obrigatório']);
+                    return;
+                }
+                
+                // Buscar o profissional
+                $profissional = $this->db->fetch("SELECT * FROM profissionais_renner WHERE id = ?", [$id]);
+                
+                if (!$profissional) {
+                    echo json_encode(['success' => false, 'message' => 'Profissional não encontrado']);
+                    return;
+                }
+                
+                // Registrar saída final
+                $this->db->query("
+                    UPDATE profissionais_renner 
+                    SET saida_final = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+                    WHERE id = ?
+                ", [$id]);
+                
+                echo json_encode([
+                    'success' => true, 
+                    'message' => 'Saída registrada com sucesso',
+                    'data' => [
+                        'id' => $id,
+                        'nome' => $profissional['nome']
+                    ]
+                ]);
+            } catch (Exception $e) {
+                echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+            }
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Método não permitido']);
+        }
+        exit;
+    }
 }

@@ -64,6 +64,7 @@ class VisitantesNovoController {
                 $empresa = $_POST['empresa'] ?? '';
                 $funcionario_responsavel = $_POST['funcionario_responsavel'] ?? '';
                 $setor = $_POST['setor'] ?? '';
+                $placa_veiculo = $_POST['placa_veiculo'] ?? '';
                 $hora_entrada = $_POST['hora_entrada'] ?? null;
                 $hora_saida = $_POST['hora_saida'] ?? null;
                 
@@ -77,10 +78,10 @@ class VisitantesNovoController {
                 }
                 
                 $this->db->query("
-                    INSERT INTO visitantes_novo (nome, cpf, empresa, funcionario_responsavel, setor, hora_entrada, hora_saida)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO visitantes_novo (nome, cpf, empresa, funcionario_responsavel, setor, placa_veiculo, hora_entrada, hora_saida)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 ", [
-                    $nome, $cpf, $empresa, $funcionario_responsavel, $setor,
+                    $nome, $cpf, $empresa, $funcionario_responsavel, $setor, $placa_veiculo,
                     $hora_entrada,
                     $hora_saida ?: null
                 ]);
@@ -120,6 +121,7 @@ class VisitantesNovoController {
                 $empresa = $_POST['empresa'] ?? '';
                 $funcionario_responsavel = $_POST['funcionario_responsavel'] ?? '';
                 $setor = $_POST['setor'] ?? '';
+                $placa_veiculo = $_POST['placa_veiculo'] ?? '';
                 $hora_entrada = $_POST['hora_entrada'] ?? null;
                 $hora_saida = $_POST['hora_saida'] ?? null;
                 
@@ -129,11 +131,11 @@ class VisitantesNovoController {
                 
                 $this->db->query("
                     UPDATE visitantes_novo 
-                    SET nome = ?, cpf = ?, empresa = ?, funcionario_responsavel = ?, setor = ?, 
+                    SET nome = ?, cpf = ?, empresa = ?, funcionario_responsavel = ?, setor = ?, placa_veiculo = ?, 
                         hora_entrada = ?, hora_saida = ?, updated_at = CURRENT_TIMESTAMP
                     WHERE id = ?
                 ", [
-                    $nome, $cpf, $empresa, $funcionario_responsavel, $setor,
+                    $nome, $cpf, $empresa, $funcionario_responsavel, $setor, $placa_veiculo,
                     $hora_entrada ?: null,
                     $hora_saida ?: null,
                     $id
@@ -296,6 +298,7 @@ class VisitantesNovoController {
                 $empresa = trim($_POST['empresa'] ?? '');
                 $setor = trim($_POST['setor'] ?? '');
                 $funcionario_responsavel = trim($_POST['funcionario_responsavel'] ?? '');
+                $placa_veiculo = trim($_POST['placa_veiculo'] ?? '');
                 $hora_saida = trim($_POST['hora_saida'] ?? '');
                 
                 if (empty($id) || empty($nome)) {
@@ -321,9 +324,9 @@ class VisitantesNovoController {
                 
                 $this->db->query("
                     UPDATE visitantes_novo 
-                    SET nome = ?, cpf = ?, empresa = ?, setor = ?, funcionario_responsavel = ?, hora_saida = ?
+                    SET nome = ?, cpf = ?, empresa = ?, setor = ?, funcionario_responsavel = ?, placa_veiculo = ?, hora_saida = ?
                     WHERE id = ?
-                ", [$nome, $cpf, $empresa, $setor, $funcionario_responsavel, $hora_saida_final, $id]);
+                ", [$nome, $cpf, $empresa, $setor, $funcionario_responsavel, $placa_veiculo, $hora_saida_final, $id]);
                 
                 echo json_encode([
                     'success' => true, 

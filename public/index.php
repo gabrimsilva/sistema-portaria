@@ -134,6 +134,12 @@ try {
                 case 'saida':
                     $controller->registrarSaida();
                     break;
+                case 'registrar_saida':
+                    $controller->registrarSaida();
+                    break;
+                case 'get_data':
+                    $controller->getData();
+                    break;
                 case 'delete':
                     $controller->delete();
                     break;

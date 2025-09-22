@@ -523,10 +523,16 @@
                             </div>
                         </div>
                         
-                        <!-- Campo específico para visitantes -->
+                        <!-- Campos específicos para visitantes -->
                         <div id="campo_funcionario_responsavel" class="form-group" style="display: none;">
                             <label for="edit_funcionario_responsavel">Funcionário Responsável</label>
                             <input type="text" class="form-control" id="edit_funcionario_responsavel" name="funcionario_responsavel">
+                        </div>
+                        
+                        <div id="campo_hora_saida" class="form-group" style="display: none;">
+                            <label for="edit_hora_saida">Hora de Saída</label>
+                            <input type="datetime-local" class="form-control" id="edit_hora_saida" name="hora_saida">
+                            <small class="form-text text-muted">Deixe em branco se a pessoa ainda não saiu da empresa</small>
                         </div>
                         
                         <!-- Campo específico para prestadores -->
@@ -920,14 +926,31 @@
             $('#edit_setor').val(setor);
             
             // Mostrar/ocultar campos específicos baseado no tipo
-            $('#campo_funcionario_responsavel, #campo_observacao, #botoes_saida').hide();
+            $('#campo_funcionario_responsavel, #campo_hora_saida, #campo_observacao, #botoes_saida').hide();
             
             if (tipo === 'Visitante') {
                 $('#campo_funcionario_responsavel').show();
-                $('#botoes_saida').show();
-                $('#texto_saida').text('Registrar Saída do Visitante');
-                // Preencher campo específico do visitante
+                $('#campo_hora_saida').show();
+                // Preencher campos específicos do visitante
                 $('#edit_funcionario_responsavel').val(funcionario || '');
+                
+                // Buscar dados completos do visitante para preencher hora de saída
+                $.ajax({
+                    url: `/visitantes?action=get_data&id=${id}`,
+                    method: 'GET',
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.success && response.data.hora_saida) {
+                            // Formatar data para datetime-local sem conversão de timezone
+                            const horaSaidaFormatada = response.data.hora_saida.replace(' ', 'T').slice(0, 16);
+                            $('#edit_hora_saida').val(horaSaidaFormatada);
+                        }
+                    },
+                    error: function() {
+                        // Em caso de erro, deixa o campo vazio
+                        $('#edit_hora_saida').val('');
+                    }
+                });
             } else if (tipo === 'Prestador') {
                 $('#campo_observacao').show();
                 $('#botoes_saida').show();
@@ -1076,7 +1099,7 @@
         // Limpar formulário de edição ao fechar modal
         $('#modalEditar').on('hidden.bs.modal', function() {
             $('#formEditar')[0].reset();
-            $('#campo_funcionario_responsavel, #campo_observacao, #botoes_saida').hide();
+            $('#campo_funcionario_responsavel, #campo_hora_saida, #campo_observacao, #botoes_saida').hide();
         });
     });
     </script>

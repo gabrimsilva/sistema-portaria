@@ -296,17 +296,34 @@ class VisitantesNovoController {
                 $empresa = trim($_POST['empresa'] ?? '');
                 $setor = trim($_POST['setor'] ?? '');
                 $funcionario_responsavel = trim($_POST['funcionario_responsavel'] ?? '');
+                $hora_saida = trim($_POST['hora_saida'] ?? '');
                 
                 if (empty($id) || empty($nome)) {
                     echo json_encode(['success' => false, 'message' => 'ID e Nome são obrigatórios']);
                     return;
                 }
                 
+                // Processar hora de saída
+                $hora_saida_final = null;
+                if (!empty($hora_saida)) {
+                    // Tentar diferentes formatos de datetime-local
+                    $datetime = DateTime::createFromFormat('Y-m-d\TH:i:s', $hora_saida);
+                    if (!$datetime) {
+                        $datetime = DateTime::createFromFormat('Y-m-d\TH:i', $hora_saida);
+                    }
+                    
+                    if (!$datetime) {
+                        echo json_encode(['success' => false, 'message' => 'Formato de hora de saída inválido']);
+                        return;
+                    }
+                    $hora_saida_final = $datetime->format('Y-m-d H:i:s');
+                }
+                
                 $this->db->query("
                     UPDATE visitantes_novo 
-                    SET nome = ?, cpf = ?, empresa = ?, setor = ?, funcionario_responsavel = ?
+                    SET nome = ?, cpf = ?, empresa = ?, setor = ?, funcionario_responsavel = ?, hora_saida = ?
                     WHERE id = ?
-                ", [$nome, $cpf, $empresa, $setor, $funcionario_responsavel, $id]);
+                ", [$nome, $cpf, $empresa, $setor, $funcionario_responsavel, $hora_saida_final, $id]);
                 
                 echo json_encode([
                     'success' => true, 
@@ -317,6 +334,48 @@ class VisitantesNovoController {
                         'cpf' => $cpf,
                         'empresa' => $empresa,
                         'setor' => $setor
+                    ]
+                ]);
+            } catch (Exception $e) {
+                echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+            }
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Método não permitido']);
+        }
+        exit;
+    }
+    
+    public function getData() {
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            header('Content-Type: application/json');
+            
+            try {
+                $id = trim($_GET['id'] ?? '');
+                
+                if (empty($id)) {
+                    echo json_encode(['success' => false, 'message' => 'ID é obrigatório']);
+                    return;
+                }
+                
+                // Buscar o visitante
+                $visitante = $this->db->fetch("SELECT * FROM visitantes_novo WHERE id = ?", [$id]);
+                
+                if (!$visitante) {
+                    echo json_encode(['success' => false, 'message' => 'Visitante não encontrado']);
+                    return;
+                }
+                
+                echo json_encode([
+                    'success' => true, 
+                    'data' => [
+                        'id' => $visitante['id'],
+                        'nome' => $visitante['nome'],
+                        'cpf' => $visitante['cpf'],
+                        'empresa' => $visitante['empresa'],
+                        'setor' => $visitante['setor'],
+                        'funcionario_responsavel' => $visitante['funcionario_responsavel'],
+                        'hora_entrada' => $visitante['hora_entrada'],
+                        'hora_saida' => $visitante['hora_saida']
                     ]
                 ]);
             } catch (Exception $e) {

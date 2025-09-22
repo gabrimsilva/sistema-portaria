@@ -202,14 +202,24 @@ class VisitantesNovoController {
                 $empresa = trim($_POST['empresa'] ?? '');
                 $funcionario_responsavel = trim($_POST['funcionario_responsavel'] ?? '');
                 $setor = trim($_POST['setor'] ?? '');
+                $hora_entrada_input = trim($_POST['hora_entrada'] ?? '');
                 
                 if (empty($nome)) {
                     echo json_encode(['success' => false, 'message' => 'Nome é obrigatório']);
                     return;
                 }
                 
-                // Se não foi especificada hora de entrada, registra automaticamente a hora atual
-                $hora_entrada = date('Y-m-d H:i:s');
+                // Usar hora especificada ou hora atual se não fornecida
+                if (!empty($hora_entrada_input)) {
+                    $timestamp = strtotime($hora_entrada_input);
+                    if ($timestamp === false) {
+                        echo json_encode(['success' => false, 'message' => 'Data/hora inválida fornecida']);
+                        return;
+                    }
+                    $hora_entrada = date('Y-m-d H:i:s', $timestamp);
+                } else {
+                    $hora_entrada = date('Y-m-d H:i:s');
+                }
                 
                 $this->db->query("
                     INSERT INTO visitantes_novo (nome, cpf, empresa, funcionario_responsavel, setor, hora_entrada)

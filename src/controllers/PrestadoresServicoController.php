@@ -202,14 +202,24 @@ class PrestadoresServicoController {
                 $empresa = trim($_POST['empresa'] ?? '');
                 $setor = trim($_POST['setor'] ?? '');
                 $observacao = trim($_POST['observacao'] ?? '');
+                $entrada_input = trim($_POST['entrada'] ?? '');
                 
                 if (empty($nome)) {
                     echo json_encode(['success' => false, 'message' => 'Nome é obrigatório']);
                     return;
                 }
                 
-                // Se não foi especificada hora de entrada, registra automaticamente a hora atual
-                $entrada = date('Y-m-d H:i:s');
+                // Usar hora especificada ou hora atual se não fornecida
+                if (!empty($entrada_input)) {
+                    $timestamp = strtotime($entrada_input);
+                    if ($timestamp === false) {
+                        echo json_encode(['success' => false, 'message' => 'Data/hora inválida fornecida']);
+                        return;
+                    }
+                    $entrada = date('Y-m-d H:i:s', $timestamp);
+                } else {
+                    $entrada = date('Y-m-d H:i:s');
+                }
                 
                 $this->db->query("
                     INSERT INTO prestadores_servico (nome, cpf, empresa, setor, observacao, entrada)

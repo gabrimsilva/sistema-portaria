@@ -315,6 +315,11 @@
                             <label for="visitante_funcionario_responsavel">Funcionário Responsável</label>
                             <input type="text" class="form-control" id="visitante_funcionario_responsavel" name="funcionario_responsavel">
                         </div>
+                        <div class="form-group">
+                            <label for="visitante_hora_entrada">Hora de Entrada</label>
+                            <input type="datetime-local" class="form-control" id="visitante_hora_entrada" name="hora_entrada" required>
+                            <small class="form-text text-muted">Hora atual preenchida automaticamente, mas pode ser editada</small>
+                        </div>
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -355,6 +360,11 @@
                                     <input type="text" class="form-control" id="profissional_setor" name="setor">
                                 </div>
                             </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="profissional_data_entrada">Data/Hora de Entrada</label>
+                            <input type="datetime-local" class="form-control" id="profissional_data_entrada" name="data_entrada" required>
+                            <small class="form-text text-muted">Hora atual preenchida automaticamente, mas pode ser editada</small>
                         </div>
                     </form>
                 </div>
@@ -414,6 +424,11 @@
                         <div class="form-group">
                             <label for="prestador_observacao">Observações</label>
                             <textarea class="form-control" id="prestador_observacao" name="observacao" rows="3"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="prestador_entrada">Data/Hora de Entrada</label>
+                            <input type="datetime-local" class="form-control" id="prestador_entrada" name="entrada" required>
+                            <small class="form-text text-muted">Hora atual preenchida automaticamente, mas pode ser editada</small>
                         </div>
                     </form>
                 </div>
@@ -649,6 +664,44 @@
             });
         });
         
+        // Função para obter data/hora atual no timezone de São Paulo
+        function obterDataHoraAtual() {
+            const agora = new Date();
+            
+            // Usar Intl.DateTimeFormat para obter componentes no timezone de São Paulo
+            const formatter = new Intl.DateTimeFormat('en-CA', {
+                timeZone: 'America/Sao_Paulo',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            });
+            
+            const parts = formatter.formatToParts(agora);
+            const date = parts.find(p => p.type === 'year').value + '-' +
+                        parts.find(p => p.type === 'month').value + '-' +
+                        parts.find(p => p.type === 'day').value;
+            const time = parts.find(p => p.type === 'hour').value + ':' +
+                        parts.find(p => p.type === 'minute').value;
+            
+            return `${date}T${time}`;
+        }
+
+        // Preencher campos de hora quando modais são abertos
+        $('#modalVisitante').on('show.bs.modal', function() {
+            $('#visitante_hora_entrada').val(obterDataHoraAtual());
+        });
+
+        $('#modalProfissional').on('show.bs.modal', function() {
+            $('#profissional_data_entrada').val(obterDataHoraAtual());
+        });
+
+        $('#modalPrestador').on('show.bs.modal', function() {
+            $('#prestador_entrada').val(obterDataHoraAtual());
+        });
+
         // Limpar formulários ao fechar modals
         $('.modal').on('hidden.bs.modal', function() {
             const modalId = $(this).attr('id');

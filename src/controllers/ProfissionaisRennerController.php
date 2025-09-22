@@ -175,14 +175,24 @@ class ProfissionaisRennerController {
                 CSRFProtection::verifyRequest();
                 $nome = trim($_POST['nome'] ?? '');
                 $setor = trim($_POST['setor'] ?? '');
+                $data_entrada_input = trim($_POST['data_entrada'] ?? '');
                 
                 if (empty($nome)) {
                     echo json_encode(['success' => false, 'message' => 'Nome é obrigatório']);
                     return;
                 }
                 
-                // Se não foi especificada data de entrada, registra automaticamente a data/hora atual
-                $data_entrada = date('Y-m-d H:i:s');
+                // Usar data especificada ou data/hora atual se não fornecida
+                if (!empty($data_entrada_input)) {
+                    $timestamp = strtotime($data_entrada_input);
+                    if ($timestamp === false) {
+                        echo json_encode(['success' => false, 'message' => 'Data/hora inválida fornecida']);
+                        return;
+                    }
+                    $data_entrada = date('Y-m-d H:i:s', $timestamp);
+                } else {
+                    $data_entrada = date('Y-m-d H:i:s');
+                }
                 
                 $this->db->query("
                     INSERT INTO profissionais_renner (nome, data_entrada, setor)

@@ -235,6 +235,7 @@ class VisitantesNovoController {
                 $empresa = trim($_POST['empresa'] ?? '');
                 $funcionario_responsavel = trim($_POST['funcionario_responsavel'] ?? '');
                 $setor = trim($_POST['setor'] ?? '');
+                $placa_veiculo = trim($_POST['placa_veiculo'] ?? '');
                 $hora_entrada_input = trim($_POST['hora_entrada'] ?? '');
                 
                 if (empty($nome)) {
@@ -255,10 +256,10 @@ class VisitantesNovoController {
                 }
                 
                 $this->db->query("
-                    INSERT INTO visitantes_novo (nome, cpf, empresa, funcionario_responsavel, setor, hora_entrada)
-                    VALUES (?, ?, ?, ?, ?, ?)
+                    INSERT INTO visitantes_novo (nome, cpf, empresa, funcionario_responsavel, setor, placa_veiculo, hora_entrada)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
                 ", [
-                    $nome, $cpf, $empresa, $funcionario_responsavel, $setor, $hora_entrada
+                    $nome, $cpf, $empresa, $funcionario_responsavel, $setor, $placa_veiculo, $hora_entrada
                 ]);
                 
                 $id = $this->db->lastInsertId();
@@ -274,6 +275,7 @@ class VisitantesNovoController {
                         'empresa' => $empresa,
                         'setor' => $setor,
                         'funcionario_responsavel' => $funcionario_responsavel,
+                        'placa_veiculo' => $placa_veiculo,
                         'hora_entrada' => $hora_entrada
                     ]
                 ]);
@@ -336,7 +338,8 @@ class VisitantesNovoController {
                         'nome' => $nome,
                         'cpf' => $cpf,
                         'empresa' => $empresa,
-                        'setor' => $setor
+                        'setor' => $setor,
+                        'placa_veiculo' => $placa_veiculo
                     ]
                 ]);
             } catch (Exception $e) {

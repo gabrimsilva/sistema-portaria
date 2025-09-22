@@ -204,6 +204,7 @@ class PrestadoresServicoController {
                 $empresa = trim($_POST['empresa'] ?? '');
                 $setor = trim($_POST['setor'] ?? '');
                 $observacao = trim($_POST['observacao'] ?? '');
+                $placa_veiculo = trim($_POST['placa_veiculo'] ?? '');
                 $entrada_input = trim($_POST['entrada'] ?? '');
                 
                 if (empty($nome)) {
@@ -224,10 +225,10 @@ class PrestadoresServicoController {
                 }
                 
                 $this->db->query("
-                    INSERT INTO prestadores_servico (nome, cpf, empresa, setor, observacao, entrada)
-                    VALUES (?, ?, ?, ?, ?, ?)
+                    INSERT INTO prestadores_servico (nome, cpf, empresa, setor, observacao, placa_veiculo, entrada)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
                 ", [
-                    $nome, $cpf, $empresa, $setor, $observacao, $entrada
+                    $nome, $cpf, $empresa, $setor, $observacao, $placa_veiculo, $entrada
                 ]);
                 
                 $id = $this->db->lastInsertId();
@@ -242,6 +243,7 @@ class PrestadoresServicoController {
                         'cpf' => $cpf,
                         'empresa' => $empresa,
                         'setor' => $setor,
+                        'placa_veiculo' => $placa_veiculo,
                         'hora_entrada' => $entrada
                     ]
                 ]);
@@ -304,6 +306,7 @@ class PrestadoresServicoController {
                         'cpf' => $cpf,
                         'empresa' => $empresa,
                         'setor' => $setor,
+                        'placa_veiculo' => $placa_veiculo,
                         'saida' => $saida_parsed
                     ]
                 ]);

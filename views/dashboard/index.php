@@ -184,20 +184,31 @@
                                     </h3>
                                 </div>
                                 <div class="card-body">
-                                    <!-- Campo de filtro -->
-                                    <div class="mb-3">
-                                        <div class="input-group">
-                                            <div class="input-group-prepend">
-                                                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                    <!-- Filtros Avançados -->
+                                    <div class="row mb-3">
+                                        <div class="col-md-8">
+                                            <div class="input-group">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                                </div>
+                                                <input type="text" class="form-control" id="filtro-pessoas" placeholder="Buscar por nome, CPF, empresa ou setor...">
+                                                <div class="input-group-append">
+                                                    <button class="btn btn-outline-secondary" type="button" id="limpar-filtros">
+                                                        <i class="fas fa-times"></i> Limpar
+                                                    </button>
+                                                </div>
                                             </div>
-                                            <input type="text" class="form-control" id="filtro-pessoas" placeholder="Buscar por nome, CPF, empresa ou setor...">
-                                            <div class="input-group-append">
-                                                <button class="btn btn-outline-secondary" type="button" id="limpar-filtro">
-                                                    <i class="fas fa-times"></i>
-                                                </button>
-                                            </div>
+                                            <small class="text-muted">Digite pelo menos 2 caracteres para filtrar por texto</small>
                                         </div>
-                                        <small class="text-muted">Digite pelo menos 2 caracteres para filtrar</small>
+                                        <div class="col-md-4">
+                                            <select class="form-control" id="filtro-tipo">
+                                                <option value="">🔍 Todos os Tipos</option>
+                                                <option value="Visitante">🟢 Visitante</option>
+                                                <option value="Profissional Renner">🔵 Profissional Renner</option>
+                                                <option value="Prestador">🟡 Prestador de Serviço</option>
+                                            </select>
+                                            <small class="text-muted">Filtrar por tipo de registro</small>
+                                        </div>
                                     </div>
                                     
                                     <div class="table-responsive">
@@ -714,30 +725,48 @@
             }
         });
 
-        // Filtro de busca para a tabela de pessoas
-        $('#filtro-pessoas').on('keyup', function() {
-            const valorFiltro = $(this).val().toLowerCase();
+        // Função para aplicar filtros combinados
+        function aplicarFiltros() {
+            const valorTexto = $('#filtro-pessoas').val().toLowerCase();
+            const tipoSelecionado = $('#filtro-tipo').val();
             
-            if (valorFiltro.length === 0) {
-                $('.table tbody tr').show();
-                return;
-            }
-            
-            if (valorFiltro.length >= 2) {
-                $('.table tbody tr').each(function() {
-                    const textoLinha = $(this).text().toLowerCase();
-                    if (textoLinha.includes(valorFiltro)) {
-                        $(this).show();
-                    } else {
-                        $(this).hide();
-                    }
-                });
-            }
-        });
+            $('.table tbody tr').each(function() {
+                const linha = $(this);
+                const textoLinha = linha.text().toLowerCase();
+                const tipoLinha = linha.find('.badge').text().trim();
+                
+                let mostrarTexto = true;
+                let mostrarTipo = true;
+                
+                // Filtro por texto (se houver)
+                if (valorTexto.length >= 2) {
+                    mostrarTexto = textoLinha.includes(valorTexto);
+                }
+                
+                // Filtro por tipo (se houver)
+                if (tipoSelecionado) {
+                    mostrarTipo = tipoLinha === tipoSelecionado;
+                }
+                
+                // Mostrar linha apenas se passar em ambos os filtros
+                if (mostrarTexto && mostrarTipo) {
+                    linha.show();
+                } else {
+                    linha.hide();
+                }
+            });
+        }
 
-        // Limpar filtro
-        $('#limpar-filtro').on('click', function() {
+        // Filtro por texto
+        $('#filtro-pessoas').on('keyup', aplicarFiltros);
+        
+        // Filtro por tipo
+        $('#filtro-tipo').on('change', aplicarFiltros);
+
+        // Limpar todos os filtros
+        $('#limpar-filtros').on('click', function() {
             $('#filtro-pessoas').val('');
+            $('#filtro-tipo').val('');
             $('.table tbody tr').show();
         });
     });

@@ -1,0 +1,4 @@
+modules = ["php-8.3"]
+[agent]
+expertMode = true
+integrations = ["python_database:1.0.0"]

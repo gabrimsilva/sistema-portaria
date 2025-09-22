@@ -311,9 +311,7 @@
                     <h5 class="modal-title text-white" id="modalVisitanteLabel">
                         <i class="fas fa-users"></i> Cadastrar Visitante
                     </h5>
-                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <form id="formVisitante">
@@ -368,7 +366,7 @@
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-success" id="btnSalvarVisitante">
                         <i class="fas fa-save"></i> Cadastrar Visitante
                     </button>
@@ -385,9 +383,7 @@
                     <h5 class="modal-title text-white" id="modalProfissionalLabel">
                         <i class="fas fa-user-tie"></i> Cadastrar Profissional Renner
                     </h5>
-                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <form id="formProfissional">
@@ -414,7 +410,7 @@
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-primary" id="btnSalvarProfissional">
                         <i class="fas fa-save"></i> Cadastrar Profissional
                     </button>
@@ -482,7 +478,7 @@
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-warning" id="btnSalvarPrestador">
                         <i class="fas fa-save"></i> Cadastrar Prestador
                     </button>
@@ -499,9 +495,7 @@
                     <h5 class="modal-title text-white" id="modalEditarLabel">
                         <i class="fas fa-edit"></i> Editar Registro
                     </h5>
-                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <form id="formEditar">
@@ -594,7 +588,7 @@
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-info" id="btnSalvarEdicao">
                         <i class="fas fa-save"></i> Salvar Alterações
                     </button>
@@ -605,7 +599,7 @@
     
     
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
     
     <script>

@@ -261,9 +261,7 @@
                     <h5 class="modal-title text-white" id="modalEditarLabel">
                         <i class="fas fa-edit"></i> Editar Registro
                     </h5>
-                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <form id="formEditar">
@@ -335,7 +333,7 @@
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-info" id="btnSalvarEdicao">
                         <i class="fas fa-save"></i> Salvar Alterações
                     </button>
@@ -470,8 +468,10 @@
                 btn.removeClass('loading');
             }
             
-            // Abrir o modal
-            $('#modalEditar').modal('show');
+            // Abrir o modal usando Bootstrap 5
+            const modalElement = document.getElementById('modalEditar');
+            const modal = new bootstrap.Modal(modalElement);
+            modal.show();
         });
 
         // Salvar edições

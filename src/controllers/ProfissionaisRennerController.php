@@ -4,7 +4,15 @@ class ProfissionaisRennerController {
     private $db;
     
     public function __construct() {
+        $this->checkAuthentication();
         $this->db = new Database();
+    }
+    
+    private function checkAuthentication() {
+        if (!isset($_SESSION['user_id'])) {
+            header('Location: /login');
+            exit;
+        }
     }
     
     public function index() {

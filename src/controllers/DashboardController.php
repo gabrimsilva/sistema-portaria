@@ -49,6 +49,9 @@ class DashboardController {
             $movimentacaoHoje = $this->getMovimentacaoHoje();
             $setoresMaisMovimentados = $this->getSetoresMaisMovimentados();
             
+            // Pessoas atualmente na empresa
+            $pessoasNaEmpresa = $this->getPessoasNaEmpresa();
+            
             include '../views/dashboard/index.php';
         } catch (Exception $e) {
             error_log("Dashboard error: " . $e->getMessage());
@@ -62,6 +65,7 @@ class DashboardController {
             ];
             $movimentacaoHoje = ['visitantes' => 0, 'prestadores' => 0, 'profissionais' => 0];
             $setoresMaisMovimentados = [];
+            $pessoasNaEmpresa = [];
             include '../views/dashboard/index.php';
         }
     }
@@ -126,6 +130,51 @@ class DashboardController {
             ";
             
             return $this->db->fetchAll($query) ?? [];
+        } catch (Exception $e) {
+            return [];
+        }
+    }
+    
+    private function getPessoasNaEmpresa() {
+        try {
+            $pessoas = [];
+            
+            // Visitantes na empresa (entraram mas não saíram)
+            $visitantesAtivos = $this->db->fetchAll("
+                SELECT nome, cpf, empresa, setor, hora_entrada, 'Visitante' as tipo, id
+                FROM visitantes_novo 
+                WHERE hora_entrada IS NOT NULL AND hora_saida IS NULL
+                ORDER BY hora_entrada DESC
+            ") ?? [];
+            
+            // Prestadores trabalhando (entraram mas não saíram)
+            $prestadoresAtivos = $this->db->fetchAll("
+                SELECT nome, cpf, empresa, setor, entrada as hora_entrada, 'Prestador' as tipo, id
+                FROM prestadores_servico 
+                WHERE entrada IS NOT NULL AND saida IS NULL
+                ORDER BY entrada DESC
+            ") ?? [];
+            
+            // Profissionais que estão na empresa (têm data_entrada ou retorno, mas não saída_final)
+            $profissionaisAtivos = $this->db->fetchAll("
+                SELECT nome, '' as cpf, '' as empresa, setor, 
+                       COALESCE(retorno, data_entrada) as hora_entrada, 
+                       'Profissional Renner' as tipo, id
+                FROM profissionais_renner 
+                WHERE (data_entrada IS NOT NULL OR retorno IS NOT NULL) 
+                  AND (saida_final IS NULL OR DATE(saida_final) != CURRENT_DATE)
+                ORDER BY COALESCE(retorno, data_entrada) DESC
+            ") ?? [];
+            
+            // Combinar todos os tipos
+            $pessoas = array_merge($visitantesAtivos, $prestadoresAtivos, $profissionaisAtivos);
+            
+            // Ordenar por hora de entrada mais recente
+            usort($pessoas, function($a, $b) {
+                return strtotime($b['hora_entrada']) - strtotime($a['hora_entrada']);
+            });
+            
+            return $pessoas;
         } catch (Exception $e) {
             return [];
         }

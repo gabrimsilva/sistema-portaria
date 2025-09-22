@@ -141,44 +141,75 @@
                         </div>
                     </div>
                     
-                    <!-- Recent Access -->
+                    <!-- Pessoas Atualmente na Empresa -->
                     <div class="row">
                         <div class="col-12">
                             <div class="card">
                                 <div class="card-header">
-                                    <h3 class="card-title">Acessos Recentes</h3>
+                                    <h3 class="card-title">
+                                        <i class="fas fa-building"></i> Pessoas Atualmente na Empresa
+                                        <span class="badge badge-info ml-2"><?= count($pessoasNaEmpresa ?? []) ?></span>
+                                    </h3>
                                 </div>
                                 <div class="card-body table-responsive p-0">
-                                    <table class="table table-hover text-nowrap">
-                                        <thead>
-                                            <tr>
-                                                <th>Tipo</th>
-                                                <th>Nome</th>
-                                                <th>Data/Hora</th>
-                                                <th>Categoria</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php foreach (($recentAccess ?? []) as $access): ?>
-                                            <tr>
-                                                <td>
-                                                    <span class="badge badge-<?= $access['tipo'] === 'entrada' ? 'success' : 'warning' ?>">
-                                                        <?= ucfirst($access['tipo']) ?>
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <?= htmlspecialchars($access['funcionario_nome'] ?? $access['visitante_nome']) ?>
-                                                </td>
-                                                <td><?= date('d/m/Y H:i', strtotime($access['data_hora'])) ?></td>
-                                                <td>
-                                                    <span class="badge badge-<?= $access['funcionario_id'] ? 'primary' : 'info' ?>">
-                                                        <?= $access['funcionario_id'] ? 'Funcionário' : 'Visitante' ?>
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                            <?php endforeach; ?>
-                                        </tbody>
-                                    </table>
+                                    <?php if (!empty($pessoasNaEmpresa)): ?>
+                                        <table class="table table-hover text-nowrap">
+                                            <thead>
+                                                <tr>
+                                                    <th>Nome</th>
+                                                    <th>Tipo</th>
+                                                    <th>CPF</th>
+                                                    <th>Empresa</th>
+                                                    <th>Setor</th>
+                                                    <th>Hora de Entrada</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php foreach ($pessoasNaEmpresa as $pessoa): ?>
+                                                <tr>
+                                                    <td>
+                                                        <strong><?= htmlspecialchars($pessoa['nome']) ?></strong>
+                                                    </td>
+                                                    <td>
+                                                        <?php 
+                                                        $badgeClass = '';
+                                                        switch ($pessoa['tipo']) {
+                                                            case 'Visitante':
+                                                                $badgeClass = 'success';
+                                                                break;
+                                                            case 'Prestador':
+                                                                $badgeClass = 'warning';
+                                                                break;
+                                                            case 'Profissional Renner':
+                                                                $badgeClass = 'primary';
+                                                                break;
+                                                        }
+                                                        ?>
+                                                        <span class="badge badge-<?= $badgeClass ?>">
+                                                            <?= htmlspecialchars($pessoa['tipo']) ?>
+                                                        </span>
+                                                    </td>
+                                                    <td><?= !empty($pessoa['cpf']) ? htmlspecialchars($pessoa['cpf']) : '-' ?></td>
+                                                    <td><?= !empty($pessoa['empresa']) ? htmlspecialchars($pessoa['empresa']) : '-' ?></td>
+                                                    <td><?= !empty($pessoa['setor']) ? htmlspecialchars($pessoa['setor']) : '-' ?></td>
+                                                    <td>
+                                                        <?php if ($pessoa['hora_entrada']): ?>
+                                                            <i class="fas fa-clock text-muted"></i>
+                                                            <?= date('d/m/Y H:i', strtotime($pessoa['hora_entrada'])) ?>
+                                                        <?php else: ?>
+                                                            -
+                                                        <?php endif; ?>
+                                                    </td>
+                                                </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+                                    <?php else: ?>
+                                        <div class="text-center p-4">
+                                            <i class="fas fa-building text-muted" style="font-size: 3rem;"></i>
+                                            <p class="text-muted mt-2">Nenhuma pessoa está registrada na empresa no momento.</p>
+                                        </div>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </div>

@@ -183,8 +183,25 @@
                                         <span class="badge badge-info ml-2"><?= count($pessoasNaEmpresa ?? []) ?></span>
                                     </h3>
                                 </div>
-                                <div class="card-body table-responsive p-0">
-                                    <?php if (!empty($pessoasNaEmpresa)): ?>
+                                <div class="card-body">
+                                    <!-- Campo de filtro -->
+                                    <div class="mb-3">
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                            </div>
+                                            <input type="text" class="form-control" id="filtro-pessoas" placeholder="Buscar por nome, CPF, empresa ou setor...">
+                                            <div class="input-group-append">
+                                                <button class="btn btn-outline-secondary" type="button" id="limpar-filtro">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <small class="text-muted">Digite pelo menos 2 caracteres para filtrar</small>
+                                    </div>
+                                    
+                                    <div class="table-responsive">
+                                        <?php if (!empty($pessoasNaEmpresa)): ?>
                                         <table class="table table-hover text-nowrap">
                                             <thead>
                                                 <tr>
@@ -642,6 +659,33 @@
             } else if (modalId === 'modalPrestador') {
                 limparFormulario('formPrestador');
             }
+        });
+
+        // Filtro de busca para a tabela de pessoas
+        $('#filtro-pessoas').on('keyup', function() {
+            const valorFiltro = $(this).val().toLowerCase();
+            
+            if (valorFiltro.length === 0) {
+                $('.table tbody tr').show();
+                return;
+            }
+            
+            if (valorFiltro.length >= 2) {
+                $('.table tbody tr').each(function() {
+                    const textoLinha = $(this).text().toLowerCase();
+                    if (textoLinha.includes(valorFiltro)) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+            }
+        });
+
+        // Limpar filtro
+        $('#limpar-filtro').on('click', function() {
+            $('#filtro-pessoas').val('');
+            $('.table tbody tr').show();
         });
     });
     </script>

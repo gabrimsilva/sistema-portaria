@@ -509,7 +509,7 @@
                         </div>
                         
                         <div class="row">
-                            <div class="col-md-6">
+                            <div id="campo_empresa" class="col-md-6">
                                 <div class="form-group">
                                     <label for="edit_empresa">Empresa</label>
                                     <input type="text" class="form-control" id="edit_empresa" name="empresa">
@@ -931,6 +931,13 @@
             // Mostrar campo de hora de saída para todos os tipos
             $('#campo_hora_saida').show();
             
+            // Mostrar/ocultar campo empresa baseado no tipo
+            if (tipo === 'Profissional Renner') {
+                $('#campo_empresa').hide();
+            } else {
+                $('#campo_empresa').show();
+            }
+            
             if (tipo === 'Visitante') {
                 $('#campo_funcionario_responsavel').show();
                 // Preencher campos específicos do visitante
@@ -1018,10 +1025,14 @@
                 id: $('#edit_id').val(),
                 nome: $('#edit_nome').val(),
                 cpf: $('#edit_cpf').val(),
-                empresa: $('#edit_empresa').val(),
                 setor: $('#edit_setor').val(),
                 csrf_token: $('meta[name="csrf-token"]').attr('content') || '<?= CSRFProtection::generateToken() ?>'
             };
+            
+            // Adicionar empresa apenas se não for Profissional Renner
+            if (tipoOriginal !== 'Profissional Renner') {
+                dadosComuns.empresa = $('#edit_empresa').val();
+            }
             
             let formData = new FormData();
             let endpoint = '';

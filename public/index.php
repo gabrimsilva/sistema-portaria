@@ -50,28 +50,94 @@ try {
             $controller->index();
             break;
             
-        case 'visitors':
-            require_once '../src/controllers/VisitorController.php';
-            $controller = new VisitorController();
-            $controller->index();
+        case 'profissionais-renner':
+            require_once '../src/controllers/ProfissionaisRennerController.php';
+            $controller = new ProfissionaisRennerController();
+            $action = $_GET['action'] ?? 'index';
+            switch ($action) {
+                case 'new':
+                    $controller->create();
+                    break;
+                case 'save':
+                    $controller->save();
+                    break;
+                case 'edit':
+                    $controller->edit();
+                    break;
+                case 'update':
+                    $controller->update();
+                    break;
+                case 'delete':
+                    $controller->delete();
+                    break;
+                default:
+                    $controller->index();
+                    break;
+            }
             break;
             
-        case 'employees':
-            require_once '../src/controllers/EmployeeController.php';
-            $controller = new EmployeeController();
-            $controller->index();
+        case 'visitantes':
+            require_once '../src/controllers/VisitantesNovoController.php';
+            $controller = new VisitantesNovoController();
+            $action = $_GET['action'] ?? 'index';
+            switch ($action) {
+                case 'new':
+                    $controller->create();
+                    break;
+                case 'save':
+                    $controller->save();
+                    break;
+                case 'edit':
+                    $controller->edit();
+                    break;
+                case 'update':
+                    $controller->update();
+                    break;
+                case 'entrada':
+                    $controller->registrarEntrada();
+                    break;
+                case 'saida':
+                    $controller->registrarSaida();
+                    break;
+                case 'delete':
+                    $controller->delete();
+                    break;
+                default:
+                    $controller->index();
+                    break;
+            }
             break;
             
-        case 'access':
-            require_once '../src/controllers/AccessController.php';
-            $controller = new AccessController();
-            $controller->index();
-            break;
-            
-        case 'reports':
-            require_once '../src/controllers/ReportController.php';
-            $controller = new ReportController();
-            $controller->index();
+        case 'prestadores-servico':
+            require_once '../src/controllers/PrestadoresServicoController.php';
+            $controller = new PrestadoresServicoController();
+            $action = $_GET['action'] ?? 'index';
+            switch ($action) {
+                case 'new':
+                    $controller->create();
+                    break;
+                case 'save':
+                    $controller->save();
+                    break;
+                case 'edit':
+                    $controller->edit();
+                    break;
+                case 'update':
+                    $controller->update();
+                    break;
+                case 'entrada':
+                    $controller->registrarEntrada();
+                    break;
+                case 'saida':
+                    $controller->registrarSaida();
+                    break;
+                case 'delete':
+                    $controller->delete();
+                    break;
+                default:
+                    $controller->index();
+                    break;
+            }
             break;
             
         default:

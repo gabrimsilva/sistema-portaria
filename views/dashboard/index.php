@@ -54,27 +54,21 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="/visitors" class="nav-link">
+                            <a href="/profissionais-renner" class="nav-link">
+                                <i class="nav-icon fas fa-user-tie"></i>
+                                <p>Profissionais Renner</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/visitantes" class="nav-link">
                                 <i class="nav-icon fas fa-users"></i>
                                 <p>Visitantes</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="/employees" class="nav-link">
-                                <i class="nav-icon fas fa-id-badge"></i>
-                                <p>Funcionários</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="/access" class="nav-link">
-                                <i class="nav-icon fas fa-door-open"></i>
-                                <p>Controle de Acesso</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="/reports" class="nav-link">
-                                <i class="nav-icon fas fa-chart-bar"></i>
-                                <p>Relatórios</p>
+                            <a href="/prestadores-servico" class="nav-link">
+                                <i class="nav-icon fas fa-tools"></i>
+                                <p>Prestador de Serviços</p>
                             </a>
                         </li>
                     </ul>

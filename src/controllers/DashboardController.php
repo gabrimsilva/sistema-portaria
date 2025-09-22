@@ -9,44 +9,125 @@ class DashboardController {
     
     public function index() {
         try {
-            // Get today's statistics
-            $today = date('Y-m-d');
+            // Estatísticas dos novos módulos
+            $totalProfissionais = $this->db->fetch("SELECT COUNT(*) as total FROM profissionais_renner")['total'] ?? 0;
+            $totalVisitantes = $this->db->fetch("SELECT COUNT(*) as total FROM visitantes_novo")['total'] ?? 0;
+            $totalPrestadores = $this->db->fetch("SELECT COUNT(*) as total FROM prestadores_servico")['total'] ?? 0;
             
-            $visitorsResult = $this->db->fetch("SELECT COUNT(*) as count FROM visitantes WHERE DATE(data_cadastro) = ?", [$today]);
-            $employeesResult = $this->db->fetch("SELECT COUNT(*) as count FROM funcionarios WHERE ativo = TRUE");
-            $entriesResult = $this->db->fetch("SELECT COUNT(*) as count FROM acessos WHERE DATE(data_hora) = ? AND tipo = 'entrada'", [$today]);
-            $exitsResult = $this->db->fetch("SELECT COUNT(*) as count FROM acessos WHERE DATE(data_hora) = ? AND tipo = 'saida'", [$today]);
+            // Visitantes ativos na empresa
+            $visitantesAtivos = $this->db->fetch("
+                SELECT COUNT(*) as total 
+                FROM visitantes_novo 
+                WHERE hora_entrada IS NOT NULL AND hora_saida IS NULL
+            ")['total'] ?? 0;
             
+            // Prestadores trabalhando
+            $prestadoresTrabalhando = $this->db->fetch("
+                SELECT COUNT(*) as total 
+                FROM prestadores_servico 
+                WHERE entrada IS NOT NULL AND saida IS NULL
+            ")['total'] ?? 0;
+            
+            // Profissionais que saíram hoje e ainda não retornaram
+            $profissionaisForaHoje = $this->db->fetch("
+                SELECT COUNT(*) as total 
+                FROM profissionais_renner 
+                WHERE DATE(saida) = CURRENT_DATE AND retorno IS NULL
+            ")['total'] ?? 0;
+            
+            // Estatísticas compiladas
             $stats = [
-                'visitors_today' => $visitorsResult['count'] ?? 0,
-                'employees_active' => $employeesResult['count'] ?? 0,
-                'entries_today' => $entriesResult['count'] ?? 0,
-                'exits_today' => $exitsResult['count'] ?? 0
+                'total_profissionais' => $totalProfissionais,
+                'total_visitantes' => $totalVisitantes,
+                'total_prestadores' => $totalPrestadores,
+                'visitantes_ativos' => $visitantesAtivos,
+                'prestadores_trabalhando' => $prestadoresTrabalhando,
+                'profissionais_fora' => $profissionaisForaHoje
             ];
             
-            // Recent access logs
-            $recentAccess = $this->db->fetchAll("
-                SELECT a.*, 
-                       f.nome as funcionario_nome, f.foto as funcionario_foto,
-                       v.nome as visitante_nome, v.foto as visitante_foto
-                FROM acessos a
-                LEFT JOIN funcionarios f ON a.funcionario_id = f.id
-                LEFT JOIN visitantes v ON a.visitante_id = v.id
-                ORDER BY a.data_hora DESC
-                LIMIT 10
-            ") ?? [];
+            // Movimentação de hoje para gráficos
+            $movimentacaoHoje = $this->getMovimentacaoHoje();
+            $setoresMaisMovimentados = $this->getSetoresMaisMovimentados();
             
+            include '../views/dashboard/index.php';
         } catch (Exception $e) {
-            // Initialize with default values if database queries fail
+            error_log("Dashboard error: " . $e->getMessage());
             $stats = [
-                'visitors_today' => 0,
-                'employees_active' => 0,
-                'entries_today' => 0,
-                'exits_today' => 0
+                'total_profissionais' => 0,
+                'total_visitantes' => 0,
+                'total_prestadores' => 0,
+                'visitantes_ativos' => 0,
+                'prestadores_trabalhando' => 0,
+                'profissionais_fora' => 0
             ];
-            $recentAccess = [];
+            $movimentacaoHoje = ['visitantes' => 0, 'prestadores' => 0, 'profissionais' => 0];
+            $setoresMaisMovimentados = [];
+            include '../views/dashboard/index.php';
         }
-        
-        include '../views/dashboard/index.php';
+    }
+    
+    private function getMovimentacaoHoje() {
+        try {
+            // Entradas de visitantes hoje
+            $visitantesHoje = $this->db->fetch("
+                SELECT COUNT(*) as total 
+                FROM visitantes_novo 
+                WHERE DATE(hora_entrada) = CURRENT_DATE
+            ")['total'] ?? 0;
+            
+            // Entradas de prestadores hoje
+            $prestadoresHoje = $this->db->fetch("
+                SELECT COUNT(*) as total 
+                FROM prestadores_servico 
+                WHERE DATE(entrada) = CURRENT_DATE
+            ")['total'] ?? 0;
+            
+            // Entradas de profissionais hoje (data_entrada)
+            $profissionaisHoje = $this->db->fetch("
+                SELECT COUNT(*) as total 
+                FROM profissionais_renner 
+                WHERE DATE(data_entrada) = CURRENT_DATE
+            ")['total'] ?? 0;
+            
+            return [
+                'visitantes' => $visitantesHoje,
+                'prestadores' => $prestadoresHoje,
+                'profissionais' => $profissionaisHoje
+            ];
+        } catch (Exception $e) {
+            return ['visitantes' => 0, 'prestadores' => 0, 'profissionais' => 0];
+        }
+    }
+    
+    private function getSetoresMaisMovimentados() {
+        try {
+            // Movimentação por setor nos últimos 7 dias
+            $query = "
+                SELECT setor, SUM(total) as total_movimentacao
+                FROM (
+                    (SELECT setor, COUNT(*) as total
+                     FROM visitantes_novo 
+                     WHERE setor IS NOT NULL AND hora_entrada >= CURRENT_DATE - INTERVAL '7 days'
+                     GROUP BY setor)
+                    UNION ALL
+                    (SELECT setor, COUNT(*) as total
+                     FROM prestadores_servico 
+                     WHERE setor IS NOT NULL AND entrada >= CURRENT_DATE - INTERVAL '7 days'
+                     GROUP BY setor)
+                    UNION ALL
+                    (SELECT setor, COUNT(*) as total
+                     FROM profissionais_renner 
+                     WHERE setor IS NOT NULL AND data_entrada >= CURRENT_DATE - INTERVAL '7 days'
+                     GROUP BY setor)
+                ) AS movimentacao
+                GROUP BY setor
+                ORDER BY total_movimentacao DESC 
+                LIMIT 10
+            ";
+            
+            return $this->db->fetchAll($query) ?? [];
+        } catch (Exception $e) {
+            return [];
+        }
     }
 }

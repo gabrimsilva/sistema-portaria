@@ -530,8 +530,15 @@
                         showToast(response.message || 'Erro ao cadastrar visitante', 'error');
                     }
                 },
-                error: function() {
-                    showToast('Erro na comunicação com o servidor', 'error');
+                error: function(xhr, status, error) {
+                    if (xhr.status === 401) {
+                        showToast('Sessão expirada. Você será redirecionado para o login.', 'error');
+                        setTimeout(() => {
+                            window.location.href = '/login';
+                        }, 2000);
+                    } else {
+                        showToast('Erro na comunicação com o servidor', 'error');
+                    }
                 },
                 complete: function() {
                     $('#btnSalvarVisitante').prop('disabled', false).html('<i class="fas fa-save"></i> Cadastrar Visitante');
@@ -566,8 +573,15 @@
                         showToast(response.message || 'Erro ao cadastrar profissional', 'error');
                     }
                 },
-                error: function() {
-                    showToast('Erro na comunicação com o servidor', 'error');
+                error: function(xhr, status, error) {
+                    if (xhr.status === 401) {
+                        showToast('Sessão expirada. Você será redirecionado para o login.', 'error');
+                        setTimeout(() => {
+                            window.location.href = '/login';
+                        }, 2000);
+                    } else {
+                        showToast('Erro na comunicação com o servidor', 'error');
+                    }
                 },
                 complete: function() {
                     $('#btnSalvarProfissional').prop('disabled', false).html('<i class="fas fa-save"></i> Cadastrar Profissional');
@@ -602,8 +616,15 @@
                         showToast(response.message || 'Erro ao cadastrar prestador', 'error');
                     }
                 },
-                error: function() {
-                    showToast('Erro na comunicação com o servidor', 'error');
+                error: function(xhr, status, error) {
+                    if (xhr.status === 401) {
+                        showToast('Sessão expirada. Você será redirecionado para o login.', 'error');
+                        setTimeout(() => {
+                            window.location.href = '/login';
+                        }, 2000);
+                    } else {
+                        showToast('Erro na comunicação com o servidor', 'error');
+                    }
                 },
                 complete: function() {
                     $('#btnSalvarPrestador').prop('disabled', false).html('<i class="fas fa-save"></i> Cadastrar Prestador');

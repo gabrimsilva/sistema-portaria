@@ -20,8 +20,31 @@ if (empty($path)) {
 $isAuthenticated = isset($_SESSION['user_id']);
 $publicRoutes = ['login', 'assets'];
 
-// Redirect to login if not authenticated and not accessing public routes
+// Handle authentication for non-public routes
 if (!$isAuthenticated && !in_array(explode('/', $path)[0], $publicRoutes)) {
+    // Check if this is an AJAX request
+    $isAjaxRequest = (
+        !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+        strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest'
+    ) || (
+        !empty($_SERVER['HTTP_ACCEPT']) && 
+        strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false
+    ) || (
+        isset($_GET['action']) && strpos($_GET['action'], 'ajax') !== false
+    );
+    
+    if ($isAjaxRequest) {
+        http_response_code(401);
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => false, 
+            'message' => 'Sessão expirada. Faça login novamente.',
+            'redirect' => '/login'
+        ]);
+        exit;
+    }
+    
+    // Regular redirect for non-AJAX requests
     header('Location: /login');
     exit;
 }
@@ -61,6 +84,9 @@ try {
                 case 'save':
                     $controller->save();
                     break;
+                case 'save_ajax':
+                    $controller->saveAjax();
+                    break;
                 case 'edit':
                     $controller->edit();
                     break;
@@ -86,6 +112,9 @@ try {
                     break;
                 case 'save':
                     $controller->save();
+                    break;
+                case 'save_ajax':
+                    $controller->saveAjax();
                     break;
                 case 'edit':
                     $controller->edit();
@@ -118,6 +147,9 @@ try {
                     break;
                 case 'save':
                     $controller->save();
+                    break;
+                case 'save_ajax':
+                    $controller->saveAjax();
                     break;
                 case 'edit':
                     $controller->edit();

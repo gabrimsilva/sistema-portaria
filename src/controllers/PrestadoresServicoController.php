@@ -71,12 +71,17 @@ class PrestadoresServicoController {
                     throw new Exception("Nome é obrigatório");
                 }
                 
+                // Se não foi especificada hora de entrada, registra automaticamente a hora atual
+                if (empty($entrada)) {
+                    $entrada = date('Y-m-d H:i:s');
+                }
+                
                 $this->db->query("
                     INSERT INTO prestadores_servico (nome, cpf, empresa, setor, observacao, entrada, saida)
                     VALUES (?, ?, ?, ?, ?, ?, ?)
                 ", [
                     $nome, $cpf, $empresa, $setor, $observacao,
-                    $entrada ?: null,
+                    $entrada,
                     $saida ?: null
                 ]);
                 

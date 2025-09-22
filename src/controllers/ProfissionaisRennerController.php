@@ -62,12 +62,17 @@ class ProfissionaisRennerController {
                     throw new Exception("Nome é obrigatório");
                 }
                 
+                // Se não foi especificada data de entrada, registra automaticamente a data/hora atual
+                if (empty($data_entrada)) {
+                    $data_entrada = date('Y-m-d H:i:s');
+                }
+                
                 $this->db->query("
                     INSERT INTO profissionais_renner (nome, data_entrada, saida, retorno, saida_final, setor)
                     VALUES (?, ?, ?, ?, ?, ?)
                 ", [
                     $nome,
-                    $data_entrada ?: null,
+                    $data_entrada,
                     $saida ?: null,
                     $retorno ?: null,
                     $saida_final ?: null,

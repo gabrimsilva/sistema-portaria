@@ -71,12 +71,17 @@ class VisitantesNovoController {
                     throw new Exception("Nome é obrigatório");
                 }
                 
+                // Se não foi especificada hora de entrada, registra automaticamente a hora atual
+                if (empty($hora_entrada)) {
+                    $hora_entrada = date('Y-m-d H:i:s');
+                }
+                
                 $this->db->query("
                     INSERT INTO visitantes_novo (nome, cpf, empresa, funcionario_responsavel, setor, hora_entrada, hora_saida)
                     VALUES (?, ?, ?, ?, ?, ?, ?)
                 ", [
                     $nome, $cpf, $empresa, $funcionario_responsavel, $setor,
-                    $hora_entrada ?: null,
+                    $hora_entrada,
                     $hora_saida ?: null
                 ]);
                 

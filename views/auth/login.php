@@ -17,7 +17,7 @@
             <div class="card-body">
                 <p class="login-box-msg">Faça login para iniciar sua sessão</p>
                 
-                <?php if (isset($error)): ?>
+                <?php if (isset($error) && !empty($error)): ?>
                     <div class="alert alert-danger alert-dismissible">
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                         <?= htmlspecialchars($error) ?>

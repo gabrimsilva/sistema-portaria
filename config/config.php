@@ -36,5 +36,6 @@ spl_autoload_register(function ($className) {
     }
 });
 
-// Include database configuration
+// Include database and CSRF configuration
 require_once BASE_PATH . '/config/database.php';
+require_once BASE_PATH . '/config/csrf.php';

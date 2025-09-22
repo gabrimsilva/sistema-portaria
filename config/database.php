@@ -33,6 +33,7 @@ class Database {
             // Handle query parameters (SSL, etc.)
             $this->queryParams = '';
             if (isset($urlParts['query'])) {
+                $query = [];
                 parse_str($urlParts['query'], $query);
                 $supportedParams = ['sslmode', 'sslcert', 'sslkey', 'sslrootcert'];
                 $params = [];

@@ -1,5 +1,8 @@
 <?php
 
+// Configurar timezone para São Paulo, Brasil
+date_default_timezone_set('America/Sao_Paulo');
+
 class Database {
     private $host;
     private $dbname;

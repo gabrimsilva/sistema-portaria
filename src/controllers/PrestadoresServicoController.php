@@ -64,6 +64,7 @@ class PrestadoresServicoController {
                 $empresa = $_POST['empresa'] ?? '';
                 $setor = $_POST['setor'] ?? '';
                 $observacao = $_POST['observacao'] ?? '';
+                $placa_veiculo = $_POST['placa_veiculo'] ?? '';
                 $entrada = $_POST['entrada'] ?? null;
                 $saida = $_POST['saida'] ?? null;
                 
@@ -77,10 +78,10 @@ class PrestadoresServicoController {
                 }
                 
                 $this->db->query("
-                    INSERT INTO prestadores_servico (nome, cpf, empresa, setor, observacao, entrada, saida)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO prestadores_servico (nome, cpf, empresa, setor, observacao, placa_veiculo, entrada, saida)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 ", [
-                    $nome, $cpf, $empresa, $setor, $observacao,
+                    $nome, $cpf, $empresa, $setor, $observacao, $placa_veiculo,
                     $entrada,
                     $saida ?: null
                 ]);
@@ -120,6 +121,7 @@ class PrestadoresServicoController {
                 $empresa = $_POST['empresa'] ?? '';
                 $setor = $_POST['setor'] ?? '';
                 $observacao = $_POST['observacao'] ?? '';
+                $placa_veiculo = $_POST['placa_veiculo'] ?? '';
                 $entrada = $_POST['entrada'] ?? null;
                 $saida = $_POST['saida'] ?? null;
                 
@@ -129,11 +131,11 @@ class PrestadoresServicoController {
                 
                 $this->db->query("
                     UPDATE prestadores_servico 
-                    SET nome = ?, cpf = ?, empresa = ?, setor = ?, observacao = ?, 
+                    SET nome = ?, cpf = ?, empresa = ?, setor = ?, observacao = ?, placa_veiculo = ?, 
                         entrada = ?, saida = ?, updated_at = CURRENT_TIMESTAMP
                     WHERE id = ?
                 ", [
-                    $nome, $cpf, $empresa, $setor, $observacao,
+                    $nome, $cpf, $empresa, $setor, $observacao, $placa_veiculo,
                     $entrada ?: null,
                     $saida ?: null,
                     $id
@@ -264,6 +266,7 @@ class PrestadoresServicoController {
                 $empresa = trim($_POST['empresa'] ?? '');
                 $setor = trim($_POST['setor'] ?? '');
                 $observacao = trim($_POST['observacao'] ?? '');
+                $placa_veiculo = trim($_POST['placa_veiculo'] ?? '');
                 $saida = trim($_POST['saida'] ?? '');
                 
                 if (empty($id) || empty($nome)) {
@@ -288,9 +291,9 @@ class PrestadoresServicoController {
                 
                 $this->db->query("
                     UPDATE prestadores_servico 
-                    SET nome = ?, cpf = ?, empresa = ?, setor = ?, observacao = ?, saida = ?
+                    SET nome = ?, cpf = ?, empresa = ?, setor = ?, observacao = ?, placa_veiculo = ?, saida = ?
                     WHERE id = ?
-                ", [$nome, $cpf, $empresa, $setor, $observacao, $saida_parsed, $id]);
+                ", [$nome, $cpf, $empresa, $setor, $observacao, $placa_veiculo, $saida_parsed, $id]);
                 
                 echo json_encode([
                     'success' => true, 

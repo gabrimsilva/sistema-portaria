@@ -154,17 +154,17 @@
                                 <div class="card-body">
                                     <div class="row">
                                         <div class="col-md-4 mb-2">
-                                            <button type="button" class="btn btn-success btn-block" data-toggle="modal" data-target="#modalVisitante">
+                                            <button type="button" class="btn btn-success btn-block" data-bs-toggle="modal" data-bs-target="#modalVisitante">
                                                 <i class="fas fa-users"></i> Registrar Visitante
                                             </button>
                                         </div>
                                         <div class="col-md-4 mb-2">
-                                            <button type="button" class="btn btn-primary btn-block" data-toggle="modal" data-target="#modalProfissional">
+                                            <button type="button" class="btn btn-primary btn-block" data-bs-toggle="modal" data-bs-target="#modalProfissional">
                                                 <i class="fas fa-user-tie"></i> Registrar Profissional Renner
                                             </button>
                                         </div>
                                         <div class="col-md-4 mb-2">
-                                            <button type="button" class="btn btn-warning btn-block" data-toggle="modal" data-target="#modalPrestador">
+                                            <button type="button" class="btn btn-warning btn-block" data-bs-toggle="modal" data-bs-target="#modalPrestador">
                                                 <i class="fas fa-tools"></i> Registrar Prestador de Serviço
                                             </button>
                                         </div>
@@ -725,7 +725,8 @@
                 success: function(response) {
                     if (response.success) {
                         showToast('Visitante cadastrado com sucesso!');
-                        $('#modalVisitante').modal('hide');
+                        const modalVisitante = bootstrap.Modal.getInstance(document.getElementById('modalVisitante'));
+                        modalVisitante.hide();
                         limparFormulario('formVisitante');
                         adicionarPessoaNaLista(response.data);
                     } else {
@@ -768,7 +769,8 @@
                 success: function(response) {
                     if (response.success) {
                         showToast('Profissional cadastrado com sucesso!');
-                        $('#modalProfissional').modal('hide');
+                        const modalProfissional = bootstrap.Modal.getInstance(document.getElementById('modalProfissional'));
+                        modalProfissional.hide();
                         limparFormulario('formProfissional');
                         adicionarPessoaNaLista(response.data);
                     } else {
@@ -811,7 +813,8 @@
                 success: function(response) {
                     if (response.success) {
                         showToast('Prestador cadastrado com sucesso!');
-                        $('#modalPrestador').modal('hide');
+                        const modalPrestador = bootstrap.Modal.getInstance(document.getElementById('modalPrestador'));
+                        modalPrestador.hide();
                         limparFormulario('formPrestador');
                         adicionarPessoaNaLista(response.data);
                     } else {
@@ -1039,7 +1042,9 @@
             }
             
             // Abrir modal
-            $('#modalEditar').modal('show');
+            const modalElement = document.getElementById('modalEditar');
+            const modal = new bootstrap.Modal(modalElement);
+            modal.show();
         });
 
         // Salvar edição (apenas editar dados, sem saída)
@@ -1119,7 +1124,8 @@
                 success: function(response) {
                     if (response.success) {
                         showToast('Registro atualizado com sucesso!');
-                        $('#modalEditar').modal('hide');
+                        const modalEditar = bootstrap.Modal.getInstance(document.getElementById('modalEditar'));
+                        modalEditar.hide();
                         // Recarregar a página para atualizar a lista
                         setTimeout(() => {
                             location.reload();
@@ -1184,7 +1190,8 @@
                 success: function(response) {
                     if (response.success) {
                         showToast(mensagemSucesso);
-                        $('#modalEditar').modal('hide');
+                        const modalEditar = bootstrap.Modal.getInstance(document.getElementById('modalEditar'));
+                        modalEditar.hide();
                         // Recarregar a página para atualizar a lista
                         setTimeout(() => {
                             location.reload();

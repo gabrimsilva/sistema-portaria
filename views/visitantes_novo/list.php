@@ -414,6 +414,13 @@
                     },
                     error: function() {
                         $('#edit_hora_saida').val('');
+                    },
+                    complete: function() {
+                        btn.removeClass('loading');
+                        // Abrir modal após carregar dados
+                        const modalElement = document.getElementById('modalEditar');
+                        const modal = new bootstrap.Modal(modalElement);
+                        modal.show();
                     }
                 });
             } else if (tipo === 'Prestador') {
@@ -438,40 +445,19 @@
                     },
                     complete: function() {
                         btn.removeClass('loading');
-                    }
-                });
-            } else if (tipo === 'Prestador') {
-                $('#campo_observacao').show();
-                $('#edit_observacao').val('');
-                
-                $.ajax({
-                    url: `/prestadores-servico?action=get_data&id=${id}`,
-                    method: 'GET',
-                    dataType: 'json',
-                    success: function(response) {
-                        if (response.success && response.data.saida) {
-                            const saidaFormatada = response.data.saida.replace(' ', 'T').slice(0, 16);
-                            $('#edit_hora_saida').val(saidaFormatada);
-                        }
-                        if (response.data.observacao) {
-                            $('#edit_observacao').val(response.data.observacao);
-                        }
-                    },
-                    error: function() {
-                        $('#edit_hora_saida').val('');
-                    },
-                    complete: function() {
-                        btn.removeClass('loading');
+                        // Abrir modal após carregar dados
+                        const modalElement = document.getElementById('modalEditar');
+                        const modal = new bootstrap.Modal(modalElement);
+                        modal.show();
                     }
                 });
             } else {
                 btn.removeClass('loading');
+                // Abrir modal diretamente para outros tipos
+                const modalElement = document.getElementById('modalEditar');
+                const modal = new bootstrap.Modal(modalElement);
+                modal.show();
             }
-            
-            // Abrir o modal usando Bootstrap 5
-            const modalElement = document.getElementById('modalEditar');
-            const modal = new bootstrap.Modal(modalElement);
-            modal.show();
         });
 
         // Salvar edições

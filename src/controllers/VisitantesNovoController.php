@@ -165,15 +165,46 @@ class VisitantesNovoController {
     
     public function registrarSaida() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            CSRFProtection::verifyRequest();
-            $id = $_POST['id'] ?? null;
+            header('Content-Type: application/json');
             
-            if ($id) {
-                $this->db->query("UPDATE visitantes_novo SET hora_saida = CURRENT_TIMESTAMP WHERE id = ?", [$id]);
+            try {
+                CSRFProtection::verifyRequest();
+                $id = trim($_GET['id'] ?? $_POST['id'] ?? '');
+                
+                if (empty($id)) {
+                    echo json_encode(['success' => false, 'message' => 'ID é obrigatório']);
+                    return;
+                }
+                
+                // Buscar o visitante
+                $visitante = $this->db->fetch("SELECT * FROM visitantes_novo WHERE id = ?", [$id]);
+                
+                if (!$visitante) {
+                    echo json_encode(['success' => false, 'message' => 'Visitante não encontrado']);
+                    return;
+                }
+                
+                // Registrar saída
+                $this->db->query("
+                    UPDATE visitantes_novo 
+                    SET hora_saida = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+                    WHERE id = ?
+                ", [$id]);
+                
+                echo json_encode([
+                    'success' => true, 
+                    'message' => 'Saída registrada com sucesso',
+                    'data' => [
+                        'id' => $id,
+                        'nome' => $visitante['nome']
+                    ]
+                ]);
+            } catch (Exception $e) {
+                echo json_encode(['success' => false, 'message' => $e->getMessage()]);
             }
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Método não permitido']);
         }
-        
-        header('Location: /visitantes');
         exit;
     }
     

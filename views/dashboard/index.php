@@ -535,25 +535,23 @@
                             <textarea class="form-control" id="edit_observacao" name="observacao" rows="3"></textarea>
                         </div>
                         
-                        <!-- Campo de Saída -->
-                        <div id="campo_saida" class="form-group" style="display: none;">
+                        <!-- Botões de Saída -->
+                        <div id="botoes_saida" class="form-group" style="display: none;">
                             <div class="card bg-danger text-white">
                                 <div class="card-header">
                                     <h6 class="card-title mb-0">
                                         <i class="fas fa-sign-out-alt"></i> Registrar Saída
                                     </h6>
                                 </div>
-                                <div class="card-body">
-                                    <div class="form-check">
-                                        <input type="checkbox" class="form-check-input" id="marcar_saida" name="marcar_saida">
-                                        <label class="form-check-label" for="marcar_saida">
-                                            <span id="texto_saida">Marcar saída da empresa</span>
-                                        </label>
-                                    </div>
-                                    <small class="text-light">
+                                <div class="card-body text-center">
+                                    <p class="mb-3">
                                         <i class="fas fa-exclamation-triangle"></i> 
-                                        Esta ação registrará a saída definitiva da pessoa da empresa.
-                                    </small>
+                                        Esta ação registrará a saída da pessoa da empresa.
+                                    </p>
+                                    <button type="button" class="btn btn-light btn-lg" id="btnRegistrarSaida">
+                                        <i class="fas fa-sign-out-alt text-danger"></i> 
+                                        <span id="texto_saida">Registrar Saída</span>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -907,36 +905,33 @@
             $('#edit_setor').val(setor);
             
             // Mostrar/ocultar campos específicos baseado no tipo
-            $('#campo_funcionario_responsavel, #campo_observacao, #campo_saida').hide();
-            $('#marcar_saida').prop('checked', false);
+            $('#campo_funcionario_responsavel, #campo_observacao, #botoes_saida').hide();
             
             if (tipo === 'Visitante') {
                 $('#campo_funcionario_responsavel').show();
-                $('#campo_saida').show();
-                $('#texto_saida').text('Marcar saída do visitante');
+                $('#botoes_saida').show();
+                $('#texto_saida').text('Registrar Saída do Visitante');
                 // Buscar dados específicos do visitante se necessário
                 $('#edit_funcionario_responsavel').val('');
             } else if (tipo === 'Prestador') {
                 $('#campo_observacao').show();
-                $('#campo_saida').show();
-                $('#texto_saida').text('Marcar saída do prestador de serviço');
+                $('#botoes_saida').show();
+                $('#texto_saida').text('Registrar Saída do Prestador');
                 // Buscar dados específicos do prestador se necessário  
                 $('#edit_observacao').val('');
             } else if (tipo === 'Profissional Renner') {
-                $('#campo_saida').show();
-                $('#texto_saida').text('Marcar saída final do profissional Renner');
+                $('#botoes_saida').show();
+                $('#texto_saida').text('Registrar Saída Final');
             }
             
             // Abrir modal
             $('#modalEditar').modal('show');
         });
 
-        // Salvar edição
+        // Salvar edição (apenas editar dados, sem saída)
         $('#btnSalvarEdicao').on('click', function() {
             const nome = $('#edit_nome').val().trim();
             const tipoOriginal = $('#edit_tipo_original').val();
-            const id = $('#edit_id').val();
-            const marcarSaida = $('#marcar_saida').is(':checked');
             
             if (!nome) {
                 showToast('Nome é obrigatório', 'error');
@@ -945,124 +940,128 @@
             
             $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Salvando...');
             
-            // Se marcar saída está ativo, chama endpoint de saída
-            if (marcarSaida) {
-                let endpointSaida = '';
-                let mensagemSucesso = '';
-                
-                switch (tipoOriginal) {
-                    case 'Visitante':
-                        endpointSaida = `/visitantes?action=registrar_saida&id=${id}`;
-                        mensagemSucesso = 'Saída do visitante registrada com sucesso!';
-                        break;
-                    case 'Profissional Renner':
-                        endpointSaida = `/profissionais-renner?action=saida&id=${id}`;
-                        mensagemSucesso = 'Saída final do profissional registrada com sucesso!';
-                        break;
-                    case 'Prestador':
-                        endpointSaida = `/prestadores-servico?action=saida&id=${id}`;
-                        mensagemSucesso = 'Saída do prestador registrada com sucesso!';
-                        break;
-                    default:
-                        showToast('Tipo de registro inválido', 'error');
-                        $(this).prop('disabled', false).html('<i class="fas fa-save"></i> Salvar Alterações');
-                        return;
-                }
-                
-                $.ajax({
-                    url: endpointSaida,
-                    method: 'POST',
-                    data: {
-                        csrf_token: $('meta[name="csrf-token"]').attr('content') || '<?= CSRFProtection::generateToken() ?>'
-                    },
-                    dataType: 'json',
-                    success: function(response) {
-                        if (response.success) {
-                            showToast(mensagemSucesso);
-                            $('#modalEditar').modal('hide');
-                            // Recarregar a página para atualizar a lista
-                            setTimeout(() => {
-                                location.reload();
-                            }, 1500);
-                        } else {
-                            showToast(response.message || 'Erro ao registrar saída', 'error');
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        if (xhr.status === 401) {
-                            showToast('Sessão expirada. Você será redirecionado para o login.', 'error');
-                            setTimeout(() => {
-                                window.location.href = '/login';
-                            }, 2000);
-                        } else {
-                            showToast('Erro na comunicação com o servidor', 'error');
-                        }
-                    },
-                    complete: function() {
-                        $('#btnSalvarEdicao').prop('disabled', false).html('<i class="fas fa-save"></i> Salvar Alterações');
-                    }
-                });
-            } else {
-                // Lógica normal de atualização de dados
-                const formData = $('#formEditar').serialize();
-                let endpoint = '';
-                
-                // Determinar endpoint baseado no tipo
-                switch (tipoOriginal) {
-                    case 'Visitante':
-                        endpoint = '/visitantes?action=update_ajax';
-                        break;
-                    case 'Profissional Renner':
-                        endpoint = '/profissionais-renner?action=update_ajax';
-                        break;
-                    case 'Prestador':
-                        endpoint = '/prestadores-servico?action=update_ajax';
-                        break;
-                    default:
-                        showToast('Tipo de registro inválido', 'error');
-                        $(this).prop('disabled', false).html('<i class="fas fa-save"></i> Salvar Alterações');
-                        return;
-                }
-                
-                $.ajax({
-                    url: endpoint,
-                    method: 'POST',
-                    data: formData,
-                    dataType: 'json',
-                    success: function(response) {
-                        if (response.success) {
-                            showToast('Registro atualizado com sucesso!');
-                            $('#modalEditar').modal('hide');
-                            // Recarregar a página para atualizar a lista
-                            setTimeout(() => {
-                                location.reload();
-                            }, 1500);
-                        } else {
-                            showToast(response.message || 'Erro ao atualizar registro', 'error');
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        if (xhr.status === 401) {
-                            showToast('Sessão expirada. Você será redirecionado para o login.', 'error');
-                            setTimeout(() => {
-                                window.location.href = '/login';
-                            }, 2000);
-                        } else {
-                            showToast('Erro na comunicação com o servidor', 'error');
-                        }
-                    },
-                    complete: function() {
-                        $('#btnSalvarEdicao').prop('disabled', false).html('<i class="fas fa-save"></i> Salvar Alterações');
-                    }
-                });
+            const formData = $('#formEditar').serialize();
+            let endpoint = '';
+            
+            // Determinar endpoint baseado no tipo
+            switch (tipoOriginal) {
+                case 'Visitante':
+                    endpoint = '/visitantes?action=update_ajax';
+                    break;
+                case 'Profissional Renner':
+                    endpoint = '/profissionais-renner?action=update_ajax';
+                    break;
+                case 'Prestador':
+                    endpoint = '/prestadores-servico?action=update_ajax';
+                    break;
+                default:
+                    showToast('Tipo de registro inválido', 'error');
+                    $(this).prop('disabled', false).html('<i class="fas fa-save"></i> Salvar Alterações');
+                    return;
             }
+            
+            $.ajax({
+                url: endpoint,
+                method: 'POST',
+                data: formData,
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        showToast('Registro atualizado com sucesso!');
+                        $('#modalEditar').modal('hide');
+                        // Recarregar a página para atualizar a lista
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        showToast(response.message || 'Erro ao atualizar registro', 'error');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    if (xhr.status === 401) {
+                        showToast('Sessão expirada. Você será redirecionado para o login.', 'error');
+                        setTimeout(() => {
+                            window.location.href = '/login';
+                        }, 2000);
+                    } else {
+                        showToast('Erro na comunicação com o servidor', 'error');
+                    }
+                },
+                complete: function() {
+                    $('#btnSalvarEdicao').prop('disabled', false).html('<i class="fas fa-save"></i> Salvar Alterações');
+                }
+            });
+        });
+
+        // Handler do botão de registrar saída
+        $('#btnRegistrarSaida').on('click', function() {
+            const tipoOriginal = $('#edit_tipo_original').val();
+            const id = $('#edit_id').val();
+            const nome = $('#edit_nome').val();
+            
+            $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Processando...');
+            
+            let endpointSaida = '';
+            let mensagemSucesso = '';
+            
+            switch (tipoOriginal) {
+                case 'Visitante':
+                    endpointSaida = `/visitantes?action=registrar_saida&id=${id}`;
+                    mensagemSucesso = 'Saída do visitante registrada com sucesso!';
+                    break;
+                case 'Profissional Renner':
+                    endpointSaida = `/profissionais-renner?action=saida&id=${id}`;
+                    mensagemSucesso = 'Saída final do profissional registrada com sucesso!';
+                    break;
+                case 'Prestador':
+                    endpointSaida = `/prestadores-servico?action=saida&id=${id}`;
+                    mensagemSucesso = 'Saída do prestador registrada com sucesso!';
+                    break;
+                default:
+                    showToast('Tipo de registro inválido', 'error');
+                    $(this).prop('disabled', false).html('<i class="fas fa-sign-out-alt text-danger"></i> <span id="texto_saida">Registrar Saída</span>');
+                    return;
+            }
+            
+            $.ajax({
+                url: endpointSaida,
+                method: 'POST',
+                data: {
+                    csrf_token: $('meta[name="csrf-token"]').attr('content') || '<?= CSRFProtection::generateToken() ?>'
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        showToast(mensagemSucesso);
+                        $('#modalEditar').modal('hide');
+                        // Recarregar a página para atualizar a lista
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        showToast(response.message || 'Erro ao registrar saída', 'error');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    if (xhr.status === 401) {
+                        showToast('Sessão expirada. Você será redirecionado para o login.', 'error');
+                        setTimeout(() => {
+                            window.location.href = '/login';
+                        }, 2000);
+                    } else {
+                        showToast('Erro na comunicação com o servidor', 'error');
+                    }
+                },
+                complete: function() {
+                    $('#btnRegistrarSaida').prop('disabled', false).html('<i class="fas fa-sign-out-alt text-danger"></i> <span id="texto_saida">Registrar Saída</span>');
+                }
+            });
         });
 
         // Limpar formulário de edição ao fechar modal
         $('#modalEditar').on('hidden.bs.modal', function() {
             $('#formEditar')[0].reset();
-            $('#campo_funcionario_responsavel, #campo_observacao, #campo_saida').hide();
-            $('#marcar_saida').prop('checked', false);
+            $('#campo_funcionario_responsavel, #campo_observacao, #botoes_saida').hide();
         });
     });
     </script>

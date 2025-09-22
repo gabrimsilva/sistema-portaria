@@ -351,8 +351,16 @@
     <script>
     $(document).ready(function() {
         // Manipular clique do botão editar
-        $(document).on('click', '.btn-editar', function() {
+        $(document).on('click', '.btn-editar', function(e) {
+            e.preventDefault();
             const btn = $(this);
+            
+            // Evitar múltiplos cliques
+            if (btn.hasClass('loading')) {
+                return false;
+            }
+            btn.addClass('loading');
+            
             const id = btn.data('id');
             const tipo = btn.data('tipo');
             const nome = btn.data('nome');
@@ -429,9 +437,41 @@
                     },
                     error: function() {
                         $('#edit_hora_saida').val('');
+                    },
+                    complete: function() {
+                        btn.removeClass('loading');
                     }
                 });
+            } else if (tipo === 'Prestador') {
+                $('#campo_observacao').show();
+                $('#edit_observacao').val('');
+                
+                $.ajax({
+                    url: `/prestadores-servico?action=get_data&id=${id}`,
+                    method: 'GET',
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.success && response.data.saida) {
+                            const saidaFormatada = response.data.saida.replace(' ', 'T').slice(0, 16);
+                            $('#edit_hora_saida').val(saidaFormatada);
+                        }
+                        if (response.data.observacao) {
+                            $('#edit_observacao').val(response.data.observacao);
+                        }
+                    },
+                    error: function() {
+                        $('#edit_hora_saida').val('');
+                    },
+                    complete: function() {
+                        btn.removeClass('loading');
+                    }
+                });
+            } else {
+                btn.removeClass('loading');
             }
+            
+            // Abrir o modal
+            $('#modalEditar').modal('show');
         });
 
         // Salvar edições

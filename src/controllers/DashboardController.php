@@ -199,7 +199,7 @@ class DashboardController {
             
             // Visitantes na empresa (entraram mas não saíram)
             $visitantesAtivos = $this->db->fetchAll("
-                SELECT nome, cpf, empresa, setor, hora_entrada, 'Visitante' as tipo, id
+                SELECT nome, cpf, empresa, setor, hora_entrada, 'Visitante' as tipo, id, placa_veiculo
                 FROM visitantes_novo 
                 WHERE hora_entrada IS NOT NULL AND hora_saida IS NULL
                 ORDER BY hora_entrada DESC
@@ -207,7 +207,7 @@ class DashboardController {
             
             // Prestadores trabalhando (entraram mas não saíram)
             $prestadoresAtivos = $this->db->fetchAll("
-                SELECT nome, cpf, empresa, setor, entrada as hora_entrada, 'Prestador' as tipo, id
+                SELECT nome, cpf, empresa, setor, entrada as hora_entrada, 'Prestador' as tipo, id, placa_veiculo
                 FROM prestadores_servico 
                 WHERE entrada IS NOT NULL AND saida IS NULL
                 ORDER BY entrada DESC
@@ -217,7 +217,7 @@ class DashboardController {
             $profissionaisAtivos = $this->db->fetchAll("
                 SELECT nome, '' as cpf, '' as empresa, setor, 
                        COALESCE(retorno, data_entrada) as hora_entrada, 
-                       'Profissional Renner' as tipo, id
+                       'Profissional Renner' as tipo, id, '' as placa_veiculo
                 FROM profissionais_renner 
                 WHERE (data_entrada IS NOT NULL OR retorno IS NOT NULL) 
                   AND saida_final IS NULL

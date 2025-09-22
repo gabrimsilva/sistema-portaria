@@ -122,10 +122,10 @@
                             <!-- Filtros -->
                             <form method="GET" class="mb-3">
                                 <div class="row">
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <input type="text" name="search" class="form-control" placeholder="Buscar por nome ou setor" value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
                                     </div>
-                                    <div class="col-md-3">
+                                    <div class="col-md-2">
                                         <select name="setor" class="form-control">
                                             <option value="">Todos os setores</option>
                                             <?php foreach ($setores as $s): ?>
@@ -133,6 +133,13 @@
                                                     <?= htmlspecialchars($s['setor']) ?>
                                                 </option>
                                             <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <select name="status" class="form-control">
+                                            <option value="">Todos os status</option>
+                                            <option value="ativo" <?= ($_GET['status'] ?? '') === 'ativo' ? 'selected' : '' ?>>Ativo (na empresa)</option>
+                                            <option value="saiu" <?= ($_GET['status'] ?? '') === 'saiu' ? 'selected' : '' ?>>Saiu</option>
                                         </select>
                                     </div>
                                     <div class="col-md-2">

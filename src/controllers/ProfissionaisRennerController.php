@@ -18,6 +18,7 @@ class ProfissionaisRennerController {
     public function index() {
         $search = $_GET['search'] ?? '';
         $setor = $_GET['setor'] ?? '';
+        $status = $_GET['status'] ?? '';
         
         $query = "SELECT * FROM profissionais_renner WHERE 1=1";
         $params = [];
@@ -31,6 +32,14 @@ class ProfissionaisRennerController {
         if (!empty($setor)) {
             $query .= " AND setor = ?";
             $params[] = $setor;
+        }
+        
+        if ($status === 'ativo') {
+            // Ativos: têm data_entrada ou retorno, mas não saída_final ou saída_final não é de hoje
+            $query .= " AND (data_entrada IS NOT NULL OR retorno IS NOT NULL) AND (saida_final IS NULL OR DATE(saida_final) != CURRENT_DATE)";
+        } elseif ($status === 'saiu') {
+            // Saíram: têm saída_final registrada hoje
+            $query .= " AND saida_final IS NOT NULL AND DATE(saida_final) = CURRENT_DATE";
         }
         
         $query .= " ORDER BY created_at DESC";

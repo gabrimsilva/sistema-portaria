@@ -336,9 +336,19 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="form-group">
-                            <label for="visitante_funcionario_responsavel">Funcionário Responsável</label>
-                            <input type="text" class="form-control" id="visitante_funcionario_responsavel" name="funcionario_responsavel">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="visitante_funcionario_responsavel">Funcionário Responsável</label>
+                                    <input type="text" class="form-control" id="visitante_funcionario_responsavel" name="funcionario_responsavel">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="visitante_placa_veiculo">Placa de Veículo</label>
+                                    <input type="text" class="form-control" id="visitante_placa_veiculo" name="placa_veiculo" placeholder="ABC-1234">
+                                </div>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label for="visitante_hora_entrada">Hora de Entrada</label>
@@ -445,6 +455,10 @@
                                     <input type="text" class="form-control" id="prestador_setor" name="setor">
                                 </div>
                             </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="prestador_placa_veiculo">Placa de Veículo</label>
+                            <input type="text" class="form-control" id="prestador_placa_veiculo" name="placa_veiculo" placeholder="ABC-1234">
                         </div>
                         <div class="form-group">
                             <label for="prestador_observacao">Observações</label>

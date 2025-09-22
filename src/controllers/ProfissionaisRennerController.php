@@ -234,17 +234,33 @@ class ProfissionaisRennerController {
                 $id = trim($_POST['id'] ?? '');
                 $nome = trim($_POST['nome'] ?? '');
                 $setor = trim($_POST['setor'] ?? '');
+                $saida_final = trim($_POST['saida_final'] ?? '');
                 
                 if (empty($id) || empty($nome)) {
                     echo json_encode(['success' => false, 'message' => 'ID e Nome são obrigatórios']);
                     return;
                 }
                 
+                // Parse saida_final if provided
+                $saida_final_parsed = null;
+                if (!empty($saida_final)) {
+                    $date = DateTime::createFromFormat('Y-m-d\TH:i:s', $saida_final);
+                    if (!$date) {
+                        $date = DateTime::createFromFormat('Y-m-d\TH:i', $saida_final);
+                    }
+                    if ($date) {
+                        $saida_final_parsed = $date->format('Y-m-d H:i:s');
+                    } else {
+                        echo json_encode(['success' => false, 'message' => 'Formato de data/hora de saída inválido']);
+                        return;
+                    }
+                }
+                
                 $this->db->query("
                     UPDATE profissionais_renner 
-                    SET nome = ?, setor = ?
+                    SET nome = ?, setor = ?, saida_final = ?
                     WHERE id = ?
-                ", [$nome, $setor, $id]);
+                ", [$nome, $setor, $saida_final_parsed, $id]);
                 
                 echo json_encode([
                     'success' => true, 
@@ -252,7 +268,49 @@ class ProfissionaisRennerController {
                     'data' => [
                         'id' => $id,
                         'nome' => $nome,
-                        'setor' => $setor
+                        'setor' => $setor,
+                        'saida_final' => $saida_final_parsed
+                    ]
+                ]);
+            } catch (Exception $e) {
+                echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+            }
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Método não permitido']);
+        }
+        exit;
+    }
+    
+    public function getData() {
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            header('Content-Type: application/json');
+            
+            try {
+                $id = trim($_GET['id'] ?? '');
+                
+                if (empty($id)) {
+                    echo json_encode(['success' => false, 'message' => 'ID é obrigatório']);
+                    return;
+                }
+                
+                // Buscar o profissional
+                $profissional = $this->db->fetch("SELECT * FROM profissionais_renner WHERE id = ?", [$id]);
+                
+                if (!$profissional) {
+                    echo json_encode(['success' => false, 'message' => 'Profissional não encontrado']);
+                    return;
+                }
+                
+                echo json_encode([
+                    'success' => true, 
+                    'data' => [
+                        'id' => $profissional['id'],
+                        'nome' => $profissional['nome'],
+                        'setor' => $profissional['setor'],
+                        'data_entrada' => $profissional['data_entrada'],
+                        'saida' => $profissional['saida'],
+                        'retorno' => $profissional['retorno'],
+                        'saida_final' => $profissional['saida_final']
                     ]
                 ]);
             } catch (Exception $e) {

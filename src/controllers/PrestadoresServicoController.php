@@ -264,17 +264,33 @@ class PrestadoresServicoController {
                 $empresa = trim($_POST['empresa'] ?? '');
                 $setor = trim($_POST['setor'] ?? '');
                 $observacao = trim($_POST['observacao'] ?? '');
+                $saida = trim($_POST['saida'] ?? '');
                 
                 if (empty($id) || empty($nome)) {
                     echo json_encode(['success' => false, 'message' => 'ID e Nome são obrigatórios']);
                     return;
                 }
                 
+                // Parse saida if provided
+                $saida_parsed = null;
+                if (!empty($saida)) {
+                    $date = DateTime::createFromFormat('Y-m-d\TH:i:s', $saida);
+                    if (!$date) {
+                        $date = DateTime::createFromFormat('Y-m-d\TH:i', $saida);
+                    }
+                    if ($date) {
+                        $saida_parsed = $date->format('Y-m-d H:i:s');
+                    } else {
+                        echo json_encode(['success' => false, 'message' => 'Formato de data/hora de saída inválido']);
+                        return;
+                    }
+                }
+                
                 $this->db->query("
                     UPDATE prestadores_servico 
-                    SET nome = ?, cpf = ?, empresa = ?, setor = ?, observacao = ?
+                    SET nome = ?, cpf = ?, empresa = ?, setor = ?, observacao = ?, saida = ?
                     WHERE id = ?
-                ", [$nome, $cpf, $empresa, $setor, $observacao, $id]);
+                ", [$nome, $cpf, $empresa, $setor, $observacao, $saida_parsed, $id]);
                 
                 echo json_encode([
                     'success' => true, 
@@ -284,7 +300,50 @@ class PrestadoresServicoController {
                         'nome' => $nome,
                         'cpf' => $cpf,
                         'empresa' => $empresa,
-                        'setor' => $setor
+                        'setor' => $setor,
+                        'saida' => $saida_parsed
+                    ]
+                ]);
+            } catch (Exception $e) {
+                echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+            }
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Método não permitido']);
+        }
+        exit;
+    }
+    
+    public function getData() {
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            header('Content-Type: application/json');
+            
+            try {
+                $id = trim($_GET['id'] ?? '');
+                
+                if (empty($id)) {
+                    echo json_encode(['success' => false, 'message' => 'ID é obrigatório']);
+                    return;
+                }
+                
+                // Buscar o prestador
+                $prestador = $this->db->fetch("SELECT * FROM prestadores_servico WHERE id = ?", [$id]);
+                
+                if (!$prestador) {
+                    echo json_encode(['success' => false, 'message' => 'Prestador não encontrado']);
+                    return;
+                }
+                
+                echo json_encode([
+                    'success' => true, 
+                    'data' => [
+                        'id' => $prestador['id'],
+                        'nome' => $prestador['nome'],
+                        'cpf' => $prestador['cpf'],
+                        'empresa' => $prestador['empresa'],
+                        'setor' => $prestador['setor'],
+                        'observacao' => $prestador['observacao'],
+                        'entrada' => $prestador['entrada'],
+                        'saida' => $prestador['saida']
                     ]
                 ]);
             } catch (Exception $e) {

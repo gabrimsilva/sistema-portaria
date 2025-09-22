@@ -928,9 +928,11 @@
             // Mostrar/ocultar campos específicos baseado no tipo
             $('#campo_funcionario_responsavel, #campo_hora_saida, #campo_observacao, #botoes_saida').hide();
             
+            // Mostrar campo de hora de saída para todos os tipos
+            $('#campo_hora_saida').show();
+            
             if (tipo === 'Visitante') {
                 $('#campo_funcionario_responsavel').show();
-                $('#campo_hora_saida').show();
                 // Preencher campos específicos do visitante
                 $('#edit_funcionario_responsavel').val(funcionario || '');
                 
@@ -953,13 +955,46 @@
                 });
             } else if (tipo === 'Prestador') {
                 $('#campo_observacao').show();
-                $('#botoes_saida').show();
-                $('#texto_saida').text('Registrar Saída do Prestador');
-                // Buscar dados específicos do prestador se necessário  
+                // Buscar dados específicos do prestador para preencher hora de saída
                 $('#edit_observacao').val('');
+                
+                $.ajax({
+                    url: `/prestadores-servico?action=get_data&id=${id}`,
+                    method: 'GET',
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.success && response.data.saida) {
+                            // Formatar data para datetime-local sem conversão de timezone
+                            const saidaFormatada = response.data.saida.replace(' ', 'T').slice(0, 16);
+                            $('#edit_hora_saida').val(saidaFormatada);
+                        }
+                        if (response.data.observacao) {
+                            $('#edit_observacao').val(response.data.observacao);
+                        }
+                    },
+                    error: function() {
+                        // Em caso de erro, deixa o campo vazio
+                        $('#edit_hora_saida').val('');
+                    }
+                });
             } else if (tipo === 'Profissional Renner') {
-                $('#botoes_saida').show();
-                $('#texto_saida').text('Registrar Saída Final');
+                // Buscar dados específicos do profissional para preencher hora de saída final
+                $.ajax({
+                    url: `/profissionais-renner?action=get_data&id=${id}`,
+                    method: 'GET',
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.success && response.data.saida_final) {
+                            // Formatar data para datetime-local sem conversão de timezone
+                            const saidaFinalFormatada = response.data.saida_final.replace(' ', 'T').slice(0, 16);
+                            $('#edit_hora_saida').val(saidaFinalFormatada);
+                        }
+                    },
+                    error: function() {
+                        // Em caso de erro, deixa o campo vazio
+                        $('#edit_hora_saida').val('');
+                    }
+                });
             }
             
             // Abrir modal
@@ -978,19 +1013,49 @@
             
             $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Salvando...');
             
-            const formData = $('#formEditar').serialize();
+            // Coletar dados comuns do formulário
+            const dadosComuns = {
+                id: $('#edit_id').val(),
+                nome: $('#edit_nome').val(),
+                cpf: $('#edit_cpf').val(),
+                empresa: $('#edit_empresa').val(),
+                setor: $('#edit_setor').val(),
+                csrf_token: $('meta[name="csrf-token"]').attr('content') || '<?= CSRFProtection::generateToken() ?>'
+            };
+            
+            let formData = new FormData();
             let endpoint = '';
             
-            // Determinar endpoint baseado no tipo
+            // Adicionar dados comuns
+            Object.keys(dadosComuns).forEach(key => {
+                if (dadosComuns[key]) {
+                    formData.append(key, dadosComuns[key]);
+                }
+            });
+            
+            // Determinar endpoint e campos específicos baseado no tipo
+            const horaSaida = $('#edit_hora_saida').val();
+            
             switch (tipoOriginal) {
                 case 'Visitante':
                     endpoint = '/visitantes?action=update_ajax';
+                    formData.append('funcionario_responsavel', $('#edit_funcionario_responsavel').val());
+                    if (horaSaida) {
+                        formData.append('hora_saida', horaSaida);
+                    }
                     break;
                 case 'Profissional Renner':
                     endpoint = '/profissionais-renner?action=update_ajax';
+                    if (horaSaida) {
+                        formData.append('saida_final', horaSaida);
+                    }
                     break;
                 case 'Prestador':
                     endpoint = '/prestadores-servico?action=update_ajax';
+                    formData.append('observacao', $('#edit_observacao').val());
+                    if (horaSaida) {
+                        formData.append('saida', horaSaida);
+                    }
                     break;
                 default:
                     showToast('Tipo de registro inválido', 'error');

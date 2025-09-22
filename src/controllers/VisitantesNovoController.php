@@ -380,6 +380,7 @@ class VisitantesNovoController {
                         'empresa' => $visitante['empresa'],
                         'setor' => $visitante['setor'],
                         'funcionario_responsavel' => $visitante['funcionario_responsavel'],
+                        'placa_veiculo' => $visitante['placa_veiculo'],
                         'hora_entrada' => $visitante['hora_entrada'],
                         'hora_saida' => $visitante['hora_saida']
                     ]

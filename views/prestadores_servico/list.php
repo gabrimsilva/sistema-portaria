@@ -211,9 +211,19 @@
                                                 </td>
                                                 <td>
                                                     <div class="btn-group">
-                                                        <a href="/prestadores-servico?action=edit&id=<?= $prestador['id'] ?>" class="btn btn-sm btn-primary">
+                                                        <button type="button" 
+                                                            class="btn btn-sm btn-primary btn-editar" 
+                                                            data-id="<?= $prestador['id'] ?>"
+                                                            data-tipo="Prestador"
+                                                            data-nome="<?= htmlspecialchars($prestador['nome']) ?>"
+                                                            data-cpf="<?= htmlspecialchars($prestador['cpf']) ?>"
+                                                            data-empresa="<?= htmlspecialchars($prestador['empresa']) ?>"
+                                                            data-setor="<?= htmlspecialchars($prestador['setor']) ?>"
+                                                            data-placa_veiculo="<?= htmlspecialchars($prestador['placa_veiculo'] ?? '') ?>"
+                                                            data-toggle="modal" 
+                                                            data-target="#modalEditar">
                                                             <i class="fas fa-edit"></i>
-                                                        </a>
+                                                        </button>
                                                         <?php if (!$prestador['entrada']): ?>
                                                             <form method="POST" action="/prestadores-servico?action=entrada" class="d-inline">
                                                                 <?= CSRFProtection::getHiddenInput() ?>
@@ -253,8 +263,221 @@
         </div>
     </div>
     
+    <!-- Modal para Edição de Registros -->
+    <div class="modal fade" id="modalEditar" tabindex="-1" role="dialog" aria-labelledby="modalEditarLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-info">
+                    <h5 class="modal-title text-white" id="modalEditarLabel">
+                        <i class="fas fa-edit"></i> Editar Registro
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="formEditar">
+                        <input type="hidden" name="csrf_token" value="<?= CSRFProtection::generateToken() ?>">
+                        <input type="hidden" id="edit_id" name="id">
+                        <input type="hidden" id="edit_tipo_original" name="tipo_original">
+                        
+                        <div class="form-group">
+                            <label>Tipo de Registro</label>
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i> 
+                                <span id="edit_tipo_display"></span>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="form-group">
+                                    <label for="edit_nome">Nome Completo *</label>
+                                    <input type="text" class="form-control" id="edit_nome" name="nome" required>
+                                </div>
+                            </div>
+                            <div id="campo_cpf" class="col-md-4">
+                                <div class="form-group">
+                                    <label for="edit_cpf">CPF</label>
+                                    <input type="text" class="form-control" id="edit_cpf" name="cpf" placeholder="000.000.000-00">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div id="campo_empresa" class="col-md-6">
+                                <div class="form-group">
+                                    <label for="edit_empresa">Empresa</label>
+                                    <input type="text" class="form-control" id="edit_empresa" name="empresa">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="edit_setor">Setor</label>
+                                    <input type="text" class="form-control" id="edit_setor" name="setor">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Campo Placa de Veículo - visível apenas para Visitantes e Prestadores -->
+                        <div id="campo_placa_veiculo" class="form-group" style="display: none;">
+                            <label for="edit_placa_veiculo">Placa de Veículo</label>
+                            <input type="text" class="form-control" id="edit_placa_veiculo" name="placa_veiculo" placeholder="ABC-1234">
+                        </div>
+                        
+                        <!-- Campos específicos para visitantes -->
+                        <div id="campo_funcionario_responsavel" class="form-group" style="display: none;">
+                            <label for="edit_funcionario_responsavel">Funcionário Responsável</label>
+                            <input type="text" class="form-control" id="edit_funcionario_responsavel" name="funcionario_responsavel">
+                        </div>
+                        
+                        <div id="campo_hora_saida" class="form-group" style="display: none;">
+                            <label for="edit_hora_saida">Hora de Saída</label>
+                            <input type="datetime-local" class="form-control" id="edit_hora_saida" name="hora_saida">
+                            <small class="form-text text-muted">Deixe em branco se a pessoa ainda não saiu da empresa</small>
+                        </div>
+                        
+                        <!-- Campo específico para prestadores -->
+                        <div id="campo_observacao" class="form-group" style="display: none;">
+                            <label for="edit_observacao">Observações</label>
+                            <textarea class="form-control" id="edit_observacao" name="observacao" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-info" id="btnSalvarEdicao">
+                        <i class="fas fa-save"></i> Salvar Alterações
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+    
+    <script>
+    $(document).ready(function() {
+        // Manipular clique do botão editar
+        $(document).on('click', '.btn-editar', function() {
+            const btn = $(this);
+            const id = btn.data('id');
+            const tipo = btn.data('tipo');
+            const nome = btn.data('nome');
+            const cpf = btn.data('cpf');
+            const empresa = btn.data('empresa');
+            const setor = btn.data('setor');
+            const funcionario = btn.data('funcionario');
+            const placa_veiculo = btn.data('placa_veiculo');
+            
+            // Preencher campos básicos
+            $('#edit_id').val(id);
+            $('#edit_tipo_original').val(tipo);
+            $('#edit_tipo_display').text(tipo);
+            $('#edit_nome').val(nome);
+            $('#edit_cpf').val(cpf);
+            $('#edit_empresa').val(empresa);
+            $('#edit_setor').val(setor);
+            $('#edit_placa_veiculo').val(placa_veiculo);
+            
+            // Mostrar/ocultar campos específicos baseado no tipo
+            $('#campo_funcionario_responsavel, #campo_hora_saida, #campo_observacao').hide();
+            
+            // Mostrar campo de hora de saída para todos os tipos
+            $('#campo_hora_saida').show();
+            
+            // Mostrar/ocultar campos específicos para Profissional Renner
+            if (tipo === 'Profissional Renner') {
+                $('#campo_empresa').hide();
+                $('#campo_cpf').hide();
+                $('#campo_placa_veiculo').hide();
+                $('.modal-header').removeClass('bg-info').addClass('bg-primary');
+            } else {
+                $('#campo_empresa').show();
+                $('#campo_cpf').show();
+                $('#campo_placa_veiculo').show();
+                $('.modal-header').removeClass('bg-primary').addClass('bg-info');
+            }
+            
+            if (tipo === 'Visitante') {
+                $('#campo_funcionario_responsavel').show();
+                $('#edit_funcionario_responsavel').val(funcionario || '');
+                
+                // Buscar dados específicos do visitante para preencher hora de saída
+                $.ajax({
+                    url: `/visitantes?action=get_data&id=${id}`,
+                    method: 'GET',
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.success && response.data.hora_saida) {
+                            const horaSaidaFormatada = response.data.hora_saida.replace(' ', 'T').slice(0, 16);
+                            $('#edit_hora_saida').val(horaSaidaFormatada);
+                        }
+                    },
+                    error: function() {
+                        $('#edit_hora_saida').val('');
+                    }
+                });
+            } else if (tipo === 'Prestador') {
+                $('#campo_observacao').show();
+                $('#edit_observacao').val('');
+                
+                $.ajax({
+                    url: `/prestadores-servico?action=get_data&id=${id}`,
+                    method: 'GET',
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.success && response.data.saida) {
+                            const saidaFormatada = response.data.saida.replace(' ', 'T').slice(0, 16);
+                            $('#edit_hora_saida').val(saidaFormatada);
+                        }
+                        if (response.data.observacao) {
+                            $('#edit_observacao').val(response.data.observacao);
+                        }
+                    },
+                    error: function() {
+                        $('#edit_hora_saida').val('');
+                    }
+                });
+            }
+        });
+
+        // Salvar edições
+        $('#btnSalvarEdicao').click(function() {
+            const formData = new FormData($('#formEditar')[0]);
+            const tipo = $('#edit_tipo_original').val();
+            
+            let url = '';
+            if (tipo === 'Visitante') {
+                url = '/visitantes?action=update_ajax';
+            } else if (tipo === 'Prestador') {
+                url = '/prestadores-servico?action=update_ajax';
+            } else if (tipo === 'Profissional Renner') {
+                url = '/profissionais-renner?action=update_ajax';
+            }
+            
+            $.ajax({
+                url: url,
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        location.reload();
+                    } else {
+                        alert('Erro: ' + response.message);
+                    }
+                },
+                error: function() {
+                    alert('Erro ao salvar alterações');
+                }
+            });
+        });
+    });
+    </script>
 </body>
 </html>

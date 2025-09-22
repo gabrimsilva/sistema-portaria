@@ -348,6 +348,7 @@ class PrestadoresServicoController {
                         'empresa' => $prestador['empresa'],
                         'setor' => $prestador['setor'],
                         'observacao' => $prestador['observacao'],
+                        'placa_veiculo' => $prestador['placa_veiculo'],
                         'entrada' => $prestador['entrada'],
                         'saida' => $prestador['saida']
                     ]

@@ -40,7 +40,7 @@
         <!-- Main Sidebar -->
         <aside class="main-sidebar sidebar-dark-primary elevation-4">
             <a href="/dashboard" class="brand-link">
-                <img src="https://via.placeholder.com/33x33" alt="Logo" class="brand-image img-circle elevation-3">
+                <img src="/logo.jpg" alt="Renner Logo" class="brand-image elevation-3" style="width: 33px; height: auto; border-radius: 4px;">
                 <span class="brand-text font-weight-light">Controle Acesso</span>
             </a>
             

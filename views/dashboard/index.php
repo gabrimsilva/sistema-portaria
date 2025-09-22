@@ -523,6 +523,12 @@
                             </div>
                         </div>
                         
+                        <!-- Campo Placa de Veículo - visível apenas para Visitantes e Prestadores -->
+                        <div id="campo_placa_veiculo" class="form-group" style="display: none;">
+                            <label for="edit_placa_veiculo">Placa de Veículo</label>
+                            <input type="text" class="form-control" id="edit_placa_veiculo" name="placa_veiculo" placeholder="ABC-1234">
+                        </div>
+                        
                         <!-- Campos específicos para visitantes -->
                         <div id="campo_funcionario_responsavel" class="form-group" style="display: none;">
                             <label for="edit_funcionario_responsavel">Funcionário Responsável</label>
@@ -915,6 +921,7 @@
             const empresa = btn.data('empresa');
             const setor = btn.data('setor');
             const funcionario = btn.data('funcionario');
+            const placa_veiculo = btn.data('placa_veiculo');
             
             // Preencher campos básicos
             $('#edit_id').val(id);
@@ -924,6 +931,7 @@
             $('#edit_cpf').val(cpf);
             $('#edit_empresa').val(empresa);
             $('#edit_setor').val(setor);
+            $('#edit_placa_veiculo').val(placa_veiculo);
             
             // Mostrar/ocultar campos específicos baseado no tipo
             $('#campo_funcionario_responsavel, #campo_hora_saida, #campo_observacao, #botoes_saida').hide();
@@ -935,11 +943,13 @@
             if (tipo === 'Profissional Renner') {
                 $('#campo_empresa').hide();
                 $('#campo_cpf').hide();
+                $('#campo_placa_veiculo').hide();
                 // Alterar cor do header do modal para Profissional Renner
                 $('.modal-header').removeClass('bg-info').addClass('bg-primary');
             } else {
                 $('#campo_empresa').show();
                 $('#campo_cpf').show();
+                $('#campo_placa_veiculo').show();
                 // Manter cor padrão do header para outros tipos
                 $('.modal-header').removeClass('bg-primary').addClass('bg-info');
             }
@@ -1038,6 +1048,7 @@
             // Adicionar empresa apenas se não for Profissional Renner
             if (tipoOriginal !== 'Profissional Renner') {
                 dadosComuns.empresa = $('#edit_empresa').val();
+                dadosComuns.placa_veiculo = $('#edit_placa_veiculo').val();
             }
             
             let formData = new FormData();

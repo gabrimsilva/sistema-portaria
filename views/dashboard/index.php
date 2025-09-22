@@ -263,25 +263,16 @@
                                                         <?php endif; ?>
                                                     </td>
                                                     <td>
-                                                        <div class="btn-group" role="group">
-                                                            <button class="btn btn-sm btn-info btn-editar" 
-                                                                    data-id="<?= $pessoa['id'] ?>" 
-                                                                    data-tipo="<?= htmlspecialchars($pessoa['tipo']) ?>"
-                                                                    data-nome="<?= htmlspecialchars($pessoa['nome']) ?>"
-                                                                    data-cpf="<?= htmlspecialchars($pessoa['cpf'] ?? '') ?>"
-                                                                    data-empresa="<?= htmlspecialchars($pessoa['empresa'] ?? '') ?>"
-                                                                    data-setor="<?= htmlspecialchars($pessoa['setor'] ?? '') ?>"
-                                                                    title="Editar registro">
-                                                                <i class="fas fa-edit"></i>
-                                                            </button>
-                                                            <button class="btn btn-sm btn-danger btn-saida" 
-                                                                    data-id="<?= $pessoa['id'] ?>" 
-                                                                    data-tipo="<?= htmlspecialchars($pessoa['tipo']) ?>"
-                                                                    data-nome="<?= htmlspecialchars($pessoa['nome']) ?>"
-                                                                    title="Registrar Saída">
-                                                                <i class="fas fa-sign-out-alt"></i>
-                                                            </button>
-                                                        </div>
+                                                        <button class="btn btn-sm btn-info btn-editar" 
+                                                                data-id="<?= $pessoa['id'] ?>" 
+                                                                data-tipo="<?= htmlspecialchars($pessoa['tipo']) ?>"
+                                                                data-nome="<?= htmlspecialchars($pessoa['nome']) ?>"
+                                                                data-cpf="<?= htmlspecialchars($pessoa['cpf'] ?? '') ?>"
+                                                                data-empresa="<?= htmlspecialchars($pessoa['empresa'] ?? '') ?>"
+                                                                data-setor="<?= htmlspecialchars($pessoa['setor'] ?? '') ?>"
+                                                                title="Editar registro">
+                                                            <i class="fas fa-edit"></i>
+                                                        </button>
                                                     </td>
                                                 </tr>
                                                 <?php endforeach; ?>
@@ -543,6 +534,29 @@
                             <label for="edit_observacao">Observações</label>
                             <textarea class="form-control" id="edit_observacao" name="observacao" rows="3"></textarea>
                         </div>
+                        
+                        <!-- Campo de Saída -->
+                        <div id="campo_saida" class="form-group" style="display: none;">
+                            <div class="card bg-danger text-white">
+                                <div class="card-header">
+                                    <h6 class="card-title mb-0">
+                                        <i class="fas fa-sign-out-alt"></i> Registrar Saída
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" id="marcar_saida" name="marcar_saida">
+                                        <label class="form-check-label" for="marcar_saida">
+                                            <span id="texto_saida">Marcar saída da empresa</span>
+                                        </label>
+                                    </div>
+                                    <small class="text-light">
+                                        <i class="fas fa-exclamation-triangle"></i> 
+                                        Esta ação registrará a saída definitiva da pessoa da empresa.
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -555,34 +569,6 @@
         </div>
     </div>
     
-    <!-- Modal de Confirmação de Saída -->
-    <div class="modal fade" id="modalConfirmarSaida" tabindex="-1" role="dialog" aria-labelledby="modalConfirmarSaidaLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content">
-                <div class="modal-header bg-warning">
-                    <h5 class="modal-title text-dark" id="modalConfirmarSaidaLabel">
-                        <i class="fas fa-exclamation-triangle"></i> Confirmar Saída
-                    </h5>
-                    <button type="button" class="close text-dark" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body text-center">
-                    <p class="mb-3">Deseja realmente registrar a saída de:</p>
-                    <h5 class="text-primary" id="nomeColaboradorSaida"></h5>
-                    <p class="text-muted small mt-2">Esta ação irá registrar a saída da empresa.</p>
-                </div>
-                <div class="modal-footer justify-content-center">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                        <i class="fas fa-times"></i> Não
-                    </button>
-                    <button type="button" class="btn btn-danger" id="btnConfirmarSaida">
-                        <i class="fas fa-check"></i> Sim
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
     
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -921,16 +907,24 @@
             $('#edit_setor').val(setor);
             
             // Mostrar/ocultar campos específicos baseado no tipo
-            $('#campo_funcionario_responsavel, #campo_observacao').hide();
+            $('#campo_funcionario_responsavel, #campo_observacao, #campo_saida').hide();
+            $('#marcar_saida').prop('checked', false);
             
             if (tipo === 'Visitante') {
                 $('#campo_funcionario_responsavel').show();
+                $('#campo_saida').show();
+                $('#texto_saida').text('Marcar saída do visitante');
                 // Buscar dados específicos do visitante se necessário
                 $('#edit_funcionario_responsavel').val('');
             } else if (tipo === 'Prestador') {
                 $('#campo_observacao').show();
+                $('#campo_saida').show();
+                $('#texto_saida').text('Marcar saída do prestador de serviço');
                 // Buscar dados específicos do prestador se necessário  
                 $('#edit_observacao').val('');
+            } else if (tipo === 'Profissional Renner') {
+                $('#campo_saida').show();
+                $('#texto_saida').text('Marcar saída final do profissional Renner');
             }
             
             // Abrir modal
@@ -941,6 +935,8 @@
         $('#btnSalvarEdicao').on('click', function() {
             const nome = $('#edit_nome').val().trim();
             const tipoOriginal = $('#edit_tipo_original').val();
+            const id = $('#edit_id').val();
+            const marcarSaida = $('#marcar_saida').is(':checked');
             
             if (!nome) {
                 showToast('Nome é obrigatório', 'error');
@@ -949,150 +945,124 @@
             
             $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Salvando...');
             
-            const formData = $('#formEditar').serialize();
-            let endpoint = '';
-            
-            // Determinar endpoint baseado no tipo
-            switch (tipoOriginal) {
-                case 'Visitante':
-                    endpoint = '/visitantes?action=update_ajax';
-                    break;
-                case 'Profissional Renner':
-                    endpoint = '/profissionais-renner?action=update_ajax';
-                    break;
-                case 'Prestador':
-                    endpoint = '/prestadores-servico?action=update_ajax';
-                    break;
-                default:
-                    showToast('Tipo de registro inválido', 'error');
-                    $(this).prop('disabled', false).html('<i class="fas fa-save"></i> Salvar Alterações');
-                    return;
-            }
-            
-            $.ajax({
-                url: endpoint,
-                method: 'POST',
-                data: formData,
-                dataType: 'json',
-                success: function(response) {
-                    if (response.success) {
-                        showToast('Registro atualizado com sucesso!');
-                        $('#modalEditar').modal('hide');
-                        // Recarregar a página para atualizar a lista
-                        setTimeout(() => {
-                            location.reload();
-                        }, 1500);
-                    } else {
-                        showToast(response.message || 'Erro ao atualizar registro', 'error');
-                    }
-                },
-                error: function(xhr, status, error) {
-                    if (xhr.status === 401) {
-                        showToast('Sessão expirada. Você será redirecionado para o login.', 'error');
-                        setTimeout(() => {
-                            window.location.href = '/login';
-                        }, 2000);
-                    } else {
-                        showToast('Erro na comunicação com o servidor', 'error');
-                    }
-                },
-                complete: function() {
-                    $('#btnSalvarEdicao').prop('disabled', false).html('<i class="fas fa-save"></i> Salvar Alterações');
+            // Se marcar saída está ativo, chama endpoint de saída
+            if (marcarSaida) {
+                let endpointSaida = '';
+                let mensagemSucesso = '';
+                
+                switch (tipoOriginal) {
+                    case 'Visitante':
+                        endpointSaida = `/visitantes?action=registrar_saida&id=${id}`;
+                        mensagemSucesso = 'Saída do visitante registrada com sucesso!';
+                        break;
+                    case 'Profissional Renner':
+                        endpointSaida = `/profissionais-renner?action=saida&id=${id}`;
+                        mensagemSucesso = 'Saída final do profissional registrada com sucesso!';
+                        break;
+                    case 'Prestador':
+                        endpointSaida = `/prestadores-servico?action=saida&id=${id}`;
+                        mensagemSucesso = 'Saída do prestador registrada com sucesso!';
+                        break;
+                    default:
+                        showToast('Tipo de registro inválido', 'error');
+                        $(this).prop('disabled', false).html('<i class="fas fa-save"></i> Salvar Alterações');
+                        return;
                 }
-            });
+                
+                $.ajax({
+                    url: endpointSaida,
+                    method: 'POST',
+                    data: {
+                        csrf_token: $('meta[name="csrf-token"]').attr('content') || '<?= CSRFProtection::generateToken() ?>'
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.success) {
+                            showToast(mensagemSucesso);
+                            $('#modalEditar').modal('hide');
+                            // Recarregar a página para atualizar a lista
+                            setTimeout(() => {
+                                location.reload();
+                            }, 1500);
+                        } else {
+                            showToast(response.message || 'Erro ao registrar saída', 'error');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        if (xhr.status === 401) {
+                            showToast('Sessão expirada. Você será redirecionado para o login.', 'error');
+                            setTimeout(() => {
+                                window.location.href = '/login';
+                            }, 2000);
+                        } else {
+                            showToast('Erro na comunicação com o servidor', 'error');
+                        }
+                    },
+                    complete: function() {
+                        $('#btnSalvarEdicao').prop('disabled', false).html('<i class="fas fa-save"></i> Salvar Alterações');
+                    }
+                });
+            } else {
+                // Lógica normal de atualização de dados
+                const formData = $('#formEditar').serialize();
+                let endpoint = '';
+                
+                // Determinar endpoint baseado no tipo
+                switch (tipoOriginal) {
+                    case 'Visitante':
+                        endpoint = '/visitantes?action=update_ajax';
+                        break;
+                    case 'Profissional Renner':
+                        endpoint = '/profissionais-renner?action=update_ajax';
+                        break;
+                    case 'Prestador':
+                        endpoint = '/prestadores-servico?action=update_ajax';
+                        break;
+                    default:
+                        showToast('Tipo de registro inválido', 'error');
+                        $(this).prop('disabled', false).html('<i class="fas fa-save"></i> Salvar Alterações');
+                        return;
+                }
+                
+                $.ajax({
+                    url: endpoint,
+                    method: 'POST',
+                    data: formData,
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.success) {
+                            showToast('Registro atualizado com sucesso!');
+                            $('#modalEditar').modal('hide');
+                            // Recarregar a página para atualizar a lista
+                            setTimeout(() => {
+                                location.reload();
+                            }, 1500);
+                        } else {
+                            showToast(response.message || 'Erro ao atualizar registro', 'error');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        if (xhr.status === 401) {
+                            showToast('Sessão expirada. Você será redirecionado para o login.', 'error');
+                            setTimeout(() => {
+                                window.location.href = '/login';
+                            }, 2000);
+                        } else {
+                            showToast('Erro na comunicação com o servidor', 'error');
+                        }
+                    },
+                    complete: function() {
+                        $('#btnSalvarEdicao').prop('disabled', false).html('<i class="fas fa-save"></i> Salvar Alterações');
+                    }
+                });
+            }
         });
 
         // Limpar formulário de edição ao fechar modal
         $('#modalEditar').on('hidden.bs.modal', function() {
             $('#formEditar')[0].reset();
-            $('#campo_funcionario_responsavel, #campo_observacao').hide();
-        });
-
-        // Variáveis para armazenar dados da saída
-        let dadosSaida = {};
-        
-        // Handler para botão de saída - abre modal de confirmação
-        $(document).on('click', '.btn-saida', function() {
-            const id = $(this).data('id');
-            const tipo = $(this).data('tipo');
-            const nome = $(this).data('nome');
-            
-            // Armazenar dados para uso no modal
-            dadosSaida = {
-                id: id,
-                tipo: tipo,
-                nome: nome,
-                botao: $(this)
-            };
-            
-            // Atualizar o modal com o nome do colaborador
-            $('#nomeColaboradorSaida').text(nome);
-            
-            // Abrir modal de confirmação
-            $('#modalConfirmarSaida').modal('show');
-        });
-        
-        // Handler para confirmação de saída (botão "Sim")
-        $('#btnConfirmarSaida').on('click', function() {
-            const { id, tipo, nome, botao } = dadosSaida;
-            
-            // Fechar modal
-            $('#modalConfirmarSaida').modal('hide');
-            
-            // Desabilitar botão e mostrar loading
-            botao.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
-            
-            let endpoint = '';
-            
-            // Determinar endpoint baseado no tipo
-            switch (tipo) {
-                case 'Visitante':
-                    endpoint = `/visitantes?action=registrar_saida&id=${id}`;
-                    break;
-                case 'Profissional Renner':
-                    endpoint = `/profissionais-renner?action=saida&id=${id}`;
-                    break;
-                case 'Prestador':
-                    endpoint = `/prestadores-servico?action=saida&id=${id}`;
-                    break;
-                default:
-                    showToast('Tipo de registro inválido', 'error');
-                    botao.prop('disabled', false).html('<i class="fas fa-sign-out-alt"></i>');
-                    return;
-            }
-            
-            $.ajax({
-                url: endpoint,
-                method: 'POST',
-                data: {
-                    csrf_token: $('meta[name="csrf-token"]').attr('content') || '<?= CSRFProtection::generateToken() ?>'
-                },
-                dataType: 'json',
-                success: function(response) {
-                    if (response.success) {
-                        showToast(`Saída de ${nome} registrada com sucesso!`);
-                        // Recarregar a página para atualizar a lista
-                        setTimeout(() => {
-                            location.reload();
-                        }, 1500);
-                    } else {
-                        showToast(response.message || 'Erro ao registrar saída', 'error');
-                    }
-                },
-                error: function(xhr, status, error) {
-                    if (xhr.status === 401) {
-                        showToast('Sessão expirada. Você será redirecionado para o login.', 'error');
-                        setTimeout(() => {
-                            window.location.href = '/login';
-                        }, 2000);
-                    } else {
-                        showToast('Erro na comunicação com o servidor', 'error');
-                    }
-                },
-                complete: function() {
-                    $('.btn-saida').prop('disabled', false).html('<i class="fas fa-sign-out-alt"></i>');
-                }
-            });
+            $('#campo_funcionario_responsavel, #campo_observacao, #campo_saida').hide();
+            $('#marcar_saida').prop('checked', false);
         });
     });
     </script>

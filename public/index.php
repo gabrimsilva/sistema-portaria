@@ -87,6 +87,9 @@ try {
                 case 'save_ajax':
                     $controller->saveAjax();
                     break;
+                case 'update_ajax':
+                    $controller->updateAjax();
+                    break;
                 case 'edit':
                     $controller->edit();
                     break;
@@ -115,6 +118,9 @@ try {
                     break;
                 case 'save_ajax':
                     $controller->saveAjax();
+                    break;
+                case 'update_ajax':
+                    $controller->updateAjax();
                     break;
                 case 'edit':
                     $controller->edit();
@@ -150,6 +156,9 @@ try {
                     break;
                 case 'save_ajax':
                     $controller->saveAjax();
+                    break;
+                case 'update_ajax':
+                    $controller->updateAjax();
                     break;
                 case 'edit':
                     $controller->edit();

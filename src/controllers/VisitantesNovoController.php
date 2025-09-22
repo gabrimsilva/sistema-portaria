@@ -251,4 +251,48 @@ class VisitantesNovoController {
         }
         exit;
     }
+    
+    public function updateAjax() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            header('Content-Type: application/json');
+            
+            try {
+                CSRFProtection::verifyRequest();
+                $id = trim($_POST['id'] ?? '');
+                $nome = trim($_POST['nome'] ?? '');
+                $cpf = trim($_POST['cpf'] ?? '');
+                $empresa = trim($_POST['empresa'] ?? '');
+                $setor = trim($_POST['setor'] ?? '');
+                $funcionario_responsavel = trim($_POST['funcionario_responsavel'] ?? '');
+                
+                if (empty($id) || empty($nome)) {
+                    echo json_encode(['success' => false, 'message' => 'ID e Nome são obrigatórios']);
+                    return;
+                }
+                
+                $this->db->query("
+                    UPDATE visitantes_novo 
+                    SET nome = ?, cpf = ?, empresa = ?, setor = ?, funcionario_responsavel = ?
+                    WHERE id = ?
+                ", [$nome, $cpf, $empresa, $setor, $funcionario_responsavel, $id]);
+                
+                echo json_encode([
+                    'success' => true, 
+                    'message' => 'Visitante atualizado com sucesso',
+                    'data' => [
+                        'id' => $id,
+                        'nome' => $nome,
+                        'cpf' => $cpf,
+                        'empresa' => $empresa,
+                        'setor' => $setor
+                    ]
+                ]);
+            } catch (Exception $e) {
+                echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+            }
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Método não permitido']);
+        }
+        exit;
+    }
 }

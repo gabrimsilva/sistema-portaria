@@ -222,6 +222,7 @@
                                                     <th>Empresa</th>
                                                     <th>Setor</th>
                                                     <th>Hora de Entrada</th>
+                                                    <th width="100">Ações</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -259,6 +260,18 @@
                                                         <?php else: ?>
                                                             -
                                                         <?php endif; ?>
+                                                    </td>
+                                                    <td>
+                                                        <button class="btn btn-sm btn-info btn-editar" 
+                                                                data-id="<?= $pessoa['id'] ?>" 
+                                                                data-tipo="<?= htmlspecialchars($pessoa['tipo']) ?>"
+                                                                data-nome="<?= htmlspecialchars($pessoa['nome']) ?>"
+                                                                data-cpf="<?= htmlspecialchars($pessoa['cpf'] ?? '') ?>"
+                                                                data-empresa="<?= htmlspecialchars($pessoa['empresa'] ?? '') ?>"
+                                                                data-setor="<?= htmlspecialchars($pessoa['setor'] ?? '') ?>"
+                                                                title="Editar registro">
+                                                            <i class="fas fa-edit"></i>
+                                                        </button>
                                                     </td>
                                                 </tr>
                                                 <?php endforeach; ?>
@@ -447,6 +460,85 @@
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-warning" id="btnSalvarPrestador">
                         <i class="fas fa-save"></i> Cadastrar Prestador
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para Edição de Registros -->
+    <div class="modal fade" id="modalEditar" tabindex="-1" role="dialog" aria-labelledby="modalEditarLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-info">
+                    <h5 class="modal-title text-white" id="modalEditarLabel">
+                        <i class="fas fa-edit"></i> Editar Registro
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="formEditar">
+                        <input type="hidden" name="csrf_token" value="<?= CSRFProtection::generateToken() ?>">
+                        <input type="hidden" id="edit_id" name="id">
+                        <input type="hidden" id="edit_tipo_original" name="tipo_original">
+                        
+                        <div class="form-group">
+                            <label>Tipo de Registro</label>
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i> 
+                                <span id="edit_tipo_display"></span>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="form-group">
+                                    <label for="edit_nome">Nome Completo *</label>
+                                    <input type="text" class="form-control" id="edit_nome" name="nome" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="edit_cpf">CPF</label>
+                                    <input type="text" class="form-control" id="edit_cpf" name="cpf" placeholder="000.000.000-00">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="edit_empresa">Empresa</label>
+                                    <input type="text" class="form-control" id="edit_empresa" name="empresa">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="edit_setor">Setor</label>
+                                    <input type="text" class="form-control" id="edit_setor" name="setor">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Campo específico para visitantes -->
+                        <div id="campo_funcionario_responsavel" class="form-group" style="display: none;">
+                            <label for="edit_funcionario_responsavel">Funcionário Responsável</label>
+                            <input type="text" class="form-control" id="edit_funcionario_responsavel" name="funcionario_responsavel">
+                        </div>
+                        
+                        <!-- Campo específico para prestadores -->
+                        <div id="campo_observacao" class="form-group" style="display: none;">
+                            <label for="edit_observacao">Observações</label>
+                            <textarea class="form-control" id="edit_observacao" name="observacao" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-info" id="btnSalvarEdicao">
+                        <i class="fas fa-save"></i> Salvar Alterações
                     </button>
                 </div>
             </div>
@@ -768,6 +860,113 @@
             $('#filtro-pessoas').val('');
             $('#filtro-tipo').val('');
             $('.table tbody tr').show();
+        });
+
+        // Edição inline de registros
+        $(document).on('click', '.btn-editar', function() {
+            const btn = $(this);
+            const id = btn.data('id');
+            const tipo = btn.data('tipo');
+            const nome = btn.data('nome');
+            const cpf = btn.data('cpf');
+            const empresa = btn.data('empresa');
+            const setor = btn.data('setor');
+            
+            // Preencher campos básicos
+            $('#edit_id').val(id);
+            $('#edit_tipo_original').val(tipo);
+            $('#edit_tipo_display').text(tipo);
+            $('#edit_nome').val(nome);
+            $('#edit_cpf').val(cpf);
+            $('#edit_empresa').val(empresa);
+            $('#edit_setor').val(setor);
+            
+            // Mostrar/ocultar campos específicos baseado no tipo
+            $('#campo_funcionario_responsavel, #campo_observacao').hide();
+            
+            if (tipo === 'Visitante') {
+                $('#campo_funcionario_responsavel').show();
+                // Buscar dados específicos do visitante se necessário
+                $('#edit_funcionario_responsavel').val('');
+            } else if (tipo === 'Prestador') {
+                $('#campo_observacao').show();
+                // Buscar dados específicos do prestador se necessário  
+                $('#edit_observacao').val('');
+            }
+            
+            // Abrir modal
+            $('#modalEditar').modal('show');
+        });
+
+        // Salvar edição
+        $('#btnSalvarEdicao').on('click', function() {
+            const nome = $('#edit_nome').val().trim();
+            const tipoOriginal = $('#edit_tipo_original').val();
+            
+            if (!nome) {
+                showToast('Nome é obrigatório', 'error');
+                return;
+            }
+            
+            $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Salvando...');
+            
+            const formData = $('#formEditar').serialize();
+            let endpoint = '';
+            
+            // Determinar endpoint baseado no tipo
+            switch (tipoOriginal) {
+                case 'Visitante':
+                    endpoint = '/visitantes?action=update_ajax';
+                    break;
+                case 'Profissional Renner':
+                    endpoint = '/profissionais-renner?action=update_ajax';
+                    break;
+                case 'Prestador':
+                    endpoint = '/prestadores-servico?action=update_ajax';
+                    break;
+                default:
+                    showToast('Tipo de registro inválido', 'error');
+                    $(this).prop('disabled', false).html('<i class="fas fa-save"></i> Salvar Alterações');
+                    return;
+            }
+            
+            $.ajax({
+                url: endpoint,
+                method: 'POST',
+                data: formData,
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        showToast('Registro atualizado com sucesso!');
+                        $('#modalEditar').modal('hide');
+                        // Recarregar a página para atualizar a lista
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        showToast(response.message || 'Erro ao atualizar registro', 'error');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    if (xhr.status === 401) {
+                        showToast('Sessão expirada. Você será redirecionado para o login.', 'error');
+                        setTimeout(() => {
+                            window.location.href = '/login';
+                        }, 2000);
+                    } else {
+                        showToast('Erro na comunicação com o servidor', 'error');
+                    }
+                },
+                complete: function() {
+                    $('#btnSalvarEdicao').prop('disabled', false).html('<i class="fas fa-save"></i> Salvar Alterações');
+                }
+            });
+        });
+
+        // Limpar formulário de edição ao fechar modal
+        $('#modalEditar').on('hidden.bs.modal', function() {
+            $('#formEditar')[0].reset();
+            $('#campo_funcionario_responsavel, #campo_observacao').hide();
         });
     });
     </script>

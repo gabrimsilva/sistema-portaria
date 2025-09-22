@@ -251,4 +251,48 @@ class PrestadoresServicoController {
         }
         exit;
     }
+    
+    public function updateAjax() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            header('Content-Type: application/json');
+            
+            try {
+                CSRFProtection::verifyRequest();
+                $id = trim($_POST['id'] ?? '');
+                $nome = trim($_POST['nome'] ?? '');
+                $cpf = trim($_POST['cpf'] ?? '');
+                $empresa = trim($_POST['empresa'] ?? '');
+                $setor = trim($_POST['setor'] ?? '');
+                $observacao = trim($_POST['observacao'] ?? '');
+                
+                if (empty($id) || empty($nome)) {
+                    echo json_encode(['success' => false, 'message' => 'ID e Nome são obrigatórios']);
+                    return;
+                }
+                
+                $this->db->query("
+                    UPDATE prestadores_servico 
+                    SET nome = ?, cpf = ?, empresa = ?, setor = ?, observacao = ?
+                    WHERE id = ?
+                ", [$nome, $cpf, $empresa, $setor, $observacao, $id]);
+                
+                echo json_encode([
+                    'success' => true, 
+                    'message' => 'Prestador atualizado com sucesso',
+                    'data' => [
+                        'id' => $id,
+                        'nome' => $nome,
+                        'cpf' => $cpf,
+                        'empresa' => $empresa,
+                        'setor' => $setor
+                    ]
+                ]);
+            } catch (Exception $e) {
+                echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+            }
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Método não permitido']);
+        }
+        exit;
+    }
 }

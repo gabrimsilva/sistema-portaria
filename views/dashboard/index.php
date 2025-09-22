@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="<?= CSRFProtection::generateToken() ?>">
     <title>Dashboard - Sistema de Controle de Acesso</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css" rel="stylesheet">
@@ -39,9 +40,8 @@
         
         <!-- Main Sidebar -->
         <aside class="main-sidebar sidebar-dark-primary elevation-4">
-            <a href="/dashboard" class="brand-link">
-                <img src="/logo.jpg" alt="Renner Logo" class="brand-image elevation-3" style="width: 33px; height: auto; border-radius: 4px;">
-                <span class="brand-text font-weight-light">Controle Acesso</span>
+            <a href="/dashboard" class="brand-link text-center">
+                <img src="/logo.jpg" alt="Renner Logo" class="brand-image elevation-3" style="max-height: 45px; width: auto; border-radius: 8px; margin: 0 auto;" aria-label="Sistema de Controle de Acesso Renner">
             </a>
             
             <div class="sidebar">
@@ -262,16 +262,25 @@
                                                         <?php endif; ?>
                                                     </td>
                                                     <td>
-                                                        <button class="btn btn-sm btn-info btn-editar" 
-                                                                data-id="<?= $pessoa['id'] ?>" 
-                                                                data-tipo="<?= htmlspecialchars($pessoa['tipo']) ?>"
-                                                                data-nome="<?= htmlspecialchars($pessoa['nome']) ?>"
-                                                                data-cpf="<?= htmlspecialchars($pessoa['cpf'] ?? '') ?>"
-                                                                data-empresa="<?= htmlspecialchars($pessoa['empresa'] ?? '') ?>"
-                                                                data-setor="<?= htmlspecialchars($pessoa['setor'] ?? '') ?>"
-                                                                title="Editar registro">
-                                                            <i class="fas fa-edit"></i>
-                                                        </button>
+                                                        <div class="btn-group" role="group">
+                                                            <button class="btn btn-sm btn-info btn-editar" 
+                                                                    data-id="<?= $pessoa['id'] ?>" 
+                                                                    data-tipo="<?= htmlspecialchars($pessoa['tipo']) ?>"
+                                                                    data-nome="<?= htmlspecialchars($pessoa['nome']) ?>"
+                                                                    data-cpf="<?= htmlspecialchars($pessoa['cpf'] ?? '') ?>"
+                                                                    data-empresa="<?= htmlspecialchars($pessoa['empresa'] ?? '') ?>"
+                                                                    data-setor="<?= htmlspecialchars($pessoa['setor'] ?? '') ?>"
+                                                                    title="Editar registro">
+                                                                <i class="fas fa-edit"></i>
+                                                            </button>
+                                                            <button class="btn btn-sm btn-danger btn-saida" 
+                                                                    data-id="<?= $pessoa['id'] ?>" 
+                                                                    data-tipo="<?= htmlspecialchars($pessoa['tipo']) ?>"
+                                                                    data-nome="<?= htmlspecialchars($pessoa['nome']) ?>"
+                                                                    title="Registrar Saída">
+                                                                <i class="fas fa-sign-out-alt"></i>
+                                                            </button>
+                                                        </div>
                                                     </td>
                                                 </tr>
                                                 <?php endforeach; ?>
@@ -967,6 +976,69 @@
         $('#modalEditar').on('hidden.bs.modal', function() {
             $('#formEditar')[0].reset();
             $('#campo_funcionario_responsavel, #campo_observacao').hide();
+        });
+
+        // Handler para botão de saída
+        $(document).on('click', '.btn-saida', function() {
+            const id = $(this).data('id');
+            const tipo = $(this).data('tipo');
+            const nome = $(this).data('nome');
+            
+            if (confirm(`Confirma a saída de ${nome}?`)) {
+                $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+                
+                let endpoint = '';
+                
+                // Determinar endpoint baseado no tipo
+                switch (tipo) {
+                    case 'Visitante':
+                        endpoint = `/visitantes?action=registrar_saida&id=${id}`;
+                        break;
+                    case 'Profissional Renner':
+                        endpoint = `/profissionais-renner?action=saida&id=${id}`;
+                        break;
+                    case 'Prestador':
+                        endpoint = `/prestadores-servico?action=saida&id=${id}`;
+                        break;
+                    default:
+                        showToast('Tipo de registro inválido', 'error');
+                        $(this).prop('disabled', false).html('<i class="fas fa-sign-out-alt"></i>');
+                        return;
+                }
+                
+                $.ajax({
+                    url: endpoint,
+                    method: 'POST',
+                    data: {
+                        csrf_token: $('meta[name="csrf-token"]').attr('content') || '<?= CSRFProtection::generateToken() ?>'
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.success) {
+                            showToast(`Saída de ${nome} registrada com sucesso!`);
+                            // Recarregar a página para atualizar a lista
+                            setTimeout(() => {
+                                location.reload();
+                            }, 1500);
+                        } else {
+                            showToast(response.message || 'Erro ao registrar saída', 'error');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        if (xhr.status === 401) {
+                            showToast('Sessão expirada. Você será redirecionado para o login.', 'error');
+                            setTimeout(() => {
+                                window.location.href = '/login';
+                            }, 2000);
+                        } else {
+                            showToast('Erro na comunicação com o servidor', 'error');
+                        }
+                    },
+                    complete: function() {
+                        $('.btn-saida').prop('disabled', false).html('<i class="fas fa-sign-out-alt"></i>');
+                    }
+                });
+            }
         });
     });
     </script>

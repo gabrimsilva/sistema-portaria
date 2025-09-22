@@ -500,7 +500,7 @@
                                     <input type="text" class="form-control" id="edit_nome" name="nome" required>
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div id="campo_cpf" class="col-md-4">
                                 <div class="form-group">
                                     <label for="edit_cpf">CPF</label>
                                     <input type="text" class="form-control" id="edit_cpf" name="cpf" placeholder="000.000.000-00">
@@ -931,11 +931,17 @@
             // Mostrar campo de hora de saída para todos os tipos
             $('#campo_hora_saida').show();
             
-            // Mostrar/ocultar campo empresa baseado no tipo
+            // Mostrar/ocultar campos específicos para Profissional Renner
             if (tipo === 'Profissional Renner') {
                 $('#campo_empresa').hide();
+                $('#campo_cpf').hide();
+                // Alterar cor do header do modal para Profissional Renner
+                $('.modal-header').removeClass('bg-info').addClass('bg-primary');
             } else {
                 $('#campo_empresa').show();
+                $('#campo_cpf').show();
+                // Manter cor padrão do header para outros tipos
+                $('.modal-header').removeClass('bg-primary').addClass('bg-info');
             }
             
             if (tipo === 'Visitante') {

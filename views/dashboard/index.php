@@ -1068,6 +1068,8 @@
                 method: 'POST',
                 data: formData,
                 dataType: 'json',
+                processData: false,  // Não processar os dados automáticamente
+                contentType: false,  // Deixar o browser definir o content-type
                 success: function(response) {
                     if (response.success) {
                         showToast('Registro atualizado com sucesso!');

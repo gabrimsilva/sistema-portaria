@@ -5,6 +5,14 @@ class DashboardController {
     
     public function __construct() {
         $this->db = new Database();
+        $this->checkAuthentication();
+    }
+    
+    private function checkAuthentication() {
+        if (!isset($_SESSION['user_id'])) {
+            header('Location: /login');
+            exit;
+        }
     }
     
     public function index() {
@@ -35,8 +43,27 @@ class DashboardController {
                 WHERE DATE(saida) = CURRENT_DATE AND retorno IS NULL
             ")['total'] ?? 0;
             
-            // Estatísticas compiladas
+            // Profissionais Renner ativos (funcionários reais da empresa)
+            $profissionaisAtivos = $this->db->fetch("
+                SELECT COUNT(*) as total 
+                FROM profissionais_renner 
+                WHERE (data_entrada IS NOT NULL OR retorno IS NOT NULL) AND saida_final IS NULL
+            ")['total'] ?? 0;
+            
+            // Entradas de hoje (de todos os tipos)
+            $movimentacao = $this->getMovimentacaoHoje();
+            $entradasHoje = $movimentacao['visitantes'] + $movimentacao['prestadores'] + $movimentacao['profissionais'];
+            
+            // Saídas de hoje (de todos os tipos)
+            $saidasHoje = $this->getSaidasHoje();
+            
+            // Estatísticas compiladas para a view
             $stats = [
+                'visitors_today' => $movimentacao['visitantes'],
+                'employees_active' => $profissionaisAtivos,
+                'entries_today' => $entradasHoje,
+                'exits_today' => $saidasHoje,
+                // Manter as estatísticas originais também
                 'total_profissionais' => $totalProfissionais,
                 'total_visitantes' => $totalVisitantes,
                 'total_prestadores' => $totalPrestadores,
@@ -45,8 +72,7 @@ class DashboardController {
                 'profissionais_fora' => $profissionaisForaHoje
             ];
             
-            // Movimentação de hoje para gráficos
-            $movimentacaoHoje = $this->getMovimentacaoHoje();
+            // Setores mais movimentados para gráficos
             $setoresMaisMovimentados = $this->getSetoresMaisMovimentados();
             
             // Pessoas atualmente na empresa
@@ -56,6 +82,10 @@ class DashboardController {
         } catch (Exception $e) {
             error_log("Dashboard error: " . $e->getMessage());
             $stats = [
+                'visitors_today' => 0,
+                'employees_active' => 0,
+                'entries_today' => 0,
+                'exits_today' => 0,
                 'total_profissionais' => 0,
                 'total_visitantes' => 0,
                 'total_prestadores' => 0,
@@ -63,7 +93,6 @@ class DashboardController {
                 'prestadores_trabalhando' => 0,
                 'profissionais_fora' => 0
             ];
-            $movimentacaoHoje = ['visitantes' => 0, 'prestadores' => 0, 'profissionais' => 0];
             $setoresMaisMovimentados = [];
             $pessoasNaEmpresa = [];
             include '../views/dashboard/index.php';
@@ -100,6 +129,35 @@ class DashboardController {
             ];
         } catch (Exception $e) {
             return ['visitantes' => 0, 'prestadores' => 0, 'profissionais' => 0];
+        }
+    }
+    
+    private function getSaidasHoje() {
+        try {
+            // Saídas de visitantes hoje
+            $visitantesSaidas = $this->db->fetch("
+                SELECT COUNT(*) as total 
+                FROM visitantes_novo 
+                WHERE DATE(hora_saida) = CURRENT_DATE
+            ")['total'] ?? 0;
+            
+            // Saídas de prestadores hoje
+            $prestadoresSaidas = $this->db->fetch("
+                SELECT COUNT(*) as total 
+                FROM prestadores_servico 
+                WHERE DATE(saida) = CURRENT_DATE
+            ")['total'] ?? 0;
+            
+            // Saídas finais de profissionais hoje
+            $profissionaisSaidas = $this->db->fetch("
+                SELECT COUNT(*) as total 
+                FROM profissionais_renner 
+                WHERE DATE(saida_final) = CURRENT_DATE
+            ")['total'] ?? 0;
+            
+            return $visitantesSaidas + $prestadoresSaidas + $profissionaisSaidas;
+        } catch (Exception $e) {
+            return 0;
         }
     }
     
@@ -162,7 +220,7 @@ class DashboardController {
                        'Profissional Renner' as tipo, id
                 FROM profissionais_renner 
                 WHERE (data_entrada IS NOT NULL OR retorno IS NOT NULL) 
-                  AND (saida_final IS NULL OR DATE(saida_final) != CURRENT_DATE)
+                  AND saida_final IS NULL
                 ORDER BY COALESCE(retorno, data_entrada) DESC
             ") ?? [];
             

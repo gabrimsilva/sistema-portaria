@@ -35,11 +35,11 @@ class ProfissionaisRennerController {
         }
         
         if ($status === 'ativo') {
-            // Ativos: têm data_entrada ou retorno, mas não saída_final ou saída_final não é de hoje
-            $query .= " AND (data_entrada IS NOT NULL OR retorno IS NOT NULL) AND (saida_final IS NULL OR DATE(saida_final) != CURRENT_DATE)";
+            // Ativos: têm data_entrada ou retorno, mas não saída_final (estão atualmente na empresa)
+            $query .= " AND (data_entrada IS NOT NULL OR retorno IS NOT NULL) AND saida_final IS NULL";
         } elseif ($status === 'saiu') {
-            // Saíram: têm saída_final registrada hoje
-            $query .= " AND saida_final IS NOT NULL AND DATE(saida_final) = CURRENT_DATE";
+            // Saíram: têm saída_final registrada (independente do dia)
+            $query .= " AND saida_final IS NOT NULL";
         }
         
         $query .= " ORDER BY created_at DESC";

@@ -619,6 +619,7 @@
                                 <th>Empresa</th>
                                 <th>Setor</th>
                                 <th>Hora de Entrada</th>
+                                <th width="100">Ações</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -649,6 +650,19 @@
                     <td>${data.empresa || '-'}</td>
                     <td>${data.setor || '-'}</td>
                     <td><i class="fas fa-clock text-muted"></i> ${dataFormatada}</td>
+                    <td>
+                        <button class="btn btn-sm btn-info btn-editar" 
+                                data-id="${data.id}" 
+                                data-tipo="${data.tipo}"
+                                data-nome="${data.nome}"
+                                data-cpf="${data.cpf || ''}"
+                                data-empresa="${data.empresa || ''}"
+                                data-setor="${data.setor || ''}"
+                                data-funcionario="${data.funcionario_responsavel || ''}"
+                                title="Editar registro">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    </td>
                 </tr>
             `;
             
@@ -894,6 +908,7 @@
             const cpf = btn.data('cpf');
             const empresa = btn.data('empresa');
             const setor = btn.data('setor');
+            const funcionario = btn.data('funcionario');
             
             // Preencher campos básicos
             $('#edit_id').val(id);
@@ -911,8 +926,8 @@
                 $('#campo_funcionario_responsavel').show();
                 $('#botoes_saida').show();
                 $('#texto_saida').text('Registrar Saída do Visitante');
-                // Buscar dados específicos do visitante se necessário
-                $('#edit_funcionario_responsavel').val('');
+                // Preencher campo específico do visitante
+                $('#edit_funcionario_responsavel').val(funcionario || '');
             } else if (tipo === 'Prestador') {
                 $('#campo_observacao').show();
                 $('#botoes_saida').show();

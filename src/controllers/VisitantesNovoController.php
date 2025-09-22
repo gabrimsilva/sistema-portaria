@@ -271,6 +271,7 @@ class VisitantesNovoController {
                         'cpf' => $cpf,
                         'empresa' => $empresa,
                         'setor' => $setor,
+                        'funcionario_responsavel' => $funcionario_responsavel,
                         'hora_entrada' => $hora_entrada
                     ]
                 ]);

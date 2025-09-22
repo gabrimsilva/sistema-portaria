@@ -555,6 +555,35 @@
         </div>
     </div>
     
+    <!-- Modal de Confirmação de Saída -->
+    <div class="modal fade" id="modalConfirmarSaida" tabindex="-1" role="dialog" aria-labelledby="modalConfirmarSaidaLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title text-dark" id="modalConfirmarSaidaLabel">
+                        <i class="fas fa-exclamation-triangle"></i> Confirmar Saída
+                    </h5>
+                    <button type="button" class="close text-dark" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body text-center">
+                    <p class="mb-3">Deseja realmente registrar a saída de:</p>
+                    <h5 class="text-primary" id="nomeColaboradorSaida"></h5>
+                    <p class="text-muted small mt-2">Esta ação irá registrar a saída da empresa.</p>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        <i class="fas fa-times"></i> Não
+                    </button>
+                    <button type="button" class="btn btn-danger" id="btnConfirmarSaida">
+                        <i class="fas fa-check"></i> Sim
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
@@ -979,67 +1008,91 @@
             $('#campo_funcionario_responsavel, #campo_observacao').hide();
         });
 
-        // Handler para botão de saída
+        // Variáveis para armazenar dados da saída
+        let dadosSaida = {};
+        
+        // Handler para botão de saída - abre modal de confirmação
         $(document).on('click', '.btn-saida', function() {
             const id = $(this).data('id');
             const tipo = $(this).data('tipo');
             const nome = $(this).data('nome');
             
-            if (confirm(`Confirma a saída de ${nome}?`)) {
-                $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
-                
-                let endpoint = '';
-                
-                // Determinar endpoint baseado no tipo
-                switch (tipo) {
-                    case 'Visitante':
-                        endpoint = `/visitantes?action=registrar_saida&id=${id}`;
-                        break;
-                    case 'Profissional Renner':
-                        endpoint = `/profissionais-renner?action=saida&id=${id}`;
-                        break;
-                    case 'Prestador':
-                        endpoint = `/prestadores-servico?action=saida&id=${id}`;
-                        break;
-                    default:
-                        showToast('Tipo de registro inválido', 'error');
-                        $(this).prop('disabled', false).html('<i class="fas fa-sign-out-alt"></i>');
-                        return;
-                }
-                
-                $.ajax({
-                    url: endpoint,
-                    method: 'POST',
-                    data: {
-                        csrf_token: $('meta[name="csrf-token"]').attr('content') || '<?= CSRFProtection::generateToken() ?>'
-                    },
-                    dataType: 'json',
-                    success: function(response) {
-                        if (response.success) {
-                            showToast(`Saída de ${nome} registrada com sucesso!`);
-                            // Recarregar a página para atualizar a lista
-                            setTimeout(() => {
-                                location.reload();
-                            }, 1500);
-                        } else {
-                            showToast(response.message || 'Erro ao registrar saída', 'error');
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        if (xhr.status === 401) {
-                            showToast('Sessão expirada. Você será redirecionado para o login.', 'error');
-                            setTimeout(() => {
-                                window.location.href = '/login';
-                            }, 2000);
-                        } else {
-                            showToast('Erro na comunicação com o servidor', 'error');
-                        }
-                    },
-                    complete: function() {
-                        $('.btn-saida').prop('disabled', false).html('<i class="fas fa-sign-out-alt"></i>');
-                    }
-                });
+            // Armazenar dados para uso no modal
+            dadosSaida = {
+                id: id,
+                tipo: tipo,
+                nome: nome,
+                botao: $(this)
+            };
+            
+            // Atualizar o modal com o nome do colaborador
+            $('#nomeColaboradorSaida').text(nome);
+            
+            // Abrir modal de confirmação
+            $('#modalConfirmarSaida').modal('show');
+        });
+        
+        // Handler para confirmação de saída (botão "Sim")
+        $('#btnConfirmarSaida').on('click', function() {
+            const { id, tipo, nome, botao } = dadosSaida;
+            
+            // Fechar modal
+            $('#modalConfirmarSaida').modal('hide');
+            
+            // Desabilitar botão e mostrar loading
+            botao.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+            
+            let endpoint = '';
+            
+            // Determinar endpoint baseado no tipo
+            switch (tipo) {
+                case 'Visitante':
+                    endpoint = `/visitantes?action=registrar_saida&id=${id}`;
+                    break;
+                case 'Profissional Renner':
+                    endpoint = `/profissionais-renner?action=saida&id=${id}`;
+                    break;
+                case 'Prestador':
+                    endpoint = `/prestadores-servico?action=saida&id=${id}`;
+                    break;
+                default:
+                    showToast('Tipo de registro inválido', 'error');
+                    botao.prop('disabled', false).html('<i class="fas fa-sign-out-alt"></i>');
+                    return;
             }
+            
+            $.ajax({
+                url: endpoint,
+                method: 'POST',
+                data: {
+                    csrf_token: $('meta[name="csrf-token"]').attr('content') || '<?= CSRFProtection::generateToken() ?>'
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        showToast(`Saída de ${nome} registrada com sucesso!`);
+                        // Recarregar a página para atualizar a lista
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        showToast(response.message || 'Erro ao registrar saída', 'error');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    if (xhr.status === 401) {
+                        showToast('Sessão expirada. Você será redirecionado para o login.', 'error');
+                        setTimeout(() => {
+                            window.location.href = '/login';
+                        }, 2000);
+                    } else {
+                        showToast('Erro na comunicação com o servidor', 'error');
+                    }
+                },
+                complete: function() {
+                    $('.btn-saida').prop('disabled', false).html('<i class="fas fa-sign-out-alt"></i>');
+                }
+            });
         });
     });
     </script>

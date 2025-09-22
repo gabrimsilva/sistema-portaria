@@ -222,6 +222,7 @@
                                                     <th>CPF</th>
                                                     <th>Empresa</th>
                                                     <th>Setor</th>
+                                                    <th>Placa</th>
                                                     <th>Hora de Entrada</th>
                                                     <th width="100">Ações</th>
                                                 </tr>
@@ -255,6 +256,14 @@
                                                     <td><?= !empty($pessoa['empresa']) ? htmlspecialchars($pessoa['empresa']) : '-' ?></td>
                                                     <td><?= !empty($pessoa['setor']) ? htmlspecialchars($pessoa['setor']) : '-' ?></td>
                                                     <td>
+                                                        <?php if (!empty($pessoa['placa_veiculo']) && in_array($pessoa['tipo'], ['Visitante', 'Prestador'])): ?>
+                                                            <i class="fas fa-car text-muted"></i>
+                                                            <?= htmlspecialchars($pessoa['placa_veiculo']) ?>
+                                                        <?php else: ?>
+                                                            -
+                                                        <?php endif; ?>
+                                                    </td>
+                                                    <td>
                                                         <?php if ($pessoa['hora_entrada']): ?>
                                                             <i class="fas fa-clock text-muted"></i>
                                                             <?= date('d/m/Y H:i', strtotime($pessoa['hora_entrada'])) ?>
@@ -270,6 +279,7 @@
                                                                 data-cpf="<?= htmlspecialchars($pessoa['cpf'] ?? '') ?>"
                                                                 data-empresa="<?= htmlspecialchars($pessoa['empresa'] ?? '') ?>"
                                                                 data-setor="<?= htmlspecialchars($pessoa['setor'] ?? '') ?>"
+                                                                data-placa_veiculo="<?= htmlspecialchars($pessoa['placa_veiculo'] ?? '') ?>"
                                                                 title="Editar registro">
                                                             <i class="fas fa-edit"></i>
                                                         </button>

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Sistema de Controle de Acesso</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
@@ -141,6 +141,38 @@
                         </div>
                     </div>
                     
+                    <!-- Botões de Cadastro Rápido -->
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3 class="card-title">
+                                        <i class="fas fa-plus-circle"></i> Cadastro Rápido
+                                    </h3>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-4 mb-2">
+                                            <button type="button" class="btn btn-success btn-block" data-toggle="modal" data-target="#modalVisitante">
+                                                <i class="fas fa-users"></i> Novo Visitante
+                                            </button>
+                                        </div>
+                                        <div class="col-md-4 mb-2">
+                                            <button type="button" class="btn btn-primary btn-block" data-toggle="modal" data-target="#modalProfissional">
+                                                <i class="fas fa-user-tie"></i> Novo Profissional Renner
+                                            </button>
+                                        </div>
+                                        <div class="col-md-4 mb-2">
+                                            <button type="button" class="btn btn-warning btn-block" data-toggle="modal" data-target="#modalPrestador">
+                                                <i class="fas fa-tools"></i> Novo Prestador de Serviço
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <!-- Pessoas Atualmente na Empresa -->
                     <div class="row">
                         <div class="col-12">
@@ -219,8 +251,378 @@
         </div>
     </div>
     
+    <!-- Modal para Cadastro de Visitante -->
+    <div class="modal fade" id="modalVisitante" tabindex="-1" role="dialog" aria-labelledby="modalVisitanteLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-success">
+                    <h5 class="modal-title text-white" id="modalVisitanteLabel">
+                        <i class="fas fa-users"></i> Cadastrar Novo Visitante
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="formVisitante">
+                        <input type="hidden" name="csrf_token" value="<?= CSRFProtection::generateToken() ?>">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="visitante_nome">Nome Completo *</label>
+                                    <input type="text" class="form-control" id="visitante_nome" name="nome" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="visitante_cpf">CPF</label>
+                                    <input type="text" class="form-control" id="visitante_cpf" name="cpf" placeholder="000.000.000-00">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="visitante_empresa">Empresa</label>
+                                    <input type="text" class="form-control" id="visitante_empresa" name="empresa">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="visitante_setor">Setor</label>
+                                    <input type="text" class="form-control" id="visitante_setor" name="setor">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="visitante_funcionario_responsavel">Funcionário Responsável</label>
+                            <input type="text" class="form-control" id="visitante_funcionario_responsavel" name="funcionario_responsavel">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" id="btnSalvarVisitante">
+                        <i class="fas fa-save"></i> Cadastrar Visitante
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para Cadastro de Profissional Renner -->
+    <div class="modal fade" id="modalProfissional" tabindex="-1" role="dialog" aria-labelledby="modalProfissionalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-primary">
+                    <h5 class="modal-title text-white" id="modalProfissionalLabel">
+                        <i class="fas fa-user-tie"></i> Cadastrar Novo Profissional Renner
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="formProfissional">
+                        <input type="hidden" name="csrf_token" value="<?= CSRFProtection::generateToken() ?>">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="form-group">
+                                    <label for="profissional_nome">Nome Completo *</label>
+                                    <input type="text" class="form-control" id="profissional_nome" name="nome" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="profissional_setor">Setor</label>
+                                    <input type="text" class="form-control" id="profissional_setor" name="setor">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btnSalvarProfissional">
+                        <i class="fas fa-save"></i> Cadastrar Profissional
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para Cadastro de Prestador de Serviço -->
+    <div class="modal fade" id="modalPrestador" tabindex="-1" role="dialog" aria-labelledby="modalPrestadorLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title text-dark" id="modalPrestadorLabel">
+                        <i class="fas fa-tools"></i> Cadastrar Novo Prestador de Serviço
+                    </h5>
+                    <button type="button" class="close text-dark" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="formPrestador">
+                        <input type="hidden" name="csrf_token" value="<?= CSRFProtection::generateToken() ?>">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="prestador_nome">Nome Completo *</label>
+                                    <input type="text" class="form-control" id="prestador_nome" name="nome" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="prestador_cpf">CPF</label>
+                                    <input type="text" class="form-control" id="prestador_cpf" name="cpf" placeholder="000.000.000-00">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="prestador_empresa">Empresa</label>
+                                    <input type="text" class="form-control" id="prestador_empresa" name="empresa">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="prestador_setor">Setor</label>
+                                    <input type="text" class="form-control" id="prestador_setor" name="setor">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="prestador_observacao">Observações</label>
+                            <textarea class="form-control" id="prestador_observacao" name="observacao" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-warning" id="btnSalvarPrestador">
+                        <i class="fas fa-save"></i> Cadastrar Prestador
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+    
+    <script>
+    $(document).ready(function() {
+        // Funções de utilidade
+        function showToast(message, type = 'success') {
+            const toastClass = type === 'success' ? 'bg-success' : 'bg-danger';
+            const toastHtml = `
+                <div class="toast ${toastClass} text-white" role="alert" aria-live="assertive" aria-atomic="true" data-delay="3000">
+                    <div class="toast-body">
+                        ${message}
+                    </div>
+                </div>
+            `;
+            
+            if (!$('#toast-container').length) {
+                $('body').append('<div id="toast-container" style="position: fixed; top: 20px; right: 20px; z-index: 9999;"></div>');
+            }
+            
+            const $toast = $(toastHtml);
+            $('#toast-container').append($toast);
+            $toast.toast('show');
+            
+            $toast.on('hidden.bs.toast', function() {
+                $(this).remove();
+            });
+        }
+        
+        function limparFormulario(formId) {
+            $(`#${formId}`)[0].reset();
+        }
+        
+        function adicionarPessoaNaLista(data) {
+            // Verifica se há pessoas na lista ou se está vazia
+            const tabelaBody = $('.table tbody');
+            const emptyMessage = $('.text-center.p-4');
+            
+            if (emptyMessage.length > 0) {
+                // Remove a mensagem de "nenhuma pessoa" e cria a tabela
+                emptyMessage.parent().html(`
+                    <table class="table table-hover text-nowrap">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Tipo</th>
+                                <th>CPF</th>
+                                <th>Empresa</th>
+                                <th>Setor</th>
+                                <th>Hora de Entrada</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                `);
+            }
+            
+            // Define a cor do badge baseado no tipo
+            let badgeClass = 'primary';
+            if (data.tipo === 'Visitante') badgeClass = 'success';
+            else if (data.tipo === 'Prestador') badgeClass = 'warning';
+            
+            // Formata a data/hora
+            const dataFormatada = new Date(data.hora_entrada.replace(' ', 'T')).toLocaleString('pt-BR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            
+            // Cria a nova linha
+            const novaLinha = `
+                <tr>
+                    <td><strong>${data.nome}</strong></td>
+                    <td><span class="badge badge-${badgeClass}">${data.tipo}</span></td>
+                    <td>${data.cpf || '-'}</td>
+                    <td>${data.empresa || '-'}</td>
+                    <td>${data.setor || '-'}</td>
+                    <td><i class="fas fa-clock text-muted"></i> ${dataFormatada}</td>
+                </tr>
+            `;
+            
+            // Adiciona a linha no topo da tabela
+            $('.table tbody').prepend(novaLinha);
+            
+            // Atualiza o contador no badge
+            const badge = $('.card-title .badge');
+            const contadorAtual = parseInt(badge.text()) || 0;
+            badge.text(contadorAtual + 1);
+        }
+        
+        // Cadastro de Visitante
+        $('#btnSalvarVisitante').click(function() {
+            const formData = $('#formVisitante').serialize();
+            const nome = $('#visitante_nome').val().trim();
+            
+            if (!nome) {
+                showToast('Nome é obrigatório', 'error');
+                return;
+            }
+            
+            $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Salvando...');
+            
+            $.ajax({
+                url: '/visitantes?action=save_ajax',
+                method: 'POST',
+                data: formData,
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        showToast('Visitante cadastrado com sucesso!');
+                        $('#modalVisitante').modal('hide');
+                        limparFormulario('formVisitante');
+                        adicionarPessoaNaLista(response.data);
+                    } else {
+                        showToast(response.message || 'Erro ao cadastrar visitante', 'error');
+                    }
+                },
+                error: function() {
+                    showToast('Erro na comunicação com o servidor', 'error');
+                },
+                complete: function() {
+                    $('#btnSalvarVisitante').prop('disabled', false).html('<i class="fas fa-save"></i> Cadastrar Visitante');
+                }
+            });
+        });
+        
+        // Cadastro de Profissional Renner
+        $('#btnSalvarProfissional').click(function() {
+            const formData = $('#formProfissional').serialize();
+            const nome = $('#profissional_nome').val().trim();
+            
+            if (!nome) {
+                showToast('Nome é obrigatório', 'error');
+                return;
+            }
+            
+            $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Salvando...');
+            
+            $.ajax({
+                url: '/profissionais-renner?action=save_ajax',
+                method: 'POST',
+                data: formData,
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        showToast('Profissional cadastrado com sucesso!');
+                        $('#modalProfissional').modal('hide');
+                        limparFormulario('formProfissional');
+                        adicionarPessoaNaLista(response.data);
+                    } else {
+                        showToast(response.message || 'Erro ao cadastrar profissional', 'error');
+                    }
+                },
+                error: function() {
+                    showToast('Erro na comunicação com o servidor', 'error');
+                },
+                complete: function() {
+                    $('#btnSalvarProfissional').prop('disabled', false).html('<i class="fas fa-save"></i> Cadastrar Profissional');
+                }
+            });
+        });
+        
+        // Cadastro de Prestador de Serviço
+        $('#btnSalvarPrestador').click(function() {
+            const formData = $('#formPrestador').serialize();
+            const nome = $('#prestador_nome').val().trim();
+            
+            if (!nome) {
+                showToast('Nome é obrigatório', 'error');
+                return;
+            }
+            
+            $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Salvando...');
+            
+            $.ajax({
+                url: '/prestadores-servico?action=save_ajax',
+                method: 'POST',
+                data: formData,
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        showToast('Prestador cadastrado com sucesso!');
+                        $('#modalPrestador').modal('hide');
+                        limparFormulario('formPrestador');
+                        adicionarPessoaNaLista(response.data);
+                    } else {
+                        showToast(response.message || 'Erro ao cadastrar prestador', 'error');
+                    }
+                },
+                error: function() {
+                    showToast('Erro na comunicação com o servidor', 'error');
+                },
+                complete: function() {
+                    $('#btnSalvarPrestador').prop('disabled', false).html('<i class="fas fa-save"></i> Cadastrar Prestador');
+                }
+            });
+        });
+        
+        // Limpar formulários ao fechar modals
+        $('.modal').on('hidden.bs.modal', function() {
+            const modalId = $(this).attr('id');
+            if (modalId === 'modalVisitante') {
+                limparFormulario('formVisitante');
+            } else if (modalId === 'modalProfissional') {
+                limparFormulario('formProfissional');
+            } else if (modalId === 'modalPrestador') {
+                limparFormulario('formPrestador');
+            }
+        });
+    });
+    </script>
 </body>
 </html>

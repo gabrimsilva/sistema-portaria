@@ -166,4 +166,52 @@ class ProfissionaisRennerController {
         header('Location: /profissionais-renner');
         exit;
     }
+    
+    public function saveAjax() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            header('Content-Type: application/json');
+            
+            try {
+                CSRFProtection::verifyRequest();
+                $nome = trim($_POST['nome'] ?? '');
+                $setor = trim($_POST['setor'] ?? '');
+                
+                if (empty($nome)) {
+                    echo json_encode(['success' => false, 'message' => 'Nome é obrigatório']);
+                    return;
+                }
+                
+                // Se não foi especificada data de entrada, registra automaticamente a data/hora atual
+                $data_entrada = date('Y-m-d H:i:s');
+                
+                $this->db->query("
+                    INSERT INTO profissionais_renner (nome, data_entrada, setor)
+                    VALUES (?, ?, ?)
+                ", [
+                    $nome, $data_entrada, $setor
+                ]);
+                
+                $id = $this->db->lastInsertId();
+                
+                echo json_encode([
+                    'success' => true, 
+                    'message' => 'Profissional cadastrado com sucesso',
+                    'data' => [
+                        'id' => $id,
+                        'nome' => $nome,
+                        'tipo' => 'Profissional Renner',
+                        'cpf' => '',
+                        'empresa' => '',
+                        'setor' => $setor,
+                        'hora_entrada' => $data_entrada
+                    ]
+                ]);
+            } catch (Exception $e) {
+                echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+            }
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Método não permitido']);
+        }
+        exit;
+    }
 }

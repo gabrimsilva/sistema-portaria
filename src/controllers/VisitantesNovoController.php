@@ -190,4 +190,55 @@ class VisitantesNovoController {
         header('Location: /visitantes');
         exit;
     }
+    
+    public function saveAjax() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            header('Content-Type: application/json');
+            
+            try {
+                CSRFProtection::verifyRequest();
+                $nome = trim($_POST['nome'] ?? '');
+                $cpf = trim($_POST['cpf'] ?? '');
+                $empresa = trim($_POST['empresa'] ?? '');
+                $funcionario_responsavel = trim($_POST['funcionario_responsavel'] ?? '');
+                $setor = trim($_POST['setor'] ?? '');
+                
+                if (empty($nome)) {
+                    echo json_encode(['success' => false, 'message' => 'Nome é obrigatório']);
+                    return;
+                }
+                
+                // Se não foi especificada hora de entrada, registra automaticamente a hora atual
+                $hora_entrada = date('Y-m-d H:i:s');
+                
+                $this->db->query("
+                    INSERT INTO visitantes_novo (nome, cpf, empresa, funcionario_responsavel, setor, hora_entrada)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                ", [
+                    $nome, $cpf, $empresa, $funcionario_responsavel, $setor, $hora_entrada
+                ]);
+                
+                $id = $this->db->lastInsertId();
+                
+                echo json_encode([
+                    'success' => true, 
+                    'message' => 'Visitante cadastrado com sucesso',
+                    'data' => [
+                        'id' => $id,
+                        'nome' => $nome,
+                        'tipo' => 'Visitante',
+                        'cpf' => $cpf,
+                        'empresa' => $empresa,
+                        'setor' => $setor,
+                        'hora_entrada' => $hora_entrada
+                    ]
+                ]);
+            } catch (Exception $e) {
+                echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+            }
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Método não permitido']);
+        }
+        exit;
+    }
 }

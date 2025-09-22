@@ -101,8 +101,15 @@ class EmployeeController {
     }
     
     public function toggleStatus() {
-        if (isset($_GET['id'])) {
-            $id = $_GET['id'];
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            die('Method not allowed');
+        }
+        
+        CSRFProtection::verifyRequest();
+        
+        if (isset($_POST['id'])) {
+            $id = $_POST['id'];
             
             $employee = $this->db->fetch("SELECT ativo FROM funcionarios WHERE id = ?", [$id]);
             if ($employee) {
@@ -149,12 +156,17 @@ class EmployeeController {
         $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
         $maxSize = 2 * 1024 * 1024; // 2MB
         
-        if (!in_array($file['type'], $allowedTypes)) {
-            throw new Exception("Tipo de arquivo não permitido. Use JPG, PNG, GIF ou WebP");
-        }
-        
         if ($file['size'] > $maxSize) {
             throw new Exception("Arquivo muito grande. Máximo 2MB");
+        }
+        
+        // Server-side MIME validation with finfo
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mimeType = finfo_file($finfo, $file['tmp_name']);
+        finfo_close($finfo);
+        
+        if (!in_array($mimeType, $allowedTypes)) {
+            throw new Exception("Tipo de arquivo não permitido. Use JPG, PNG, GIF ou WebP");
         }
         
         $uploadDir = UPLOAD_PATH . '/employees/';
@@ -162,8 +174,14 @@ class EmployeeController {
             mkdir($uploadDir, 0755, true);
         }
         
-        // Generate secure filename
-        $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        // Generate secure filename with safe extension based on MIME type
+        $safeExtensions = [
+            'image/jpeg' => 'jpg',
+            'image/png' => 'png', 
+            'image/gif' => 'gif',
+            'image/webp' => 'webp'
+        ];
+        $extension = $safeExtensions[$mimeType] ?? 'jpg';
         $filename = bin2hex(random_bytes(16)) . '.' . $extension;
         $filepath = $uploadDir . $filename;
         

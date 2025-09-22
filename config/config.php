@@ -9,14 +9,33 @@ define('PUBLIC_PATH', BASE_PATH . '/public');
 define('UPLOAD_PATH', PUBLIC_PATH . '/uploads');
 define('BASE_URL', '/');
 
-// Session configuration
+// Session configuration with security
 ini_set('session.cookie_lifetime', 86400); // 24 hours
 ini_set('session.gc_maxlifetime', 86400);
+ini_set('session.cookie_httponly', 1);
+ini_set('session.cookie_samesite', 'Strict');
+ini_set('session.use_strict_mode', 1);
+if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
+    ini_set('session.cookie_secure', 1);
+}
 session_start();
 
-// Error reporting
+// Error reporting - secure for production
 error_reporting(E_ALL);
-ini_set('display_errors', 1);
+ini_set('log_errors', 1);
+ini_set('error_log', BASE_PATH . '/logs/error.log');
+
+// Create logs directory if it doesn't exist
+if (!is_dir(BASE_PATH . '/logs')) {
+    mkdir(BASE_PATH . '/logs', 0755, true);
+}
+
+// Only display errors in development
+if (isset($_ENV['ENVIRONMENT']) && $_ENV['ENVIRONMENT'] === 'development') {
+    ini_set('display_errors', 1);
+} else {
+    ini_set('display_errors', 0);
+}
 
 // Autoload function for classes
 spl_autoload_register(function ($className) {

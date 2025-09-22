@@ -22,6 +22,9 @@ class AuthController {
                     );
                     
                     if ($user && password_verify($password, $user['senha_hash'])) {
+                        // Regenerate session ID for security
+                        session_regenerate_id(true);
+                        
                         $_SESSION['user_id'] = $user['id'];
                         $_SESSION['user_name'] = $user['nome'];
                         $_SESSION['user_profile'] = $user['perfil'];

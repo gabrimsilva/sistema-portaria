@@ -189,12 +189,16 @@
                                                         <a href="/employees?action=history&id=<?= $employee['id'] ?>" class="btn btn-sm btn-info" title="Histórico de Acessos">
                                                             <i class="fas fa-history"></i>
                                                         </a>
-                                                        <a href="/employees?action=toggle&id=<?= $employee['id'] ?>" 
-                                                           class="btn btn-sm btn-<?= $employee['ativo'] ? 'warning' : 'success' ?>"
-                                                           title="<?= $employee['ativo'] ? 'Desativar' : 'Ativar' ?>"
-                                                           onclick="return confirm('Tem certeza que deseja <?= $employee['ativo'] ? 'desativar' : 'ativar' ?> este funcionário?')">
-                                                            <i class="fas fa-<?= $employee['ativo'] ? 'pause' : 'play' ?>"></i>
-                                                        </a>
+                                                        <form method="POST" action="/employees?action=toggle" class="d-inline">
+                                                            <?= CSRFProtection::getHiddenInput() ?>
+                                                            <input type="hidden" name="id" value="<?= $employee['id'] ?>">
+                                                            <button type="submit" 
+                                                                    class="btn btn-sm btn-<?= $employee['ativo'] ? 'warning' : 'success' ?>"
+                                                                    title="<?= $employee['ativo'] ? 'Desativar' : 'Ativar' ?>"
+                                                                    onclick="return confirm('Tem certeza que deseja <?= $employee['ativo'] ? 'desativar' : 'ativar' ?> este funcionário?')">
+                                                                <i class="fas fa-<?= $employee['ativo'] ? 'pause' : 'play' ?>"></i>
+                                                            </button>
+                                                        </form>
                                                         <a href="/access?employee_id=<?= $employee['id'] ?>" class="btn btn-sm btn-primary" title="Registrar Acesso">
                                                             <i class="fas fa-door-open"></i>
                                                         </a>

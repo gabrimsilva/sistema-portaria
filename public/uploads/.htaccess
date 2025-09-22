@@ -1,0 +1,14 @@
+# Prevent execution of scripts in uploads directory
+<FilesMatch "\.(php|phtml|pl|py|jsp|asp|sh|cgi)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Only allow image files
+<FilesMatch "\.(jpg|jpeg|gif|png|webp)$">
+    Order deny,allow
+    Allow from all
+</FilesMatch>
+
+# Disable directory browsing
+Options -Indexes

@@ -154,17 +154,17 @@
                                     <div class="row">
                                         <div class="col-md-4 mb-2">
                                             <button type="button" class="btn btn-success btn-block" data-toggle="modal" data-target="#modalVisitante">
-                                                <i class="fas fa-users"></i> Novo Visitante
+                                                <i class="fas fa-users"></i> Registrar Visitante
                                             </button>
                                         </div>
                                         <div class="col-md-4 mb-2">
                                             <button type="button" class="btn btn-primary btn-block" data-toggle="modal" data-target="#modalProfissional">
-                                                <i class="fas fa-user-tie"></i> Novo Profissional Renner
+                                                <i class="fas fa-user-tie"></i> Registrar Profissional Renner
                                             </button>
                                         </div>
                                         <div class="col-md-4 mb-2">
                                             <button type="button" class="btn btn-warning btn-block" data-toggle="modal" data-target="#modalPrestador">
-                                                <i class="fas fa-tools"></i> Novo Prestador de Serviço
+                                                <i class="fas fa-tools"></i> Registrar Prestador de Serviço
                                             </button>
                                         </div>
                                     </div>
@@ -257,7 +257,7 @@
             <div class="modal-content">
                 <div class="modal-header bg-success">
                     <h5 class="modal-title text-white" id="modalVisitanteLabel">
-                        <i class="fas fa-users"></i> Cadastrar Novo Visitante
+                        <i class="fas fa-users"></i> Cadastrar Visitante
                     </h5>
                     <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
@@ -316,7 +316,7 @@
             <div class="modal-content">
                 <div class="modal-header bg-primary">
                     <h5 class="modal-title text-white" id="modalProfissionalLabel">
-                        <i class="fas fa-user-tie"></i> Cadastrar Novo Profissional Renner
+                        <i class="fas fa-user-tie"></i> Cadastrar Profissional Renner
                     </h5>
                     <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
@@ -357,7 +357,7 @@
             <div class="modal-content">
                 <div class="modal-header bg-warning">
                     <h5 class="modal-title text-dark" id="modalPrestadorLabel">
-                        <i class="fas fa-tools"></i> Cadastrar Novo Prestador de Serviço
+                        <i class="fas fa-tools"></i> Cadastrar Prestador de Serviço
                     </h5>
                     <button type="button" class="close text-dark" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>

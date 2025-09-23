@@ -256,8 +256,8 @@
                                                     <td><?= !empty($pessoa['empresa']) ? htmlspecialchars($pessoa['empresa']) : '-' ?></td>
                                                     <td><?= !empty($pessoa['setor']) ? htmlspecialchars($pessoa['setor']) : '-' ?></td>
                                                     <td>
-                                                        <?php if (!empty($pessoa['placa_veiculo']) && in_array($pessoa['tipo'], ['Visitante', 'Prestador'])): ?>
-                                                            <i class="fas fa-car text-muted"></i>
+                                                        <?php if (!empty($pessoa['placa_veiculo'])): ?>
+                                                            <i class="fas fa-car text-muted mr-1"></i>
                                                             <?= htmlspecialchars($pessoa['placa_veiculo']) ?>
                                                         <?php else: ?>
                                                             -

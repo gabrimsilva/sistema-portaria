@@ -277,7 +277,8 @@ class ProfissionaisRennerController {
                         'setor' => $setor,
                         'funcionario_responsavel' => '',
                         'placa_veiculo' => '',
-                        'hora_entrada' => $profissionalAtualizado['retorno'] ?? $profissionalAtualizado['data_entrada'] ?? null
+                        'hora_entrada' => $profissionalAtualizado['retorno'] ?? $profissionalAtualizado['data_entrada'] ?? null,
+                        'saida_final' => $profissionalAtualizado['saida_final'] ?? null
                     ]
                 ]);
             } catch (Exception $e) {

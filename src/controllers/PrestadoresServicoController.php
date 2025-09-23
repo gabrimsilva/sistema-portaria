@@ -312,7 +312,8 @@ class PrestadoresServicoController {
                         'setor' => $setor,
                         'funcionario_responsavel' => '',
                         'placa_veiculo' => $placa_veiculo,
-                        'hora_entrada' => $prestadorAtualizado['entrada'] ?? null
+                        'hora_entrada' => $prestadorAtualizado['entrada'] ?? null,
+                        'saida' => $prestadorAtualizado['saida'] ?? null
                     ]
                 ]);
             } catch (Exception $e) {

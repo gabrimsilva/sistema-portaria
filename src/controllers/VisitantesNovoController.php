@@ -345,7 +345,8 @@ class VisitantesNovoController {
                         'setor' => $setor,
                         'funcionario_responsavel' => $funcionario_responsavel,
                         'placa_veiculo' => $placa_veiculo,
-                        'hora_entrada' => $visitanteAtualizado['hora_entrada'] ?? null
+                        'hora_entrada' => $visitanteAtualizado['hora_entrada'] ?? null,
+                        'hora_saida' => $visitanteAtualizado['hora_saida'] ?? null
                     ]
                 ]);
             } catch (Exception $e) {

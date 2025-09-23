@@ -636,6 +636,42 @@
             // Função para atualizar registro existente SEM afetar contadores
             const linha = $(`.btn-editar[data-id="${data.id}"]`).closest('tr');
             if (linha.length > 0) {
+                // Verificar se a pessoa registrou saída (deve ser removida da lista)
+                let temSaida = false;
+                
+                // Verificar cada tipo de saída possível nos dados retornados pelo controller
+                if (data.hora_saida && data.hora_saida !== null && data.hora_saida !== '') {
+                    temSaida = true; // Visitante com saída
+                } else if (data.saida && data.saida !== null && data.saida !== '') {
+                    temSaida = true; // Prestador com saída  
+                } else if (data.saida_final && data.saida_final !== null && data.saida_final !== '') {
+                    temSaida = true; // Profissional com saída final
+                }
+                
+                // Se a pessoa saiu, remover da tabela e atualizar contadores
+                if (temSaida) {
+                    showToast(`${data.nome} saiu da empresa`, 'success');
+                    
+                    linha.fadeOut(300, function() {
+                        $(this).remove();
+                        
+                        // Atualizar contador de pessoas na empresa
+                        const badge = $('.card-title .badge');
+                        const contadorAtual = parseInt(badge.text()) || 0;
+                        if (contadorAtual > 0) {
+                            badge.text(contadorAtual - 1);
+                        }
+                        
+                        // Atualizar contador de saídas hoje
+                        const saidasCard = $('.small-box').eq(3).find('.inner h3');
+                        const saidasAtual = parseInt(saidasCard.text()) || 0;
+                        saidasCard.text(saidasAtual + 1);
+                    });
+                    
+                    return; // Não continuar com a atualização da linha
+                }
+                
+                // Se não saiu, atualizar linha normalmente
                 // Define a cor do badge baseado no tipo
                 let badgeClass = 'primary';
                 if (data.tipo === 'Visitante') badgeClass = 'success';

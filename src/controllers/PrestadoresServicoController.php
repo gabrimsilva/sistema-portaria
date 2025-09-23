@@ -88,8 +88,18 @@ class PrestadoresServicoController {
                 $placa_veiculo = preg_replace('/[^A-Z0-9]/', '', strtoupper(trim($placa_veiculo)));
                 // ================================================
                 
+                // Validações obrigatórias
                 if (empty($nome)) {
                     throw new Exception("Nome é obrigatório");
+                }
+                if (empty($setor)) {
+                    throw new Exception("Setor é obrigatório");
+                }
+                if (empty($cpf)) {
+                    throw new Exception("CPF é obrigatório");
+                }
+                if (empty($placa_veiculo)) {
+                    throw new Exception("Placa de veículo é obrigatória");
                 }
                 
                 // ========== VALIDAÇÕES TEMPORAIS ==========
@@ -197,8 +207,18 @@ class PrestadoresServicoController {
                 $placa_veiculo = preg_replace('/[^A-Z0-9]/', '', strtoupper(trim($placa_veiculo)));
                 // ================================================
                 
+                // Validações obrigatórias
                 if (empty($nome)) {
                     throw new Exception("Nome é obrigatório");
+                }
+                if (empty($setor)) {
+                    throw new Exception("Setor é obrigatório");
+                }
+                if (empty($cpf)) {
+                    throw new Exception("CPF é obrigatório");
+                }
+                if (empty($placa_veiculo)) {
+                    throw new Exception("Placa de veículo é obrigatória");
                 }
                 
                 // ========== VALIDAÇÕES TEMPORAIS ==========
@@ -354,10 +374,31 @@ class PrestadoresServicoController {
                 $placa_veiculo = preg_replace('/[^A-Z0-9]/', '', strtoupper(trim($placa_veiculo)));
                 // =====================================
                 
+                // Validações obrigatórias
                 if (empty($nome)) {
                     echo json_encode(['success' => false, 'message' => 'Nome é obrigatório']);
                     return;
                 }
+                if (empty($setor)) {
+                    echo json_encode(['success' => false, 'message' => 'Setor é obrigatório']);
+                    return;
+                }
+                if (empty($cpf)) {
+                    echo json_encode(['success' => false, 'message' => 'CPF é obrigatório']);
+                    return;
+                }
+                if (empty($placa_veiculo)) {
+                    echo json_encode(['success' => false, 'message' => 'Placa de veículo é obrigatória']);
+                    return;
+                }
+                
+                // Validar CPF
+                $cpfValidator = new CpfValidator();
+                if (!$cpfValidator->isValid($cpf)) {
+                    echo json_encode(['success' => false, 'message' => 'CPF inválido']);
+                    return;
+                }
+                $cpf = $cpfValidator->normalize($cpf);
                 
                 // Usar hora especificada ou hora atual se não fornecida
                 if (!empty($entrada_input)) {
@@ -448,10 +489,34 @@ class PrestadoresServicoController {
                 $placa_veiculo = trim($_POST['placa_veiculo'] ?? '');
                 $saida = trim($_POST['saida'] ?? '');
                 
+                // Validações obrigatórias
                 if (empty($id) || empty($nome)) {
                     echo json_encode(['success' => false, 'message' => 'ID e Nome são obrigatórios']);
                     return;
                 }
+                if (empty($setor)) {
+                    echo json_encode(['success' => false, 'message' => 'Setor é obrigatório']);
+                    return;
+                }
+                if (empty($cpf)) {
+                    echo json_encode(['success' => false, 'message' => 'CPF é obrigatório']);
+                    return;
+                }
+                if (empty($placa_veiculo)) {
+                    echo json_encode(['success' => false, 'message' => 'Placa de veículo é obrigatória']);
+                    return;
+                }
+                
+                // Validar e normalizar CPF
+                $cpfValidator = new CpfValidator();
+                if (!$cpfValidator->isValid($cpf)) {
+                    echo json_encode(['success' => false, 'message' => 'CPF inválido']);
+                    return;
+                }
+                $cpf = $cpfValidator->normalize($cpf);
+                
+                // Normalizar placa de veículo
+                $placa_veiculo = strtoupper(preg_replace('/[^A-Z0-9]/', '', $placa_veiculo));
                 
                 // Buscar dados atuais do prestador
                 $prestadorAtual = $this->db->fetch("SELECT * FROM prestadores_servico WHERE id = ?", [$id]);

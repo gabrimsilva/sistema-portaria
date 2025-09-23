@@ -328,8 +328,8 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="visitante_cpf">CPF</label>
-                                    <input type="text" class="form-control" id="visitante_cpf" name="cpf" placeholder="000.000.000-00">
+                                    <label for="visitante_cpf">CPF *</label>
+                                    <input type="text" class="form-control" id="visitante_cpf" name="cpf" placeholder="000.000.000-00" maxlength="14" required>
                                 </div>
                             </div>
                         </div>
@@ -342,8 +342,8 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="visitante_setor">Setor</label>
-                                    <input type="text" class="form-control" id="visitante_setor" name="setor">
+                                    <label for="visitante_setor">Setor *</label>
+                                    <input type="text" class="form-control" id="visitante_setor" name="setor" required>
                                 </div>
                             </div>
                         </div>
@@ -356,8 +356,8 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="visitante_placa_veiculo">Placa de Veículo</label>
-                                    <input type="text" class="form-control" id="visitante_placa_veiculo" name="placa_veiculo" placeholder="ABC-1234">
+                                    <label for="visitante_placa_veiculo">Placa de Veículo *</label>
+                                    <input type="text" class="form-control" id="visitante_placa_veiculo" name="placa_veiculo" placeholder="ABC-1234" style="text-transform: uppercase;" maxlength="8" required>
                                 </div>
                             </div>
                         </div>
@@ -394,18 +394,38 @@
                     <form id="formProfissional">
                         <input type="hidden" name="csrf_token" value="<?= CSRFProtection::generateToken() ?>">
                         <div class="row">
-                            <div class="col-md-8">
+                            <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="profissional_nome">Nome Completo *</label>
                                     <input type="text" class="form-control" id="profissional_nome" name="nome" required>
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="profissional_setor">Setor</label>
-                                    <input type="text" class="form-control" id="profissional_setor" name="setor">
+                                    <label for="profissional_cpf">CPF *</label>
+                                    <input type="text" class="form-control" id="profissional_cpf" name="cpf" placeholder="000.000.000-00" maxlength="14" required>
                                 </div>
                             </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="profissional_empresa">Empresa</label>
+                                    <input type="text" class="form-control" id="profissional_empresa" name="empresa">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="profissional_setor">Setor *</label>
+                                    <input type="text" class="form-control" id="profissional_setor" name="setor" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="profissional_placa_veiculo">Placa de Veículo *</label>
+                            <input type="text" class="form-control" id="profissional_placa_veiculo" name="placa_veiculo" placeholder="ABC-1234" style="text-transform: uppercase;" maxlength="8" required>
                         </div>
                         <div class="form-group">
                             <label for="profissional_data_entrada">Data/Hora de Entrada</label>
@@ -448,8 +468,8 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="prestador_cpf">CPF</label>
-                                    <input type="text" class="form-control" id="prestador_cpf" name="cpf" placeholder="000.000.000-00">
+                                    <label for="prestador_cpf">CPF *</label>
+                                    <input type="text" class="form-control" id="prestador_cpf" name="cpf" placeholder="000.000.000-00" maxlength="14" required>
                                 </div>
                             </div>
                         </div>
@@ -462,14 +482,14 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="prestador_setor">Setor</label>
-                                    <input type="text" class="form-control" id="prestador_setor" name="setor">
+                                    <label for="prestador_setor">Setor *</label>
+                                    <input type="text" class="form-control" id="prestador_setor" name="setor" required>
                                 </div>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label for="prestador_placa_veiculo">Placa de Veículo</label>
-                            <input type="text" class="form-control" id="prestador_placa_veiculo" name="placa_veiculo" placeholder="ABC-1234">
+                            <label for="prestador_placa_veiculo">Placa de Veículo *</label>
+                            <input type="text" class="form-control" id="prestador_placa_veiculo" name="placa_veiculo" placeholder="ABC-1234" style="text-transform: uppercase;" maxlength="8" required>
                         </div>
                         <div class="form-group">
                             <label for="prestador_observacao">Observações</label>
@@ -1411,6 +1431,12 @@
             aplicarMascaraCPF('#prestador_cpf');
             aplicarMascaraPlaca('#prestador_placa_veiculo');
             console.log('✅ Máscaras aplicadas ao Modal Prestador');
+        });
+        
+        $('#modalProfissional').on('shown.bs.modal', function() {
+            aplicarMascaraCPF('#profissional_cpf');
+            aplicarMascaraPlaca('#profissional_placa_veiculo');
+            console.log('✅ Máscaras aplicadas ao Modal Profissional');
         });
         
         $('#modalEditar').on('shown.bs.modal', function() {

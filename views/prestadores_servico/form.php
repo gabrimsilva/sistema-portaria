@@ -40,7 +40,7 @@
         <!-- Main Sidebar -->
         <aside class="main-sidebar sidebar-dark-primary elevation-4">
             <a href="/dashboard" class="brand-link">
-                <img src="https://via.placeholder.com/33x33" alt="Logo" class="brand-image img-circle elevation-3">
+                <img src="/logo.jpg" alt="Renner Logo" class="brand-image img-circle elevation-3" style="width: 40px; height: 40px; object-fit: contain;">
                 <span class="brand-text font-weight-light">Controle Acesso</span>
             </a>
             
@@ -113,7 +113,7 @@
                                         <div class="row">
                                             <div class="col-md-6">
                                                 <div class="form-group">
-                                                    <label for="nome">Nome *</label>
+                                                    <label for="nome">Nome Completo *</label>
                                                     <input type="text" class="form-control" id="nome" name="nome" 
                                                            value="<?= htmlspecialchars($prestador['nome'] ?? '') ?>" required>
                                                 </div>
@@ -123,7 +123,7 @@
                                                     <label for="cpf">CPF</label>
                                                     <input type="text" class="form-control" id="cpf" name="cpf" 
                                                            value="<?= htmlspecialchars($prestador['cpf'] ?? '') ?>" 
-                                                           placeholder="000.000.000-00">
+                                                           placeholder="000.000.000-00" maxlength="14">
                                                 </div>
                                             </div>
                                         </div>
@@ -145,17 +145,24 @@
                                             </div>
                                         </div>
                                         
+                                        <div class="form-group">
+                                            <label for="placa_veiculo">Placa de Veículo</label>
+                                            <input type="text" class="form-control" id="placa_veiculo" name="placa_veiculo" 
+                                                   value="<?= htmlspecialchars($prestador['placa_veiculo'] ?? '') ?>" 
+                                                   placeholder="ABC-1234" style="text-transform: uppercase;">
+                                        </div>
+                                        
                                         <div class="row">
                                             <div class="col-md-6">
                                                 <div class="form-group">
-                                                    <label for="entrada">Entrada</label>
+                                                    <label for="entrada">Data/Hora de Entrada</label>
                                                     <input type="datetime-local" class="form-control" id="entrada" name="entrada" 
                                                            value="<?= $prestador['entrada'] ? date('Y-m-d\TH:i', strtotime($prestador['entrada'])) : '' ?>">
                                                 </div>
                                             </div>
                                             <div class="col-md-6">
                                                 <div class="form-group">
-                                                    <label for="saida">Saída</label>
+                                                    <label for="saida">Data/Hora de Saída</label>
                                                     <input type="datetime-local" class="form-control" id="saida" name="saida" 
                                                            value="<?= $prestador['saida'] ? date('Y-m-d\TH:i', strtotime($prestador['saida'])) : '' ?>">
                                                 </div>
@@ -195,12 +202,23 @@
     <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
     
     <script>
-    // Format CPF input
+    // Format CPF input with validation
     document.getElementById('cpf').addEventListener('input', function (e) {
         var value = e.target.value.replace(/\D/g, '');
+        if (value.length > 11) value = value.substring(0, 11);
         value = value.replace(/(\d{3})(\d)/, '$1.$2');
         value = value.replace(/(\d{3})(\d)/, '$1.$2');
         value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+        e.target.value = value;
+    });
+    
+    // Format Placa input
+    document.getElementById('placa_veiculo').addEventListener('input', function (e) {
+        var value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        if (value.length > 7) value = value.substring(0, 7);
+        if (value.length >= 4) {
+            value = value.replace(/([A-Z]{3})([0-9])/, '$1-$2');
+        }
         e.target.value = value;
     });
     </script>

@@ -40,7 +40,7 @@
         <!-- Main Sidebar -->
         <aside class="main-sidebar sidebar-dark-primary elevation-4">
             <a href="/dashboard" class="brand-link">
-                <img src="https://via.placeholder.com/33x33" alt="Logo" class="brand-image img-circle elevation-3">
+                <img src="/logo.jpg" alt="Renner Logo" class="brand-image img-circle elevation-3" style="width: 40px; height: 40px; object-fit: contain;">
                 <span class="brand-text font-weight-light">Controle Acesso</span>
             </a>
             
@@ -113,7 +113,7 @@
                                         <div class="row">
                                             <div class="col-md-6">
                                                 <div class="form-group">
-                                                    <label for="nome">Nome *</label>
+                                                    <label for="nome">Nome Completo *</label>
                                                     <input type="text" class="form-control" id="nome" name="nome" 
                                                            value="<?= htmlspecialchars($profissional['nome'] ?? '') ?>" required>
                                                 </div>

@@ -528,7 +528,7 @@
                             <div id="campo_cpf" class="col-md-4">
                                 <div class="form-group">
                                     <label for="edit_cpf">CPF</label>
-                                    <input type="text" class="form-control" id="edit_cpf" name="cpf" placeholder="000.000.000-00">
+                                    <input type="text" class="form-control" id="edit_cpf" name="cpf" placeholder="000.000.000-00" maxlength="14">
                                 </div>
                             </div>
                         </div>
@@ -551,7 +551,7 @@
                         <!-- Campo Placa de Veículo - visível apenas para Visitantes e Prestadores -->
                         <div id="campo_placa_veiculo" class="form-group" style="display: none;">
                             <label for="edit_placa_veiculo">Placa de Veículo</label>
-                            <input type="text" class="form-control" id="edit_placa_veiculo" name="placa_veiculo" placeholder="ABC-1234">
+                            <input type="text" class="form-control" id="edit_placa_veiculo" name="placa_veiculo" placeholder="ABC-1234" style="text-transform: uppercase;" maxlength="8">
                         </div>
                         
                         <!-- Campos específicos para visitantes -->

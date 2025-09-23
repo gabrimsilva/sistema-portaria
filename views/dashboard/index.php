@@ -648,6 +648,7 @@
                                 <th>CPF</th>
                                 <th>Empresa</th>
                                 <th>Setor</th>
+                                <th>Placa</th>
                                 <th>Hora de Entrada</th>
                                 <th width="100">Ações</th>
                             </tr>
@@ -679,6 +680,7 @@
                     <td>${data.cpf || '-'}</td>
                     <td>${data.empresa || '-'}</td>
                     <td>${data.setor || '-'}</td>
+                    <td>${data.placa_veiculo || '-'}</td>
                     <td><i class="fas fa-clock text-muted"></i> ${dataFormatada}</td>
                     <td>
                         <button class="btn btn-sm btn-info btn-editar" 
@@ -689,6 +691,7 @@
                                 data-empresa="${data.empresa || ''}"
                                 data-setor="${data.setor || ''}"
                                 data-funcionario="${data.funcionario_responsavel || ''}"
+                                data-placa_veiculo="${data.placa_veiculo || ''}"
                                 title="Editar registro">
                             <i class="fas fa-edit"></i>
                         </button>
@@ -699,10 +702,26 @@
             // Adiciona a linha no topo da tabela
             $('.table tbody').prepend(novaLinha);
             
-            // Atualiza o contador no badge
+            // Atualiza o contador no badge "Pessoas Atualmente na Empresa"
             const badge = $('.card-title .badge');
             const contadorAtual = parseInt(badge.text()) || 0;
             badge.text(contadorAtual + 1);
+            
+            // Atualiza os contadores específicos do dashboard baseado no tipo
+            if (data.tipo === 'Visitante') {
+                const visitantesCard = $('.info-box-content').eq(0).find('.info-box-number');
+                const visitantesAtual = parseInt(visitantesCard.text()) || 0;
+                visitantesCard.text(visitantesAtual + 1);
+            } else if (data.tipo === 'Profissional Renner') {
+                const funcionariosCard = $('.info-box-content').eq(1).find('.info-box-number');
+                const funcionariosAtual = parseInt(funcionariosCard.text()) || 0;
+                funcionariosCard.text(funcionariosAtual + 1);
+            }
+            
+            // Sempre atualiza o contador de "Entradas Hoje"
+            const entradasCard = $('.info-box-content').eq(2).find('.info-box-number');
+            const entradasAtual = parseInt(entradasCard.text()) || 0;
+            entradasCard.text(entradasAtual + 1);
         }
         
         // Cadastro de Visitante

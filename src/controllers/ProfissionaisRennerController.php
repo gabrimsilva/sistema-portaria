@@ -262,14 +262,22 @@ class ProfissionaisRennerController {
                     WHERE id = ?
                 ", [$nome, $setor, $saida_final_parsed, $id]);
                 
+                // Buscar dados atualizados para retornar
+                $profissionalAtualizado = $this->db->fetch("SELECT * FROM profissionais_renner WHERE id = ?", [$id]);
+                
                 echo json_encode([
                     'success' => true, 
                     'message' => 'Profissional atualizado com sucesso',
                     'data' => [
                         'id' => $id,
                         'nome' => $nome,
+                        'tipo' => 'Profissional Renner',
+                        'cpf' => '',
+                        'empresa' => '',
                         'setor' => $setor,
-                        'saida_final' => $saida_final_parsed
+                        'funcionario_responsavel' => '',
+                        'placa_veiculo' => '',
+                        'hora_entrada' => $profissionalAtualizado['retorno'] ?? $profissionalAtualizado['data_entrada'] ?? null
                     ]
                 ]);
             } catch (Exception $e) {

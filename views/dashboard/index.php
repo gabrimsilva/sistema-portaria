@@ -632,6 +632,54 @@
             $(`#${formId}`)[0].reset();
         }
         
+        function atualizarLinhaNaTabela(data) {
+            // Função para atualizar registro existente SEM afetar contadores
+            const linha = $(`.btn-editar[data-id="${data.id}"]`).closest('tr');
+            if (linha.length > 0) {
+                // Define a cor do badge baseado no tipo
+                let badgeClass = 'primary';
+                if (data.tipo === 'Visitante') badgeClass = 'success';
+                else if (data.tipo === 'Prestador') badgeClass = 'warning';
+                
+                // Formata a data/hora se disponível
+                let dataFormatada = '-';
+                if (data.hora_entrada) {
+                    dataFormatada = new Date(data.hora_entrada.replace(' ', 'T')).toLocaleString('pt-BR', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                }
+                
+                // Atualiza o conteúdo da linha existente
+                linha.html(`
+                    <td><strong>${data.nome}</strong></td>
+                    <td><span class="badge badge-${badgeClass}">${data.tipo}</span></td>
+                    <td>${data.cpf || '-'}</td>
+                    <td>${data.empresa || '-'}</td>
+                    <td>${data.setor || '-'}</td>
+                    <td>${data.placa_veiculo || '-'}</td>
+                    <td><i class="fas fa-clock text-muted"></i> ${dataFormatada}</td>
+                    <td>
+                        <button class="btn btn-sm btn-info btn-editar" 
+                                data-id="${data.id}" 
+                                data-tipo="${data.tipo}"
+                                data-nome="${data.nome}"
+                                data-cpf="${data.cpf || ''}"
+                                data-empresa="${data.empresa || ''}"
+                                data-setor="${data.setor || ''}"
+                                data-funcionario="${data.funcionario_responsavel || ''}"
+                                data-placa_veiculo="${data.placa_veiculo || ''}"
+                                title="Editar registro">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    </td>
+                `);
+            }
+        }
+
         function adicionarPessoaNaLista(data) {
             // Verifica se há pessoas na lista ou se está vazia
             const tabelaBody = $('.table tbody');
@@ -1148,10 +1196,8 @@
                         showToast('Registro atualizado com sucesso!');
                         const modalEditar = bootstrap.Modal.getInstance(document.getElementById('modalEditar'));
                         modalEditar.hide();
-                        // Recarregar a página para atualizar a lista
-                        setTimeout(() => {
-                            location.reload();
-                        }, 1500);
+                        // Atualizar apenas a linha na tabela sem recarregar
+                        atualizarLinhaNaTabela(response.data);
                     } else {
                         showToast(response.message || 'Erro ao atualizar registro', 'error');
                     }
@@ -1214,10 +1260,20 @@
                         showToast(mensagemSucesso);
                         const modalEditar = bootstrap.Modal.getInstance(document.getElementById('modalEditar'));
                         modalEditar.hide();
-                        // Recarregar a página para atualizar a lista
-                        setTimeout(() => {
-                            location.reload();
-                        }, 1500);
+                        // Remover a linha da tabela quando pessoa sai da empresa
+                        $(`.btn-editar[data-id="${id}"]`).closest('tr').fadeOut(300, function() {
+                            $(this).remove();
+                            // Atualizar contador de pessoas na empresa
+                            const badge = $('.card-title .badge');
+                            const contadorAtual = parseInt(badge.text()) || 0;
+                            if (contadorAtual > 0) {
+                                badge.text(contadorAtual - 1);
+                            }
+                            // Atualizar contador de saídas hoje
+                            const saidasCard = $('.small-box').eq(3).find('.inner h3');
+                            const saidasAtual = parseInt(saidasCard.text()) || 0;
+                            saidasCard.text(saidasAtual + 1);
+                        });
                     } else {
                         showToast(response.message || 'Erro ao registrar saída', 'error');
                     }

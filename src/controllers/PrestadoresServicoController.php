@@ -297,17 +297,22 @@ class PrestadoresServicoController {
                     WHERE id = ?
                 ", [$nome, $cpf, $empresa, $setor, $observacao, $placa_veiculo, $saida_parsed, $id]);
                 
+                // Buscar dados atualizados para retornar
+                $prestadorAtualizado = $this->db->fetch("SELECT * FROM prestadores_servico WHERE id = ?", [$id]);
+                
                 echo json_encode([
                     'success' => true, 
                     'message' => 'Prestador atualizado com sucesso',
                     'data' => [
                         'id' => $id,
                         'nome' => $nome,
+                        'tipo' => 'Prestador',
                         'cpf' => $cpf,
                         'empresa' => $empresa,
                         'setor' => $setor,
+                        'funcionario_responsavel' => '',
                         'placa_veiculo' => $placa_veiculo,
-                        'saida' => $saida_parsed
+                        'hora_entrada' => $prestadorAtualizado['entrada'] ?? null
                     ]
                 ]);
             } catch (Exception $e) {

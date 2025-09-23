@@ -330,16 +330,22 @@ class VisitantesNovoController {
                     WHERE id = ?
                 ", [$nome, $cpf, $empresa, $setor, $funcionario_responsavel, $placa_veiculo, $hora_saida_final, $id]);
                 
+                // Buscar dados atualizados para retornar
+                $visitanteAtualizado = $this->db->fetch("SELECT * FROM visitantes_novo WHERE id = ?", [$id]);
+                
                 echo json_encode([
                     'success' => true, 
                     'message' => 'Visitante atualizado com sucesso',
                     'data' => [
                         'id' => $id,
                         'nome' => $nome,
+                        'tipo' => 'Visitante',
                         'cpf' => $cpf,
                         'empresa' => $empresa,
                         'setor' => $setor,
-                        'placa_veiculo' => $placa_veiculo
+                        'funcionario_responsavel' => $funcionario_responsavel,
+                        'placa_veiculo' => $placa_veiculo,
+                        'hora_entrada' => $visitanteAtualizado['hora_entrada'] ?? null
                     ]
                 ]);
             } catch (Exception $e) {

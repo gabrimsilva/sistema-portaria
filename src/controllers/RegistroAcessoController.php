@@ -3,6 +3,7 @@
 require_once '../src/services/AuditService.php';
 require_once '../src/services/AuthorizationService.php';
 require_once '../src/services/DuplicityValidationService.php';
+require_once '../src/utils/CpfValidator.php';
 
 class RegistroAcessoController {
     private $db;
@@ -386,8 +387,15 @@ class RegistroAcessoController {
             throw new Exception("Tipo inválido. Permitidos: " . implode(', ', $allowedTypes));
         }
         
-        // Normalizar dados
-        $data['cpf'] = preg_replace('/\D/', '', $data['cpf']);
+        // Validar e normalizar dados
+        if (!empty($data['cpf'])) {
+            $cpfValidation = CpfValidator::validateAndNormalize($data['cpf']);
+            if (!$cpfValidation['isValid']) {
+                throw new Exception($cpfValidation['message']);
+            }
+            $data['cpf'] = $cpfValidation['normalized'];
+        }
+        
         $data['placa_veiculo'] = isset($data['placa_veiculo']) ? 
             preg_replace('/[^A-Z0-9]/', '', strtoupper(trim($data['placa_veiculo']))) : '';
         

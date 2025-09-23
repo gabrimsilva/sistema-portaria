@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/../services/DuplicityValidationService.php';
+require_once __DIR__ . '/../utils/CpfValidator.php';
 
 class VisitantesNovoController {
     private $db;
@@ -72,12 +73,19 @@ class VisitantesNovoController {
                 $hora_entrada = $_POST['hora_entrada'] ?? null;
                 $hora_saida = $_POST['hora_saida'] ?? null;
                 
-                // ========== NORMALIZAR DADOS ==========
-                // CPF: apenas dígitos
-                $cpf = preg_replace('/\D/', '', $cpf);
+                // ========== VALIDAR E NORMALIZAR DADOS ==========
+                // Validar CPF com dígitos verificadores
+                if (!empty($cpf)) {
+                    $cpfValidation = CpfValidator::validateAndNormalize($cpf);
+                    if (!$cpfValidation['isValid']) {
+                        throw new Exception($cpfValidation['message']);
+                    }
+                    $cpf = $cpfValidation['normalized'];
+                }
+                
                 // Placa: apenas letras e números, maiúscula
                 $placa_veiculo = preg_replace('/[^A-Z0-9]/', '', strtoupper(trim($placa_veiculo)));
-                // =====================================
+                // ================================================
                 
                 if (empty($nome)) {
                     throw new Exception("Nome é obrigatório");
@@ -163,12 +171,19 @@ class VisitantesNovoController {
                 $hora_entrada = $_POST['hora_entrada'] ?? null;
                 $hora_saida = $_POST['hora_saida'] ?? null;
                 
-                // ========== NORMALIZAR DADOS ==========
-                // CPF: apenas dígitos
-                $cpf = preg_replace('/\D/', '', $cpf);
+                // ========== VALIDAR E NORMALIZAR DADOS ==========
+                // Validar CPF com dígitos verificadores
+                if (!empty($cpf)) {
+                    $cpfValidation = CpfValidator::validateAndNormalize($cpf);
+                    if (!$cpfValidation['isValid']) {
+                        throw new Exception($cpfValidation['message']);
+                    }
+                    $cpf = $cpfValidation['normalized'];
+                }
+                
                 // Placa: apenas letras e números, maiúscula
                 $placa_veiculo = preg_replace('/[^A-Z0-9]/', '', strtoupper(trim($placa_veiculo)));
-                // =====================================
+                // ================================================
                 
                 if (empty($nome)) {
                     throw new Exception("Nome é obrigatório");

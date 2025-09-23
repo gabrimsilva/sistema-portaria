@@ -1,11 +1,15 @@
 <?php
 
+require_once __DIR__ . '/../services/DuplicityValidationService.php';
+
 class VisitantesNovoController {
     private $db;
+    private $duplicityService;
     
     public function __construct() {
         $this->checkAuthentication();
         $this->db = new Database();
+        $this->duplicityService = new DuplicityValidationService();
     }
     
     private function checkAuthentication() {
@@ -255,6 +259,25 @@ class VisitantesNovoController {
                     $hora_entrada = date('Y-m-d H:i:s');
                 }
                 
+                // ========== VALIDAÇÕES DE DUPLICIDADE ==========
+                $dadosValidacao = [
+                    'cpf' => $cpf,
+                    'placa_veiculo' => $placa_veiculo,
+                    'hora_entrada' => $hora_entrada
+                ];
+                
+                $validacao = $this->duplicityService->validateNewEntry($dadosValidacao, 'visitante');
+                
+                if (!$validacao['isValid']) {
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Erro de duplicidade',
+                        'errors' => $validacao['errors']
+                    ]);
+                    return;
+                }
+                // ===============================================
+                
                 $this->db->query("
                     INSERT INTO visitantes_novo (nome, cpf, empresa, funcionario_responsavel, setor, placa_veiculo, hora_entrada)
                     VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -308,6 +331,13 @@ class VisitantesNovoController {
                     return;
                 }
                 
+                // Buscar dados atuais do visitante
+                $visitanteAtual = $this->db->fetch("SELECT * FROM visitantes_novo WHERE id = ?", [$id]);
+                if (!$visitanteAtual) {
+                    echo json_encode(['success' => false, 'message' => 'Visitante não encontrado']);
+                    return;
+                }
+                
                 // Processar hora de saída
                 $hora_saida_final = null;
                 if (!empty($hora_saida)) {
@@ -323,6 +353,26 @@ class VisitantesNovoController {
                     }
                     $hora_saida_final = $datetime->format('Y-m-d H:i:s');
                 }
+                
+                // ========== VALIDAÇÕES DE DUPLICIDADE PARA EDIÇÃO ==========
+                $dadosValidacao = [
+                    'cpf' => $cpf,
+                    'placa_veiculo' => $placa_veiculo,
+                    'hora_entrada' => $visitanteAtual['hora_entrada'],
+                    'hora_saida' => $hora_saida_final
+                ];
+                
+                $validacao = $this->duplicityService->validateEditEntry($dadosValidacao, $id, 'visitantes_novo');
+                
+                if (!$validacao['isValid']) {
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Erro de duplicidade',
+                        'errors' => $validacao['errors']
+                    ]);
+                    return;
+                }
+                // ==========================================================
                 
                 $this->db->query("
                     UPDATE visitantes_novo 

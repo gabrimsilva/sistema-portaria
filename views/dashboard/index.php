@@ -841,7 +841,13 @@
                         limparFormulario('formVisitante');
                         adicionarPessoaNaLista(response.data);
                     } else {
-                        showToast(response.message || 'Erro ao cadastrar visitante', 'error');
+                        // Tratamento melhorado para erros de duplicidade
+                        if (response.errors && Array.isArray(response.errors)) {
+                            const mensagens = response.errors.join('<br>');
+                            showToast(`⚠️ Problema de duplicidade:<br><small>${mensagens}</small>`, 'error');
+                        } else {
+                            showToast(response.message || 'Erro ao cadastrar visitante', 'error');
+                        }
                     }
                 },
                 error: function(xhr, status, error) {
@@ -927,7 +933,13 @@
                         limparFormulario('formPrestador');
                         adicionarPessoaNaLista(response.data);
                     } else {
-                        showToast(response.message || 'Erro ao cadastrar prestador', 'error');
+                        // Tratamento melhorado para erros de duplicidade
+                        if (response.errors && Array.isArray(response.errors)) {
+                            const mensagens = response.errors.join('<br>');
+                            showToast(`⚠️ Problema de duplicidade:<br><small>${mensagens}</small>`, 'error');
+                        } else {
+                            showToast(response.message || 'Erro ao cadastrar prestador', 'error');
+                        }
                     }
                 },
                 error: function(xhr, status, error) {
@@ -1237,7 +1249,13 @@
                         // Atualizar apenas a linha na tabela sem recarregar
                         atualizarLinhaNaTabela(response.data);
                     } else {
-                        showToast(response.message || 'Erro ao atualizar registro', 'error');
+                        // Tratamento melhorado para erros de duplicidade
+                        if (response.errors && Array.isArray(response.errors)) {
+                            const mensagens = response.errors.join('<br>');
+                            showToast(`⚠️ Problema de duplicidade:<br><small>${mensagens}</small>`, 'error');
+                        } else {
+                            showToast(response.message || 'Erro ao atualizar registro', 'error');
+                        }
                     }
                 },
                 error: function(xhr, status, error) {

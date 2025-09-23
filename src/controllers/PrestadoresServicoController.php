@@ -1,11 +1,15 @@
 <?php
 
+require_once __DIR__ . '/../services/DuplicityValidationService.php';
+
 class PrestadoresServicoController {
     private $db;
+    private $duplicityService;
     
     public function __construct() {
         $this->checkAuthentication();
         $this->db = new Database();
+        $this->duplicityService = new DuplicityValidationService();
     }
     
     private function checkAuthentication() {
@@ -224,6 +228,25 @@ class PrestadoresServicoController {
                     $entrada = date('Y-m-d H:i:s');
                 }
                 
+                // ========== VALIDAÇÕES DE DUPLICIDADE ==========
+                $dadosValidacao = [
+                    'cpf' => $cpf,
+                    'placa_veiculo' => $placa_veiculo,
+                    'entrada' => $entrada
+                ];
+                
+                $validacao = $this->duplicityService->validateNewEntry($dadosValidacao, 'prestador');
+                
+                if (!$validacao['isValid']) {
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Erro de duplicidade',
+                        'errors' => $validacao['errors']
+                    ]);
+                    return;
+                }
+                // ===============================================
+                
                 $this->db->query("
                     INSERT INTO prestadores_servico (nome, cpf, empresa, setor, observacao, placa_veiculo, entrada)
                     VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -276,6 +299,13 @@ class PrestadoresServicoController {
                     return;
                 }
                 
+                // Buscar dados atuais do prestador
+                $prestadorAtual = $this->db->fetch("SELECT * FROM prestadores_servico WHERE id = ?", [$id]);
+                if (!$prestadorAtual) {
+                    echo json_encode(['success' => false, 'message' => 'Prestador não encontrado']);
+                    return;
+                }
+                
                 // Parse saida if provided
                 $saida_parsed = null;
                 if (!empty($saida)) {
@@ -290,6 +320,26 @@ class PrestadoresServicoController {
                         return;
                     }
                 }
+                
+                // ========== VALIDAÇÕES DE DUPLICIDADE PARA EDIÇÃO ==========
+                $dadosValidacao = [
+                    'cpf' => $cpf,
+                    'placa_veiculo' => $placa_veiculo,
+                    'entrada' => $prestadorAtual['entrada'],
+                    'saida' => $saida_parsed
+                ];
+                
+                $validacao = $this->duplicityService->validateEditEntry($dadosValidacao, $id, 'prestadores_servico');
+                
+                if (!$validacao['isValid']) {
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Erro de duplicidade',
+                        'errors' => $validacao['errors']
+                    ]);
+                    return;
+                }
+                // ==========================================================
                 
                 $this->db->query("
                     UPDATE prestadores_servico 

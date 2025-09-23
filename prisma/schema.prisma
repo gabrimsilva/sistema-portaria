@@ -1,0 +1,63 @@
+// Schema do Prisma para Sistema de Controle de Acesso
+// Compatível com o banco PostgreSQL existente
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Modelo para Profissionais Renner (Colaboradores)
+model ProfissionalRenner {
+  id            Int       @id @default(autoincrement())
+  nome          String    @db.VarChar(100)
+  setor         String    @db.VarChar(60)
+  dataEntrada   DateTime? @map("data_entrada") @db.Timestamp
+  retorno       DateTime? @db.Timestamp
+  saidaFinal    DateTime? @map("saida_final") @db.Timestamp
+  observacoes   String?   @db.VarChar(500)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamp
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamp
+
+  @@map("profissionais_renner")
+}
+
+// Modelo para Visitantes
+model Visitante {
+  id                     Int       @id @default(autoincrement())
+  nome                   String    @db.VarChar(100)
+  cpf                    String    @db.VarChar(11) // Apenas dígitos
+  empresa                String    @db.VarChar(80)
+  setor                  String    @db.VarChar(60)
+  funcionarioResponsavel String    @map("funcionario_responsavel") @db.VarChar(100)
+  placaVeiculo           String?   @map("placa_veiculo") @db.VarChar(7)
+  horaEntrada            DateTime  @map("hora_entrada") @db.Timestamp
+  horaSaida              DateTime? @map("hora_saida") @db.Timestamp
+  observacoes            String?   @db.VarChar(500)
+  createdAt              DateTime  @default(now()) @map("created_at") @db.Timestamp
+  updatedAt              DateTime  @updatedAt @map("updated_at") @db.Timestamp
+
+  @@map("visitantes_novo")
+}
+
+// Modelo para Prestadores de Serviço
+model PrestadorServico {
+  id           Int       @id @default(autoincrement())
+  nome         String    @db.VarChar(100)
+  cpf          String    @db.VarChar(11) // Apenas dígitos
+  empresa      String    @db.VarChar(80)
+  setor        String?   @db.VarChar(60) // Opcional para prestadores
+  cnpj         String?   @db.VarChar(14) // Apenas dígitos, opcional
+  placaVeiculo String?   @map("placa_veiculo") @db.VarChar(7)
+  entrada      DateTime  @db.Timestamp
+  saida        DateTime? @db.Timestamp
+  observacao   String?   @db.VarChar(500)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamp
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamp
+
+  @@map("prestadores_servico")
+}

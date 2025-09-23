@@ -96,7 +96,7 @@
                         <div class="col-lg-3 col-6">
                             <div class="small-box bg-info">
                                 <div class="inner">
-                                    <h3><?= $stats['visitors_today'] ?? 0 ?></h3>
+                                    <h3><?= isset($stats['visitors_today']) ? $stats['visitors_today'] : 0 ?></h3>
                                     <p>Visitantes Hoje</p>
                                 </div>
                                 <div class="icon">
@@ -108,7 +108,7 @@
                         <div class="col-lg-3 col-6">
                             <div class="small-box bg-success">
                                 <div class="inner">
-                                    <h3><?= $stats['employees_active'] ?? 0 ?></h3>
+                                    <h3><?= isset($stats['employees_active']) ? $stats['employees_active'] : 0 ?></h3>
                                     <p>Funcionários Ativos</p>
                                 </div>
                                 <div class="icon">
@@ -120,7 +120,7 @@
                         <div class="col-lg-3 col-6">
                             <div class="small-box bg-warning">
                                 <div class="inner">
-                                    <h3><?= $stats['entries_today'] ?? 0 ?></h3>
+                                    <h3><?= isset($stats['entries_today']) ? $stats['entries_today'] : 0 ?></h3>
                                     <p>Entradas Hoje</p>
                                 </div>
                                 <div class="icon">
@@ -132,7 +132,7 @@
                         <div class="col-lg-3 col-6">
                             <div class="small-box bg-danger">
                                 <div class="inner">
-                                    <h3><?= $stats['exits_today'] ?? 0 ?></h3>
+                                    <h3><?= isset($stats['exits_today']) ? $stats['exits_today'] : 0 ?></h3>
                                     <p>Saídas Hoje</p>
                                 </div>
                                 <div class="icon">
@@ -154,17 +154,17 @@
                                 <div class="card-body">
                                     <div class="row">
                                         <div class="col-md-4 mb-2">
-                                            <button type="button" class="btn btn-success btn-block" data-bs-toggle="modal" data-bs-target="#modalVisitante">
+                                            <button type="button" class="btn btn-success btn-block" data-toggle="modal" data-target="#modalVisitante">
                                                 <i class="fas fa-users"></i> Registrar Visitante
                                             </button>
                                         </div>
                                         <div class="col-md-4 mb-2">
-                                            <button type="button" class="btn btn-primary btn-block" data-bs-toggle="modal" data-bs-target="#modalProfissional">
+                                            <button type="button" class="btn btn-primary btn-block" data-toggle="modal" data-target="#modalProfissional">
                                                 <i class="fas fa-user-tie"></i> Registrar Profissional Renner
                                             </button>
                                         </div>
                                         <div class="col-md-4 mb-2">
-                                            <button type="button" class="btn btn-warning btn-block" data-bs-toggle="modal" data-bs-target="#modalPrestador">
+                                            <button type="button" class="btn btn-warning btn-block" data-toggle="modal" data-target="#modalPrestador">
                                                 <i class="fas fa-tools"></i> Registrar Prestador de Serviço
                                             </button>
                                         </div>
@@ -181,7 +181,7 @@
                                 <div class="card-header">
                                     <h3 class="card-title">
                                         <i class="fas fa-building"></i> Pessoas Atualmente na Empresa
-                                        <span class="badge badge-info ml-2"><?= count($pessoasNaEmpresa ?? []) ?></span>
+                                        <span class="badge badge-info ml-2"><?= isset($pessoasNaEmpresa) ? count($pessoasNaEmpresa) : 0 ?></span>
                                     </h3>
                                 </div>
                                 <div class="card-body">
@@ -213,7 +213,7 @@
                                     </div>
                                     
                                     <div class="table-responsive">
-                                        <?php if (!empty($pessoasNaEmpresa)): ?>
+                                        <?php if (isset($pessoasNaEmpresa) && !empty($pessoasNaEmpresa)): ?>
                                         <table class="table table-hover text-nowrap">
                                             <thead>
                                                 <tr>
@@ -311,7 +311,9 @@
                     <h5 class="modal-title text-white" id="modalVisitanteLabel">
                         <i class="fas fa-users"></i> Cadastrar Visitante
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                 </div>
                 <div class="modal-body">
                     <form id="formVisitante">
@@ -366,7 +368,7 @@
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-success" id="btnSalvarVisitante">
                         <i class="fas fa-save"></i> Cadastrar Visitante
                     </button>
@@ -383,7 +385,9 @@
                     <h5 class="modal-title text-white" id="modalProfissionalLabel">
                         <i class="fas fa-user-tie"></i> Cadastrar Profissional Renner
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                 </div>
                 <div class="modal-body">
                     <form id="formProfissional">
@@ -410,7 +414,7 @@
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-primary" id="btnSalvarProfissional">
                         <i class="fas fa-save"></i> Cadastrar Profissional
                     </button>
@@ -478,7 +482,7 @@
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-warning" id="btnSalvarPrestador">
                         <i class="fas fa-save"></i> Cadastrar Prestador
                     </button>
@@ -495,7 +499,9 @@
                     <h5 class="modal-title text-white" id="modalEditarLabel">
                         <i class="fas fa-edit"></i> Editar Registro
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                 </div>
                 <div class="modal-body">
                     <form id="formEditar">
@@ -588,7 +594,7 @@
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-info" id="btnSalvarEdicao">
                         <i class="fas fa-save"></i> Salvar Alterações
                     </button>
@@ -1336,82 +1342,217 @@
             $('#campo_funcionario_responsavel, #campo_hora_saida, #campo_observacao, #botoes_saida').hide();
         });
 
-        // ==================== MÁSCARAS DE ENTRADA ====================
+        // ==================== MÁSCARAS DE ENTRADA ROBUSTAS ====================
         
-        // Máscara para CPF (formato: 000.000.000-00)
-        function aplicarMascaraCPF(elemento) {
-            elemento.addEventListener('input', function(e) {
-                let value = e.target.value.replace(/\D/g, ''); // Remove caracteres não numéricos
-                
-                // Limita a 11 dígitos
-                if (value.length > 11) {
-                    value = value.substr(0, 11);
-                }
-                
-                // Aplica a formatação
-                value = value.replace(/(\d{3})(\d)/, '$1.$2');
-                value = value.replace(/(\d{3})(\d)/, '$1.$2');  
-                value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-                
-                e.target.value = value;
-            });
+        // Função de tratamento de erro global
+        function tratarErroMascara(erro, contexto) {
+            console.warn('Erro na máscara:', contexto, erro);
         }
-
-        // Máscara para Placa de Veículo (formato antigo: ABC-1234 ou Mercosul: ABC1D23)
-        function aplicarMascaraPlaca(elemento) {
-            elemento.addEventListener('input', function(e) {
-                let value = e.target.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase(); // Remove caracteres especiais e converte para maiúsculo
-                
-                // Limita a 7 caracteres
-                if (value.length > 7) {
-                    value = value.substr(0, 7);
+        
+        // Máscara para CPF (formato: 000.000.000-00) - versão robusta com tratamento de erro
+        function aplicarMascaraCPFRobusta(elemento) {
+            try {
+                if (!elemento || typeof elemento.addEventListener !== 'function') {
+                    return;
                 }
                 
-                // Aplica formatação baseada no padrão
-                if (value.length >= 4) {
-                    // Verifica se é formato Mercosul (4º caractere é número)
-                    if (/^[A-Z]{3}[0-9]/.test(value)) {
-                        // Formato Mercosul: ABC1D23 (não adiciona traço)
-                        if (value.length > 7) {
-                            value = value.substr(0, 7);
+                function formatarCPF(valor) {
+                    try {
+                        if (typeof valor !== 'string') valor = String(valor || '');
+                        
+                        // Remove todos os caracteres não numéricos
+                        const digits = valor.replace(/\D/g, '');
+                        
+                        // Limita a 11 dígitos
+                        const limitedDigits = digits.slice(0, 11);
+                        
+                        // Aplica formatação progressiva
+                        let formatted = limitedDigits;
+                        if (limitedDigits.length > 3) {
+                            formatted = limitedDigits.replace(/(\d{3})(\d)/, '$1.$2');
                         }
-                    } else {
-                        // Formato antigo: ABC-1234 (adiciona traço após 3ª letra)
-                        value = value.replace(/^([A-Z]{3})([0-9]{1,4})$/, '$1-$2');
+                        if (limitedDigits.length > 6) {
+                            formatted = formatted.replace(/(\d{3})\.(\d{3})(\d)/, '$1.$2.$3');
+                        }
+                        if (limitedDigits.length > 9) {
+                            formatted = formatted.replace(/(\d{3})\.(\d{3})\.(\d{3})(\d)/, '$1.$2.$3-$4');
+                        }
+                        
+                        return formatted;
+                    } catch (erro) {
+                        tratarErroMascara(erro, 'formatarCPF');
+                        return valor || '';
                     }
                 }
                 
-                e.target.value = value;
-            });
+                function mascaraCPF(e) {
+                    try {
+                        if (!e.target) return;
+                        
+                        const cursorPosition = e.target.selectionStart || 0;
+                        const valorAnterior = e.target.value || '';
+                        const valorFormatado = formatarCPF(valorAnterior);
+                        
+                        e.target.value = valorFormatado;
+                        
+                        // Ajusta posição do cursor após formatação
+                        let novaPosicao = cursorPosition;
+                        if (valorFormatado.length > valorAnterior.length) {
+                            // Caractere de formatação foi adicionado
+                            if (cursorPosition === 4 || cursorPosition === 8 || cursorPosition === 12) {
+                                novaPosicao = cursorPosition + 1;
+                            }
+                        }
+                        
+                        // Restaura posição do cursor
+                        setTimeout(() => {
+                            try {
+                                if (e.target && typeof e.target.setSelectionRange === 'function') {
+                                    e.target.setSelectionRange(novaPosicao, novaPosicao);
+                                }
+                            } catch (erro) {
+                                tratarErroMascara(erro, 'setCursor CPF');
+                            }
+                        }, 10);
+                        
+                    } catch (erro) {
+                        tratarErroMascara(erro, 'mascaraCPF');
+                    }
+                }
+                
+                elemento.addEventListener('input', mascaraCPF);
+                elemento.addEventListener('paste', mascaraCPF);
+                
+            } catch (erro) {
+                tratarErroMascara(erro, 'aplicarMascaraCPFRobusta');
+            }
         }
 
-        // Aplicar máscaras quando modais são abertos
-        $('#modalVisitante').on('shown.bs.modal', function() {
-            aplicarMascaraCPF(document.getElementById('visitante_cpf'));
-            aplicarMascaraPlaca(document.getElementById('visitante_placa_veiculo'));
-        });
+        // Máscara para Placa (formato antigo: ABC-1234 ou Mercosul: ABC1D23) - versão robusta com tratamento de erro
+        function aplicarMascaraPlacaRobusta(elemento) {
+            try {
+                if (!elemento || typeof elemento.addEventListener !== 'function') {
+                    return;
+                }
+                
+                function formatarPlaca(valor) {
+                    try {
+                        if (typeof valor !== 'string') valor = String(valor || '');
+                        
+                        // Remove caracteres especiais e converte para maiúsculo
+                        const clean = valor.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+                        
+                        // Limita a 7 caracteres
+                        const limited = clean.slice(0, 7);
+                        
+                        // Se tem pelo menos 4 caracteres, verifica o formato
+                        if (limited.length >= 4) {
+                            const primeiros3 = limited.slice(0, 3);
+                            const resto = limited.slice(3);
+                            
+                            // Verifica se os primeiros 3 são letras
+                            if (/^[A-Z]{3}$/.test(primeiros3)) {
+                                // Se o 4º caractere é número e temos até 7 chars, pode ser formato antigo
+                                if (/^[0-9]/.test(resto) && limited.length <= 7) {
+                                    // Se todos os chars restantes são números = formato antigo
+                                    if (/^[0-9]{1,4}$/.test(resto)) {
+                                        return primeiros3 + '-' + resto;
+                                    }
+                                }
+                                // Caso contrário, retorna sem traço (formato Mercosul)
+                                return limited;
+                            }
+                        }
+                        
+                        return limited;
+                    } catch (erro) {
+                        tratarErroMascara(erro, 'formatarPlaca');
+                        return valor || '';
+                    }
+                }
+                
+                function mascaraPlaca(e) {
+                    try {
+                        if (!e.target) return;
+                        
+                        const cursorPosition = e.target.selectionStart || 0;
+                        const valorAnterior = e.target.value || '';
+                        const valorFormatado = formatarPlaca(valorAnterior);
+                        
+                        e.target.value = valorFormatado;
+                        
+                        // Ajusta posição do cursor
+                        let novaPosicao = cursorPosition;
+                        if (valorFormatado.length > valorAnterior.length && valorFormatado.includes('-') && cursorPosition === 4) {
+                            novaPosicao = cursorPosition + 1;
+                        }
+                        
+                        // Restaura posição do cursor
+                        setTimeout(() => {
+                            try {
+                                if (e.target && typeof e.target.setSelectionRange === 'function') {
+                                    e.target.setSelectionRange(novaPosicao, novaPosicao);
+                                }
+                            } catch (erro) {
+                                tratarErroMascara(erro, 'setCursor Placa');
+                            }
+                        }, 10);
+                        
+                    } catch (erro) {
+                        tratarErroMascara(erro, 'mascaraPlaca');
+                    }
+                }
+                
+                elemento.addEventListener('input', mascaraPlaca);
+                elemento.addEventListener('paste', mascaraPlaca);
+                
+            } catch (erro) {
+                tratarErroMascara(erro, 'aplicarMascaraPlacaRobusta');
+            }
+        }
 
-        $('#modalProfissional').on('shown.bs.modal', function() {
-            aplicarMascaraCPF(document.getElementById('profissional_cpf'));
-        });
+        // Sistema de aplicação de máscaras usando delegação de eventos (Bootstrap 4 compatível)
+        try {
+            // Aplicar máscaras quando modais são mostrados (Bootstrap 4)
+            $('#modalVisitante').on('shown.bs.modal', function() {
+                try {
+                    aplicarMascaraCPFRobusta(document.getElementById('visitante_cpf'));
+                    aplicarMascaraPlacaRobusta(document.getElementById('visitante_placa_veiculo'));
+                } catch (erro) {
+                    tratarErroMascara(erro, 'modalVisitante shown');
+                }
+            });
 
-        $('#modalPrestador').on('shown.bs.modal', function() {
-            aplicarMascaraCPF(document.getElementById('prestador_cpf'));
-            aplicarMascaraPlaca(document.getElementById('prestador_placa_veiculo'));
-        });
+            $('#modalProfissional').on('shown.bs.modal', function() {
+                try {
+                    aplicarMascaraCPFRobusta(document.getElementById('profissional_cpf'));
+                } catch (erro) {
+                    tratarErroMascara(erro, 'modalProfissional shown');
+                }
+            });
 
-        // Aplicar máscaras no modal de edição quando campos são preenchidos
-        $('#modalEditar').on('shown.bs.modal', function() {
-            const editCpfField = document.getElementById('edit_cpf');
-            const editPlacaField = document.getElementById('edit_placa_veiculo');
+            $('#modalPrestador').on('shown.bs.modal', function() {
+                try {
+                    aplicarMascaraCPFRobusta(document.getElementById('prestador_cpf'));
+                    aplicarMascaraPlacaRobusta(document.getElementById('prestador_placa_veiculo'));
+                } catch (erro) {
+                    tratarErroMascara(erro, 'modalPrestador shown');
+                }
+            });
+
+            // Aplicar máscaras no modal de edição (Bootstrap 4)
+            $('#modalEditar').on('shown.bs.modal', function() {
+                try {
+                    aplicarMascaraCPFRobusta(document.getElementById('edit_cpf'));
+                    aplicarMascaraPlacaRobusta(document.getElementById('edit_placa_veiculo'));
+                } catch (erro) {
+                    tratarErroMascara(erro, 'modalEditar shown');
+                }
+            });
             
-            if (editCpfField) {
-                aplicarMascaraCPF(editCpfField);
-            }
-            if (editPlacaField) {
-                aplicarMascaraPlaca(editPlacaField);
-            }
-        });
+        } catch (erro) {
+            tratarErroMascara(erro, 'inicialização máscaras');
+        }
         
     });
     </script>

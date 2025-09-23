@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/../utils/DateTimeValidator.php';
+
 class ProfissionaisRennerController {
     private $db;
     
@@ -71,10 +73,41 @@ class ProfissionaisRennerController {
                     throw new Exception("Nome é obrigatório");
                 }
                 
-                // Se não foi especificada data de entrada, registra automaticamente a data/hora atual
-                if (empty($data_entrada)) {
-                    $data_entrada = date('Y-m-d H:i:s');
+                // ========== VALIDAÇÕES TEMPORAIS ==========
+                // Validar data de entrada
+                $entradaValidation = DateTimeValidator::validateEntryDateTime($data_entrada);
+                if (!$entradaValidation['isValid']) {
+                    throw new Exception($entradaValidation['message']);
                 }
+                $data_entrada = $entradaValidation['normalized'];
+                
+                // Validar saída se fornecida
+                if (!empty($saida)) {
+                    $saidaValidation = DateTimeValidator::validateExitDateTime($saida, $data_entrada);
+                    if (!$saidaValidation['isValid']) {
+                        throw new Exception($saidaValidation['message']);
+                    }
+                    $saida = $saidaValidation['normalized'];
+                }
+                
+                // Validar retorno se fornecido
+                if (!empty($retorno)) {
+                    $retornoValidation = DateTimeValidator::validateEntryDateTime($retorno);
+                    if (!$retornoValidation['isValid']) {
+                        throw new Exception($retornoValidation['message']);
+                    }
+                    $retorno = $retornoValidation['normalized'];
+                }
+                
+                // Validar saída final se fornecida
+                if (!empty($saida_final)) {
+                    $saidaFinalValidation = DateTimeValidator::validateExitDateTime($saida_final, $retorno ?: $data_entrada);
+                    if (!$saidaFinalValidation['isValid']) {
+                        throw new Exception($saidaFinalValidation['message']);
+                    }
+                    $saida_final = $saidaFinalValidation['normalized'];
+                }
+                // ==========================================
                 
                 $this->db->query("
                     INSERT INTO profissionais_renner (nome, data_entrada, saida, retorno, saida_final, setor)
@@ -128,6 +161,57 @@ class ProfissionaisRennerController {
                 if (empty($nome)) {
                     throw new Exception("Nome é obrigatório");
                 }
+                
+                // Buscar dados atuais para usar como baseline
+                $profissionalAtual = $this->db->fetch("SELECT * FROM profissionais_renner WHERE id = ?", [$id]);
+                if (!$profissionalAtual) {
+                    throw new Exception("Profissional não encontrado");
+                }
+                
+                // ========== VALIDAÇÕES TEMPORAIS ==========
+                // Validar data de entrada se fornecida
+                if (!empty($data_entrada)) {
+                    $entradaValidation = DateTimeValidator::validateEntryDateTime($data_entrada);
+                    if (!$entradaValidation['isValid']) {
+                        throw new Exception($entradaValidation['message']);
+                    }
+                    $data_entrada = $entradaValidation['normalized'];
+                }
+                
+                // Validar saída se fornecida
+                if (!empty($saida)) {
+                    // Use data_entrada atual (modificada ou existente) como baseline
+                    $entradaBaseline = $data_entrada ?: $profissionalAtual['data_entrada'];
+                    $saidaValidation = DateTimeValidator::validateExitDateTime($saida, $entradaBaseline);
+                    if (!$saidaValidation['isValid']) {
+                        throw new Exception($saidaValidation['message']);
+                    }
+                    $saida = $saidaValidation['normalized'];
+                }
+                
+                // Validar retorno se fornecido
+                if (!empty($retorno)) {
+                    $retornoValidation = DateTimeValidator::validateEntryDateTime($retorno);
+                    if (!$retornoValidation['isValid']) {
+                        throw new Exception($retornoValidation['message']);
+                    }
+                    $retorno = $retornoValidation['normalized'];
+                }
+                
+                // Validar saída final se fornecida
+                if (!empty($saida_final)) {
+                    // Use retorno atual (modificado ou existente) ou data_entrada como baseline
+                    $retornoBaseline = $retorno ?: $profissionalAtual['retorno'];
+                    $entradaBaseline = $data_entrada ?: $profissionalAtual['data_entrada'];
+                    $baselineParaSaidaFinal = $retornoBaseline ?: $entradaBaseline;
+                    
+                    $saidaFinalValidation = DateTimeValidator::validateExitDateTime($saida_final, $baselineParaSaidaFinal);
+                    if (!$saidaFinalValidation['isValid']) {
+                        throw new Exception($saidaFinalValidation['message']);
+                    }
+                    $saida_final = $saidaFinalValidation['normalized'];
+                }
+                // ==========================================
                 
                 $this->db->query("
                     UPDATE profissionais_renner 

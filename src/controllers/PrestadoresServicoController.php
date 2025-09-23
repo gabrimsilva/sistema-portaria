@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/../services/DuplicityValidationService.php';
 require_once __DIR__ . '/../utils/CpfValidator.php';
+require_once __DIR__ . '/../utils/DateTimeValidator.php';
 
 class PrestadoresServicoController {
     private $db;
@@ -91,10 +92,21 @@ class PrestadoresServicoController {
                     throw new Exception("Nome é obrigatório");
                 }
                 
-                // Se não foi especificada hora de entrada, registra automaticamente a hora atual
-                if (empty($entrada)) {
-                    $entrada = date('Y-m-d H:i:s');
+                // ========== VALIDAÇÕES TEMPORAIS ==========
+                // Validar hora de entrada
+                $entradaValidation = DateTimeValidator::validateEntryDateTime($entrada);
+                if (!$entradaValidation['isValid']) {
+                    throw new Exception($entradaValidation['message']);
                 }
+                $entrada = $entradaValidation['normalized'];
+                
+                // Validar hora de saída
+                $saidaValidation = DateTimeValidator::validateExitDateTime($saida, $entrada);
+                if (!$saidaValidation['isValid']) {
+                    throw new Exception($saidaValidation['message']);
+                }
+                $saida = $saidaValidation['normalized'] ?: null;
+                // ==========================================
                 
                 // ========== VALIDAÇÕES DE DUPLICIDADE ==========
                 $dadosValidacao = [
@@ -188,6 +200,22 @@ class PrestadoresServicoController {
                 if (empty($nome)) {
                     throw new Exception("Nome é obrigatório");
                 }
+                
+                // ========== VALIDAÇÕES TEMPORAIS ==========
+                // Validar hora de entrada
+                $entradaValidation = DateTimeValidator::validateEntryDateTime($entrada);
+                if (!$entradaValidation['isValid']) {
+                    throw new Exception($entradaValidation['message']);
+                }
+                $entrada = $entradaValidation['normalized'];
+                
+                // Validar hora de saída
+                $saidaValidation = DateTimeValidator::validateExitDateTime($saida, $entrada);
+                if (!$saidaValidation['isValid']) {
+                    throw new Exception($saidaValidation['message']);
+                }
+                $saida = $saidaValidation['normalized'] ?: null;
+                // ==========================================
                 
                 // ========== VALIDAÇÕES DE DUPLICIDADE ==========
                 $dadosValidacao = [

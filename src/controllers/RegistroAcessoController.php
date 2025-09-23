@@ -4,6 +4,7 @@ require_once '../src/services/AuditService.php';
 require_once '../src/services/AuthorizationService.php';
 require_once '../src/services/DuplicityValidationService.php';
 require_once '../src/utils/CpfValidator.php';
+require_once '../src/utils/DateTimeValidator.php';
 
 class RegistroAcessoController {
     private $db;
@@ -126,15 +127,17 @@ class RegistroAcessoController {
             
             $saida_at = $_POST['saida_at'] ?? date('Y-m-d H:i:s');
             
-            // Validar se saída é após entrada
-            if (strtotime($saida_at) < strtotime($registro['entrada_at'])) {
+            // Validar horário de saída com DateTimeValidator
+            $saidaValidation = DateTimeValidator::validateExitDateTime($saida_at, $registro['entrada_at']);
+            if (!$saidaValidation['isValid']) {
                 http_response_code(400);
                 echo json_encode([
                     'success' => false,
-                    'message' => 'Horário de saída não pode ser anterior ao horário de entrada'
+                    'message' => $saidaValidation['message']
                 ]);
                 return;
             }
+            $saida_at = $saidaValidation['normalized'];
             
             // Atualizar registro
             $this->db->query(
@@ -214,25 +217,33 @@ class RegistroAcessoController {
                 throw new Exception("Nenhum campo editável foi fornecido");
             }
             
-            // Validações específicas
-            if (isset($dadosEditaveis['entrada_at']) && isset($dadosEditaveis['saida_at'])) {
-                if (strtotime($dadosEditaveis['saida_at']) < strtotime($dadosEditaveis['entrada_at'])) {
+            // Validações temporais com DateTimeValidator
+            if (isset($dadosEditaveis['entrada_at'])) {
+                $entradaValidation = DateTimeValidator::validateEntryDateTime($dadosEditaveis['entrada_at']);
+                if (!$entradaValidation['isValid']) {
                     http_response_code(400);
                     echo json_encode([
                         'success' => false,
-                        'message' => 'Horário de saída não pode ser anterior ao horário de entrada'
+                        'message' => $entradaValidation['message']
                     ]);
                     return;
                 }
-            } else if (isset($dadosEditaveis['saida_at']) && $registroAntes['entrada_at']) {
-                if (strtotime($dadosEditaveis['saida_at']) < strtotime($registroAntes['entrada_at'])) {
+                $dadosEditaveis['entrada_at'] = $entradaValidation['normalized'];
+            }
+            
+            if (isset($dadosEditaveis['saida_at'])) {
+                // Use entrada atual (modificada ou existente) como baseline
+                $entradaBaseline = $dadosEditaveis['entrada_at'] ?? $registroAntes['entrada_at'];
+                $saidaValidation = DateTimeValidator::validateExitDateTime($dadosEditaveis['saida_at'], $entradaBaseline);
+                if (!$saidaValidation['isValid']) {
                     http_response_code(400);
                     echo json_encode([
                         'success' => false,
-                        'message' => 'Horário de saída não pode ser anterior ao horário de entrada'
+                        'message' => $saidaValidation['message']
                     ]);
                     return;
                 }
+                $dadosEditaveis['saida_at'] = $saidaValidation['normalized'];
             }
             
             // Normalizar CPF e placa se fornecidos
@@ -400,7 +411,11 @@ class RegistroAcessoController {
             preg_replace('/[^A-Z0-9]/', '', strtoupper(trim($data['placa_veiculo']))) : '';
         
         // Validar horário de entrada
-        $data['entrada_at'] = !empty($data['entrada_at']) ? $data['entrada_at'] : date('Y-m-d H:i:s');
+        $entradaValidation = DateTimeValidator::validateEntryDateTime($data['entrada_at']);
+        if (!$entradaValidation['isValid']) {
+            throw new Exception($entradaValidation['message']);
+        }
+        $data['entrada_at'] = $entradaValidation['normalized'];
         
         return $data;
     }

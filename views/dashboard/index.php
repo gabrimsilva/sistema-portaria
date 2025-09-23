@@ -605,7 +605,7 @@
     
     
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
     
     <script>
@@ -1337,111 +1337,70 @@
             $('#campo_funcionario_responsavel, #campo_hora_saida, #campo_observacao, #botoes_saida').hide();
         });
 
-        // ==================== MÁSCARAS DE ENTRADA ROBUSTAS - BOOTSTRAP 4 COMPATÍVEL ====================
+        // ==================== MÁSCARAS DE ENTRADA - BOOTSTRAP 4.6.2 COMPATÍVEL ====================
         
-        console.log('✅ Iniciando sistema de máscaras...');
+        console.log('✅ Sistema de máscaras carregado (Bootstrap 4.6.2)');
         
-        // Handler de erro global para debug
-        window.onerror = function(message, source, lineno, colno, error) {
-            console.error('🔴 ERRO JAVASCRIPT CAPTURADO:', {
-                message: message,
-                source: source,
-                line: lineno,
-                column: colno,
-                error: error ? error.stack : 'Stack não disponível'
+        // Máscara para CPF - Formato: 000.000.000-00
+        function aplicarMascaraCPF(selector) {
+            $(selector).on('input paste keyup', function() {
+                let cpf = this.value.replace(/\D/g, ''); // Remove não-dígitos
+                cpf = cpf.substring(0, 11); // Limita a 11 dígitos
+                
+                // Aplica formatação progressiva
+                cpf = cpf.replace(/(\d{3})(\d)/, '$1.$2');
+                cpf = cpf.replace(/(\d{3})\.(\d{3})(\d)/, '$1.$2.$3');
+                cpf = cpf.replace(/(\d{3})\.(\d{3})\.(\d{3})(\d)/, '$1.$2.$3-$4');
+                
+                this.value = cpf;
             });
-            return false; // Não previne o comportamento padrão
-        };
-        
-        window.onunhandledrejection = function(event) {
-            console.error('🔴 PROMISE REJEITADA:', event.reason);
-        };
-        
-        // Máscara para CPF (formato: 000.000.000-00) com tratamento de erro
-        function aplicarMascaraCPF(elemento) {
-            if (!elemento) {
-                console.warn('⚠️ Elemento não encontrado para máscara CPF');
-                return;
-            }
-            
-            try {
-                $(elemento).on('input keyup paste', function() {
-                    let valor = this.value.replace(/\D/g, ''); // Remove caracteres não numéricos
-                    valor = valor.substring(0, 11); // Limita a 11 dígitos
-                    
-                    // Aplica formatação
-                    valor = valor.replace(/(\d{3})(\d)/, '$1.$2');
-                    valor = valor.replace(/(\d{3})\.(\d{3})(\d)/, '$1.$2.$3');
-                    valor = valor.replace(/(\d{3})\.(\d{3})\.(\d{3})(\d{1,2})$/, '$1.$2.$3-$4');
-                    
-                    this.value = valor;
-                });
-                console.log('✅ Máscara CPF aplicada com sucesso');
-            } catch (erro) {
-                console.error('❌ Erro ao aplicar máscara CPF:', erro);
-            }
         }
-
-        // Máscara para Placa (formato antigo: ABC-1234 ou Mercosul: ABC1D23) com tratamento de erro
-        function aplicarMascaraPlaca(elemento) {
-            if (!elemento) {
-                console.warn('⚠️ Elemento não encontrado para máscara Placa');
-                return;
-            }
-            
-            try {
-                $(elemento).on('input keyup paste', function() {
-                    let valor = this.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
-                    valor = valor.substring(0, 7); // Limita a 7 caracteres
+        
+        // Máscara para Placa - Formatos: ABC-1234 (antigo) e ABC1D23 (Mercosul)
+        function aplicarMascaraPlaca(selector) {
+            $(selector).on('input paste keyup', function() {
+                let placa = this.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+                placa = placa.substring(0, 7); // Máximo 7 caracteres
+                
+                // Detecta formato e aplica formatação
+                if (placa.length >= 4) {
+                    const letras = placa.substring(0, 3);
+                    const resto = placa.substring(3);
                     
-                    // Detecta formato e aplica máscara
-                    if (valor.length >= 4) {
-                        const letras = valor.substring(0, 3);
-                        const numeros = valor.substring(3);
-                        
-                        // Se primeiros 3 são letras
-                        if (/^[A-Z]{3}$/.test(letras)) {
-                            // Se últimos chars são só números = formato antigo
-                            if (/^[0-9]+$/.test(numeros)) {
-                                valor = letras + '-' + numeros;
-                            }
-                            // Senão mantém formato Mercosul sem traço
+                    // Se primeiros 3 são letras
+                    if (/^[A-Z]{3}$/.test(letras)) {
+                        // Se resto são só números = formato antigo ABC-1234
+                        if (/^[0-9]+$/.test(resto)) {
+                            placa = letras + '-' + resto;
                         }
+                        // Senão = formato Mercosul ABC1D23 (sem formatação extra)
                     }
-                    
-                    this.value = valor;
-                });
-                console.log('✅ Máscara Placa aplicada com sucesso');
-            } catch (erro) {
-                console.error('❌ Erro ao aplicar máscara Placa:', erro);
-            }
+                }
+                
+                this.value = placa;
+            });
         }
-
-        // Aplicar máscaras quando modais abrem
+        
+        // Aplicar máscaras quando os modais abrem
         $('#modalVisitante').on('shown.bs.modal', function() {
-            console.log('✅ Aplicando máscaras no Modal Visitante');
-            aplicarMascaraCPF(document.getElementById('visitante_cpf'));
-            aplicarMascaraPlaca(document.getElementById('visitante_placa_veiculo'));
-        });
-
-        $('#modalProfissional').on('shown.bs.modal', function() {
-            console.log('✅ Modal Profissional aberto (sem campos para máscaras)');
-            // Modal Profissional não tem campo CPF, apenas Nome e Setor
-        });
-
-        $('#modalPrestador').on('shown.bs.modal', function() {
-            console.log('✅ Aplicando máscaras no Modal Prestador');
-            aplicarMascaraCPF(document.getElementById('prestador_cpf'));
-            aplicarMascaraPlaca(document.getElementById('prestador_placa_veiculo'));
-        });
-
-        $('#modalEditar').on('shown.bs.modal', function() {
-            console.log('✅ Aplicando máscaras no Modal Editar');
-            aplicarMascaraCPF(document.getElementById('edit_cpf'));
-            aplicarMascaraPlaca(document.getElementById('edit_placa_veiculo'));
+            aplicarMascaraCPF('#visitante_cpf');
+            aplicarMascaraPlaca('#visitante_placa_veiculo');
+            console.log('✅ Máscaras aplicadas ao Modal Visitante');
         });
         
-        console.log('✅ Sistema de máscaras inicializado com sucesso!');
+        $('#modalPrestador').on('shown.bs.modal', function() {
+            aplicarMascaraCPF('#prestador_cpf');
+            aplicarMascaraPlaca('#prestador_placa_veiculo');
+            console.log('✅ Máscaras aplicadas ao Modal Prestador');
+        });
+        
+        $('#modalEditar').on('shown.bs.modal', function() {
+            aplicarMascaraCPF('#edit_cpf');
+            aplicarMascaraPlaca('#edit_placa_veiculo');
+            console.log('✅ Máscaras aplicadas ao Modal Editar');
+        });
+        
+        console.log('🎯 Sistema de máscaras inicializado com Bootstrap 4.6.2!');
         
     });
     </script>

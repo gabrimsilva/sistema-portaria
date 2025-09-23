@@ -6,6 +6,7 @@
     "dev": "nodemon src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
+    "pretest": "prisma generate",
     "test": "jest",
     "test:watch": "jest --watch",
     "db:push": "prisma db push",

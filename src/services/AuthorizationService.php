@@ -28,6 +28,7 @@ class AuthorizationService {
         'porteiro' => [
             'registro_acesso.create',
             'registro_acesso.read',
+            'registro_acesso.update',
             'registro_acesso.checkin',
             'registro_acesso.checkout'
         ]

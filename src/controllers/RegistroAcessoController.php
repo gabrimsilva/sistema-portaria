@@ -41,9 +41,9 @@ class RegistroAcessoController {
             $this->validateDuplicity($data);
             
             // Inserir registro
-            $id = $this->db->query(
+            $this->db->query(
                 "INSERT INTO registro_acesso (tipo, nome, cpf, empresa, setor, placa_veiculo, funcionario_responsavel, observacao, entrada_at, created_by) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id",
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 [
                     $data['tipo'],
                     $data['nome'],
@@ -57,6 +57,9 @@ class RegistroAcessoController {
                     $_SESSION['user_id']
                 ]
             );
+            
+            // Obter ID do registro inserido
+            $id = $this->db->fetch("SELECT currval('registro_acesso_id_seq') as id")['id'];
             
             $registro = $this->db->fetch("SELECT * FROM registro_acesso WHERE id = ?", [$id]);
             

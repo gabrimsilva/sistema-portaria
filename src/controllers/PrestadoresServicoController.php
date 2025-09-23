@@ -115,7 +115,19 @@ class PrestadoresServicoController {
                 header('Location: /prestadores-servico?success=1');
                 exit;
             } catch (Exception $e) {
-                $error = $e->getMessage();
+                $errorMessage = $e->getMessage();
+                
+                // Tratar erros específicos do banco de dados
+                if (strpos($errorMessage, 'ux_prestadores_cpf_ativo') !== false) {
+                    $error = "Este CPF já está ativo no sistema. Não é possível registrar duas entradas simultâneas.";
+                } elseif (strpos($errorMessage, 'ux_prestadores_placa_ativa') !== false) {
+                    $error = "Esta placa de veículo já está ativa no sistema. Não é possível registrar duas entradas simultâneas.";
+                } elseif (strpos($errorMessage, 'chk_prestadores_horario_valido') !== false) {
+                    $error = "A hora de saída não pode ser anterior à hora de entrada.";
+                } else {
+                    $error = $errorMessage;
+                }
+                
                 include '../views/prestadores_servico/form.php';
             }
         }
@@ -193,7 +205,19 @@ class PrestadoresServicoController {
                 header('Location: /prestadores-servico?updated=1');
                 exit;
             } catch (Exception $e) {
-                $error = $e->getMessage();
+                $errorMessage = $e->getMessage();
+                
+                // Tratar erros específicos do banco de dados
+                if (strpos($errorMessage, 'ux_prestadores_cpf_ativo') !== false) {
+                    $error = "Este CPF já está ativo no sistema. Não é possível registrar duas entradas simultâneas.";
+                } elseif (strpos($errorMessage, 'ux_prestadores_placa_ativa') !== false) {
+                    $error = "Esta placa de veículo já está ativa no sistema. Não é possível registrar duas entradas simultâneas.";
+                } elseif (strpos($errorMessage, 'chk_prestadores_horario_valido') !== false) {
+                    $error = "A hora de saída não pode ser anterior à hora de entrada.";
+                } else {
+                    $error = $errorMessage;
+                }
+                
                 $prestador = $this->db->fetch("SELECT * FROM prestadores_servico WHERE id = ?", [$_POST['id']]);
                 include '../views/prestadores_servico/form.php';
             }
@@ -347,7 +371,18 @@ class PrestadoresServicoController {
                     ]
                 ]);
             } catch (Exception $e) {
-                echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+                $errorMessage = $e->getMessage();
+                
+                // Tratar erros específicos do banco de dados para AJAX
+                if (strpos($errorMessage, 'ux_prestadores_cpf_ativo') !== false) {
+                    echo json_encode(['success' => false, 'message' => 'Este CPF já está ativo no sistema. Não é possível registrar duas entradas simultâneas.']);
+                } elseif (strpos($errorMessage, 'ux_prestadores_placa_ativa') !== false) {
+                    echo json_encode(['success' => false, 'message' => 'Esta placa de veículo já está ativa no sistema. Não é possível registrar duas entradas simultâneas.']);
+                } elseif (strpos($errorMessage, 'chk_prestadores_horario_valido') !== false) {
+                    echo json_encode(['success' => false, 'message' => 'A hora de saída não pode ser anterior à hora de entrada.']);
+                } else {
+                    echo json_encode(['success' => false, 'message' => $errorMessage]);
+                }
             }
         } else {
             echo json_encode(['success' => false, 'message' => 'Método não permitido']);
@@ -443,7 +478,18 @@ class PrestadoresServicoController {
                     ]
                 ]);
             } catch (Exception $e) {
-                echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+                $errorMessage = $e->getMessage();
+                
+                // Tratar erros específicos do banco de dados para AJAX
+                if (strpos($errorMessage, 'ux_prestadores_cpf_ativo') !== false) {
+                    echo json_encode(['success' => false, 'message' => 'Este CPF já está ativo no sistema. Não é possível registrar duas entradas simultâneas.']);
+                } elseif (strpos($errorMessage, 'ux_prestadores_placa_ativa') !== false) {
+                    echo json_encode(['success' => false, 'message' => 'Esta placa de veículo já está ativa no sistema. Não é possível registrar duas entradas simultâneas.']);
+                } elseif (strpos($errorMessage, 'chk_prestadores_horario_valido') !== false) {
+                    echo json_encode(['success' => false, 'message' => 'A hora de saída não pode ser anterior à hora de entrada.']);
+                } else {
+                    echo json_encode(['success' => false, 'message' => $errorMessage]);
+                }
             }
         } else {
             echo json_encode(['success' => false, 'message' => 'Método não permitido']);
@@ -486,7 +532,18 @@ class PrestadoresServicoController {
                     ]
                 ]);
             } catch (Exception $e) {
-                echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+                $errorMessage = $e->getMessage();
+                
+                // Tratar erros específicos do banco de dados para AJAX
+                if (strpos($errorMessage, 'ux_prestadores_cpf_ativo') !== false) {
+                    echo json_encode(['success' => false, 'message' => 'Este CPF já está ativo no sistema. Não é possível registrar duas entradas simultâneas.']);
+                } elseif (strpos($errorMessage, 'ux_prestadores_placa_ativa') !== false) {
+                    echo json_encode(['success' => false, 'message' => 'Esta placa de veículo já está ativa no sistema. Não é possível registrar duas entradas simultâneas.']);
+                } elseif (strpos($errorMessage, 'chk_prestadores_horario_valido') !== false) {
+                    echo json_encode(['success' => false, 'message' => 'A hora de saída não pode ser anterior à hora de entrada.']);
+                } else {
+                    echo json_encode(['success' => false, 'message' => $errorMessage]);
+                }
             }
         } else {
             echo json_encode(['success' => false, 'message' => 'Método não permitido']);
@@ -531,7 +588,18 @@ class PrestadoresServicoController {
                     ]
                 ]);
             } catch (Exception $e) {
-                echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+                $errorMessage = $e->getMessage();
+                
+                // Tratar erros específicos do banco de dados para AJAX
+                if (strpos($errorMessage, 'ux_prestadores_cpf_ativo') !== false) {
+                    echo json_encode(['success' => false, 'message' => 'Este CPF já está ativo no sistema. Não é possível registrar duas entradas simultâneas.']);
+                } elseif (strpos($errorMessage, 'ux_prestadores_placa_ativa') !== false) {
+                    echo json_encode(['success' => false, 'message' => 'Esta placa de veículo já está ativa no sistema. Não é possível registrar duas entradas simultâneas.']);
+                } elseif (strpos($errorMessage, 'chk_prestadores_horario_valido') !== false) {
+                    echo json_encode(['success' => false, 'message' => 'A hora de saída não pode ser anterior à hora de entrada.']);
+                } else {
+                    echo json_encode(['success' => false, 'message' => $errorMessage]);
+                }
             }
         } else {
             echo json_encode(['success' => false, 'message' => 'Método não permitido']);

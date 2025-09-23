@@ -115,7 +115,19 @@ class VisitantesNovoController {
                 header('Location: /visitantes?success=1');
                 exit;
             } catch (Exception $e) {
-                $error = $e->getMessage();
+                $errorMessage = $e->getMessage();
+                
+                // Tratar erros específicos do banco de dados
+                if (strpos($errorMessage, 'ux_visitantes_cpf_ativo') !== false) {
+                    $error = "Este CPF já está ativo no sistema. Não é possível registrar duas entradas simultâneas.";
+                } elseif (strpos($errorMessage, 'ux_visitantes_placa_ativa') !== false) {
+                    $error = "Esta placa de veículo já está ativa no sistema. Não é possível registrar duas entradas simultâneas.";
+                } elseif (strpos($errorMessage, 'chk_visitantes_horario_valido') !== false) {
+                    $error = "A hora de saída não pode ser anterior à hora de entrada.";
+                } else {
+                    $error = $errorMessage;
+                }
+                
                 include '../views/visitantes_novo/form.php';
             }
         }
@@ -193,7 +205,19 @@ class VisitantesNovoController {
                 header('Location: /visitantes?updated=1');
                 exit;
             } catch (Exception $e) {
-                $error = $e->getMessage();
+                $errorMessage = $e->getMessage();
+                
+                // Tratar erros específicos do banco de dados
+                if (strpos($errorMessage, 'ux_visitantes_cpf_ativo') !== false) {
+                    $error = "Este CPF já está ativo no sistema. Não é possível registrar duas entradas simultâneas.";
+                } elseif (strpos($errorMessage, 'ux_visitantes_placa_ativa') !== false) {
+                    $error = "Esta placa de veículo já está ativa no sistema. Não é possível registrar duas entradas simultâneas.";
+                } elseif (strpos($errorMessage, 'chk_visitantes_horario_valido') !== false) {
+                    $error = "A hora de saída não pode ser anterior à hora de entrada.";
+                } else {
+                    $error = $errorMessage;
+                }
+                
                 $visitante = $this->db->fetch("SELECT * FROM visitantes_novo WHERE id = ?", [$_POST['id']]);
                 include '../views/visitantes_novo/form.php';
             }

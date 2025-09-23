@@ -73,10 +73,23 @@ class RegistroAcessoController {
             ]);
             
         } catch (Exception $e) {
+            $errorMessage = $e->getMessage();
+            
+            // Tratar erros específicos do banco de dados
+            if (strpos($errorMessage, 'ux_registro_cpf_ativo') !== false) {
+                $message = "Este CPF já está ativo no sistema. Não é possível registrar duas entradas simultâneas.";
+            } elseif (strpos($errorMessage, 'ux_registro_placa_ativa') !== false) {
+                $message = "Esta placa de veículo já está ativa no sistema. Não é possível registrar duas entradas simultâneas.";
+            } elseif (strpos($errorMessage, 'chk_registro_horario_valido') !== false) {
+                $message = "A hora de saída não pode ser anterior à hora de entrada.";
+            } else {
+                $message = $errorMessage;
+            }
+            
             http_response_code(400);
             echo json_encode([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => $message
             ]);
         }
     }
@@ -140,10 +153,23 @@ class RegistroAcessoController {
             ]);
             
         } catch (Exception $e) {
+            $errorMessage = $e->getMessage();
+            
+            // Tratar erros específicos do banco de dados
+            if (strpos($errorMessage, 'ux_registro_cpf_ativo') !== false) {
+                $message = "Este CPF já está ativo no sistema. Não é possível registrar duas entradas simultâneas.";
+            } elseif (strpos($errorMessage, 'ux_registro_placa_ativa') !== false) {
+                $message = "Esta placa de veículo já está ativa no sistema. Não é possível registrar duas entradas simultâneas.";
+            } elseif (strpos($errorMessage, 'chk_registro_horario_valido') !== false) {
+                $message = "A hora de saída não pode ser anterior à hora de entrada.";
+            } else {
+                $message = $errorMessage;
+            }
+            
             http_response_code(400);
             echo json_encode([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => $message
             ]);
         }
     }
@@ -246,10 +272,23 @@ class RegistroAcessoController {
             ]);
             
         } catch (Exception $e) {
+            $errorMessage = $e->getMessage();
+            
+            // Tratar erros específicos do banco de dados
+            if (strpos($errorMessage, 'ux_registro_cpf_ativo') !== false) {
+                $message = "Este CPF já está ativo no sistema. Não é possível registrar duas entradas simultâneas.";
+            } elseif (strpos($errorMessage, 'ux_registro_placa_ativa') !== false) {
+                $message = "Esta placa de veículo já está ativa no sistema. Não é possível registrar duas entradas simultâneas.";
+            } elseif (strpos($errorMessage, 'chk_registro_horario_valido') !== false) {
+                $message = "A hora de saída não pode ser anterior à hora de entrada.";
+            } else {
+                $message = $errorMessage;
+            }
+            
             http_response_code(400);
             echo json_encode([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => $message
             ]);
         }
     }

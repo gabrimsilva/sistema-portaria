@@ -837,8 +837,7 @@
                 success: function(response) {
                     if (response.success) {
                         showToast('Visitante cadastrado com sucesso!');
-                        const modalVisitante = bootstrap.Modal.getInstance(document.getElementById('modalVisitante'));
-                        modalVisitante.hide();
+                        $('#modalVisitante').modal('hide');
                         limparFormulario('formVisitante');
                         adicionarPessoaNaLista(response.data);
                     } else {
@@ -881,8 +880,7 @@
                 success: function(response) {
                     if (response.success) {
                         showToast('Profissional cadastrado com sucesso!');
-                        const modalProfissional = bootstrap.Modal.getInstance(document.getElementById('modalProfissional'));
-                        modalProfissional.hide();
+                        $('#modalProfissional').modal('hide');
                         limparFormulario('formProfissional');
                         adicionarPessoaNaLista(response.data);
                     } else {
@@ -925,8 +923,7 @@
                 success: function(response) {
                     if (response.success) {
                         showToast('Prestador cadastrado com sucesso!');
-                        const modalPrestador = bootstrap.Modal.getInstance(document.getElementById('modalPrestador'));
-                        modalPrestador.hide();
+                        $('#modalPrestador').modal('hide');
                         limparFormulario('formPrestador');
                         adicionarPessoaNaLista(response.data);
                     } else {
@@ -1236,8 +1233,7 @@
                 success: function(response) {
                     if (response.success) {
                         showToast('Registro atualizado com sucesso!');
-                        const modalEditar = bootstrap.Modal.getInstance(document.getElementById('modalEditar'));
-                        modalEditar.hide();
+                        $('#modalEditar').modal('hide');
                         // Atualizar apenas a linha na tabela sem recarregar
                         atualizarLinhaNaTabela(response.data);
                     } else {
@@ -1300,8 +1296,7 @@
                 success: function(response) {
                     if (response.success) {
                         showToast(mensagemSucesso);
-                        const modalEditar = bootstrap.Modal.getInstance(document.getElementById('modalEditar'));
-                        modalEditar.hide();
+                        $('#modalEditar').modal('hide');
                         // Remover a linha da tabela quando pessoa sai da empresa
                         $(`.btn-editar[data-id="${id}"]`).closest('tr').fadeOut(300, function() {
                             $(this).remove();
@@ -1342,217 +1337,111 @@
             $('#campo_funcionario_responsavel, #campo_hora_saida, #campo_observacao, #botoes_saida').hide();
         });
 
-        // ==================== MÁSCARAS DE ENTRADA ROBUSTAS ====================
+        // ==================== MÁSCARAS DE ENTRADA ROBUSTAS - BOOTSTRAP 4 COMPATÍVEL ====================
         
-        // Função de tratamento de erro global
-        function tratarErroMascara(erro, contexto) {
-            console.warn('Erro na máscara:', contexto, erro);
-        }
+        console.log('✅ Iniciando sistema de máscaras...');
         
-        // Máscara para CPF (formato: 000.000.000-00) - versão robusta com tratamento de erro
-        function aplicarMascaraCPFRobusta(elemento) {
-            try {
-                if (!elemento || typeof elemento.addEventListener !== 'function') {
-                    return;
-                }
-                
-                function formatarCPF(valor) {
-                    try {
-                        if (typeof valor !== 'string') valor = String(valor || '');
-                        
-                        // Remove todos os caracteres não numéricos
-                        const digits = valor.replace(/\D/g, '');
-                        
-                        // Limita a 11 dígitos
-                        const limitedDigits = digits.slice(0, 11);
-                        
-                        // Aplica formatação progressiva
-                        let formatted = limitedDigits;
-                        if (limitedDigits.length > 3) {
-                            formatted = limitedDigits.replace(/(\d{3})(\d)/, '$1.$2');
-                        }
-                        if (limitedDigits.length > 6) {
-                            formatted = formatted.replace(/(\d{3})\.(\d{3})(\d)/, '$1.$2.$3');
-                        }
-                        if (limitedDigits.length > 9) {
-                            formatted = formatted.replace(/(\d{3})\.(\d{3})\.(\d{3})(\d)/, '$1.$2.$3-$4');
-                        }
-                        
-                        return formatted;
-                    } catch (erro) {
-                        tratarErroMascara(erro, 'formatarCPF');
-                        return valor || '';
-                    }
-                }
-                
-                function mascaraCPF(e) {
-                    try {
-                        if (!e.target) return;
-                        
-                        const cursorPosition = e.target.selectionStart || 0;
-                        const valorAnterior = e.target.value || '';
-                        const valorFormatado = formatarCPF(valorAnterior);
-                        
-                        e.target.value = valorFormatado;
-                        
-                        // Ajusta posição do cursor após formatação
-                        let novaPosicao = cursorPosition;
-                        if (valorFormatado.length > valorAnterior.length) {
-                            // Caractere de formatação foi adicionado
-                            if (cursorPosition === 4 || cursorPosition === 8 || cursorPosition === 12) {
-                                novaPosicao = cursorPosition + 1;
-                            }
-                        }
-                        
-                        // Restaura posição do cursor
-                        setTimeout(() => {
-                            try {
-                                if (e.target && typeof e.target.setSelectionRange === 'function') {
-                                    e.target.setSelectionRange(novaPosicao, novaPosicao);
-                                }
-                            } catch (erro) {
-                                tratarErroMascara(erro, 'setCursor CPF');
-                            }
-                        }, 10);
-                        
-                    } catch (erro) {
-                        tratarErroMascara(erro, 'mascaraCPF');
-                    }
-                }
-                
-                elemento.addEventListener('input', mascaraCPF);
-                elemento.addEventListener('paste', mascaraCPF);
-                
-            } catch (erro) {
-                tratarErroMascara(erro, 'aplicarMascaraCPFRobusta');
+        // Handler de erro global para debug
+        window.onerror = function(message, source, lineno, colno, error) {
+            console.error('🔴 ERRO JAVASCRIPT CAPTURADO:', {
+                message: message,
+                source: source,
+                line: lineno,
+                column: colno,
+                error: error ? error.stack : 'Stack não disponível'
+            });
+            return false; // Não previne o comportamento padrão
+        };
+        
+        window.onunhandledrejection = function(event) {
+            console.error('🔴 PROMISE REJEITADA:', event.reason);
+        };
+        
+        // Máscara para CPF (formato: 000.000.000-00) com tratamento de erro
+        function aplicarMascaraCPF(elemento) {
+            if (!elemento) {
+                console.warn('⚠️ Elemento não encontrado para máscara CPF');
+                return;
             }
-        }
-
-        // Máscara para Placa (formato antigo: ABC-1234 ou Mercosul: ABC1D23) - versão robusta com tratamento de erro
-        function aplicarMascaraPlacaRobusta(elemento) {
-            try {
-                if (!elemento || typeof elemento.addEventListener !== 'function') {
-                    return;
-                }
-                
-                function formatarPlaca(valor) {
-                    try {
-                        if (typeof valor !== 'string') valor = String(valor || '');
-                        
-                        // Remove caracteres especiais e converte para maiúsculo
-                        const clean = valor.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
-                        
-                        // Limita a 7 caracteres
-                        const limited = clean.slice(0, 7);
-                        
-                        // Se tem pelo menos 4 caracteres, verifica o formato
-                        if (limited.length >= 4) {
-                            const primeiros3 = limited.slice(0, 3);
-                            const resto = limited.slice(3);
-                            
-                            // Verifica se os primeiros 3 são letras
-                            if (/^[A-Z]{3}$/.test(primeiros3)) {
-                                // Se o 4º caractere é número e temos até 7 chars, pode ser formato antigo
-                                if (/^[0-9]/.test(resto) && limited.length <= 7) {
-                                    // Se todos os chars restantes são números = formato antigo
-                                    if (/^[0-9]{1,4}$/.test(resto)) {
-                                        return primeiros3 + '-' + resto;
-                                    }
-                                }
-                                // Caso contrário, retorna sem traço (formato Mercosul)
-                                return limited;
-                            }
-                        }
-                        
-                        return limited;
-                    } catch (erro) {
-                        tratarErroMascara(erro, 'formatarPlaca');
-                        return valor || '';
-                    }
-                }
-                
-                function mascaraPlaca(e) {
-                    try {
-                        if (!e.target) return;
-                        
-                        const cursorPosition = e.target.selectionStart || 0;
-                        const valorAnterior = e.target.value || '';
-                        const valorFormatado = formatarPlaca(valorAnterior);
-                        
-                        e.target.value = valorFormatado;
-                        
-                        // Ajusta posição do cursor
-                        let novaPosicao = cursorPosition;
-                        if (valorFormatado.length > valorAnterior.length && valorFormatado.includes('-') && cursorPosition === 4) {
-                            novaPosicao = cursorPosition + 1;
-                        }
-                        
-                        // Restaura posição do cursor
-                        setTimeout(() => {
-                            try {
-                                if (e.target && typeof e.target.setSelectionRange === 'function') {
-                                    e.target.setSelectionRange(novaPosicao, novaPosicao);
-                                }
-                            } catch (erro) {
-                                tratarErroMascara(erro, 'setCursor Placa');
-                            }
-                        }, 10);
-                        
-                    } catch (erro) {
-                        tratarErroMascara(erro, 'mascaraPlaca');
-                    }
-                }
-                
-                elemento.addEventListener('input', mascaraPlaca);
-                elemento.addEventListener('paste', mascaraPlaca);
-                
-            } catch (erro) {
-                tratarErroMascara(erro, 'aplicarMascaraPlacaRobusta');
-            }
-        }
-
-        // Sistema de aplicação de máscaras usando delegação de eventos (Bootstrap 4 compatível)
-        try {
-            // Aplicar máscaras quando modais são mostrados (Bootstrap 4)
-            $('#modalVisitante').on('shown.bs.modal', function() {
-                try {
-                    aplicarMascaraCPFRobusta(document.getElementById('visitante_cpf'));
-                    aplicarMascaraPlacaRobusta(document.getElementById('visitante_placa_veiculo'));
-                } catch (erro) {
-                    tratarErroMascara(erro, 'modalVisitante shown');
-                }
-            });
-
-            $('#modalProfissional').on('shown.bs.modal', function() {
-                try {
-                    aplicarMascaraCPFRobusta(document.getElementById('profissional_cpf'));
-                } catch (erro) {
-                    tratarErroMascara(erro, 'modalProfissional shown');
-                }
-            });
-
-            $('#modalPrestador').on('shown.bs.modal', function() {
-                try {
-                    aplicarMascaraCPFRobusta(document.getElementById('prestador_cpf'));
-                    aplicarMascaraPlacaRobusta(document.getElementById('prestador_placa_veiculo'));
-                } catch (erro) {
-                    tratarErroMascara(erro, 'modalPrestador shown');
-                }
-            });
-
-            // Aplicar máscaras no modal de edição (Bootstrap 4)
-            $('#modalEditar').on('shown.bs.modal', function() {
-                try {
-                    aplicarMascaraCPFRobusta(document.getElementById('edit_cpf'));
-                    aplicarMascaraPlacaRobusta(document.getElementById('edit_placa_veiculo'));
-                } catch (erro) {
-                    tratarErroMascara(erro, 'modalEditar shown');
-                }
-            });
             
-        } catch (erro) {
-            tratarErroMascara(erro, 'inicialização máscaras');
+            try {
+                $(elemento).on('input keyup paste', function() {
+                    let valor = this.value.replace(/\D/g, ''); // Remove caracteres não numéricos
+                    valor = valor.substring(0, 11); // Limita a 11 dígitos
+                    
+                    // Aplica formatação
+                    valor = valor.replace(/(\d{3})(\d)/, '$1.$2');
+                    valor = valor.replace(/(\d{3})\.(\d{3})(\d)/, '$1.$2.$3');
+                    valor = valor.replace(/(\d{3})\.(\d{3})\.(\d{3})(\d{1,2})$/, '$1.$2.$3-$4');
+                    
+                    this.value = valor;
+                });
+                console.log('✅ Máscara CPF aplicada com sucesso');
+            } catch (erro) {
+                console.error('❌ Erro ao aplicar máscara CPF:', erro);
+            }
         }
+
+        // Máscara para Placa (formato antigo: ABC-1234 ou Mercosul: ABC1D23) com tratamento de erro
+        function aplicarMascaraPlaca(elemento) {
+            if (!elemento) {
+                console.warn('⚠️ Elemento não encontrado para máscara Placa');
+                return;
+            }
+            
+            try {
+                $(elemento).on('input keyup paste', function() {
+                    let valor = this.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+                    valor = valor.substring(0, 7); // Limita a 7 caracteres
+                    
+                    // Detecta formato e aplica máscara
+                    if (valor.length >= 4) {
+                        const letras = valor.substring(0, 3);
+                        const numeros = valor.substring(3);
+                        
+                        // Se primeiros 3 são letras
+                        if (/^[A-Z]{3}$/.test(letras)) {
+                            // Se últimos chars são só números = formato antigo
+                            if (/^[0-9]+$/.test(numeros)) {
+                                valor = letras + '-' + numeros;
+                            }
+                            // Senão mantém formato Mercosul sem traço
+                        }
+                    }
+                    
+                    this.value = valor;
+                });
+                console.log('✅ Máscara Placa aplicada com sucesso');
+            } catch (erro) {
+                console.error('❌ Erro ao aplicar máscara Placa:', erro);
+            }
+        }
+
+        // Aplicar máscaras quando modais abrem
+        $('#modalVisitante').on('shown.bs.modal', function() {
+            console.log('✅ Aplicando máscaras no Modal Visitante');
+            aplicarMascaraCPF(document.getElementById('visitante_cpf'));
+            aplicarMascaraPlaca(document.getElementById('visitante_placa_veiculo'));
+        });
+
+        $('#modalProfissional').on('shown.bs.modal', function() {
+            console.log('✅ Modal Profissional aberto (sem campos para máscaras)');
+            // Modal Profissional não tem campo CPF, apenas Nome e Setor
+        });
+
+        $('#modalPrestador').on('shown.bs.modal', function() {
+            console.log('✅ Aplicando máscaras no Modal Prestador');
+            aplicarMascaraCPF(document.getElementById('prestador_cpf'));
+            aplicarMascaraPlaca(document.getElementById('prestador_placa_veiculo'));
+        });
+
+        $('#modalEditar').on('shown.bs.modal', function() {
+            console.log('✅ Aplicando máscaras no Modal Editar');
+            aplicarMascaraCPF(document.getElementById('edit_cpf'));
+            aplicarMascaraPlaca(document.getElementById('edit_placa_veiculo'));
+        });
+        
+        console.log('✅ Sistema de máscaras inicializado com sucesso!');
         
     });
     </script>

@@ -280,6 +280,7 @@
                                                                 data-empresa="<?= htmlspecialchars($pessoa['empresa'] ?? '') ?>"
                                                                 data-setor="<?= htmlspecialchars($pessoa['setor'] ?? '') ?>"
                                                                 data-placa_veiculo="<?= htmlspecialchars($pessoa['placa_veiculo'] ?? '') ?>"
+                                                data-funcionario_responsavel="<?= htmlspecialchars($pessoa['funcionario_responsavel'] ?? '') ?>"
                                                                 title="Editar registro">
                                                             <i class="fas fa-edit"></i>
                                                         </button>
@@ -1099,7 +1100,7 @@
             if (tipo === 'Visitante') {
                 $('#campo_funcionario_responsavel').show();
                 // Preencher campos específicos do visitante
-                $('#edit_funcionario_responsavel').val(funcionario || '');
+                $('#edit_funcionario_responsavel').val(btn.data('funcionario_responsavel') || '');
                 
                 // Buscar dados completos do visitante para preencher hora de saída
                 $.ajax({

@@ -222,7 +222,7 @@ class DashboardController {
             
             // Visitantes na empresa (entraram mas não saíram)
             $visitantesAtivos = $this->db->fetchAll("
-                SELECT nome, cpf, empresa, setor, hora_entrada, 'Visitante' as tipo, id, placa_veiculo
+                SELECT nome, cpf, empresa, setor, hora_entrada, 'Visitante' as tipo, id, placa_veiculo, funcionario_responsavel
                 FROM visitantes_novo 
                 WHERE hora_entrada IS NOT NULL AND hora_saida IS NULL
                 ORDER BY hora_entrada DESC

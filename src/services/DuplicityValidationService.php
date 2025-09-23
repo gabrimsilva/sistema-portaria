@@ -85,8 +85,8 @@ class DuplicityValidationService {
             return ['isValid' => true, 'message' => '', 'entry' => null];
         }
         
-        // Normalizar placa (uppercase, sem espaços)
-        $placa = strtoupper(trim($placa));
+        // Normalizar placa (apenas letras e números, maiúscula)
+        $placa = preg_replace('/[^A-Z0-9]/', '', strtoupper(trim($placa)));
         
         // Verificar visitantes com placa ativa
         $sql = "SELECT nome, cpf, empresa, placa_veiculo, hora_entrada, 'Visitante' as tipo 

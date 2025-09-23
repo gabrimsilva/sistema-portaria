@@ -72,6 +72,13 @@ class PrestadoresServicoController {
                 $entrada = $_POST['entrada'] ?? null;
                 $saida = $_POST['saida'] ?? null;
                 
+                // ========== NORMALIZAR DADOS ==========
+                // CPF: apenas dígitos
+                $cpf = preg_replace('/\D/', '', $cpf);
+                // Placa: apenas letras e números, maiúscula
+                $placa_veiculo = preg_replace('/[^A-Z0-9]/', '', strtoupper(trim($placa_veiculo)));
+                // =====================================
+                
                 if (empty($nome)) {
                     throw new Exception("Nome é obrigatório");
                 }
@@ -80,6 +87,21 @@ class PrestadoresServicoController {
                 if (empty($entrada)) {
                     $entrada = date('Y-m-d H:i:s');
                 }
+                
+                // ========== VALIDAÇÕES DE DUPLICIDADE ==========
+                $dadosValidacao = [
+                    'cpf' => $cpf,
+                    'placa_veiculo' => $placa_veiculo,
+                    'entrada' => $entrada
+                ];
+                
+                $validacao = $this->duplicityService->validateNewEntry($dadosValidacao, 'prestador');
+                
+                if (!$validacao['isValid']) {
+                    $errorMessages = implode(' ', $validacao['errors']);
+                    throw new Exception("Erro de duplicidade: " . $errorMessages);
+                }
+                // ===============================================
                 
                 $this->db->query("
                     INSERT INTO prestadores_servico (nome, cpf, empresa, setor, observacao, placa_veiculo, entrada, saida)
@@ -129,9 +151,32 @@ class PrestadoresServicoController {
                 $entrada = $_POST['entrada'] ?? null;
                 $saida = $_POST['saida'] ?? null;
                 
+                // ========== NORMALIZAR DADOS ==========
+                // CPF: apenas dígitos
+                $cpf = preg_replace('/\D/', '', $cpf);
+                // Placa: apenas letras e números, maiúscula
+                $placa_veiculo = preg_replace('/[^A-Z0-9]/', '', strtoupper(trim($placa_veiculo)));
+                // =====================================
+                
                 if (empty($nome)) {
                     throw new Exception("Nome é obrigatório");
                 }
+                
+                // ========== VALIDAÇÕES DE DUPLICIDADE ==========
+                $dadosValidacao = [
+                    'cpf' => $cpf,
+                    'placa_veiculo' => $placa_veiculo,
+                    'entrada' => $entrada,
+                    'saida' => $saida
+                ];
+                
+                $validacao = $this->duplicityService->validateEditEntry($dadosValidacao, $id, 'prestadores_servico');
+                
+                if (!$validacao['isValid']) {
+                    $errorMessages = implode(' ', $validacao['errors']);
+                    throw new Exception("Erro de duplicidade: " . $errorMessages);
+                }
+                // ===============================================
                 
                 $this->db->query("
                     UPDATE prestadores_servico 
@@ -161,6 +206,30 @@ class PrestadoresServicoController {
             $id = $_POST['id'] ?? null;
             
             if ($id) {
+                // Buscar dados do prestador para validação
+                $prestador = $this->db->fetch("SELECT * FROM prestadores_servico WHERE id = ?", [$id]);
+                
+                if ($prestador) {
+                    // Normalizar dados para validação
+                    $cpf = preg_replace('/\D/', '', $prestador['cpf']);
+                    $placa_veiculo = preg_replace('/[^A-Z0-9]/', '', strtoupper(trim($prestador['placa_veiculo'])));
+                    
+                    // Validar se não há entrada em aberto
+                    $cpfValidation = $this->duplicityService->validateCpfNotOpen($cpf, $id, 'prestadores_servico');
+                    if (!$cpfValidation['isValid']) {
+                        header('Location: /prestadores-servico?error=' . urlencode($cpfValidation['message']));
+                        exit;
+                    }
+                    
+                    if (!empty($placa_veiculo)) {
+                        $placaValidation = $this->duplicityService->validatePlacaNotOpen($placa_veiculo, $id, 'prestadores_servico');
+                        if (!$placaValidation['isValid']) {
+                            header('Location: /prestadores-servico?error=' . urlencode($placaValidation['message']));
+                            exit;
+                        }
+                    }
+                }
+                
                 $this->db->query("UPDATE prestadores_servico SET entrada = CURRENT_TIMESTAMP WHERE id = ?", [$id]);
             }
         }
@@ -210,6 +279,13 @@ class PrestadoresServicoController {
                 $observacao = trim($_POST['observacao'] ?? '');
                 $placa_veiculo = trim($_POST['placa_veiculo'] ?? '');
                 $entrada_input = trim($_POST['entrada'] ?? '');
+                
+                // ========== NORMALIZAR DADOS ==========
+                // CPF: apenas dígitos
+                $cpf = preg_replace('/\D/', '', $cpf);
+                // Placa: apenas letras e números, maiúscula
+                $placa_veiculo = preg_replace('/[^A-Z0-9]/', '', strtoupper(trim($placa_veiculo)));
+                // =====================================
                 
                 if (empty($nome)) {
                     echo json_encode(['success' => false, 'message' => 'Nome é obrigatório']);

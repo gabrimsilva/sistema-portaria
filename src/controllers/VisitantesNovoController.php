@@ -72,6 +72,13 @@ class VisitantesNovoController {
                 $hora_entrada = $_POST['hora_entrada'] ?? null;
                 $hora_saida = $_POST['hora_saida'] ?? null;
                 
+                // ========== NORMALIZAR DADOS ==========
+                // CPF: apenas dígitos
+                $cpf = preg_replace('/\D/', '', $cpf);
+                // Placa: apenas letras e números, maiúscula
+                $placa_veiculo = preg_replace('/[^A-Z0-9]/', '', strtoupper(trim($placa_veiculo)));
+                // =====================================
+                
                 if (empty($nome)) {
                     throw new Exception("Nome é obrigatório");
                 }
@@ -80,6 +87,21 @@ class VisitantesNovoController {
                 if (empty($hora_entrada)) {
                     $hora_entrada = date('Y-m-d H:i:s');
                 }
+                
+                // ========== VALIDAÇÕES DE DUPLICIDADE ==========
+                $dadosValidacao = [
+                    'cpf' => $cpf,
+                    'placa_veiculo' => $placa_veiculo,
+                    'hora_entrada' => $hora_entrada
+                ];
+                
+                $validacao = $this->duplicityService->validateNewEntry($dadosValidacao, 'visitante');
+                
+                if (!$validacao['isValid']) {
+                    $errorMessages = implode(' ', $validacao['errors']);
+                    throw new Exception("Erro de duplicidade: " . $errorMessages);
+                }
+                // ===============================================
                 
                 $this->db->query("
                     INSERT INTO visitantes_novo (nome, cpf, empresa, funcionario_responsavel, setor, placa_veiculo, hora_entrada, hora_saida)
@@ -129,9 +151,32 @@ class VisitantesNovoController {
                 $hora_entrada = $_POST['hora_entrada'] ?? null;
                 $hora_saida = $_POST['hora_saida'] ?? null;
                 
+                // ========== NORMALIZAR DADOS ==========
+                // CPF: apenas dígitos
+                $cpf = preg_replace('/\D/', '', $cpf);
+                // Placa: apenas letras e números, maiúscula
+                $placa_veiculo = preg_replace('/[^A-Z0-9]/', '', strtoupper(trim($placa_veiculo)));
+                // =====================================
+                
                 if (empty($nome)) {
                     throw new Exception("Nome é obrigatório");
                 }
+                
+                // ========== VALIDAÇÕES DE DUPLICIDADE ==========
+                $dadosValidacao = [
+                    'cpf' => $cpf,
+                    'placa_veiculo' => $placa_veiculo,
+                    'hora_entrada' => $hora_entrada,
+                    'hora_saida' => $hora_saida
+                ];
+                
+                $validacao = $this->duplicityService->validateEditEntry($dadosValidacao, $id, 'visitantes_novo');
+                
+                if (!$validacao['isValid']) {
+                    $errorMessages = implode(' ', $validacao['errors']);
+                    throw new Exception("Erro de duplicidade: " . $errorMessages);
+                }
+                // ===============================================
                 
                 $this->db->query("
                     UPDATE visitantes_novo 
@@ -161,6 +206,30 @@ class VisitantesNovoController {
             $id = $_POST['id'] ?? null;
             
             if ($id) {
+                // Buscar dados do visitante para validação
+                $visitante = $this->db->fetch("SELECT * FROM visitantes_novo WHERE id = ?", [$id]);
+                
+                if ($visitante) {
+                    // Normalizar dados para validação
+                    $cpf = preg_replace('/\D/', '', $visitante['cpf']);
+                    $placa_veiculo = preg_replace('/[^A-Z0-9]/', '', strtoupper(trim($visitante['placa_veiculo'])));
+                    
+                    // Validar se não há entrada em aberto
+                    $cpfValidation = $this->duplicityService->validateCpfNotOpen($cpf, $id, 'visitantes_novo');
+                    if (!$cpfValidation['isValid']) {
+                        header('Location: /visitantes?error=' . urlencode($cpfValidation['message']));
+                        exit;
+                    }
+                    
+                    if (!empty($placa_veiculo)) {
+                        $placaValidation = $this->duplicityService->validatePlacaNotOpen($placa_veiculo, $id, 'visitantes_novo');
+                        if (!$placaValidation['isValid']) {
+                            header('Location: /visitantes?error=' . urlencode($placaValidation['message']));
+                            exit;
+                        }
+                    }
+                }
+                
                 $this->db->query("UPDATE visitantes_novo SET hora_entrada = CURRENT_TIMESTAMP WHERE id = ?", [$id]);
             }
         }
@@ -241,6 +310,13 @@ class VisitantesNovoController {
                 $setor = trim($_POST['setor'] ?? '');
                 $placa_veiculo = trim($_POST['placa_veiculo'] ?? '');
                 $hora_entrada_input = trim($_POST['hora_entrada'] ?? '');
+                
+                // ========== NORMALIZAR DADOS ==========
+                // CPF: apenas dígitos
+                $cpf = preg_replace('/\D/', '', $cpf);
+                // Placa: apenas letras e números, maiúscula
+                $placa_veiculo = preg_replace('/[^A-Z0-9]/', '', strtoupper(trim($placa_veiculo)));
+                // =====================================
                 
                 if (empty($nome)) {
                     echo json_encode(['success' => false, 'message' => 'Nome é obrigatório']);

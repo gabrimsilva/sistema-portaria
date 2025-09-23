@@ -88,8 +88,18 @@ class VisitantesNovoController {
                 $placa_veiculo = preg_replace('/[^A-Z0-9]/', '', strtoupper(trim($placa_veiculo)));
                 // ================================================
                 
+                // Validações obrigatórias
                 if (empty($nome)) {
                     throw new Exception("Nome é obrigatório");
+                }
+                if (empty($setor)) {
+                    throw new Exception("Setor é obrigatório");
+                }
+                if (empty($cpf)) {
+                    throw new Exception("CPF é obrigatório");
+                }
+                if (empty($placa_veiculo)) {
+                    throw new Exception("Placa de veículo é obrigatória");
                 }
                 
                 // ========== VALIDAÇÕES TEMPORAIS ==========
@@ -197,8 +207,18 @@ class VisitantesNovoController {
                 $placa_veiculo = preg_replace('/[^A-Z0-9]/', '', strtoupper(trim($placa_veiculo)));
                 // ================================================
                 
+                // Validações obrigatórias
                 if (empty($nome)) {
                     throw new Exception("Nome é obrigatório");
+                }
+                if (empty($setor)) {
+                    throw new Exception("Setor é obrigatório");
+                }
+                if (empty($cpf)) {
+                    throw new Exception("CPF é obrigatório");
+                }
+                if (empty($placa_veiculo)) {
+                    throw new Exception("Placa de veículo é obrigatória");
                 }
                 
                 // ========== VALIDAÇÕES TEMPORAIS ==========

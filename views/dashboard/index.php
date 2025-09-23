@@ -709,17 +709,20 @@
             
             // Atualiza os contadores específicos do dashboard baseado no tipo
             if (data.tipo === 'Visitante') {
-                const visitantesCard = $('.info-box-content').eq(0).find('.info-box-number');
+                // Primeiro card: Visitantes Hoje
+                const visitantesCard = $('.small-box').eq(0).find('.inner h3');
                 const visitantesAtual = parseInt(visitantesCard.text()) || 0;
                 visitantesCard.text(visitantesAtual + 1);
             } else if (data.tipo === 'Profissional Renner') {
-                const funcionariosCard = $('.info-box-content').eq(1).find('.info-box-number');
+                // Segundo card: Funcionários Ativos
+                const funcionariosCard = $('.small-box').eq(1).find('.inner h3');
                 const funcionariosAtual = parseInt(funcionariosCard.text()) || 0;
                 funcionariosCard.text(funcionariosAtual + 1);
             }
+            // Nota: Prestadores de Serviço contam apenas nas "Entradas Hoje", não têm contador específico
             
-            // Sempre atualiza o contador de "Entradas Hoje"
-            const entradasCard = $('.info-box-content').eq(2).find('.info-box-number');
+            // Sempre atualiza o contador de "Entradas Hoje" (terceiro card)
+            const entradasCard = $('.small-box').eq(2).find('.inner h3');
             const entradasAtual = parseInt(entradasCard.text()) || 0;
             entradasCard.text(entradasAtual + 1);
         }

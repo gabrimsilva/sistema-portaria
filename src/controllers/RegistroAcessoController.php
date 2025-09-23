@@ -1,0 +1,376 @@
+<?php
+
+require_once '../src/services/AuditService.php';
+require_once '../src/services/AuthorizationService.php';
+require_once '../src/services/DuplicityValidationService.php';
+
+class RegistroAcessoController {
+    private $db;
+    private $auditService;
+    private $authService;
+    private $duplicityService;
+    
+    public function __construct() {
+        $this->db = new Database();
+        $this->auditService = new AuditService();
+        $this->authService = new AuthorizationService();
+        $this->duplicityService = new DuplicityValidationService();
+    }
+    
+    /**
+     * POST /entradas - Check-in
+     */
+    public function checkIn() {
+        header('Content-Type: application/json');
+        
+        // Verificar permissão
+        $this->authService->requirePermission('registro_acesso.create');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método não permitido']);
+            return;
+        }
+        
+        CSRFProtection::verifyRequest();
+        
+        try {
+            $data = $this->validateCheckInData($_POST);
+            
+            // Validar duplicidade
+            $this->validateDuplicity($data);
+            
+            // Inserir registro
+            $id = $this->db->query(
+                "INSERT INTO registro_acesso (tipo, nome, cpf, empresa, setor, placa_veiculo, funcionario_responsavel, observacao, entrada_at, created_by) 
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id",
+                [
+                    $data['tipo'],
+                    $data['nome'],
+                    $data['cpf'],
+                    $data['empresa'],
+                    $data['setor'],
+                    $data['placa_veiculo'],
+                    $data['funcionario_responsavel'],
+                    $data['observacao'],
+                    $data['entrada_at'],
+                    $_SESSION['user_id']
+                ]
+            );
+            
+            $registro = $this->db->fetch("SELECT * FROM registro_acesso WHERE id = ?", [$id]);
+            
+            // Registrar auditoria
+            $this->auditService->log('CREATE', 'registro_acesso', $id, null, $registro);
+            
+            echo json_encode([
+                'success' => true,
+                'message' => 'Check-in realizado com sucesso',
+                'data' => $registro
+            ]);
+            
+        } catch (Exception $e) {
+            http_response_code(400);
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
+     * POST /saidas/:id - Check-out
+     */
+    public function checkOut($id) {
+        header('Content-Type: application/json');
+        
+        // Verificar permissão
+        $this->authService->requirePermission('registro_acesso.update');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método não permitido']);
+            return;
+        }
+        
+        CSRFProtection::verifyRequest();
+        
+        try {
+            // Buscar registro atual
+            $registro = $this->db->fetch("SELECT * FROM registro_acesso WHERE id = ?", [$id]);
+            
+            if (!$registro) {
+                throw new Exception("Registro não encontrado");
+            }
+            
+            if ($registro['saida_at']) {
+                throw new Exception("Check-out já foi realizado para este registro");
+            }
+            
+            $saida_at = $_POST['saida_at'] ?? date('Y-m-d H:i:s');
+            
+            // Validar se saída é após entrada
+            if (strtotime($saida_at) < strtotime($registro['entrada_at'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Horário de saída não pode ser anterior ao horário de entrada'
+                ]);
+                return;
+            }
+            
+            // Atualizar registro
+            $this->db->query(
+                "UPDATE registro_acesso SET saida_at = ?, updated_by = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+                [$saida_at, $_SESSION['user_id'], $id]
+            );
+            
+            $registroAtualizado = $this->db->fetch("SELECT * FROM registro_acesso WHERE id = ?", [$id]);
+            
+            // Registrar auditoria
+            $this->auditService->log('CHECKOUT', 'registro_acesso', $id, $registro, $registroAtualizado);
+            
+            echo json_encode([
+                'success' => true,
+                'message' => 'Check-out realizado com sucesso',
+                'data' => $registroAtualizado
+            ]);
+            
+        } catch (Exception $e) {
+            http_response_code(400);
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
+     * PUT /registros/:id - Editar registro
+     */
+    public function edit($id) {
+        header('Content-Type: application/json');
+        
+        // Verificar permissão
+        $this->authService->requirePermission('registro_acesso.update');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'PUT') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método não permitido']);
+            return;
+        }
+        
+        CSRFProtection::verifyRequest();
+        
+        try {
+            // Buscar registro atual
+            $registroAntes = $this->db->fetch("SELECT * FROM registro_acesso WHERE id = ?", [$id]);
+            
+            if (!$registroAntes) {
+                throw new Exception("Registro não encontrado");
+            }
+            
+            // Obter dados da requisição
+            $input = json_decode(file_get_contents('php://input'), true);
+            
+            if (!$input) {
+                throw new Exception("Dados inválidos");
+            }
+            
+            // Filtrar campos editáveis baseado no perfil do usuário
+            $dadosEditaveis = $this->authService->filterEditableData($input);
+            
+            if (empty($dadosEditaveis)) {
+                throw new Exception("Nenhum campo editável foi fornecido");
+            }
+            
+            // Validações específicas
+            if (isset($dadosEditaveis['entrada_at']) && isset($dadosEditaveis['saida_at'])) {
+                if (strtotime($dadosEditaveis['saida_at']) < strtotime($dadosEditaveis['entrada_at'])) {
+                    http_response_code(400);
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Horário de saída não pode ser anterior ao horário de entrada'
+                    ]);
+                    return;
+                }
+            } else if (isset($dadosEditaveis['saida_at']) && $registroAntes['entrada_at']) {
+                if (strtotime($dadosEditaveis['saida_at']) < strtotime($registroAntes['entrada_at'])) {
+                    http_response_code(400);
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Horário de saída não pode ser anterior ao horário de entrada'
+                    ]);
+                    return;
+                }
+            }
+            
+            // Normalizar CPF e placa se fornecidos
+            if (isset($dadosEditaveis['cpf'])) {
+                $dadosEditaveis['cpf'] = preg_replace('/\D/', '', $dadosEditaveis['cpf']);
+            }
+            if (isset($dadosEditaveis['placa_veiculo'])) {
+                $dadosEditaveis['placa_veiculo'] = preg_replace('/[^A-Z0-9]/', '', strtoupper(trim($dadosEditaveis['placa_veiculo'])));
+            }
+            
+            // Construir query de update dinamicamente
+            $setClauses = [];
+            $params = [];
+            
+            foreach ($dadosEditaveis as $field => $value) {
+                $setClauses[] = "$field = ?";
+                $params[] = $value;
+            }
+            
+            $setClauses[] = "updated_by = ?";
+            $setClauses[] = "updated_at = CURRENT_TIMESTAMP";
+            $params[] = $_SESSION['user_id'];
+            $params[] = $id;
+            
+            $sql = "UPDATE registro_acesso SET " . implode(', ', $setClauses) . " WHERE id = ?";
+            
+            $this->db->query($sql, $params);
+            
+            $registroDepois = $this->db->fetch("SELECT * FROM registro_acesso WHERE id = ?", [$id]);
+            
+            // Registrar auditoria
+            $this->auditService->log('UPDATE', 'registro_acesso', $id, $registroAntes, $registroDepois);
+            
+            echo json_encode([
+                'success' => true,
+                'message' => 'Registro editado com sucesso',
+                'data' => $registroDepois
+            ]);
+            
+        } catch (Exception $e) {
+            http_response_code(400);
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
+     * GET /registros - Listar registros
+     */
+    public function list() {
+        header('Content-Type: application/json');
+        
+        // Verificar permissão
+        $this->authService->requirePermission('registro_acesso.read');
+        
+        try {
+            $sql = "SELECT ra.*, 
+                           u1.nome as criado_por_nome,
+                           u2.nome as atualizado_por_nome
+                    FROM registro_acesso ra 
+                    LEFT JOIN usuarios u1 ON ra.created_by = u1.id
+                    LEFT JOIN usuarios u2 ON ra.updated_by = u2.id
+                    ORDER BY ra.entrada_at DESC";
+            
+            $registros = $this->db->fetchAll($sql);
+            
+            echo json_encode([
+                'success' => true,
+                'data' => $registros
+            ]);
+            
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
+     * GET /registros/alertas - Registros com permanência > 12h
+     */
+    public function alertas() {
+        header('Content-Type: application/json');
+        
+        // Verificar permissão
+        $this->authService->requirePermission('registro_acesso.read');
+        
+        try {
+            $sql = "SELECT ra.*, 
+                           u1.nome as criado_por_nome,
+                           EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - ra.entrada_at))/3600 as horas_permanencia
+                    FROM registro_acesso ra 
+                    LEFT JOIN usuarios u1 ON ra.created_by = u1.id
+                    WHERE ra.saida_at IS NULL 
+                    AND ra.entrada_at < (CURRENT_TIMESTAMP - INTERVAL '12 hours')
+                    ORDER BY ra.entrada_at ASC";
+            
+            $alertas = $this->db->fetchAll($sql);
+            
+            echo json_encode([
+                'success' => true,
+                'data' => $alertas,
+                'count' => count($alertas)
+            ]);
+            
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
+     * Validar dados de check-in
+     */
+    private function validateCheckInData($data) {
+        $required = ['tipo', 'nome', 'cpf'];
+        $missing = [];
+        
+        foreach ($required as $field) {
+            if (empty($data[$field])) {
+                $missing[] = $field;
+            }
+        }
+        
+        if (!empty($missing)) {
+            throw new Exception("Campos obrigatórios: " . implode(', ', $missing));
+        }
+        
+        // Validar tipo
+        $allowedTypes = ['visitante', 'prestador_servico', 'profissional_renner'];
+        if (!in_array($data['tipo'], $allowedTypes)) {
+            throw new Exception("Tipo inválido. Permitidos: " . implode(', ', $allowedTypes));
+        }
+        
+        // Normalizar dados
+        $data['cpf'] = preg_replace('/\D/', '', $data['cpf']);
+        $data['placa_veiculo'] = isset($data['placa_veiculo']) ? 
+            preg_replace('/[^A-Z0-9]/', '', strtoupper(trim($data['placa_veiculo']))) : '';
+        
+        // Validar horário de entrada
+        $data['entrada_at'] = !empty($data['entrada_at']) ? $data['entrada_at'] : date('Y-m-d H:i:s');
+        
+        return $data;
+    }
+    
+    /**
+     * Validar duplicidade usando o serviço existente
+     */
+    private function validateDuplicity($data) {
+        // Validar CPF
+        $cpfValidation = $this->duplicityService->validateCpfNotOpen($data['cpf']);
+        if (!$cpfValidation['isValid']) {
+            throw new Exception($cpfValidation['message']);
+        }
+        
+        // Validar placa se fornecida
+        if (!empty($data['placa_veiculo'])) {
+            $placaValidation = $this->duplicityService->validatePlacaNotOpen($data['placa_veiculo']);
+            if (!$placaValidation['isValid']) {
+                throw new Exception($placaValidation['message']);
+            }
+        }
+    }
+}

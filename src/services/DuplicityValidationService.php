@@ -69,6 +69,29 @@ class DuplicityValidationService {
             ];
         }
         
+        // Verificar registros unificados com CPF ativo
+        $sql = "SELECT nome, cpf, empresa, entrada_at, tipo, 'Registro' as categoria 
+                FROM registro_acesso 
+                WHERE cpf = ? AND entrada_at IS NOT NULL AND saida_at IS NULL";
+        $params = [$cpf];
+        
+        // Só excluir se estamos editando a mesma tabela
+        if ($excludeId && $excludeTable === 'registro_acesso') {
+            $sql .= " AND id != ?";
+            $params[] = $excludeId;
+        }
+        
+        $registroAtivo = $this->db->fetch($sql, $params);
+        if ($registroAtivo) {
+            $horarioFormatado = date('H:i', strtotime($registroAtivo['entrada_at']));
+            $tipoFormatado = ucfirst(str_replace('_', ' ', $registroAtivo['tipo']));
+            return [
+                'isValid' => false,
+                'message' => "Entrada em aberto para este CPF às {$horarioFormatado} ({$tipoFormatado}: {$registroAtivo['nome']}).",
+                'entry' => $registroAtivo
+            ];
+        }
+        
         return ['isValid' => true, 'message' => '', 'entry' => null];
     }
     
@@ -129,6 +152,29 @@ class DuplicityValidationService {
                 'isValid' => false,
                 'message' => "Placa já está em uso em um acesso aberto às {$horarioFormatado} (Prestador: {$prestadorAtivo['nome']}).",
                 'entry' => $prestadorAtivo
+            ];
+        }
+        
+        // Verificar registros unificados com placa ativa
+        $sql = "SELECT nome, cpf, empresa, placa_veiculo, entrada_at, tipo, 'Registro' as categoria 
+                FROM registro_acesso 
+                WHERE placa_veiculo = ? AND entrada_at IS NOT NULL AND saida_at IS NULL";
+        $params = [$placa];
+        
+        // Só excluir se estamos editando a mesma tabela
+        if ($excludeId && $excludeTable === 'registro_acesso') {
+            $sql .= " AND id != ?";
+            $params[] = $excludeId;
+        }
+        
+        $registroAtivo = $this->db->fetch($sql, $params);
+        if ($registroAtivo) {
+            $horarioFormatado = date('H:i', strtotime($registroAtivo['entrada_at']));
+            $tipoFormatado = ucfirst(str_replace('_', ' ', $registroAtivo['tipo']));
+            return [
+                'isValid' => false,
+                'message' => "Placa já está em uso em um acesso aberto às {$horarioFormatado} ({$tipoFormatado}: {$registroAtivo['nome']}).",
+                'entry' => $registroAtivo
             ];
         }
         

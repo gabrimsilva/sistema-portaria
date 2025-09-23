@@ -194,13 +194,34 @@ try {
             break;
             
         default:
-            // Handle assets and uploads
-            if (strpos($path, 'assets/') === 0 || strpos($path, 'uploads/') === 0) {
+            // Handle new API endpoints
+            if (preg_match('/^entradas$/', $path)) {
+                require_once '../src/controllers/RegistroAcessoController.php';
+                $controller = new RegistroAcessoController();
+                $controller->checkIn();
+            } else if (preg_match('/^saidas\/(\d+)$/', $path, $matches)) {
+                require_once '../src/controllers/RegistroAcessoController.php';
+                $controller = new RegistroAcessoController();
+                $controller->checkOut($matches[1]);
+            } else if (preg_match('/^registros\/(\d+)$/', $path, $matches)) {
+                require_once '../src/controllers/RegistroAcessoController.php';
+                $controller = new RegistroAcessoController();
+                $controller->edit($matches[1]);
+            } else if (preg_match('/^registros$/', $path)) {
+                require_once '../src/controllers/RegistroAcessoController.php';
+                $controller = new RegistroAcessoController();
+                $controller->list();
+            } else if (preg_match('/^registros\/alertas$/', $path)) {
+                require_once '../src/controllers/RegistroAcessoController.php';
+                $controller = new RegistroAcessoController();
+                $controller->alertas();
+            } else if (strpos($path, 'assets/') === 0 || strpos($path, 'uploads/') === 0) {
+                // Handle assets and uploads
                 return false; // Let the web server handle static files
+            } else {
+                http_response_code(404);
+                echo "<h1>404 - Page Not Found</h1>";
             }
-            
-            http_response_code(404);
-            echo "<h1>404 - Page Not Found</h1>";
             break;
     }
 } catch (Exception $e) {

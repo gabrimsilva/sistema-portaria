@@ -76,12 +76,12 @@ class CpfValidator
     public static function validateAndNormalize(string $cpf): array 
     {
         $normalized = self::normalize($cpf);
-        $isValid = self::isValidCPF($cpf);
+        $isValid = self::isValidCPF($normalized);  // Corrigido: valida CPF normalizado
         
         return [
             'isValid' => $isValid,
             'normalized' => $normalized,
-            'formatted' => $isValid ? self::format($cpf) : $cpf,
+            'formatted' => $isValid ? self::format($normalized) : $cpf,  // Corrigido: usa normalizado
             'message' => $isValid ? '' : 'CPF inválido - verifique os dígitos verificadores'
         ];
     }

@@ -1335,6 +1335,84 @@
             $('#formEditar')[0].reset();
             $('#campo_funcionario_responsavel, #campo_hora_saida, #campo_observacao, #botoes_saida').hide();
         });
+
+        // ==================== MÁSCARAS DE ENTRADA ====================
+        
+        // Máscara para CPF (formato: 000.000.000-00)
+        function aplicarMascaraCPF(elemento) {
+            elemento.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, ''); // Remove caracteres não numéricos
+                
+                // Limita a 11 dígitos
+                if (value.length > 11) {
+                    value = value.substr(0, 11);
+                }
+                
+                // Aplica a formatação
+                value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                value = value.replace(/(\d{3})(\d)/, '$1.$2');  
+                value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+                
+                e.target.value = value;
+            });
+        }
+
+        // Máscara para Placa de Veículo (formato antigo: ABC-1234 ou Mercosul: ABC1D23)
+        function aplicarMascaraPlaca(elemento) {
+            elemento.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase(); // Remove caracteres especiais e converte para maiúsculo
+                
+                // Limita a 7 caracteres
+                if (value.length > 7) {
+                    value = value.substr(0, 7);
+                }
+                
+                // Aplica formatação baseada no padrão
+                if (value.length >= 4) {
+                    // Verifica se é formato Mercosul (4º caractere é número)
+                    if (/^[A-Z]{3}[0-9]/.test(value)) {
+                        // Formato Mercosul: ABC1D23 (não adiciona traço)
+                        if (value.length > 7) {
+                            value = value.substr(0, 7);
+                        }
+                    } else {
+                        // Formato antigo: ABC-1234 (adiciona traço após 3ª letra)
+                        value = value.replace(/^([A-Z]{3})([0-9]{1,4})$/, '$1-$2');
+                    }
+                }
+                
+                e.target.value = value;
+            });
+        }
+
+        // Aplicar máscaras quando modais são abertos
+        $('#modalVisitante').on('shown.bs.modal', function() {
+            aplicarMascaraCPF(document.getElementById('visitante_cpf'));
+            aplicarMascaraPlaca(document.getElementById('visitante_placa_veiculo'));
+        });
+
+        $('#modalProfissional').on('shown.bs.modal', function() {
+            aplicarMascaraCPF(document.getElementById('profissional_cpf'));
+        });
+
+        $('#modalPrestador').on('shown.bs.modal', function() {
+            aplicarMascaraCPF(document.getElementById('prestador_cpf'));
+            aplicarMascaraPlaca(document.getElementById('prestador_placa_veiculo'));
+        });
+
+        // Aplicar máscaras no modal de edição quando campos são preenchidos
+        $('#modalEditar').on('shown.bs.modal', function() {
+            const editCpfField = document.getElementById('edit_cpf');
+            const editPlacaField = document.getElementById('edit_placa_veiculo');
+            
+            if (editCpfField) {
+                aplicarMascaraCPF(editCpfField);
+            }
+            if (editPlacaField) {
+                aplicarMascaraPlaca(editPlacaField);
+            }
+        });
+        
     });
     </script>
 </body>

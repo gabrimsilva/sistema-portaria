@@ -334,7 +334,7 @@ class RegistroAcessoController {
             http_response_code(500);
             echo json_encode([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => 'Erro ao carregar registros. Tente novamente.'
             ]);
         }
     }
@@ -370,7 +370,7 @@ class RegistroAcessoController {
             http_response_code(500);
             echo json_encode([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => 'Erro ao carregar alertas. Tente novamente.'
             ]);
         }
     }

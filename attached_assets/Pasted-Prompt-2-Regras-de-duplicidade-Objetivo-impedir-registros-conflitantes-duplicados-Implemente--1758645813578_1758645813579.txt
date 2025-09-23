@@ -1,0 +1,225 @@
+Prompt 2 — Regras de duplicidade
+
+Objetivo: impedir registros conflitantes/duplicados.
+
+Implemente:
+
+Uma entrada aberta por CPF: se existir registro_acesso com saida_at IS NULL para o mesmo CPF/pessoa, bloquear novo check-in.
+
+Uma entrada aberta por placa: se placa informada e existir aberta, bloquear.
+
+Debounce: impedir repetição de cadastro com mesmo CPF+placa em <30s.
+
+Edição de horários: ao alterar entrada_at/saida_at, impedir sobreposição com outro intervalo da mesma pessoa.
+
+Entrega:
+
+Regras no service/DB + mensagens:
+
+“Entrada em aberto para este CPF às HH:MM.”
+
+“Placa já está em uso em um acesso aberto.”
+
+“Intervalo de horário sobreposto a outro registro.”
+
+Testes mínimos:
+
+Criar entrada → tentar criar outra sem saída (deve falhar).
+
+Placa igual em dois abertos (falha).
+
+Editar criando sobreposição (falha).
+
+Debounce em <30s (falha) e >30s (ok).
+
+Prompt 3 — Limitações de caracteres
+
+Objetivo: aplicar limites de tamanho coerentes no banco e no backend.
+
+Aplique limites:
+
+nome 100; setor 60; empresa 80; obs 500; placa 7; CPF 11 (só dígitos); CNPJ 14.
+
+Entrega:
+
+Schemas de validação refletindo esses limites.
+
+Migração do banco (VARCHAR/SIZE adequados).
+
+Critérios de aceite:
+
+Inserções acima do limite retornam 400 com mensagem amigável.
+
+Migrações criadas e aplicadas.
+
+Testes mínimos:
+
+Campos exatamente no limite (aceitar) e +1 (recusar).
+
+Prompt 4 — Banco de dados (integridade)
+
+Objetivo: reforçar integridade com índices e FKs.
+
+Implemente em PostgreSQL via Prisma:
+
+Índice único parcial: cpf WHERE saida_at IS NULL na tabela de registros (usar pessoa_id ou cpf normalizado).
+
+Índice único parcial: placa WHERE saida_at IS NULL.
+
+Índices de busca: nome, setor, empresa, entrada_at, saida_at.
+
+FK: visitante.registro → responsavel_id apontando para colaborador.
+
+Entrega:
+
+Migrações Prisma com @@index, @@unique condicionais (via CREATE INDEX SQL raw quando necessário).
+
+Documentar como recriar índices.
+
+Critérios de aceite:
+
+Tentativa de duplicar CPF/placa em aberto falha no nível do banco.
+
+Consultas por período usam índices.
+
+Testes mínimos (integração):
+
+Conflitos batem no DB (erro tratado e convertido em 409/400).
+
+Prompt 5 — Validações no front e no back
+
+Objetivo: espelhar validações e sanitizar entradas.
+
+Implemente:
+
+Front: máscaras (CPF/CNPJ), uppercase de placa, trim automático, feedback inline.
+
+Back: repetir TODAS as validações; nunca confiar só no front.
+
+Sanitização contra XSS/SQLi: escapar HTML em observações; usar queries parametrizadas (Prisma já ajuda).
+
+Mensagens padronizadas de erro (i18n opcional).
+
+Entrega:
+
+Utilitário de normalização (shared) usado em controllers.
+
+Middleware global de tratamento de erros com códigos e mensagens consistentes.
+
+Critérios de aceite:
+
+Payload malicioso com <script> em obs é salvo escapado e renderizado seguro.
+
+Erros exibidos na UI de forma legível.
+
+Testes mínimos:
+
+XSS em observações.
+
+Erros de validação refletem no front.
+
+Prompt 6 — Regras de negócio do fluxo
+
+Objetivo: formalizar check-in/check-out/edição/auditoria.
+
+Implemente endpoints:
+
+POST /entradas (check-in): cria registro_acesso com entrada_at = now() (ou informado validado).
+
+POST /saidas/:id (check-out): seta saida_at; nunca antes de entrada_at.
+
+PUT /registros/:id (editar horários/dados permitidos).
+
+Alertar permanência >12h sem saída (flag ou job que notifica/lista).
+
+Entrega:
+
+Autorização por perfil (recepção, segurança, admin).
+
+Auditoria: tabela audit_log com (user_id, ação, entidade, antes/depois, timestamp, ip).
+
+Critérios de aceite:
+
+Fluxo completo operando; logs gravados nas operações sensíveis.
+
+Saída < entrada retorna 400.
+
+Testes mínimos:
+
+Check-in → check-out → edição proibida de campos bloqueados para perfil baixo.
+
+Registro >12h sinalizado.
+
+Prompt 7 — Segurança / LGPD
+
+Objetivo: reforçar proteção de dados pessoais.
+
+Implemente:
+
+Armazenar CPF/CNPJ como dado sensível: criptografia em repouso (ex.: campo criptografado com libsodium/crypto no app antes de salvar) OU criptografia no volume do DB; exibir mascarado nas respostas (***.***.***-**).
+
+RBAC: permissões por papel (admin/recepção/segurança) via middleware.
+
+Rate-limit (ex.: 100 req/15min por IP) e proteção CSRF se houver sessões.
+
+Política de retenção: config para anonimizar/expurgar registros antigos (ex.: task que ofusca CPF após N meses, mantendo chaves técnicas).
+
+Logs de auditoria completos (de Prompt 6).
+
+Entrega:
+
+Middleware de RBAC, rate-limit, CSRF (ou SameSite cookies/JWT).
+
+Helper para mascarar CPF/CNPJ nas respostas.
+
+Critérios de aceite:
+
+Usuário sem permissão não acessa rotas admin.
+
+Respostas nunca retornam CPF em claro.
+
+Testes mínimos:
+
+Snapshot de resposta conferindo máscara.
+
+RBAC bloqueando rotas indevidas.
+
+Rate-limit ativo.
+
+Prompt 8 — Exemplos de código e testes
+
+Objetivo: disponibilizar utilidades e testes.
+
+Inclua:
+
+Função validaCPF(cpf: string): boolean (com DV).
+
+Função validaCNPJ(cnpj: string): boolean.
+
+Função validaPlaca(p: string): boolean aceitando antigo e Mercosul.
+
+SQL/Prisma para índices únicos parciais (usar prisma.$executeRaw quando necessário).
+
+Suite de testes (Jest ou Vitest) cobrindo:
+
+CPF/CNPJ válidos/ inválidos,
+
+Placa válida/ inválida,
+
+Duplicidade por CPF/placa,
+
+Sobreposição de intervalos,
+
+Saída < entrada.
+
+Entrega:
+
+npm scripts: dev, test, migrate, seed.
+
+Exemplos de requisição (cURL/Insomnia) para cada endpoint.
+
+Critérios de aceite:
+
+Testes passam (>=90% nas funções utilitárias).
+
+Exemplo cURL funciona end-to-end.

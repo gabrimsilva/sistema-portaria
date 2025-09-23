@@ -100,65 +100,88 @@ class DashboardController {
     }
     
     private function getMovimentacaoHoje() {
+        $result = ['visitantes' => 0, 'prestadores' => 0, 'profissionais' => 0];
+        
+        // Entradas de visitantes hoje (usando range predicates)
         try {
-            // Entradas de visitantes hoje
             $visitantesHoje = $this->db->fetch("
                 SELECT COUNT(*) as total 
                 FROM visitantes_novo 
-                WHERE DATE(hora_entrada) = CURRENT_DATE
+                WHERE hora_entrada >= CURRENT_DATE AND hora_entrada < CURRENT_DATE + INTERVAL '1 day'
             ")['total'] ?? 0;
-            
-            // Entradas de prestadores hoje
+            $result['visitantes'] = $visitantesHoje;
+        } catch (Exception $e) {
+            error_log("Erro ao contar visitantes hoje: " . $e->getMessage());
+        }
+        
+        // Entradas de prestadores hoje
+        try {
             $prestadoresHoje = $this->db->fetch("
                 SELECT COUNT(*) as total 
                 FROM prestadores_servico 
-                WHERE DATE(entrada) = CURRENT_DATE
+                WHERE entrada >= CURRENT_DATE AND entrada < CURRENT_DATE + INTERVAL '1 day'
             ")['total'] ?? 0;
-            
-            // Entradas de profissionais hoje (data_entrada)
+            $result['prestadores'] = $prestadoresHoje;
+        } catch (Exception $e) {
+            error_log("Erro ao contar prestadores hoje: " . $e->getMessage());
+        }
+        
+        // Entradas de profissionais hoje (data_entrada OU retorno)
+        try {
             $profissionaisHoje = $this->db->fetch("
                 SELECT COUNT(*) as total 
                 FROM profissionais_renner 
-                WHERE DATE(data_entrada) = CURRENT_DATE
+                WHERE (data_entrada >= CURRENT_DATE AND data_entrada < CURRENT_DATE + INTERVAL '1 day')
+                   OR (retorno >= CURRENT_DATE AND retorno < CURRENT_DATE + INTERVAL '1 day')
             ")['total'] ?? 0;
-            
-            return [
-                'visitantes' => $visitantesHoje,
-                'prestadores' => $prestadoresHoje,
-                'profissionais' => $profissionaisHoje
-            ];
+            $result['profissionais'] = $profissionaisHoje;
         } catch (Exception $e) {
-            return ['visitantes' => 0, 'prestadores' => 0, 'profissionais' => 0];
+            error_log("Erro ao contar profissionais hoje: " . $e->getMessage());
         }
+        
+        return $result;
     }
     
     private function getSaidasHoje() {
+        $totalSaidas = 0;
+        
+        // Saídas de visitantes hoje
         try {
-            // Saídas de visitantes hoje
             $visitantesSaidas = $this->db->fetch("
                 SELECT COUNT(*) as total 
                 FROM visitantes_novo 
-                WHERE DATE(hora_saida) = CURRENT_DATE
+                WHERE hora_saida >= CURRENT_DATE AND hora_saida < CURRENT_DATE + INTERVAL '1 day'
             ")['total'] ?? 0;
-            
-            // Saídas de prestadores hoje
+            $totalSaidas += $visitantesSaidas;
+        } catch (Exception $e) {
+            error_log("Erro ao contar saídas de visitantes hoje: " . $e->getMessage());
+        }
+        
+        // Saídas de prestadores hoje
+        try {
             $prestadoresSaidas = $this->db->fetch("
                 SELECT COUNT(*) as total 
                 FROM prestadores_servico 
-                WHERE DATE(saida) = CURRENT_DATE
+                WHERE saida >= CURRENT_DATE AND saida < CURRENT_DATE + INTERVAL '1 day'
             ")['total'] ?? 0;
-            
-            // Saídas finais de profissionais hoje
+            $totalSaidas += $prestadoresSaidas;
+        } catch (Exception $e) {
+            error_log("Erro ao contar saídas de prestadores hoje: " . $e->getMessage());
+        }
+        
+        // Saídas finais de profissionais hoje
+        try {
             $profissionaisSaidas = $this->db->fetch("
                 SELECT COUNT(*) as total 
                 FROM profissionais_renner 
-                WHERE DATE(saida_final) = CURRENT_DATE
+                WHERE saida_final >= CURRENT_DATE AND saida_final < CURRENT_DATE + INTERVAL '1 day'
             ")['total'] ?? 0;
-            
-            return $visitantesSaidas + $prestadoresSaidas + $profissionaisSaidas;
+            $totalSaidas += $profissionaisSaidas;
         } catch (Exception $e) {
-            return 0;
+            error_log("Erro ao contar saídas de profissionais hoje: " . $e->getMessage());
         }
+        
+        return $totalSaidas;
     }
     
     private function getSetoresMaisMovimentados() {

@@ -80,9 +80,7 @@ class ProfissionaisRennerController {
             try {
                 $nome = trim($_POST['nome'] ?? '');
                 $setor = trim($_POST['setor'] ?? '');
-                $cpf = trim($_POST['cpf'] ?? '');
                 $placa_veiculo = trim($_POST['placa_veiculo'] ?? '');
-                $empresa = trim($_POST['empresa'] ?? '');
                 $data_entrada = $_POST['data_entrada'] ?? null;
                 $saida = $_POST['saida'] ?? null;
                 $retorno = $_POST['retorno'] ?? null;
@@ -95,19 +93,9 @@ class ProfissionaisRennerController {
                 if (empty($setor)) {
                     throw new Exception("Setor é obrigatório");
                 }
-                if (empty($cpf)) {
-                    throw new Exception("CPF é obrigatório");
-                }
                 if (empty($placa_veiculo)) {
                     throw new Exception("Placa de veículo é obrigatória");
                 }
-                
-                // Validar e normalizar CPF
-                $cpfValidator = new CpfValidator();
-                if (!$cpfValidator->isValid($cpf)) {
-                    throw new Exception("CPF inválido");
-                }
-                $cpf = $cpfValidator->normalize($cpf);
                 
                 // Normalizar placa de veículo
                 $placa_veiculo = strtoupper(preg_replace('/[^A-Z0-9]/', '', $placa_veiculo));
@@ -149,8 +137,8 @@ class ProfissionaisRennerController {
                 // ==========================================
                 
                 $this->db->query("
-                    INSERT INTO profissionais_renner (nome, data_entrada, saida, retorno, saida_final, setor, cpf, placa_veiculo, empresa)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO profissionais_renner (nome, data_entrada, saida, retorno, saida_final, setor, placa_veiculo)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
                 ", [
                     $nome,
                     $data_entrada,
@@ -158,9 +146,7 @@ class ProfissionaisRennerController {
                     $retorno ?: null,
                     $saida_final ?: null,
                     $setor,
-                    $cpf,
-                    $placa_veiculo,
-                    $empresa
+                    $placa_veiculo
                 ]);
                 
                 header('Location: ' . $this->getBaseRoute() . '?success=1');
@@ -195,9 +181,7 @@ class ProfissionaisRennerController {
                 $id = $_POST['id'] ?? null;
                 $nome = trim($_POST['nome'] ?? '');
                 $setor = trim($_POST['setor'] ?? '');
-                $cpf = trim($_POST['cpf'] ?? '');
                 $placa_veiculo = trim($_POST['placa_veiculo'] ?? '');
-                $empresa = trim($_POST['empresa'] ?? '');
                 $data_entrada = $_POST['data_entrada'] ?? null;
                 $saida = $_POST['saida'] ?? null;
                 $retorno = $_POST['retorno'] ?? null;
@@ -210,19 +194,9 @@ class ProfissionaisRennerController {
                 if (empty($setor)) {
                     throw new Exception("Setor é obrigatório");
                 }
-                if (empty($cpf)) {
-                    throw new Exception("CPF é obrigatório");
-                }
                 if (empty($placa_veiculo)) {
                     throw new Exception("Placa de veículo é obrigatória");
                 }
-                
-                // Validar e normalizar CPF
-                $cpfValidator = new CpfValidator();
-                if (!$cpfValidator->isValid($cpf)) {
-                    throw new Exception("CPF inválido");
-                }
-                $cpf = $cpfValidator->normalize($cpf);
                 
                 // Normalizar placa de veículo
                 $placa_veiculo = strtoupper(preg_replace('/[^A-Z0-9]/', '', $placa_veiculo));
@@ -280,7 +254,7 @@ class ProfissionaisRennerController {
                 
                 $this->db->query("
                     UPDATE profissionais_renner 
-                    SET nome = ?, data_entrada = ?, saida = ?, retorno = ?, saida_final = ?, setor = ?, cpf = ?, placa_veiculo = ?, empresa = ?, updated_at = CURRENT_TIMESTAMP
+                    SET nome = ?, data_entrada = ?, saida = ?, retorno = ?, saida_final = ?, setor = ?, placa_veiculo = ?, updated_at = CURRENT_TIMESTAMP
                     WHERE id = ?
                 ", [
                     $nome,
@@ -289,9 +263,7 @@ class ProfissionaisRennerController {
                     $retorno ?: null,
                     $saida_final ?: null,
                     $setor,
-                    $cpf,
                     $placa_veiculo,
-                    $empresa,
                     $id
                 ]);
                 
@@ -327,9 +299,7 @@ class ProfissionaisRennerController {
                 CSRFProtection::verifyRequest();
                 $nome = trim($_POST['nome'] ?? '');
                 $setor = trim($_POST['setor'] ?? '');
-                $cpf = trim($_POST['cpf'] ?? '');
                 $placa_veiculo = trim($_POST['placa_veiculo'] ?? '');
-                $empresa = trim($_POST['empresa'] ?? '');
                 $data_entrada_input = trim($_POST['data_entrada'] ?? '');
                 
                 // Validações obrigatórias
@@ -341,22 +311,10 @@ class ProfissionaisRennerController {
                     echo json_encode(['success' => false, 'message' => 'Setor é obrigatório']);
                     return;
                 }
-                if (empty($cpf)) {
-                    echo json_encode(['success' => false, 'message' => 'CPF é obrigatório']);
-                    return;
-                }
                 if (empty($placa_veiculo)) {
                     echo json_encode(['success' => false, 'message' => 'Placa de veículo é obrigatória']);
                     return;
                 }
-                
-                // Validar e normalizar CPF
-                $cpfValidator = new CpfValidator();
-                if (!$cpfValidator->isValid($cpf)) {
-                    echo json_encode(['success' => false, 'message' => 'CPF inválido']);
-                    return;
-                }
-                $cpf = $cpfValidator->normalize($cpf);
                 
                 // Usar data especificada ou data/hora atual se não fornecida
                 if (!empty($data_entrada_input)) {
@@ -374,10 +332,10 @@ class ProfissionaisRennerController {
                 $placa_veiculo = strtoupper(preg_replace('/[^A-Z0-9]/', '', $placa_veiculo));
                 
                 $this->db->query("
-                    INSERT INTO profissionais_renner (nome, data_entrada, setor, cpf, placa_veiculo, empresa)
-                    VALUES (?, ?, ?, ?, ?, ?)
+                    INSERT INTO profissionais_renner (nome, data_entrada, setor, placa_veiculo)
+                    VALUES (?, ?, ?, ?)
                 ", [
-                    $nome, $data_entrada, $setor, $cpf, $placa_veiculo, $empresa
+                    $nome, $data_entrada, $setor, $placa_veiculo
                 ]);
                 
                 $id = $this->db->lastInsertId();
@@ -389,8 +347,7 @@ class ProfissionaisRennerController {
                         'id' => $id,
                         'nome' => $nome,
                         'tipo' => 'Profissional Renner',
-                        'cpf' => $cpf,
-                        'empresa' => $empresa,
+
                         'setor' => $setor,
                         'placa_veiculo' => $placa_veiculo,
                         'hora_entrada' => $data_entrada
@@ -414,9 +371,7 @@ class ProfissionaisRennerController {
                 $id = trim($_POST['id'] ?? '');
                 $nome = trim($_POST['nome'] ?? '');
                 $setor = trim($_POST['setor'] ?? '');
-                $cpf = trim($_POST['cpf'] ?? '');
                 $placa_veiculo = trim($_POST['placa_veiculo'] ?? '');
-                $empresa = trim($_POST['empresa'] ?? '');
                 $saida_final = trim($_POST['saida_final'] ?? '');
                 
                 // Validações obrigatórias
@@ -428,22 +383,11 @@ class ProfissionaisRennerController {
                     echo json_encode(['success' => false, 'message' => 'Setor é obrigatório']);
                     return;
                 }
-                if (empty($cpf)) {
-                    echo json_encode(['success' => false, 'message' => 'CPF é obrigatório']);
-                    return;
-                }
                 if (empty($placa_veiculo)) {
                     echo json_encode(['success' => false, 'message' => 'Placa de veículo é obrigatória']);
                     return;
                 }
                 
-                // Validar e normalizar CPF
-                $cpfValidator = new CpfValidator();
-                if (!$cpfValidator->isValid($cpf)) {
-                    echo json_encode(['success' => false, 'message' => 'CPF inválido']);
-                    return;
-                }
-                $cpf = $cpfValidator->normalize($cpf);
                 
                 // Parse saida_final if provided
                 $saida_final_parsed = null;
@@ -465,9 +409,9 @@ class ProfissionaisRennerController {
                 
                 $this->db->query("
                     UPDATE profissionais_renner 
-                    SET nome = ?, setor = ?, cpf = ?, placa_veiculo = ?, empresa = ?, saida_final = ?
+                    SET nome = ?, setor = ?, placa_veiculo = ?, saida_final = ?
                     WHERE id = ?
-                ", [$nome, $setor, $cpf, $placa_veiculo, $empresa, $saida_final_parsed, $id]);
+                ", [$nome, $setor, $placa_veiculo, $saida_final ?: null, $id]);
                 
                 // Buscar dados atualizados para retornar
                 $profissionalAtualizado = $this->db->fetch("SELECT * FROM profissionais_renner WHERE id = ?", [$id]);
@@ -479,8 +423,7 @@ class ProfissionaisRennerController {
                         'id' => $id,
                         'nome' => $nome,
                         'tipo' => 'Profissional Renner',
-                        'cpf' => $cpf,
-                        'empresa' => $empresa,
+
                         'setor' => $setor,
                         'funcionario_responsavel' => '',
                         'placa_veiculo' => $placa_veiculo,

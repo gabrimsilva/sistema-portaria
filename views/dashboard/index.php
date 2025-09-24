@@ -413,21 +413,6 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="profissional_cpf">CPF *</label>
-                                    <input type="text" class="form-control" id="profissional_cpf" name="cpf" placeholder="000.000.000-00" maxlength="14" required>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="profissional_empresa">Empresa</label>
-                                    <input type="text" class="form-control" id="profissional_empresa" name="empresa">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
                                     <label for="profissional_setor">Setor *</label>
                                     <input type="text" class="form-control" id="profissional_setor" name="setor" required>
                                 </div>
@@ -1445,7 +1430,6 @@
         });
         
         $('#modalProfissional').on('shown.bs.modal', function() {
-            aplicarMascaraCPF('#profissional_cpf');
             aplicarMascaraPlaca('#profissional_placa_veiculo');
             console.log('✅ Máscaras aplicadas ao Modal Profissional');
         });

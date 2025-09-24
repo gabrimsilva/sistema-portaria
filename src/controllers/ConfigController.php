@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../config/csrf.php';
 require_once __DIR__ . '/../services/ConfigService.php';
 require_once __DIR__ . '/../services/AuthorizationService.php';
 require_once __DIR__ . '/../utils/CnpjValidator.php';

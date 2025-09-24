@@ -13,7 +13,7 @@ define('BASE_URL', '/');
 ini_set('session.cookie_lifetime', 86400); // 24 hours
 ini_set('session.gc_maxlifetime', 86400);
 ini_set('session.cookie_httponly', 1);
-ini_set('session.cookie_samesite', 'Strict');
+ini_set('session.cookie_samesite', 'Lax'); // Permite AJAX requests no mesmo domínio
 ini_set('session.use_strict_mode', 1);
 if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
     ini_set('session.cookie_secure', 1);

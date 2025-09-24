@@ -738,7 +738,7 @@
                                 data-cpf="${data.cpf || ''}"
                                 data-empresa="${data.empresa || ''}"
                                 data-setor="${data.setor || ''}"
-                                data-funcionario="${data.funcionario_responsavel || ''}"
+                                data-funcionario_responsavel="${data.funcionario_responsavel || ''}"
                                 data-placa_veiculo="${data.placa_veiculo || ''}"
                                 title="Editar registro">
                             <i class="fas fa-edit"></i>
@@ -806,7 +806,7 @@
                                 data-cpf="${data.cpf || ''}"
                                 data-empresa="${data.empresa || ''}"
                                 data-setor="${data.setor || ''}"
-                                data-funcionario="${data.funcionario_responsavel || ''}"
+                                data-funcionario_responsavel="${data.funcionario_responsavel || ''}"
                                 data-placa_veiculo="${data.placa_veiculo || ''}"
                                 title="Editar registro">
                             <i class="fas fa-edit"></i>

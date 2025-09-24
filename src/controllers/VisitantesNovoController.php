@@ -446,15 +446,6 @@ class VisitantesNovoController {
                 }
                 $cpf = $cpfValidation['normalized'];
                 
-                // Validar placa se não for "APE" (a pé)
-                if (!empty($placa_veiculo) && $placa_veiculo !== 'APE') {
-                    $placaValidation = $this->duplicityService->validatePlacaNotOpen($placa_veiculo, null, 'visitantes_novo');
-                    if (!$placaValidation['isValid']) {
-                        echo json_encode(['success' => false, 'message' => $placaValidation['message']]);
-                        return;
-                    }
-                }
-                
                 // Usar hora especificada ou hora atual se não fornecida
                 if (!empty($hora_entrada_input)) {
                     $timestamp = strtotime($hora_entrada_input);

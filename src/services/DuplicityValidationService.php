@@ -341,8 +341,8 @@ class DuplicityValidationService {
             $errors[] = $cpfValidation['message'];
         }
         
-        // Validar placa não está em uso (se informada)
-        if (!empty($placa)) {
+        // Validar placa não está em uso (se informada e não for "APE")
+        if (!empty($placa) && $placa !== 'APE') {
             $placaValidation = $this->validatePlacaNotOpen($placa);
             if (!$placaValidation['isValid']) {
                 $errors[] = $placaValidation['message'];
@@ -383,8 +383,8 @@ class DuplicityValidationService {
             $errors[] = $cpfValidation['message'];
         }
         
-        // Validar placa não está em uso (se informada, excluindo o próprio registro da mesma tabela)
-        if (!empty($placa)) {
+        // Validar placa não está em uso (se informada e não for "APE", excluindo o próprio registro da mesma tabela)
+        if (!empty($placa) && $placa !== 'APE') {
             $placaValidation = $this->validatePlacaNotOpen($placa, $id, $tabela);
             if (!$placaValidation['isValid']) {
                 $errors[] = $placaValidation['message'];

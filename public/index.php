@@ -193,6 +193,126 @@ try {
             }
             break;
             
+        case 'reports/profissionais-renner':
+            require_once '../src/controllers/ProfissionaisRennerController.php';
+            $controller = new ProfissionaisRennerController();
+            $action = $_GET['action'] ?? 'index';
+            switch ($action) {
+                case 'new':
+                    $controller->create();
+                    break;
+                case 'save':
+                    $controller->save();
+                    break;
+                case 'save_ajax':
+                    $controller->saveAjax();
+                    break;
+                case 'update_ajax':
+                    $controller->updateAjax();
+                    break;
+                case 'edit':
+                    $controller->edit();
+                    break;
+                case 'update':
+                    $controller->update();
+                    break;
+                case 'get_data':
+                    $controller->getData();
+                    break;
+                case 'delete':
+                    $controller->delete();
+                    break;
+                default:
+                    $controller->index();
+                    break;
+            }
+            break;
+            
+        case 'reports/visitantes':
+            require_once '../src/controllers/VisitantesNovoController.php';
+            $controller = new VisitantesNovoController();
+            $action = $_GET['action'] ?? 'index';
+            switch ($action) {
+                case 'new':
+                    $controller->create();
+                    break;
+                case 'save':
+                    $controller->save();
+                    break;
+                case 'save_ajax':
+                    $controller->saveAjax();
+                    break;
+                case 'update_ajax':
+                    $controller->updateAjax();
+                    break;
+                case 'edit':
+                    $controller->edit();
+                    break;
+                case 'update':
+                    $controller->update();
+                    break;
+                case 'entrada':
+                    $controller->registrarEntrada();
+                    break;
+                case 'saida':
+                    $controller->registrarSaida();
+                    break;
+                case 'registrar_saida':
+                    $controller->registrarSaida();
+                    break;
+                case 'get_data':
+                    $controller->getData();
+                    break;
+                case 'delete':
+                    $controller->delete();
+                    break;
+                default:
+                    $controller->index();
+                    break;
+            }
+            break;
+            
+        case 'reports/prestadores-servico':
+            require_once '../src/controllers/PrestadoresServicoController.php';
+            $controller = new PrestadoresServicoController();
+            $action = $_GET['action'] ?? 'index';
+            switch ($action) {
+                case 'new':
+                    $controller->create();
+                    break;
+                case 'save':
+                    $controller->save();
+                    break;
+                case 'save_ajax':
+                    $controller->saveAjax();
+                    break;
+                case 'update_ajax':
+                    $controller->updateAjax();
+                    break;
+                case 'edit':
+                    $controller->edit();
+                    break;
+                case 'update':
+                    $controller->update();
+                    break;
+                case 'entrada':
+                    $controller->registrarEntrada();
+                    break;
+                case 'saida':
+                    $controller->registrarSaida();
+                    break;
+                case 'get_data':
+                    $controller->getData();
+                    break;
+                case 'delete':
+                    $controller->delete();
+                    break;
+                default:
+                    $controller->index();
+                    break;
+            }
+            break;
+            
         default:
             // Handle new API endpoints
             if (preg_match('/^entradas$/', $path)) {

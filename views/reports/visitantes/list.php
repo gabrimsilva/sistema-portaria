@@ -1,3 +1,9 @@
+<?php
+// Verificar se as variáveis estão definidas para evitar erros LSP
+$setores = $setores ?? [];
+$paginationData = $paginationData ?? null;
+$visitantes = $visitantes ?? [];
+?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>

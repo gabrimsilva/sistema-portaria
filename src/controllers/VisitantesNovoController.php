@@ -21,6 +21,22 @@ class VisitantesNovoController {
         }
     }
     
+    private function getViewPath($viewFile) {
+        $requestUri = $_SERVER['REQUEST_URI'] ?? '';
+        if (strpos($requestUri, '/reports/') !== false) {
+            return "../views/reports/visitantes/{$viewFile}";
+        }
+        return "../views/visitantes_novo/{$viewFile}";
+    }
+    
+    private function getBaseRoute() {
+        $requestUri = $_SERVER['REQUEST_URI'] ?? '';
+        if (strpos($requestUri, '/reports/') !== false) {
+            return "/reports/visitantes";
+        }
+        return "/visitantes";
+    }
+    
     public function index() {
         $search = $_GET['search'] ?? '';
         $setor = $_GET['setor'] ?? '';
@@ -54,11 +70,11 @@ class VisitantesNovoController {
         // Get unique sectors for filter
         $setores = $this->db->fetchAll("SELECT DISTINCT setor FROM visitantes_novo WHERE setor IS NOT NULL ORDER BY setor");
         
-        include '../views/visitantes_novo/list.php';
+        include $this->getViewPath('list.php');
     }
     
     public function create() {
-        include '../views/visitantes_novo/form.php';
+        include $this->getViewPath('form.php');
     }
     
     public function save() {
@@ -142,7 +158,7 @@ class VisitantesNovoController {
                     $hora_saida ?: null
                 ]);
                 
-                header('Location: /visitantes?success=1');
+                header('Location: ' . $this->getBaseRoute() . '?success=1');
                 exit;
             } catch (Exception $e) {
                 $errorMessage = $e->getMessage();
@@ -158,7 +174,7 @@ class VisitantesNovoController {
                     $error = $errorMessage;
                 }
                 
-                include '../views/visitantes_novo/form.php';
+                include $this->getViewPath('form.php');
             }
         }
     }
@@ -166,17 +182,17 @@ class VisitantesNovoController {
     public function edit() {
         $id = $_GET['id'] ?? null;
         if (!$id) {
-            header('Location: /visitantes');
+            header('Location: ' . $this->getBaseRoute());
             exit;
         }
         
         $visitante = $this->db->fetch("SELECT * FROM visitantes_novo WHERE id = ?", [$id]);
         if (!$visitante) {
-            header('Location: /visitantes');
+            header('Location: ' . $this->getBaseRoute());
             exit;
         }
         
-        include '../views/visitantes_novo/form.php';
+        include $this->getViewPath('form.php');
     }
     
     public function update() {
@@ -265,7 +281,7 @@ class VisitantesNovoController {
                     $id
                 ]);
                 
-                header('Location: /visitantes?updated=1');
+                header('Location: ' . $this->getBaseRoute() . '?updated=1');
                 exit;
             } catch (Exception $e) {
                 $errorMessage = $e->getMessage();
@@ -282,7 +298,7 @@ class VisitantesNovoController {
                 }
                 
                 $visitante = $this->db->fetch("SELECT * FROM visitantes_novo WHERE id = ?", [$_POST['id']]);
-                include '../views/visitantes_novo/form.php';
+                include $this->getViewPath('form.php');
             }
         }
     }
@@ -304,14 +320,14 @@ class VisitantesNovoController {
                     // Validar se não há entrada em aberto
                     $cpfValidation = $this->duplicityService->validateCpfNotOpen($cpf, $id, 'visitantes_novo');
                     if (!$cpfValidation['isValid']) {
-                        header('Location: /visitantes?error=' . urlencode($cpfValidation['message']));
+                        header('Location: ' . $this->getBaseRoute() . '?error=' . urlencode($cpfValidation['message']));
                         exit;
                     }
                     
                     if (!empty($placa_veiculo)) {
                         $placaValidation = $this->duplicityService->validatePlacaNotOpen($placa_veiculo, $id, 'visitantes_novo');
                         if (!$placaValidation['isValid']) {
-                            header('Location: /visitantes?error=' . urlencode($placaValidation['message']));
+                            header('Location: ' . $this->getBaseRoute() . '?error=' . urlencode($placaValidation['message']));
                             exit;
                         }
                     }
@@ -321,7 +337,7 @@ class VisitantesNovoController {
             }
         }
         
-        header('Location: /visitantes');
+        header('Location: ' . $this->getBaseRoute());
         exit;
     }
     
@@ -380,7 +396,7 @@ class VisitantesNovoController {
             }
         }
         
-        header('Location: /visitantes');
+        header('Location: ' . $this->getBaseRoute());
         exit;
     }
     

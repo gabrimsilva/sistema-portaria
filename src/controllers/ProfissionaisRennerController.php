@@ -17,6 +17,22 @@ class ProfissionaisRennerController {
         }
     }
     
+    private function getViewPath($viewFile) {
+        $requestUri = $_SERVER['REQUEST_URI'] ?? '';
+        if (strpos($requestUri, '/reports/') !== false) {
+            return "../views/reports/profissionais_renner/{$viewFile}";
+        }
+        return "../views/profissionais_renner/{$viewFile}";
+    }
+    
+    private function getBaseRoute() {
+        $requestUri = $_SERVER['REQUEST_URI'] ?? '';
+        if (strpos($requestUri, '/reports/') !== false) {
+            return "/reports/profissionais-renner";
+        }
+        return "/profissionais-renner";
+    }
+    
     public function index() {
         $search = $_GET['search'] ?? '';
         $setor = $_GET['setor'] ?? '';
@@ -51,11 +67,11 @@ class ProfissionaisRennerController {
         // Get unique sectors for filter
         $setores = $this->db->fetchAll("SELECT DISTINCT setor FROM profissionais_renner WHERE setor IS NOT NULL ORDER BY setor");
         
-        include '../views/profissionais_renner/list.php';
+        include $this->getViewPath('list.php');
     }
     
     public function create() {
-        include '../views/profissionais_renner/form.php';
+        include $this->getViewPath('form.php');
     }
     
     public function save() {
@@ -147,11 +163,11 @@ class ProfissionaisRennerController {
                     $empresa
                 ]);
                 
-                header('Location: /profissionais-renner?success=1');
+                header('Location: ' . $this->getBaseRoute() . '?success=1');
                 exit;
             } catch (Exception $e) {
                 $error = $e->getMessage();
-                include '../views/profissionais_renner/form.php';
+                include $this->getViewPath('form.php');
             }
         }
     }
@@ -159,17 +175,17 @@ class ProfissionaisRennerController {
     public function edit() {
         $id = $_GET['id'] ?? null;
         if (!$id) {
-            header('Location: /profissionais-renner');
+            header('Location: ' . $this->getBaseRoute());
             exit;
         }
         
         $profissional = $this->db->fetch("SELECT * FROM profissionais_renner WHERE id = ?", [$id]);
         if (!$profissional) {
-            header('Location: /profissionais-renner');
+            header('Location: ' . $this->getBaseRoute());
             exit;
         }
         
-        include '../views/profissionais_renner/form.php';
+        include $this->getViewPath('form.php');
     }
     
     public function update() {
@@ -279,12 +295,12 @@ class ProfissionaisRennerController {
                     $id
                 ]);
                 
-                header('Location: /profissionais-renner?updated=1');
+                header('Location: ' . $this->getBaseRoute() . '?updated=1');
                 exit;
             } catch (Exception $e) {
                 $error = $e->getMessage();
                 $profissional = $this->db->fetch("SELECT * FROM profissionais_renner WHERE id = ?", [$_POST['id']]);
-                include '../views/profissionais_renner/form.php';
+                include $this->getViewPath('form.php');
             }
         }
     }

@@ -21,6 +21,22 @@ class PrestadoresServicoController {
         }
     }
     
+    private function getViewPath($viewFile) {
+        $requestUri = $_SERVER['REQUEST_URI'] ?? '';
+        if (strpos($requestUri, '/reports/') !== false) {
+            return "../views/reports/prestadores_servico/{$viewFile}";
+        }
+        return "../views/prestadores_servico/{$viewFile}";
+    }
+    
+    private function getBaseRoute() {
+        $requestUri = $_SERVER['REQUEST_URI'] ?? '';
+        if (strpos($requestUri, '/reports/') !== false) {
+            return "/reports/prestadores-servico";
+        }
+        return "/prestadores-servico";
+    }
+    
     public function index() {
         $search = $_GET['search'] ?? '';
         $setor = $_GET['setor'] ?? '';
@@ -54,11 +70,11 @@ class PrestadoresServicoController {
         $setores = $this->db->fetchAll("SELECT DISTINCT setor FROM prestadores_servico WHERE setor IS NOT NULL ORDER BY setor");
         $empresas = $this->db->fetchAll("SELECT DISTINCT empresa FROM prestadores_servico WHERE empresa IS NOT NULL ORDER BY empresa");
         
-        include '../views/prestadores_servico/list.php';
+        include $this->getViewPath('list.php');
     }
     
     public function create() {
-        include '../views/prestadores_servico/form.php';
+        include $this->getViewPath('form.php');
     }
     
     public function save() {
@@ -142,7 +158,7 @@ class PrestadoresServicoController {
                     $saida ?: null
                 ]);
                 
-                header('Location: /prestadores-servico?success=1');
+                header('Location: ' . $this->getBaseRoute() . '?success=1');
                 exit;
             } catch (Exception $e) {
                 $errorMessage = $e->getMessage();
@@ -158,7 +174,7 @@ class PrestadoresServicoController {
                     $error = $errorMessage;
                 }
                 
-                include '../views/prestadores_servico/form.php';
+                include $this->getViewPath('form.php');
             }
         }
     }
@@ -166,17 +182,17 @@ class PrestadoresServicoController {
     public function edit() {
         $id = $_GET['id'] ?? null;
         if (!$id) {
-            header('Location: /prestadores-servico');
+            header('Location: ' . $this->getBaseRoute());
             exit;
         }
         
         $prestador = $this->db->fetch("SELECT * FROM prestadores_servico WHERE id = ?", [$id]);
         if (!$prestador) {
-            header('Location: /prestadores-servico');
+            header('Location: ' . $this->getBaseRoute());
             exit;
         }
         
-        include '../views/prestadores_servico/form.php';
+        include $this->getViewPath('form.php');
     }
     
     public function update() {
@@ -265,7 +281,7 @@ class PrestadoresServicoController {
                     $id
                 ]);
                 
-                header('Location: /prestadores-servico?updated=1');
+                header('Location: ' . $this->getBaseRoute() . '?updated=1');
                 exit;
             } catch (Exception $e) {
                 $errorMessage = $e->getMessage();
@@ -282,7 +298,7 @@ class PrestadoresServicoController {
                 }
                 
                 $prestador = $this->db->fetch("SELECT * FROM prestadores_servico WHERE id = ?", [$_POST['id']]);
-                include '../views/prestadores_servico/form.php';
+                include $this->getViewPath('form.php');
             }
         }
     }
@@ -304,14 +320,14 @@ class PrestadoresServicoController {
                     // Validar se não há entrada em aberto
                     $cpfValidation = $this->duplicityService->validateCpfNotOpen($cpf, $id, 'prestadores_servico');
                     if (!$cpfValidation['isValid']) {
-                        header('Location: /prestadores-servico?error=' . urlencode($cpfValidation['message']));
+                        header('Location: ' . $this->getBaseRoute() . '?error=' . urlencode($cpfValidation['message']));
                         exit;
                     }
                     
                     if (!empty($placa_veiculo)) {
                         $placaValidation = $this->duplicityService->validatePlacaNotOpen($placa_veiculo, $id, 'prestadores_servico');
                         if (!$placaValidation['isValid']) {
-                            header('Location: /prestadores-servico?error=' . urlencode($placaValidation['message']));
+                            header('Location: ' . $this->getBaseRoute() . '?error=' . urlencode($placaValidation['message']));
                             exit;
                         }
                     }
@@ -321,7 +337,7 @@ class PrestadoresServicoController {
             }
         }
         
-        header('Location: /prestadores-servico');
+        header('Location: ' . $this->getBaseRoute());
         exit;
     }
     
@@ -335,7 +351,7 @@ class PrestadoresServicoController {
             }
         }
         
-        header('Location: /prestadores-servico');
+        header('Location: ' . $this->getBaseRoute());
         exit;
     }
     
@@ -349,7 +365,7 @@ class PrestadoresServicoController {
             }
         }
         
-        header('Location: /prestadores-servico');
+        header('Location: ' . $this->getBaseRoute());
         exit;
     }
     

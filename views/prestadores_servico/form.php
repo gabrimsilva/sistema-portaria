@@ -145,11 +145,22 @@
                                             </div>
                                         </div>
                                         
-                                        <div class="form-group">
-                                            <label for="placa_veiculo">Placa de Veículo</label>
-                                            <input type="text" class="form-control" id="placa_veiculo" name="placa_veiculo" 
-                                                   value="<?= htmlspecialchars($prestador['placa_veiculo'] ?? '') ?>" 
-                                                   placeholder="ABC-1234" style="text-transform: uppercase;">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="funcionario_responsavel">Funcionário Responsável</label>
+                                                    <input type="text" class="form-control" id="funcionario_responsavel" name="funcionario_responsavel" 
+                                                           value="<?= htmlspecialchars($prestador['funcionario_responsavel'] ?? '') ?>">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="placa_veiculo">Placa de Veículo</label>
+                                                    <input type="text" class="form-control" id="placa_veiculo" name="placa_veiculo" 
+                                                           value="<?= htmlspecialchars($prestador['placa_veiculo'] ?? '') ?>" 
+                                                           placeholder="ABC-1234" style="text-transform: uppercase;">
+                                                </div>
+                                            </div>
                                         </div>
                                         
                                         <div class="row">

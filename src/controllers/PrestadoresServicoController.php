@@ -84,6 +84,7 @@ class PrestadoresServicoController {
                 $nome = $_POST['nome'] ?? '';
                 $cpf = $_POST['cpf'] ?? '';
                 $empresa = $_POST['empresa'] ?? '';
+                $funcionario_responsavel = $_POST['funcionario_responsavel'] ?? '';
                 $setor = $_POST['setor'] ?? '';
                 $observacao = $_POST['observacao'] ?? '';
                 $placa_veiculo = $_POST['placa_veiculo'] ?? '';
@@ -150,10 +151,10 @@ class PrestadoresServicoController {
                 // ===============================================
                 
                 $this->db->query("
-                    INSERT INTO prestadores_servico (nome, cpf, empresa, setor, observacao, placa_veiculo, entrada, saida)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO prestadores_servico (nome, cpf, empresa, funcionario_responsavel, setor, observacao, placa_veiculo, entrada, saida)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ", [
-                    $nome, $cpf, $empresa, $setor, $observacao, $placa_veiculo,
+                    $nome, $cpf, $empresa, $funcionario_responsavel, $setor, $observacao, $placa_veiculo,
                     $entrada,
                     $saida ?: null
                 ]);
@@ -203,6 +204,7 @@ class PrestadoresServicoController {
                 $nome = $_POST['nome'] ?? '';
                 $cpf = $_POST['cpf'] ?? '';
                 $empresa = $_POST['empresa'] ?? '';
+                $funcionario_responsavel = $_POST['funcionario_responsavel'] ?? '';
                 $setor = $_POST['setor'] ?? '';
                 $observacao = $_POST['observacao'] ?? '';
                 $placa_veiculo = $_POST['placa_veiculo'] ?? '';
@@ -271,11 +273,11 @@ class PrestadoresServicoController {
                 
                 $this->db->query("
                     UPDATE prestadores_servico 
-                    SET nome = ?, cpf = ?, empresa = ?, setor = ?, observacao = ?, placa_veiculo = ?, 
+                    SET nome = ?, cpf = ?, empresa = ?, funcionario_responsavel = ?, setor = ?, observacao = ?, placa_veiculo = ?, 
                         entrada = ?, saida = ?, updated_at = CURRENT_TIMESTAMP
                     WHERE id = ?
                 ", [
-                    $nome, $cpf, $empresa, $setor, $observacao, $placa_veiculo,
+                    $nome, $cpf, $empresa, $funcionario_responsavel, $setor, $observacao, $placa_veiculo,
                     $entrada ?: null,
                     $saida ?: null,
                     $id
@@ -448,10 +450,10 @@ class PrestadoresServicoController {
                 // ===============================================
                 
                 $this->db->query("
-                    INSERT INTO prestadores_servico (nome, cpf, empresa, setor, observacao, placa_veiculo, entrada)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO prestadores_servico (nome, cpf, empresa, funcionario_responsavel, setor, observacao, placa_veiculo, entrada)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 ", [
-                    $nome, $cpf, $empresa, $setor, $observacao, $placa_veiculo, $entrada
+                    $nome, $cpf, $empresa, $funcionario_responsavel, $setor, $observacao, $placa_veiculo, $entrada
                 ]);
                 
                 $id = $this->db->lastInsertId();
@@ -578,9 +580,9 @@ class PrestadoresServicoController {
                 
                 $this->db->query("
                     UPDATE prestadores_servico 
-                    SET nome = ?, cpf = ?, empresa = ?, setor = ?, observacao = ?, placa_veiculo = ?, saida = ?
+                    SET nome = ?, cpf = ?, empresa = ?, funcionario_responsavel = ?, setor = ?, observacao = ?, placa_veiculo = ?, saida = ?
                     WHERE id = ?
-                ", [$nome, $cpf, $empresa, $setor, $observacao, $placa_veiculo, $saida_parsed, $id]);
+                ", [$nome, $cpf, $empresa, $funcionario_responsavel, $setor, $observacao, $placa_veiculo, $saida_parsed, $id]);
                 
                 // Buscar dados atualizados para retornar
                 $prestadorAtualizado = $this->db->fetch("SELECT * FROM prestadores_servico WHERE id = ?", [$id]);

@@ -74,38 +74,9 @@ try {
             break;
             
         case 'profissionais-renner':
-            require_once '../src/controllers/ProfissionaisRennerController.php';
-            $controller = new ProfissionaisRennerController();
-            $action = $_GET['action'] ?? 'index';
-            switch ($action) {
-                case 'new':
-                    $controller->create();
-                    break;
-                case 'save':
-                    $controller->save();
-                    break;
-                case 'save_ajax':
-                    $controller->saveAjax();
-                    break;
-                case 'update_ajax':
-                    $controller->updateAjax();
-                    break;
-                case 'edit':
-                    $controller->edit();
-                    break;
-                case 'update':
-                    $controller->update();
-                    break;
-                case 'get_data':
-                    $controller->getData();
-                    break;
-                case 'delete':
-                    $controller->delete();
-                    break;
-                default:
-                    $controller->index();
-                    break;
-            }
+            // Página antiga removida - redirecionamento para relatório
+            header('Location: /reports/profissionais-renner');
+            exit;
             break;
             
         case 'visitantes':

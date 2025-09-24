@@ -42,7 +42,7 @@ class PrestadoresServicoController {
         $setor = $_GET['setor'] ?? '';
         $empresa = $_GET['empresa'] ?? '';
         
-        $query = "SELECT * FROM prestadores_servico WHERE 1=1";
+        $query = "SELECT id, nome, cpf, empresa, setor, funcionario_responsavel, placa_veiculo, entrada, saida, observacao, created_at, updated_at FROM prestadores_servico WHERE 1=1";
         $params = [];
         
         if (!empty($search)) {

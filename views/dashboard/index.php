@@ -1511,6 +1511,10 @@
             aplicarMascaraPlaca('#profissional_placa_veiculo');
             console.log('✅ Máscaras aplicadas ao Modal Profissional');
             
+            // Garantir que o campo de placa esteja habilitado inicialmente
+            $('#profissional_placa_veiculo').prop('readonly', false).prop('disabled', false);
+            $('#profissional_ape_checkbox').prop('checked', false);
+            
             // Controle do checkbox "A pé" para Profissional Renner
             let previousValueProfissional = '';
             

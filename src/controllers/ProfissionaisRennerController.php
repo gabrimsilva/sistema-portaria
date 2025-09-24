@@ -123,6 +123,14 @@ class ProfissionaisRennerController {
         
         $profissionais = $this->db->fetchAll($query, $params);
         
+        // Mascarar CPFs se necessário (LGPD)
+        $canViewFullCpf = $this->canViewFullCpf();
+        foreach ($profissionais as &$profissional) {
+            if (!$canViewFullCpf && !empty($profissional['cpf'])) {
+                $profissional['cpf'] = $this->maskCpf($profissional['cpf']);
+            }
+        }
+        
         // Get unique sectors for filter
         $setores = $this->db->fetchAll("SELECT DISTINCT setor FROM profissionais_renner WHERE setor IS NOT NULL ORDER BY setor");
         
@@ -625,5 +633,23 @@ class ProfissionaisRennerController {
             echo json_encode(['success' => false, 'message' => 'Método não permitido']);
         }
         exit;
+    }
+    
+    private function canViewFullCpf() {
+        // LGPD: Mascarar CPF na seção de relatórios
+        $currentUri = $_SERVER['REQUEST_URI'] ?? '';
+        if (strpos($currentUri, '/reports/') !== false) {
+            return false; // Mascarar CPF em relatórios
+        }
+        
+        // Em outras seções, permitir visualização completa (RBAC futuro)
+        return true;
+    }
+    
+    private function maskCpf($cpf) {
+        if (empty($cpf)) return '';
+        $cpf = preg_replace('/\D/', '', $cpf);
+        if (strlen($cpf) !== 11) return $cpf;
+        return '***.***.***-' . substr($cpf, -2);
     }
 }

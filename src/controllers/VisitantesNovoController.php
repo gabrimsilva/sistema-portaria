@@ -155,12 +155,12 @@ class VisitantesNovoController {
         $visitantes = $this->db->fetchAll($query, $params);
         
         // Processar dados para exibição
+        $canViewFullCpf = $this->canViewFullCpf();
         foreach ($visitantes as &$visitante) {
-            // Mascarar CPF
+            // Mascarar CPF padronizado (LGPD)
             if (!empty($visitante['cpf'])) {
-                $cpf = preg_replace('/\D/', '', $visitante['cpf']);
-                if (strlen($cpf) === 11) {
-                    $visitante['cpf_masked'] = preg_replace('/(\d{3})(\d{3})(\d{3})(\d{2})/', '$1.XXX.XXX-$4', $cpf);
+                if (!$canViewFullCpf) {
+                    $visitante['cpf_masked'] = $this->maskCpf($visitante['cpf']);
                 } else {
                     $visitante['cpf_masked'] = $visitante['cpf'];
                 }
@@ -781,5 +781,23 @@ class VisitantesNovoController {
             echo json_encode(['success' => false, 'message' => 'Método não permitido']);
         }
         exit;
+    }
+    
+    private function canViewFullCpf() {
+        // LGPD: Mascarar CPF na seção de relatórios
+        $currentUri = $_SERVER['REQUEST_URI'] ?? '';
+        if (strpos($currentUri, '/reports/') !== false) {
+            return false; // Mascarar CPF em relatórios
+        }
+        
+        // Em outras seções, permitir visualização completa (RBAC futuro)
+        return true;
+    }
+    
+    private function maskCpf($cpf) {
+        if (empty($cpf)) return '';
+        $cpf = preg_replace('/\D/', '', $cpf);
+        if (strlen($cpf) !== 11) return $cpf;
+        return '***.***.***-' . substr($cpf, -2);
     }
 }

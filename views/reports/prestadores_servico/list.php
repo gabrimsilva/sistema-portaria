@@ -162,6 +162,7 @@
                                             <th>CPF</th>
                                             <th>Empresa</th>
                                             <th>Setor</th>
+                                            <th>Responsável</th>
                                             <th>Entrada</th>
                                             <th>Saída</th>
                                             <th>Status</th>
@@ -172,7 +173,7 @@
                                     <tbody>
                                         <?php if (empty($prestadores)): ?>
                                             <tr>
-                                                <td colspan="9" class="text-center">Nenhum prestador encontrado</td>
+                                                <td colspan="10" class="text-center">Nenhum prestador encontrado</td>
                                             </tr>
                                         <?php else: ?>
                                             <?php foreach ($prestadores as $prestador): ?>
@@ -181,6 +182,7 @@
                                                 <td><?= htmlspecialchars($prestador['cpf']) ?></td>
                                                 <td><?= htmlspecialchars($prestador['empresa']) ?></td>
                                                 <td><?= htmlspecialchars($prestador['setor']) ?></td>
+                                                <td><?= htmlspecialchars($prestador['funcionario_responsavel'] ?: '-') ?></td>
                                                 <td><?= $prestador['entrada'] ? date('d/m/Y H:i', strtotime($prestador['entrada'])) : '-' ?></td>
                                                 <td><?= $prestador['saida'] ? date('d/m/Y H:i', strtotime($prestador['saida'])) : '-' ?></td>
                                                 <td>
@@ -219,6 +221,7 @@
                                                             data-cpf="<?= htmlspecialchars($prestador['cpf']) ?>"
                                                             data-empresa="<?= htmlspecialchars($prestador['empresa']) ?>"
                                                             data-setor="<?= htmlspecialchars($prestador['setor']) ?>"
+                                                            data-funcionario="<?= htmlspecialchars($prestador['funcionario_responsavel'] ?? '') ?>"
                                                             data-placa_veiculo="<?= htmlspecialchars($prestador['placa_veiculo'] ?? '') ?>"
                                                             data-toggle="modal" 
                                                             data-target="#modalEditar">
@@ -407,10 +410,12 @@
                 $('.modal-header').removeClass('bg-primary').addClass('bg-info');
             }
             
-            if (tipo === 'Visitante') {
+            if (tipo === 'Visitante' || tipo === 'Prestador') {
                 $('#campo_funcionario_responsavel').show();
                 $('#edit_funcionario_responsavel').val(funcionario || '');
-                
+            }
+            
+            if (tipo === 'Visitante') {
                 // Buscar dados específicos do visitante para preencher hora de saída
                 $.ajax({
                     url: `/visitantes?action=get_data&id=${id}`,
@@ -442,29 +447,8 @@
                         if (response.data.observacao) {
                             $('#edit_observacao').val(response.data.observacao);
                         }
-                    },
-                    error: function() {
-                        $('#edit_hora_saida').val('');
-                    },
-                    complete: function() {
-                        btn.removeClass('loading');
-                    }
-                });
-            } else if (tipo === 'Prestador') {
-                $('#campo_observacao').show();
-                $('#edit_observacao').val('');
-                
-                $.ajax({
-                    url: `/prestadores-servico?action=get_data&id=${id}`,
-                    method: 'GET',
-                    dataType: 'json',
-                    success: function(response) {
-                        if (response.success && response.data.saida) {
-                            const saidaFormatada = response.data.saida.replace(' ', 'T').slice(0, 16);
-                            $('#edit_hora_saida').val(saidaFormatada);
-                        }
-                        if (response.data.observacao) {
-                            $('#edit_observacao').val(response.data.observacao);
+                        if (response.data.funcionario_responsavel) {
+                            $('#edit_funcionario_responsavel').val(response.data.funcionario_responsavel);
                         }
                     },
                     error: function() {

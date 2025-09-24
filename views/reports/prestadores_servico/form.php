@@ -148,9 +148,9 @@
                                         <div class="row">
                                             <div class="col-md-6">
                                                 <div class="form-group">
-                                                    <label for="funcionario_responsavel">Funcionário Responsável</label>
+                                                    <label for="funcionario_responsavel">Funcionário Responsável *</label>
                                                     <input type="text" class="form-control" id="funcionario_responsavel" name="funcionario_responsavel" 
-                                                           value="<?= htmlspecialchars($prestador['funcionario_responsavel'] ?? '') ?>">
+                                                           value="<?= htmlspecialchars($prestador['funcionario_responsavel'] ?? '') ?>" required>
                                                 </div>
                                             </div>
                                             <div class="col-md-6">

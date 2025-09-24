@@ -1,13 +1,16 @@
 <?php
 
+require_once __DIR__ . '/../services/DuplicityValidationService.php';
 require_once __DIR__ . '/../utils/DateTimeValidator.php';
 
 class ProfissionaisRennerController {
     private $db;
+    private $duplicityService;
     
     public function __construct() {
         $this->checkAuthentication();
         $this->db = new Database();
+        $this->duplicityService = new DuplicityValidationService();
     }
     
     private function checkAuthentication() {
@@ -99,6 +102,14 @@ class ProfissionaisRennerController {
                 
                 // Normalizar placa de veículo
                 $placa_veiculo = strtoupper(preg_replace('/[^A-Z0-9]/', '', $placa_veiculo));
+                
+                // Validar placa se não for "APE" (a pé)
+                if (!empty($placa_veiculo) && $placa_veiculo !== 'APE') {
+                    $placaValidation = $this->duplicityService->validatePlacaNotOpen($placa_veiculo, null, 'profissionais_renner');
+                    if (!$placaValidation['isValid']) {
+                        throw new Exception($placaValidation['message']);
+                    }
+                }
                 
                 // ========== VALIDAÇÕES TEMPORAIS ==========
                 // Validar data de entrada
@@ -200,6 +211,14 @@ class ProfissionaisRennerController {
                 
                 // Normalizar placa de veículo
                 $placa_veiculo = strtoupper(preg_replace('/[^A-Z0-9]/', '', $placa_veiculo));
+                
+                // Validar placa se não for "APE" (a pé)
+                if (!empty($placa_veiculo) && $placa_veiculo !== 'APE') {
+                    $placaValidation = $this->duplicityService->validatePlacaNotOpen($placa_veiculo, $id, 'profissionais_renner');
+                    if (!$placaValidation['isValid']) {
+                        throw new Exception($placaValidation['message']);
+                    }
+                }
                 
                 // Buscar dados atuais para usar como baseline
                 $profissionalAtual = $this->db->fetch("SELECT * FROM profissionais_renner WHERE id = ?", [$id]);
@@ -316,6 +335,18 @@ class ProfissionaisRennerController {
                     return;
                 }
                 
+                // Normalizar placa de veículo
+                $placa_veiculo = strtoupper(preg_replace('/[^A-Z0-9]/', '', $placa_veiculo));
+                
+                // Validar placa se não for "APE" (a pé)
+                if (!empty($placa_veiculo) && $placa_veiculo !== 'APE') {
+                    $placaValidation = $this->duplicityService->validatePlacaNotOpen($placa_veiculo, null, 'profissionais_renner');
+                    if (!$placaValidation['isValid']) {
+                        echo json_encode(['success' => false, 'message' => $placaValidation['message']]);
+                        return;
+                    }
+                }
+                
                 // Usar data especificada ou data/hora atual se não fornecida
                 if (!empty($data_entrada_input)) {
                     $timestamp = strtotime($data_entrada_input);
@@ -388,6 +419,17 @@ class ProfissionaisRennerController {
                     return;
                 }
                 
+                // Normalizar placa de veículo
+                $placa_veiculo = strtoupper(preg_replace('/[^A-Z0-9]/', '', $placa_veiculo));
+                
+                // Validar placa se não for "APE" (a pé)
+                if (!empty($placa_veiculo) && $placa_veiculo !== 'APE') {
+                    $placaValidation = $this->duplicityService->validatePlacaNotOpen($placa_veiculo, $id, 'profissionais_renner');
+                    if (!$placaValidation['isValid']) {
+                        echo json_encode(['success' => false, 'message' => $placaValidation['message']]);
+                        return;
+                    }
+                }
                 
                 // Parse saida_final if provided
                 $saida_final_parsed = null;

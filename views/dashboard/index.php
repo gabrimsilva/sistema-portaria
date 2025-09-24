@@ -377,7 +377,14 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="visitante_placa_veiculo">Placa de Veículo *</label>
-                                    <input type="text" class="form-control" id="visitante_placa_veiculo" name="placa_veiculo" placeholder="ABC-1234" style="text-transform: uppercase;" maxlength="8" required>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="visitante_placa_veiculo" name="placa_veiculo" placeholder="ABC-1234" style="text-transform: uppercase;" maxlength="8" required>
+                                        <span class="input-group-text">
+                                            <input type="checkbox" id="visitante_ape_checkbox">
+                                            <label for="visitante_ape_checkbox" class="ms-1 mb-0">A pé</label>
+                                        </span>
+                                    </div>
+                                    <small class="form-text text-muted">Marque "A pé" se não houver veículo</small>
                                 </div>
                             </div>
                         </div>
@@ -430,7 +437,14 @@
                         
                         <div class="form-group">
                             <label for="profissional_placa_veiculo">Placa de Veículo *</label>
-                            <input type="text" class="form-control" id="profissional_placa_veiculo" name="placa_veiculo" placeholder="ABC-1234" style="text-transform: uppercase;" maxlength="8" required>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="profissional_placa_veiculo" name="placa_veiculo" placeholder="ABC-1234" style="text-transform: uppercase;" maxlength="8" required>
+                                <span class="input-group-text">
+                                    <input type="checkbox" id="profissional_ape_checkbox">
+                                    <label for="profissional_ape_checkbox" class="ms-1 mb-0">A pé</label>
+                                </span>
+                            </div>
+                            <small class="form-text text-muted">Marque "A pé" se não houver veículo</small>
                         </div>
                         <div class="form-group">
                             <label for="profissional_data_entrada">Data/Hora de Entrada</label>
@@ -494,7 +508,14 @@
                         </div>
                         <div class="form-group">
                             <label for="prestador_placa_veiculo">Placa de Veículo *</label>
-                            <input type="text" class="form-control" id="prestador_placa_veiculo" name="placa_veiculo" placeholder="ABC-1234" style="text-transform: uppercase;" maxlength="8" required>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="prestador_placa_veiculo" name="placa_veiculo" placeholder="ABC-1234" style="text-transform: uppercase;" maxlength="8" required>
+                                <span class="input-group-text">
+                                    <input type="checkbox" id="prestador_ape_checkbox">
+                                    <label for="prestador_ape_checkbox" class="ms-1 mb-0">A pé</label>
+                                </span>
+                            </div>
+                            <small class="form-text text-muted">Marque "A pé" se não houver veículo</small>
                         </div>
                         <div class="form-group">
                             <label for="prestador_observacao">Observações</label>
@@ -573,10 +594,17 @@
                             </div>
                         </div>
                         
-                        <!-- Campo Placa de Veículo - visível apenas para Visitantes e Prestadores -->
+                        <!-- Campo Placa de Veículo - visível para Visitantes, Prestadores e Profissionais Renner -->
                         <div id="campo_placa_veiculo" class="form-group" style="display: none;">
                             <label for="edit_placa_veiculo">Placa de Veículo</label>
-                            <input type="text" class="form-control" id="edit_placa_veiculo" name="placa_veiculo" placeholder="ABC-1234" style="text-transform: uppercase;" maxlength="8">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="edit_placa_veiculo" name="placa_veiculo" placeholder="ABC-1234" style="text-transform: uppercase;" maxlength="8">
+                                <span class="input-group-text">
+                                    <input type="checkbox" id="edit_ape_checkbox">
+                                    <label for="edit_ape_checkbox" class="ms-1 mb-0">A pé</label>
+                                </span>
+                            </div>
+                            <small class="form-text text-muted">Marque "A pé" se não houver veículo</small>
                         </div>
                         
                         <!-- Campos específicos para visitantes -->
@@ -1111,7 +1139,8 @@
             if (tipo === 'Profissional Renner') {
                 $('#campo_empresa').hide();
                 $('#campo_cpf').hide();
-                $('#campo_placa_veiculo').hide();
+                // Manter placa visível para Profissionais Renner
+                $('#campo_placa_veiculo').show();
                 // Alterar cor do header do modal para Profissional Renner
                 $('.modal-header').removeClass('bg-info').addClass('bg-primary');
             } else {
@@ -1218,8 +1247,10 @@
             // Adicionar empresa apenas se não for Profissional Renner
             if (tipoOriginal !== 'Profissional Renner') {
                 dadosComuns.empresa = $('#edit_empresa').val();
-                dadosComuns.placa_veiculo = $('#edit_placa_veiculo').val();
             }
+            
+            // Placa de veículo é obrigatória para todos os tipos
+            dadosComuns.placa_veiculo = $('#edit_placa_veiculo').val();
             
             let formData = new FormData();
             let endpoint = '';
@@ -1430,23 +1461,95 @@
             aplicarMascaraCPF('#visitante_cpf');
             aplicarMascaraPlaca('#visitante_placa_veiculo');
             console.log('✅ Máscaras aplicadas ao Modal Visitante');
+            
+            // Controle do checkbox "A pé" para visitante
+            let previousValueVisitante = '';
+            
+            $('#visitante_ape_checkbox').off('change').on('change', function() {
+                if ($(this).is(':checked')) {
+                    previousValueVisitante = $('#visitante_placa_veiculo').val() !== 'APE' ? $('#visitante_placa_veiculo').val() : '';
+                    $('#visitante_placa_veiculo').val('APE').prop('readonly', true).removeAttr('required');
+                } else {
+                    $('#visitante_placa_veiculo').val(previousValueVisitante).prop('readonly', false).attr('required', 'required');
+                }
+            });
+            
+            // Verificar estado inicial
+            if ($('#visitante_placa_veiculo').val() === 'APE') {
+                $('#visitante_ape_checkbox').prop('checked', true);
+                $('#visitante_placa_veiculo').prop('readonly', true);
+            }
         });
         
         $('#modalPrestador').on('shown.bs.modal', function() {
             aplicarMascaraCPF('#prestador_cpf');
             aplicarMascaraPlaca('#prestador_placa_veiculo');
             console.log('✅ Máscaras aplicadas ao Modal Prestador');
+            
+            // Controle do checkbox "A pé" para prestador
+            let previousValuePrestador = '';
+            
+            $('#prestador_ape_checkbox').off('change').on('change', function() {
+                if ($(this).is(':checked')) {
+                    previousValuePrestador = $('#prestador_placa_veiculo').val() !== 'APE' ? $('#prestador_placa_veiculo').val() : '';
+                    $('#prestador_placa_veiculo').val('APE').prop('readonly', true).removeAttr('required');
+                } else {
+                    $('#prestador_placa_veiculo').val(previousValuePrestador).prop('readonly', false).attr('required', 'required');
+                }
+            });
+            
+            // Verificar estado inicial
+            if ($('#prestador_placa_veiculo').val() === 'APE') {
+                $('#prestador_ape_checkbox').prop('checked', true);
+                $('#prestador_placa_veiculo').prop('readonly', true);
+            }
         });
         
         $('#modalProfissional').on('shown.bs.modal', function() {
             aplicarMascaraPlaca('#profissional_placa_veiculo');
             console.log('✅ Máscaras aplicadas ao Modal Profissional');
+            
+            // Controle do checkbox "A pé" para Profissional Renner
+            let previousValueProfissional = '';
+            
+            $('#profissional_ape_checkbox').off('change').on('change', function() {
+                if ($(this).is(':checked')) {
+                    previousValueProfissional = $('#profissional_placa_veiculo').val() !== 'APE' ? $('#profissional_placa_veiculo').val() : '';
+                    $('#profissional_placa_veiculo').val('APE').prop('readonly', true).removeAttr('required');
+                } else {
+                    $('#profissional_placa_veiculo').val(previousValueProfissional).prop('readonly', false).attr('required', 'required');
+                }
+            });
+            
+            // Verificar estado inicial
+            if ($('#profissional_placa_veiculo').val() === 'APE') {
+                $('#profissional_ape_checkbox').prop('checked', true);
+                $('#profissional_placa_veiculo').prop('readonly', true);
+            }
         });
         
         $('#modalEditar').on('shown.bs.modal', function() {
             aplicarMascaraCPF('#edit_cpf');
             aplicarMascaraPlaca('#edit_placa_veiculo');
             console.log('✅ Máscaras aplicadas ao Modal Editar');
+            
+            // Controle do checkbox "A pé" para modal de edição
+            let previousValueEdit = '';
+            
+            $('#edit_ape_checkbox').off('change').on('change', function() {
+                if ($(this).is(':checked')) {
+                    previousValueEdit = $('#edit_placa_veiculo').val() !== 'APE' ? $('#edit_placa_veiculo').val() : '';
+                    $('#edit_placa_veiculo').val('APE').prop('readonly', true).removeAttr('required');
+                } else {
+                    $('#edit_placa_veiculo').val(previousValueEdit).prop('readonly', false).attr('required', 'required');
+                }
+            });
+            
+            // Verificar estado inicial
+            if ($('#edit_placa_veiculo').val() === 'APE') {
+                $('#edit_ape_checkbox').prop('checked', true);
+                $('#edit_placa_veiculo').prop('readonly', true);
+            }
         });
         
         console.log('🎯 Sistema de máscaras inicializado com Bootstrap 4.6.2!');

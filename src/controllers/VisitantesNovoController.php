@@ -38,6 +38,17 @@ class VisitantesNovoController {
     }
     
     public function index() {
+        // Detectar contexto de relatórios
+        $isReportsContext = (strpos($_SERVER['REQUEST_URI'], '/reports/') !== false);
+        
+        if ($isReportsContext) {
+            $this->handleReportsIndex();
+        } else {
+            $this->handleStandardIndex();
+        }
+    }
+    
+    private function handleStandardIndex() {
         $search = $_GET['search'] ?? '';
         $setor = $_GET['setor'] ?? '';
         $status = $_GET['status'] ?? '';
@@ -70,6 +81,128 @@ class VisitantesNovoController {
         // Get unique sectors for filter
         $setores = $this->db->fetchAll("SELECT DISTINCT setor FROM visitantes_novo WHERE setor IS NOT NULL ORDER BY setor");
         
+        include $this->getViewPath('list.php');
+    }
+    
+    private function handleReportsIndex() {
+        // Filtros avançados para relatórios
+        $data_entrada = $_GET['data_entrada'] ?? '';
+        $empresa = $_GET['empresa'] ?? '';
+        $funcionario_responsavel = $_GET['funcionario_responsavel'] ?? '';
+        $setor = $_GET['setor'] ?? '';
+        $search = $_GET['search'] ?? '';
+        
+        // Paginação
+        $page = max(1, (int)($_GET['page'] ?? 1));
+        $perPage = 20;
+        $offset = ($page - 1) * $perPage;
+        
+        // Query base com filtros otimizados
+        $whereConditions = ["hora_entrada IS NOT NULL"];
+        $params = [];
+        
+        // Filtro por data
+        if (!empty($data_entrada)) {
+            $whereConditions[] = "DATE(hora_entrada) = ?";
+            $params[] = $data_entrada;
+        }
+        
+        // Filtro por empresa
+        if (!empty($empresa)) {
+            $whereConditions[] = "empresa ILIKE ?";
+            $params[] = "%$empresa%";
+        }
+        
+        // Filtro por funcionário responsável
+        if (!empty($funcionario_responsavel)) {
+            $whereConditions[] = "funcionario_responsavel ILIKE ?";
+            $params[] = "%$funcionario_responsavel%";
+        }
+        
+        // Filtro por setor
+        if (!empty($setor)) {
+            $whereConditions[] = "setor = ?";
+            $params[] = $setor;
+        }
+        
+        // Busca geral
+        if (!empty($search)) {
+            $whereConditions[] = "(nome ILIKE ? OR cpf ILIKE ?)";
+            $params[] = "%$search%";
+            $params[] = "%$search%";
+        }
+        
+        $whereClause = implode(" AND ", $whereConditions);
+        
+        // Query para contar total (sem paginação)
+        $countQuery = "SELECT COUNT(*) as total FROM visitantes_novo WHERE $whereClause";
+        $countResult = $this->db->fetch($countQuery, $params);
+        $totalRecords = (int)$countResult['total'];
+        
+        // Query principal com paginação e ordenação otimizada
+        $query = "
+            SELECT id, nome, cpf, empresa, funcionario_responsavel, setor, 
+                   placa_veiculo, hora_entrada, hora_saida
+            FROM visitantes_novo 
+            WHERE $whereClause 
+            ORDER BY hora_entrada DESC 
+            LIMIT ? OFFSET ?
+        ";
+        
+        $params[] = $perPage;
+        $params[] = $offset;
+        
+        $visitantes = $this->db->fetchAll($query, $params);
+        
+        // Processar dados para exibição
+        foreach ($visitantes as &$visitante) {
+            // Mascarar CPF
+            if (!empty($visitante['cpf'])) {
+                $cpf = preg_replace('/\D/', '', $visitante['cpf']);
+                if (strlen($cpf) === 11) {
+                    $visitante['cpf_masked'] = preg_replace('/(\d{3})(\d{3})(\d{3})(\d{2})/', '$1.XXX.XXX-$4', $cpf);
+                } else {
+                    $visitante['cpf_masked'] = $visitante['cpf'];
+                }
+            }
+            
+            // Lógica "A pé" para placas vazias
+            if (empty($visitante['placa_veiculo']) || trim($visitante['placa_veiculo']) === '') {
+                $visitante['placa_display'] = 'A pé';
+            } else {
+                $visitante['placa_display'] = $visitante['placa_veiculo'];
+            }
+            
+            // Formatar datas para exibição
+            if (!empty($visitante['hora_entrada'])) {
+                $visitante['data_entrada'] = date('d/m/Y', strtotime($visitante['hora_entrada']));
+                $visitante['hora_entrada_formatted'] = date('H:i', strtotime($visitante['hora_entrada']));
+            }
+            
+            if (!empty($visitante['hora_saida'])) {
+                $visitante['hora_saida_formatted'] = date('H:i', strtotime($visitante['hora_saida']));
+            }
+        }
+        
+        // Metadados de paginação
+        $totalPages = ceil($totalRecords / $perPage);
+        $paginationData = [
+            'current_page' => $page,
+            'total_pages' => $totalPages,
+            'total_records' => $totalRecords,
+            'per_page' => $perPage,
+            'has_previous' => $page > 1,
+            'has_next' => $page < $totalPages,
+            'previous_page' => $page > 1 ? $page - 1 : null,
+            'next_page' => $page < $totalPages ? $page + 1 : null
+        ];
+        
+        // Buscar dados para filtros
+        $setores = $this->db->fetchAll("SELECT DISTINCT setor FROM visitantes_novo WHERE setor IS NOT NULL ORDER BY setor");
+        $empresas = $this->db->fetchAll("SELECT DISTINCT empresa FROM visitantes_novo WHERE empresa IS NOT NULL AND empresa != '' ORDER BY empresa LIMIT 50");
+        $responsaveis = $this->db->fetchAll("SELECT DISTINCT funcionario_responsavel FROM visitantes_novo WHERE funcionario_responsavel IS NOT NULL AND funcionario_responsavel != '' ORDER BY funcionario_responsavel LIMIT 50");
+        
+        // Incluir view de relatórios
         include $this->getViewPath('list.php');
     }
     

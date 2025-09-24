@@ -246,6 +246,65 @@ try {
             }
             break;
             
+        case 'config':
+            require_once '../src/controllers/ConfigController.php';
+            $controller = new ConfigController();
+            $action = $_GET['action'] ?? 'index';
+            switch ($action) {
+                case 'organization':
+                    if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+                        $controller->getOrganization();
+                    } elseif ($_SERVER['REQUEST_METHOD'] === 'PUT') {
+                        $controller->updateOrganization();
+                    }
+                    break;
+                case 'sites':
+                    if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+                        $controller->getSites();
+                    } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                        $controller->createSite();
+                    } elseif ($_SERVER['REQUEST_METHOD'] === 'PUT') {
+                        $controller->updateSite();
+                    }
+                    break;
+                case 'sectors':
+                    if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+                        $controller->getSectorsBySite();
+                    } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                        $controller->createSector();
+                    }
+                    break;
+                case 'rbac-matrix':
+                    $controller->getRbacMatrix();
+                    break;
+                case 'role-permissions':
+                    $controller->updateRolePermissions();
+                    break;
+                case 'auth-policies':
+                    if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+                        $controller->getAuthPolicies();
+                    } elseif ($_SERVER['REQUEST_METHOD'] === 'PUT') {
+                        $controller->updateAuthPolicies();
+                    }
+                    break;
+                case 'audit':
+                    $controller->getAuditLogs();
+                    break;
+                case 'audit/export':
+                    $controller->exportAuditLogs();
+                    break;
+                case 'users':
+                    $controller->getUsers();
+                    break;
+                case 'validate-cnpj':
+                    $controller->validateCnpj();
+                    break;
+                default:
+                    $controller->index();
+                    break;
+            }
+            break;
+            
         default:
             // Handle new API endpoints
             if (preg_match('/^entradas$/', $path)) {

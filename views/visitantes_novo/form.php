@@ -145,6 +145,20 @@
                                             </div>
                                         </div>
                                         
+                                        <div class="form-group">
+                                            <label for="placa_veiculo">Placa de Veículo *</label>
+                                            <div class="input-group">
+                                                <input type="text" class="form-control" id="placa_veiculo" name="placa_veiculo" 
+                                                       value="<?= htmlspecialchars($visitante['placa_veiculo'] ?? '') ?>" 
+                                                       placeholder="ABC-1234" style="text-transform: uppercase;" required>
+                                                <span class="input-group-text">
+                                                    <input type="checkbox" id="ape_checkbox" <?= ($visitante['placa_veiculo'] ?? '') === 'APE' ? 'checked' : '' ?>>
+                                                    <label for="ape_checkbox" class="ms-1 mb-0">A pé</label>
+                                                </span>
+                                            </div>
+                                            <small class="form-text text-muted">Marque "A pé" se não houver veículo</small>
+                                        </div>
+                                        
                                         <div class="row">
                                             <div class="col-md-4">
                                                 <div class="form-group">
@@ -192,6 +206,26 @@
     <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
     
     <script>
+    $(document).ready(function() {
+        let previousValue = '';
+        
+        // Controlar checkbox "A pé"
+        $('#ape_checkbox').change(function() {
+            if ($(this).is(':checked')) {
+                previousValue = $('#placa_veiculo').val() !== 'APE' ? $('#placa_veiculo').val() : '';
+                $('#placa_veiculo').val('APE').prop('readonly', true);
+            } else {
+                $('#placa_veiculo').val(previousValue).prop('readonly', false);
+            }
+        });
+        
+        // Verificar estado inicial
+        if ($('#placa_veiculo').val() === 'APE') {
+            $('#ape_checkbox').prop('checked', true);
+            $('#placa_veiculo').prop('readonly', true);
+        }
+    });
+    
     // Format CPF input
     document.getElementById('cpf').addEventListener('input', function (e) {
         var value = e.target.value.replace(/\D/g, '');

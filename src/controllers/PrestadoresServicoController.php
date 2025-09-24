@@ -326,7 +326,7 @@ class PrestadoresServicoController {
                         exit;
                     }
                     
-                    if (!empty($placa_veiculo)) {
+                    if (!empty($placa_veiculo) && $placa_veiculo !== 'APE') {
                         $placaValidation = $this->duplicityService->validatePlacaNotOpen($placa_veiculo, $id, 'prestadores_servico');
                         if (!$placaValidation['isValid']) {
                             header('Location: ' . $this->getBaseRoute() . '?error=' . urlencode($placaValidation['message']));

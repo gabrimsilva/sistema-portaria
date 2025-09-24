@@ -431,7 +431,7 @@ class RegistroAcessoController {
         }
         
         // Validar placa se fornecida
-        if (!empty($data['placa_veiculo'])) {
+        if (!empty($data['placa_veiculo']) && $data['placa_veiculo'] !== 'APE') {
             $placaValidation = $this->duplicityService->validatePlacaNotOpen($data['placa_veiculo']);
             if (!$placaValidation['isValid']) {
                 throw new Exception($placaValidation['message']);

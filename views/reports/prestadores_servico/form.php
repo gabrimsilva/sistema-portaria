@@ -155,10 +155,17 @@
                                             </div>
                                             <div class="col-md-6">
                                                 <div class="form-group">
-                                                    <label for="placa_veiculo">Placa de Veículo</label>
-                                                    <input type="text" class="form-control" id="placa_veiculo" name="placa_veiculo" 
-                                                           value="<?= htmlspecialchars($prestador['placa_veiculo'] ?? '') ?>" 
-                                                           placeholder="ABC-1234" style="text-transform: uppercase;">
+                                                    <label for="placa_veiculo">Placa de Veículo *</label>
+                                                    <div class="input-group">
+                                                        <input type="text" class="form-control" id="placa_veiculo" name="placa_veiculo" 
+                                                               value="<?= htmlspecialchars($prestador['placa_veiculo'] ?? '') ?>" 
+                                                               placeholder="ABC-1234" style="text-transform: uppercase;" required>
+                                                        <span class="input-group-text">
+                                                            <input type="checkbox" id="ape_checkbox" <?= ($prestador['placa_veiculo'] ?? '') === 'APE' ? 'checked' : '' ?>>
+                                                            <label for="ape_checkbox" class="ms-1 mb-0">A pé</label>
+                                                        </span>
+                                                    </div>
+                                                    <small class="form-text text-muted">Marque "A pé" se não houver veículo</small>
                                                 </div>
                                             </div>
                                         </div>
@@ -211,6 +218,28 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+    
+    <script>
+    $(document).ready(function() {
+        let previousValue = '';
+        
+        // Controlar checkbox "A pé"
+        $('#ape_checkbox').change(function() {
+            if ($(this).is(':checked')) {
+                previousValue = $('#placa_veiculo').val() !== 'APE' ? $('#placa_veiculo').val() : '';
+                $('#placa_veiculo').val('APE').prop('readonly', true);
+            } else {
+                $('#placa_veiculo').val(previousValue).prop('readonly', false);
+            }
+        });
+        
+        // Verificar estado inicial
+        if ($('#placa_veiculo').val() === 'APE') {
+            $('#ape_checkbox').prop('checked', true);
+            $('#placa_veiculo').prop('readonly', true);
+        }
+    });
+    </script>
     
     <script>
     // Format CPF input with validation

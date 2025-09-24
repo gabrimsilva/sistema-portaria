@@ -230,7 +230,7 @@ class DashboardController {
             
             // Prestadores trabalhando (entraram mas não saíram)
             $prestadoresAtivos = $this->db->fetchAll("
-                SELECT nome, cpf, empresa, setor, entrada as hora_entrada, 'Prestador' as tipo, id, placa_veiculo
+                SELECT nome, cpf, empresa, setor, entrada as hora_entrada, 'Prestador' as tipo, id, placa_veiculo, funcionario_responsavel
                 FROM prestadores_servico 
                 WHERE entrada IS NOT NULL AND saida IS NULL
                 ORDER BY entrada DESC

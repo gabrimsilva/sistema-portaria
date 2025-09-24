@@ -268,7 +268,7 @@
                                                     <td><?= !empty($pessoa['empresa']) ? htmlspecialchars($pessoa['empresa']) : '-' ?></td>
                                                     <td><?= !empty($pessoa['setor']) ? htmlspecialchars($pessoa['setor']) : '-' ?></td>
                                                     <td>
-                                                        <?php if ($pessoa['tipo'] === 'Visitante' && !empty($pessoa['funcionario_responsavel'])): ?>
+                                                        <?php if (($pessoa['tipo'] === 'Visitante' || $pessoa['tipo'] === 'Prestador') && !empty($pessoa['funcionario_responsavel'])): ?>
                                                             <i class="fas fa-user-tie text-primary mr-1"></i>
                                                             <?= htmlspecialchars($pessoa['funcionario_responsavel']) ?>
                                                         <?php else: ?>

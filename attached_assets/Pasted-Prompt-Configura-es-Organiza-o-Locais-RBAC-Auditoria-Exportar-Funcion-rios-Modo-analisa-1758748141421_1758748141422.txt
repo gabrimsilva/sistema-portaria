@@ -1,0 +1,196 @@
+Prompt — Configurações (Organização & Locais, RBAC, Auditoria, Exportar Funcionários)
+
+Modo: analisar → propor (mostrar tudo) → executar apenas se eu disser “executa”
+
+Contexto: Sistema de controle de acesso (entradas/saídas).
+Stack alvo: Node.js + Express + TypeScript + Prisma (PostgreSQL) + React.
+Fuso padrão: America/Sao_Paulo (24h).
+Objetivo: Implementar (ou ajustar) o módulo Configurações com:
+
+Organização & Locais: Dados da empresa (nome, CNPJ, logo), fuso horário, idioma; Locais/Sites, Zonas/Setores, capacidade, horários de funcionamento, feriados e exceções.
+
+Pessoas & Perfis (RBAC): Perfis Admin, Segurança, Recepção, RH (personalizáveis); matriz de permissões (criar/editar/ver/exportar, acesso a relatórios, ver CPF não mascarado, etc.); políticas de login (SSO/OAuth placeholders), 2FA (placeholder TOTP), política de senha, tempo de sessão.
+
+Auditoria: Trilhas (quem mudou o quê, antes/depois, IP, timestamp), filtros e exportação.
+
+Exportar Funcionários: Botão que baixa planilha (CSV ou XLSX) de Funcionários/Colaboradores; respeitar RBAC (CPF mascarado se o usuário não tiver permissão).
+
+Regra de ouro: Nesta tarefa NÃO execute nada antes de me perguntar:
+“Posso executar? Responda executa para prosseguir ou não para cancelar.”
+
+FASE A — ANÁLISE (somente leitura)
+
+Mapear o que já existe no repo (back/front) para configurações, RBAC, auditoria e exportações.
+
+Identificar tabelas relacionadas (possíveis): settings/tenant_settings, sites, sectors, business_hours, holidays, holiday_exceptions, roles, permissions, role_permissions, users, audit_log.
+
+Checar validações existentes (CNPJ DV, tamanhos, etc.), RBAC atual (perfis e escopo), e se já há máscara de CPF no back/front.
+
+Ver se há componentes de UI aproveitáveis (upload de logo, calendário, tabela com filtros).
+
+Produzir RELATORIO_CONFIG_ANALISE.md contendo:
+
+Resumo de arquitetura (back/front).
+
+Tabela OK / FALTA / INCOMPLETO para cada sub-seção:
+
+Organização (nome, CNPJ, logo, fuso, idioma)
+
+Locais/Sites, Zonas/Setores, capacidade
+
+Horários de funcionamento (por dia)
+
+Feriados e Exceções
+
+RBAC (perfis, matriz, ver CPF sem máscara)
+
+Políticas de login (SSO/OAuth), 2FA (placeholder), política de senha, tempo de sessão
+
+Auditoria (trilhas, filtros, exportação)
+
+Exportar Funcionários (botão, endpoint, RBAC, máscara de CPF)
+
+Itens de higiene (cancelamento de requests, cleanup de timers, isolamento de estado por aba).
+
+Saída esperada agora: imprimir resumo + escrever RELATORIO_CONFIG_ANALISE.md. Não aplicar mudanças.
+
+FASE B — PROPOSTA (plano detalhado + diffs, sem aplicar)
+
+Gerar CONFIG_PLANO.md com:
+
+1) Modelagem & Migrações (Prisma/SQL)
+
+Organização (organization_settings ou tenant_settings):
+
+company_name (2–120), cnpj (14 dígitos + DV), logo_url, timezone (default America/Sao_Paulo), locale (pt-BR).
+
+Locais/Sites: sites(id, name, capacity, timezone?, address?).
+
+Zonas/Setores: sectors(id, site_id FK, name, capacity).
+
+Horários de funcionamento: business_hours(id, site_id, weekday 0–6, open_at, close_at) + exceções business_hour_exceptions(id, site_id, date, open_at?, close_at?, closed boolean).
+
+Feriados: holidays(id, date, name, scope: 'global'|'site', site_id?).
+
+RBAC:
+
+roles(id, name) com defaults: Admin, Segurança, Recepção, RH.
+
+permissions(id, key) (ex.: report.read, report.export, person.cpf.view_unmasked, config.write, …).
+
+role_permissions(role_id, permission_id).
+
+Políticas: auth_policies(id, password_min, password_expiry_days, session_timeout_min, twofa_required boolean, sso_enabled boolean, sso_provider?, sso_client_id?, sso_issuer?).
+
+Auditoria: audit_log(id, user_id, action, entity, entity_id, before JSONB, after JSONB, ip, created_at).
+
+Índices úteis (nome, date, FKs) e CHECK simples (capacidade >= 0).
+
+Incluir blocos ```sql com as migrações ou prisma.$executeRaw quando necessário.
+
+2) Back-end (rotas + validações Zod/Joi)
+
+GET/PUT /config/organization (validar CNPJ DV, tamanhos, URL do logo).
+
+GET/POST/PUT/DELETE /config/sites e /config/sectors (capacidade ≥ 0).
+
+GET/PUT /config/business-hours e /config/holidays & /config/holiday-exceptions.
+
+GET/PUT /config/rbac (listar perfis, atribuir/remover permissões; nunca remover Admin de config.write).
+
+GET/PUT /config/auth-policies (senha mínima, expiração, tempo de sessão, toggles 2FA/SSO — somente configurações, sem integrar SSO de fato agora).
+
+GET /config/audit?user_id&entity&action&date_ini&date_fim&page&pageSize + GET /config/audit/export.
+
+Exportar Funcionários:
+
+GET /export/funcionarios.csv?setor=&status=&site_id=&q= (ou XLSX se já houver lib).
+
+RBAC: exigir report.export; CPF mascarado se o usuário não tiver person.cpf.view_unmasked.
+
+Streaming (CSV) e paginação/limite para não estourar memória.
+
+Colunas recomendadas: id, nome, setor, cargo?, site, cpf(ou ***), email?, telefone?, status, criado_em.
+
+Incluir blocos ```diff mostrando controladores/serviços/middlewares criados ou alterados, com mensagens de erro claras.
+
+3) Front-end (React)
+
+Nova página Configurações com menu lateral:
+
+Organização & Locais (tabs: Organização | Locais/Sites | Zonas/Setores | Horários | Feriados/Exceções).
+
+Pessoas & Perfis (RBAC) (matriz de permissões com checkboxes; busca por usuário e por papel).
+
+Políticas de Login (form com senha mínima, expiração, 2FA toggle, SSO toggle + campos do provider desativados se SSO off).
+
+Auditoria (tabela com filtros + botão Exportar trilha).
+
+Exportações → Botão “Exportar planilha de Funcionários” (respeitando RBAC; spinner; erro tratável).
+
+UX padrão mercado: autosave em toggles simples; botão Salvar para formulários grandes; Danger Zone para ações perigosas (vermelho, confirmação dupla).
+
+Higiene de estado: abortar fetch ao trocar de aba, limpar timers/debounces/listeners, chaves de cache únicas por seção.
+
+Incluir blocos ```diff dos componentes/rotas, e wireframes simplificados (markdown) se útil.
+
+4) Testes & QA
+
+Unitários: validações (CNPJ DV, limites, políticas).
+
+Integração: RBAC (permissões negadas/permitidas), auditoria registra antes/depois.
+
+E2E (mínimo): salvar Organização, criar Site/Setor, definir feriado, alterar política de senha.
+
+Exportar Funcionários: baixa arquivo; CPF mascarado sem permissão; não mascarado com permissão.
+
+Critérios de aceite listados claramente.
+
+Saída esperada agora: imprimir resumo + escrever CONFIG_PLANO.md com todos os diffs/SQL. Não aplicar.
+
+FASE C — EXECUÇÃO (somente após minha confirmação)
+
+Antes de executar, pergunte explicitamente:
+“Posso executar as alterações de Configurações? Responda executa para prosseguir ou não para cancelar.”
+
+Se eu responder executa:
+
+Criar branch feat/config-organizacao-rbac-auditoria-export.
+
+Aplicar todos os diffs propostos (back e front).
+
+Rodar migrações (prisma migrate), testes e imprimir resultados.
+
+Mostrar resumo de arquivos alterados, endpoints criados e telas adicionadas.
+
+Se eu responder não: não aplicar nada; manter apenas RELATORIO_CONFIG_ANALISE.md e CONFIG_PLANO.md.
+
+Critérios de Aceite (checklist)
+
+Organização: salvar nome, CNPJ (DV), logo, fuso, idioma.
+
+Locais/Sites & Setores: CRUD completo; capacidade ≥ 0; horários por dia; exceções e feriados aplicáveis.
+
+RBAC: perfis padrão + personalizáveis; matriz funcional; ver CPF não mascarado só com permissão; Recepção não altera configurações.
+
+Políticas: senha mínima, expiração, tempo de sessão, toggles 2FA/SSO (somente config, sem integrar SSO agora).
+
+Auditoria: grava antes/depois, IP, timestamp; filtros e exportação operando.
+
+Exportar Funcionários: botão baixa planilha; respeita RBAC; CPF mascarado para quem não pode ver.
+
+Higiene: sair/voltar entre abas sem “sujeira” (filtros/requests/timers vazando).
+
+Mensagens de sucesso/erro claras e localizadas (pt-BR).
+
+Formato de resposta esperado AGORA
+
+Resumo da análise.
+
+RELATORIO_CONFIG_ANALISE.md (conteúdo).
+
+CONFIG_PLANO.md (com diffs e SQL).
+
+Pergunta de confirmação: “Posso executar? (executa / não)”.
+
+Reforço final: não executar nada até eu responder executa.

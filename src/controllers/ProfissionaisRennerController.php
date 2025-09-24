@@ -40,14 +40,37 @@ class ProfissionaisRennerController {
         $search = $_GET['search'] ?? '';
         $setor = $_GET['setor'] ?? '';
         $status = $_GET['status'] ?? '';
+        $data = $_GET['data'] ?? date('Y-m-d'); // Padrão: hoje
+        $page = max(1, intval($_GET['page'] ?? 1));
+        $pageSize = max(1, min(100, intval($_GET['pageSize'] ?? 20)));
+        $offset = ($page - 1) * $pageSize;
         
-        $query = "SELECT * FROM profissionais_renner WHERE 1=1";
+        // Verificar se é contexto de relatório
+        $isReport = strpos($_SERVER['REQUEST_URI'] ?? '', '/reports/') !== false;
+        
+        // Query otimizada: campos específicos para relatórios, todos para módulo normal
+        if ($isReport) {
+            $query = "SELECT id, nome, setor, placa_veiculo, data_entrada, saida_final FROM profissionais_renner WHERE 1=1";
+        } else {
+            $query = "SELECT * FROM profissionais_renner WHERE 1=1";
+        }
         $params = [];
         
+        // Filtro por data (apenas para relatórios)
+        if ($isReport && !empty($data)) {
+            $query .= " AND DATE(data_entrada) = ?";
+            $params[] = $data;
+        }
+        
         if (!empty($search)) {
-            $query .= " AND (nome ILIKE ? OR setor ILIKE ?)";
-            $params[] = "%$search%";
-            $params[] = "%$search%";
+            if ($isReport) {
+                $query .= " AND nome ILIKE ?";
+                $params[] = "%$search%";
+            } else {
+                $query .= " AND (nome ILIKE ? OR setor ILIKE ?)";
+                $params[] = "%$search%";
+                $params[] = "%$search%";
+            }
         }
         
         if (!empty($setor)) {
@@ -55,15 +78,48 @@ class ProfissionaisRennerController {
             $params[] = $setor;
         }
         
+        // Filtro de status ajustado
         if ($status === 'ativo') {
-            // Ativos: têm data_entrada ou retorno, mas não saída_final (estão atualmente na empresa)
-            $query .= " AND (data_entrada IS NOT NULL OR retorno IS NOT NULL) AND saida_final IS NULL";
+            if ($isReport) {
+                // Para relatórios: apenas com entrada válida e sem saída final
+                $query .= " AND data_entrada IS NOT NULL AND saida_final IS NULL";
+            } else {
+                // Para módulo normal: lógica original
+                $query .= " AND (data_entrada IS NOT NULL OR retorno IS NOT NULL) AND saida_final IS NULL";
+            }
         } elseif ($status === 'saiu') {
-            // Saíram: têm saída_final registrada (independente do dia)
             $query .= " AND saida_final IS NOT NULL";
         }
         
-        $query .= " ORDER BY created_at DESC";
+        // Contar total para paginação (apenas para relatórios)
+        $total = 0;
+        $pagination = null;
+        if ($isReport) {
+            $countQuery = str_replace(
+                "SELECT id, nome, setor, placa_veiculo, data_entrada, saida_final", 
+                "SELECT COUNT(*)", 
+                $query
+            );
+            $totalResult = $this->db->fetch($countQuery, $params);
+            $total = $totalResult['count'] ?? 0;
+            
+            $pagination = [
+                'page' => $page,
+                'pageSize' => $pageSize,
+                'total' => $total,
+                'totalPages' => ceil($total / $pageSize)
+            ];
+        }
+        
+        // Ordenação e paginação
+        if ($isReport) {
+            $query .= " ORDER BY data_entrada DESC";
+            $query .= " LIMIT ? OFFSET ?";
+            $params[] = $pageSize;
+            $params[] = $offset;
+        } else {
+            $query .= " ORDER BY created_at DESC";
+        }
         
         $profissionais = $this->db->fetchAll($query, $params);
         

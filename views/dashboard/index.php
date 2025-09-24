@@ -1257,11 +1257,9 @@
             let formData = new FormData();
             let endpoint = '';
             
-            // Adicionar dados comuns
+            // Adicionar dados comuns (incluindo campos vazios)
             Object.keys(dadosComuns).forEach(key => {
-                if (dadosComuns[key]) {
-                    formData.append(key, dadosComuns[key]);
-                }
+                formData.append(key, dadosComuns[key] || '');
             });
             
             // Determinar endpoint e campos específicos baseado no tipo

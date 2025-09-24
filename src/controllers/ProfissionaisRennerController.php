@@ -401,6 +401,8 @@ class ProfissionaisRennerController {
                 CSRFProtection::verifyRequest();
                 $id = trim($_POST['id'] ?? '');
                 $nome = trim($_POST['nome'] ?? '');
+                $cpf = trim($_POST['cpf'] ?? '');
+                $empresa = trim($_POST['empresa'] ?? '');
                 $setor = trim($_POST['setor'] ?? '');
                 $placa_veiculo = trim($_POST['placa_veiculo'] ?? '');
                 $saida_final = trim($_POST['saida_final'] ?? '');
@@ -451,9 +453,9 @@ class ProfissionaisRennerController {
                 
                 $this->db->query("
                     UPDATE profissionais_renner 
-                    SET nome = ?, setor = ?, placa_veiculo = ?, saida_final = ?
+                    SET nome = ?, cpf = ?, empresa = ?, setor = ?, placa_veiculo = ?, saida_final = ?
                     WHERE id = ?
-                ", [$nome, $setor, $placa_veiculo, $saida_final ?: null, $id]);
+                ", [$nome, $cpf, $empresa, $setor, $placa_veiculo, $saida_final ?: null, $id]);
                 
                 // Buscar dados atualizados para retornar
                 $profissionalAtualizado = $this->db->fetch("SELECT * FROM profissionais_renner WHERE id = ?", [$id]);
@@ -465,7 +467,8 @@ class ProfissionaisRennerController {
                         'id' => $id,
                         'nome' => $nome,
                         'tipo' => 'Profissional Renner',
-
+                        'cpf' => $cpf,
+                        'empresa' => $empresa,
                         'setor' => $setor,
                         'funcionario_responsavel' => '',
                         'placa_veiculo' => $placa_veiculo,

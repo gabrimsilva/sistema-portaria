@@ -197,7 +197,13 @@ class PrestadoresServicoController {
     }
     
     private function canViewFullCpf() {
-        // Implementar RBAC - por enquanto, todos podem ver
+        // LGPD: Mascarar CPF na seção de relatórios
+        $currentUri = $_SERVER['REQUEST_URI'] ?? '';
+        if (strpos($currentUri, '/reports/') !== false) {
+            return false; // Mascarar CPF em relatórios
+        }
+        
+        // Em outras seções, permitir visualização completa (RBAC futuro)
         return true;
     }
     

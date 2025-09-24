@@ -760,7 +760,7 @@
                     <td>${data.cpf || '-'}</td>
                     <td>${data.empresa || '-'}</td>
                     <td>${data.setor || '-'}</td>
-                    <td>${data.funcionario_responsavel || '-'}</td>
+                    <td>${(data.tipo === 'Visitante' || data.tipo === 'Prestador') && data.funcionario_responsavel ? '<i class="fas fa-user-tie text-primary mr-1"></i>' + data.funcionario_responsavel : '-'}</td>
                     <td>${data.placa_veiculo || '-'}</td>
                     <td><i class="fas fa-clock text-muted"></i> ${dataFormatada}</td>
                     <td>
@@ -830,7 +830,7 @@
                     <td>${data.cpf || '-'}</td>
                     <td>${data.empresa || '-'}</td>
                     <td>${data.setor || '-'}</td>
-                    <td>${data.funcionario_responsavel || '-'}</td>
+                    <td>${(data.tipo === 'Visitante' || data.tipo === 'Prestador') && data.funcionario_responsavel ? '<i class="fas fa-user-tie text-primary mr-1"></i>' + data.funcionario_responsavel : '-'}</td>
                     <td>${data.placa_veiculo || '-'}</td>
                     <td><i class="fas fa-clock text-muted"></i> ${dataFormatada}</td>
                     <td>

@@ -1,3 +1,10 @@
+<?php
+// Verificar se as variáveis estão definidas para evitar erros LSP
+$setores = $setores ?? [];
+$responsaveis = $responsaveis ?? [];
+$pagination = $pagination ?? null;
+$prestadores = $prestadores ?? [];
+?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -107,91 +114,135 @@
                         <div class="card-header">
                             <div class="row">
                                 <div class="col-md-12">
-                                    <h3 class="card-title"><i class="fas fa-chart-line"></i> Relatório - Prestadores de Serviço</h3>
-                                    <p class="text-muted mb-0">Relatório de entradas do dia com filtros avançados</p>
+                                    <h3 class="card-title"><i class="fas fa-chart-line"></i> Relatório de Entradas - Prestadores de Serviço</h3>
+                                    <p class="text-muted mt-1">Visualização de registros de entrada por data</p>
                                 </div>
                             </div>
                         </div>
                         
                         <div class="card-body">
-                            <!-- Filtros de Relatório -->
-                            <form method="GET" class="mb-3" id="report-filters">
-                                <div class="row">
-                                    <div class="col-md-2">
-                                        <label class="form-label">Data</label>
-                                        <input type="date" name="data" class="form-control" value="<?= htmlspecialchars($_GET['data'] ?? date('Y-m-d')) ?>">
-                                    </div>
-                                    <div class="col-md-2">
-                                        <label class="form-label">Setor</label>
-                                        <select name="setor" class="form-control">
-                                            <option value="">Todos</option>
-                                            <?php foreach ($setores as $s): ?>
-                                                <option value="<?= htmlspecialchars($s['setor']) ?>" <?= ($_GET['setor'] ?? '') === $s['setor'] ? 'selected' : '' ?>>
-                                                    <?= htmlspecialchars($s['setor']) ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <label class="form-label">Status</label>
-                                        <select name="status" class="form-control">
-                                            <option value="todos" <?= ($_GET['status'] ?? 'todos') === 'todos' ? 'selected' : '' ?>>Todos</option>
-                                            <option value="aberto" <?= ($_GET['status'] ?? '') === 'aberto' ? 'selected' : '' ?>>Em aberto</option>
-                                            <option value="finalizado" <?= ($_GET['status'] ?? '') === 'finalizado' ? 'selected' : '' ?>>Finalizado</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <label class="form-label">Empresa</label>
-                                        <input type="text" name="empresa" class="form-control" placeholder="Nome da empresa" value="<?= htmlspecialchars($_GET['empresa'] ?? '') ?>">
-                                    </div>
-                                    <div class="col-md-2">
-                                        <label class="form-label">Responsável</label>
-                                        <select name="responsavel" class="form-control">
-                                            <option value="">Todos</option>
-                                            <?php foreach ($responsaveis as $r): ?>
-                                                <option value="<?= htmlspecialchars($r['funcionario_responsavel']) ?>" <?= ($_GET['responsavel'] ?? '') === $r['funcionario_responsavel'] ? 'selected' : '' ?>>
-                                                    <?= htmlspecialchars($r['funcionario_responsavel']) ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-2 d-flex align-items-end">
-                                        <button type="submit" class="btn btn-primary">
-                                            <i class="fas fa-search"></i> Filtrar
-                                        </button>
+                            <!-- Filtros para Relatório -->
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <div class="bg-light p-3 rounded">
+                                        <form method="GET" class="row align-items-end" id="report-filters">
+                                            <div class="col-md-2">
+                                                <label class="form-label">Data:</label>
+                                                <input type="date" name="data" class="form-control" value="<?= htmlspecialchars($_GET['data'] ?? date('Y-m-d')) ?>">
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label">Setor:</label>
+                                                <select name="setor" class="form-control">
+                                                    <option value="">Todos</option>
+                                                    <?php foreach ($setores as $s): ?>
+                                                        <option value="<?= htmlspecialchars($s['setor']) ?>" <?= ($_GET['setor'] ?? '') === $s['setor'] ? 'selected' : '' ?>>
+                                                            <?= htmlspecialchars($s['setor']) ?>
+                                                        </option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label">Status:</label>
+                                                <select name="status" class="form-control">
+                                                    <option value="">Todos</option>
+                                                    <option value="aberto" <?= ($_GET['status'] ?? '') === 'aberto' ? 'selected' : '' ?>>Na empresa</option>
+                                                    <option value="finalizado" <?= ($_GET['status'] ?? '') === 'finalizado' ? 'selected' : '' ?>>Saiu</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label">Empresa:</label>
+                                                <input type="text" name="empresa" class="form-control" placeholder="Nome da empresa" value="<?= htmlspecialchars($_GET['empresa'] ?? '') ?>">
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label">Responsável:</label>
+                                                <select name="responsavel" class="form-control">
+                                                    <option value="">Todos</option>
+                                                    <?php foreach ($responsaveis as $r): ?>
+                                                        <option value="<?= htmlspecialchars($r['funcionario_responsavel']) ?>" <?= ($_GET['responsavel'] ?? '') === $r['funcionario_responsavel'] ? 'selected' : '' ?>>
+                                                            <?= htmlspecialchars($r['funcionario_responsavel']) ?>
+                                                        </option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <button type="submit" class="btn btn-primary w-100">
+                                                    <i class="fas fa-filter"></i> Filtrar
+                                                </button>
+                                            </div>
+                                        </form>
                                     </div>
                                 </div>
-                            </form>
+                            </div>
                             
+                            <!-- Informações do Relatório -->
+                            <?php if (isset($pagination)): ?>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <p class="text-muted mb-0">
+                                        <i class="fas fa-calendar"></i> Data: <?= date('d/m/Y', strtotime($_GET['data'] ?? date('Y-m-d'))) ?> |
+                                        <i class="fas fa-list"></i> Total: <?= $pagination['totalItems'] ?> registros
+                                    </p>
+                                </div>
+                                <div class="col-md-6 text-right">
+                                    <p class="text-muted mb-0">
+                                        Página <?= $pagination['current'] ?> de <?= $pagination['total'] ?>
+                                    </p>
+                                </div>
+                            </div>
+                            <?php endif; ?>
+
                             <div class="table-responsive">
-                                <table class="table table-bordered table-hover">
+                                <table class="table table-bordered table-hover table-sm">
                                     <thead class="table-dark">
                                         <tr>
-                                            <th>Nome Completo</th>
-                                            <th>Setor</th>
-                                            <th>Placa / A pé</th>
-                                            <th>Empresa</th>
-                                            <th>Funcionário Responsável</th>
-                                            <th>CPF</th>
-                                            <th>Data/Hora Entrada</th>
+                                            <th width="25%">Nome</th>
+                                            <th width="12%">Setor</th>
+                                            <th width="12%">Placa/Veículo</th>
+                                            <th width="15%">Empresa</th>
+                                            <th width="15%">Funcionário Responsável</th>
+                                            <th width="11%">CPF</th>
+                                            <th width="10%">Data/Hora Entrada</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <?php if (empty($prestadores)): ?>
                                             <tr>
-                                                <td colspan="7" class="text-center text-muted">
-                                                    <i class="fas fa-info-circle"></i> Nenhum registro encontrado para os filtros selecionados.
+                                                <td colspan="7" class="text-center py-4">
+                                                    <i class="fas fa-info-circle text-muted"></i>
+                                                    Nenhum registro encontrado para esta data
                                                 </td>
                                             </tr>
                                         <?php else: ?>
                                             <?php foreach ($prestadores as $p): ?>
                                             <tr>
-                                                <td><?= htmlspecialchars($p['nome']) ?></td>
-                                                <td><?= htmlspecialchars($p['setor'] ?? '-') ?></td>
-                                                <td><?= htmlspecialchars($p['placa_ou_ape']) ?></td>
-                                                <td><?= htmlspecialchars($p['empresa'] ?? '-') ?></td>
-                                                <td><?= htmlspecialchars($p['funcionario_responsavel'] ?? '-') ?></td>
-                                                <td><?= htmlspecialchars($p['cpf']) ?></td>
+                                                <td>
+                                                    <strong><?= htmlspecialchars($p['nome']) ?></strong>
+                                                    <?php 
+                                                    // Determinar status baseado na entrada/saída
+                                                    $temSaida = !empty($p['saida']) || !empty($p['saida_final']);
+                                                    ?>
+                                                    <?php if ($temSaida): ?>
+                                                        <span class="badge bg-secondary ms-2">Saiu</span>
+                                                    <?php else: ?>
+                                                        <span class="badge bg-success ms-2">Na empresa</span>
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td><?= htmlspecialchars($p['setor'] ?? '') ?></td>
+                                                <td>
+                                                    <?php 
+                                                    $placa = strtoupper(trim($p['placa_ou_ape'] ?? ''));
+                                                    if ($placa === 'A PÉ' || empty($placa)): 
+                                                    ?>
+                                                        <span class="text-muted"><i class="fas fa-walking"></i> A pé</span>
+                                                    <?php else: ?>
+                                                        <span class="badge bg-primary"><?= htmlspecialchars($placa) ?></span>
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td><?= htmlspecialchars($p['empresa'] ?? '') ?></td>
+                                                <td><?= htmlspecialchars($p['funcionario_responsavel'] ?? '') ?></td>
+                                                <td>
+                                                    <span class="text-muted"><?= htmlspecialchars($p['cpf']) ?></span>
+                                                </td>
                                                 <td><?= $p['entrada_at'] ? date('d/m/Y H:i', strtotime($p['entrada_at'])) : '-' ?></td>
                                             </tr>
                                             <?php endforeach; ?>
@@ -199,59 +250,91 @@
                                     </tbody>
                                 </table>
                                 
-                                <!-- Paginação -->
-                                <?php if ($pagination['total'] > 1): ?>
-                                <div class="d-flex justify-content-between align-items-center mt-3">
-                                    <div class="text-muted">
-                                        Exibindo <?= count($prestadores) ?> de <?= $pagination['totalItems'] ?> registros
-                                    </div>
-                                    <nav aria-label="Navegação de páginas">
-                                        <ul class="pagination pagination-sm mb-0">
+                            </div>
+
+                            <!-- Paginação -->
+                            <?php if (isset($pagination) && $pagination['total'] > 1): ?>
+                            <div class="row mt-3">
+                                <div class="col-md-12">
+                                    <nav aria-label="Paginação do relatório">
+                                        <ul class="pagination justify-content-center">
+                                            <?php 
+                                            $currentPage = $pagination['current'];
+                                            $totalPages = $pagination['total'];
+                                            $queryParams = $_GET;
+                                            ?>
+                                            
                                             <!-- Primeira página -->
-                                            <?php if ($pagination['current'] > 1): ?>
-                                            <li class="page-item">
-                                                <a class="page-link" href="?<?= http_build_query(array_merge(array_filter($_GET), ['page' => 1])) ?>" title="Primeira página">
-                                                    <i class="fas fa-angle-double-left"></i>
-                                                </a>
-                                            </li>
-                                            <li class="page-item">
-                                                <a class="page-link" href="?<?= http_build_query(array_merge(array_filter($_GET), ['page' => $pagination['current'] - 1])) ?>" title="Página anterior">
-                                                    <i class="fas fa-angle-left"></i>
-                                                </a>
-                                            </li>
+                                            <?php if ($currentPage > 1): ?>
+                                                <?php 
+                                                $queryParams['page'] = 1;
+                                                $queryString = http_build_query($queryParams);
+                                                ?>
+                                                <li class="page-item">
+                                                    <a class="page-link" href="?<?= $queryString ?>">
+                                                        <i class="fas fa-angle-double-left"></i>
+                                                    </a>
+                                                </li>
                                             <?php endif; ?>
                                             
-                                            <!-- Páginas -->
+                                            <!-- Página anterior -->
+                                            <?php if ($currentPage > 1): ?>
+                                                <?php 
+                                                $queryParams['page'] = $currentPage - 1;
+                                                $queryString = http_build_query($queryParams);
+                                                ?>
+                                                <li class="page-item">
+                                                    <a class="page-link" href="?<?= $queryString ?>">
+                                                        <i class="fas fa-angle-left"></i>
+                                                    </a>
+                                                </li>
+                                            <?php endif; ?>
+                                            
+                                            <!-- Páginas numéricas -->
                                             <?php 
-                                            $start = max(1, $pagination['current'] - 2);
-                                            $end = min($pagination['total'], $pagination['current'] + 2);
+                                            $start = max(1, $currentPage - 2);
+                                            $end = min($totalPages, $currentPage + 2);
                                             for ($i = $start; $i <= $end; $i++): 
                                             ?>
-                                            <li class="page-item <?= $i === $pagination['current'] ? 'active' : '' ?>">
-                                                <a class="page-link" href="?<?= http_build_query(array_merge(array_filter($_GET), ['page' => $i])) ?>"><?= $i ?></a>
-                                            </li>
+                                                <?php 
+                                                $queryParams['page'] = $i;
+                                                $queryString = http_build_query($queryParams);
+                                                ?>
+                                                <li class="page-item <?= $i === $currentPage ? 'active' : '' ?>">
+                                                    <a class="page-link" href="?<?= $queryString ?>"><?= $i ?></a>
+                                                </li>
                                             <?php endfor; ?>
                                             
+                                            <!-- Próxima página -->
+                                            <?php if ($currentPage < $totalPages): ?>
+                                                <?php 
+                                                $queryParams['page'] = $currentPage + 1;
+                                                $queryString = http_build_query($queryParams);
+                                                ?>
+                                                <li class="page-item">
+                                                    <a class="page-link" href="?<?= $queryString ?>">
+                                                        <i class="fas fa-angle-right"></i>
+                                                    </a>
+                                                </li>
+                                            <?php endif; ?>
+                                            
                                             <!-- Última página -->
-                                            <?php if ($pagination['current'] < $pagination['total']): ?>
-                                            <li class="page-item">
-                                                <a class="page-link" href="?<?= http_build_query(array_merge(array_filter($_GET), ['page' => $pagination['current'] + 1])) ?>" title="Próxima página">
-                                                    <i class="fas fa-angle-right"></i>
-                                                </a>
-                                            </li>
-                                            <li class="page-item">
-                                                <a class="page-link" href="?<?= http_build_query(array_merge(array_filter($_GET), ['page' => $pagination['total']])) ?>" title="Última página">
-                                                    <i class="fas fa-angle-double-right"></i>
-                                                </a>
-                                            </li>
+                                            <?php if ($currentPage < $totalPages): ?>
+                                                <?php 
+                                                $queryParams['page'] = $totalPages;
+                                                $queryString = http_build_query($queryParams);
+                                                ?>
+                                                <li class="page-item">
+                                                    <a class="page-link" href="?<?= $queryString ?>">
+                                                        <i class="fas fa-angle-double-right"></i>
+                                                    </a>
+                                                </li>
                                             <?php endif; ?>
                                         </ul>
                                     </nav>
-                                    <div class="text-muted">
-                                        Página <?= $pagination['current'] ?> de <?= $pagination['total'] ?>
-                                    </div>
                                 </div>
-                                <?php endif; ?>
+                            </div>
+                            <?php endif; ?>
                             </div>
                         </div>
                     </div>

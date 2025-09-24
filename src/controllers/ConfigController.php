@@ -63,7 +63,7 @@ class ConfigController {
      * PUT /config/organization
      */
     public function updateOrganization() {
-        if (!$this->authService->hasPermission('audit_log.read')) {
+        if (!$this->authService->hasPermission('registro_acesso.update')) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Acesso negado']);
             return;
@@ -119,7 +119,7 @@ class ConfigController {
      * POST /config/sites
      */
     public function createSite() {
-        if (!$this->authService->hasPermission('audit_log.read')) {
+        if (!$this->authService->hasPermission('registro_acesso.update')) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Acesso negado']);
             return;
@@ -150,7 +150,7 @@ class ConfigController {
      * PUT /config/sites/{id}
      */
     public function updateSite() {
-        if (!$this->authService->hasPermission('audit_log.read')) {
+        if (!$this->authService->hasPermission('registro_acesso.update')) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Acesso negado']);
             return;
@@ -174,6 +174,40 @@ class ConfigController {
             $input = json_decode(file_get_contents('php://input'), true);
             
             $this->configService->updateSite($siteId, $input);
+            echo json_encode(['success' => true]);
+            
+        } catch (Exception $e) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+    
+    /**
+     * DELETE /config/sites/{id}
+     */
+    public function deleteSite() {
+        if (!$this->authService->hasPermission('registro_acesso.update')) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acesso negado']);
+            return;
+        }
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'DELETE') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método não permitido']);
+            return;
+        }
+        
+        header('Content-Type: application/json');
+        CSRFProtection::verifyRequest();
+        
+        try {
+            $siteId = $_GET['id'] ?? null;
+            if (!$siteId) {
+                throw new Exception('ID do site é obrigatório');
+            }
+            
+            $this->configService->deleteSite($siteId);
             echo json_encode(['success' => true]);
             
         } catch (Exception $e) {
@@ -208,7 +242,7 @@ class ConfigController {
      * POST /config/sectors
      */
     public function createSector() {
-        if (!$this->authService->hasPermission('audit_log.read')) {
+        if (!$this->authService->hasPermission('registro_acesso.update')) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Acesso negado']);
             return;
@@ -235,13 +269,83 @@ class ConfigController {
         }
     }
     
+    /**
+     * PUT /config/sectors/{id}
+     */
+    public function updateSector() {
+        if (!$this->authService->hasPermission('registro_acesso.update')) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acesso negado']);
+            return;
+        }
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'PUT') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método não permitido']);
+            return;
+        }
+        
+        header('Content-Type: application/json');
+        CSRFProtection::verifyRequest();
+        
+        try {
+            $sectorId = $_GET['id'] ?? null;
+            if (!$sectorId) {
+                throw new Exception('ID do setor é obrigatório');
+            }
+            
+            $input = json_decode(file_get_contents('php://input'), true);
+            
+            $this->configService->updateSector($sectorId, $input);
+            echo json_encode(['success' => true]);
+            
+        } catch (Exception $e) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+    
+    /**
+     * DELETE /config/sectors/{id}
+     */
+    public function deleteSector() {
+        if (!$this->authService->hasPermission('registro_acesso.update')) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acesso negado']);
+            return;
+        }
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'DELETE') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método não permitido']);
+            return;
+        }
+        
+        header('Content-Type: application/json');
+        CSRFProtection::verifyRequest();
+        
+        try {
+            $sectorId = $_GET['id'] ?? null;
+            if (!$sectorId) {
+                throw new Exception('ID do setor é obrigatório');
+            }
+            
+            $this->configService->deleteSector($sectorId);
+            echo json_encode(['success' => true]);
+            
+        } catch (Exception $e) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+    
     // ========== RBAC ==========
     
     /**
      * GET /config/rbac-matrix
      */
     public function getRbacMatrix() {
-        if (!$this->authService->hasPermission('audit_log.read')) {
+        if (!$this->authService->hasPermission('registro_acesso.update')) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Acesso negado']);
             return;
@@ -261,7 +365,7 @@ class ConfigController {
      * PUT /config/role-permissions
      */
     public function updateRolePermissions() {
-        if (!$this->authService->hasPermission('audit_log.read')) {
+        if (!$this->authService->hasPermission('registro_acesso.update')) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Acesso negado']);
             return;
@@ -312,7 +416,7 @@ class ConfigController {
      * PUT /config/auth-policies
      */
     public function updateAuthPolicies() {
-        if (!$this->authService->hasPermission('audit_log.read')) {
+        if (!$this->authService->hasPermission('registro_acesso.update')) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Acesso negado']);
             return;
@@ -345,7 +449,7 @@ class ConfigController {
      * GET /config/audit
      */
     public function getAuditLogs() {
-        if (!$this->authService->hasPermission('audit_log.read')) {
+        if (!$this->authService->hasPermission('registro_acesso.update')) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Acesso negado']);
             return;
@@ -375,7 +479,7 @@ class ConfigController {
      * GET /config/audit/export
      */
     public function exportAuditLogs() {
-        if (!$this->authService->hasPermission('audit_log.read')) {
+        if (!$this->authService->hasPermission('registro_acesso.update')) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Acesso negado']);
             return;
@@ -405,7 +509,7 @@ class ConfigController {
      * GET /config/users - Listar usuários para filtros
      */
     public function getUsers() {
-        if (!$this->authService->hasPermission('audit_log.read')) {
+        if (!$this->authService->hasPermission('registro_acesso.update')) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Acesso negado']);
             return;
@@ -459,7 +563,7 @@ class ConfigController {
      * POST /config/organization/logo
      */
     public function uploadLogo() {
-        if (!$this->authService->hasPermission('audit_log.read')) {
+        if (!$this->authService->hasPermission('registro_acesso.update')) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Acesso negado']);
             return;

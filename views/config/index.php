@@ -518,8 +518,160 @@ include '../views/includes/header.php';
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" onclick="saveSite()">
+                <button type="button" class="btn btn-primary" id="saveSiteBtn" onclick="saveSite()">
                     <i class="fas fa-save"></i> Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Editar Site -->
+<div class="modal fade" id="editSiteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Editar Local/Site</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="editSiteForm">
+                    <div class="form-group">
+                        <label for="editSiteName">Nome do Local *</label>
+                        <input type="text" class="form-control" id="editSiteName" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editSiteCapacity">Capacidade Máxima</label>
+                        <input type="number" class="form-control" id="editSiteCapacity" name="capacity" min="0" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="editSiteAddress">Endereço</label>
+                        <textarea class="form-control" id="editSiteAddress" name="address" rows="2"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="editSiteTimezone">Fuso Horário</label>
+                        <select class="form-control" id="editSiteTimezone" name="timezone">
+                            <option value="America/Sao_Paulo">Brasília (GMT-3)</option>
+                            <option value="America/Manaus">Manaus (GMT-4)</option>
+                            <option value="America/Rio_Branco">Rio Branco (GMT-5)</option>
+                            <option value="America/Noronha">Fernando de Noronha (GMT-2)</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="updateSiteBtn" onclick="updateSite()">
+                    <i class="fas fa-save"></i> Salvar Alterações
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Detalhes do Site -->
+<div class="modal fade" id="siteDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detalhes do Local</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Nome do Local</h6>
+                        <p id="siteDetailName" class="h5"></p>
+                    </div>
+                    <div class="col-md-3">
+                        <h6 class="text-muted">Capacidade Total</h6>
+                        <p><span id="siteDetailCapacity" class="h5"></span> pessoas</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h6 class="text-muted">Fuso Horário</h6>
+                        <p id="siteDetailTimezone"></p>
+                    </div>
+                </div>
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <h6 class="text-muted">Endereço</h6>
+                        <p id="siteDetailAddress"></p>
+                    </div>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="mb-0">Setores</h6>
+                    <button type="button" class="btn btn-success btn-sm" id="addSectorBtn">
+                        <i class="fas fa-plus"></i> Adicionar Setor
+                    </button>
+                </div>
+                <div id="siteDetailsSectors">
+                    <!-- Setores serão carregados aqui -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Adicionar Setor -->
+<div class="modal fade" id="addSectorModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Novo Setor</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="addSectorForm">
+                    <div class="form-group">
+                        <label for="sectorName">Nome do Setor *</label>
+                        <input type="text" class="form-control" id="sectorName" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="sectorCapacity">Capacidade Máxima</label>
+                        <input type="number" class="form-control" id="sectorCapacity" name="capacity" min="0" value="0">
+                        <small class="form-text text-muted">Número de pessoas que podem estar neste setor</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="saveSectorBtn" onclick="saveSector()">
+                    <i class="fas fa-save"></i> Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Editar Setor -->
+<div class="modal fade" id="editSectorModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Editar Setor</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="editSectorForm">
+                    <div class="form-group">
+                        <label for="editSectorName">Nome do Setor *</label>
+                        <input type="text" class="form-control" id="editSectorName" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editSectorCapacity">Capacidade Máxima</label>
+                        <input type="number" class="form-control" id="editSectorCapacity" name="capacity" min="0" value="0">
+                        <small class="form-text text-muted">Número de pessoas que podem estar neste setor</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="updateSectorBtn" onclick="updateSector()">
+                    <i class="fas fa-save"></i> Salvar Alterações
                 </button>
             </div>
         </div>
@@ -881,6 +1033,9 @@ function renderSites(sites) {
                         <button class="btn btn-warning btn-sm" onclick="editSite(${site.id})">
                             <i class="fas fa-edit"></i> Editar
                         </button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteSite(${site.id}, '${site.name}')">
+                            <i class="fas fa-trash"></i> Excluir
+                        </button>
                     </div>
                 </div>
             </div>
@@ -897,24 +1052,368 @@ function showAddSiteModal() {
 
 function saveSite() {
     const formData = {
-        name: $('#siteName').val(),
+        name: $('#siteName').val().trim(),
         capacity: parseInt($('#siteCapacity').val()) || 0,
-        address: $('#siteAddress').val() || null,
+        address: $('#siteAddress').val().trim() || null,
         timezone: $('#siteTimezone').val()
     };
     
-    $.post('/config/sites', JSON.stringify(formData), function(response) {
+    // Validação
+    if (!formData.name) {
+        showAlert('Nome do local é obrigatório', 'warning');
+        return;
+    }
+    
+    // Desabilitar botão durante salvamento
+    const $saveBtn = $('#saveSiteBtn');
+    $saveBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Salvando...');
+    
+    $.ajax({
+        url: '/config/sites',
+        method: 'POST',
+        data: JSON.stringify(formData),
+        contentType: 'application/json',
+        headers: {
+            'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+        }
+    })
+    .done(function(response) {
         if (response.success) {
             $('#addSiteModal').modal('hide');
             loadSites();
-            showAlert('Site criado com sucesso!', 'success');
+            showAlert('Local criado com sucesso!', 'success');
         } else {
-            showAlert(response.message || 'Erro ao criar site', 'error');
+            showAlert(response.message || 'Erro ao criar local', 'error');
         }
-    }, 'json')
-    .fail(function() {
-        showAlert('Erro ao criar site', 'error');
+    })
+    .fail(function(xhr) {
+        const message = xhr.responseJSON?.message || 'Erro ao criar local';
+        showAlert(message, 'error');
+    })
+    .always(function() {
+        $saveBtn.prop('disabled', false).html('<i class="fas fa-save"></i> Salvar');
     });
+}
+
+let currentEditingSite = null;
+
+function editSite(siteId) {
+    // Buscar dados do site
+    $.get('/config/sites')
+        .done(function(response) {
+            if (response.success) {
+                const site = response.data.find(s => s.id == siteId);
+                if (site) {
+                    currentEditingSite = site;
+                    
+                    // Preencher modal de edição
+                    $('#editSiteName').val(site.name);
+                    $('#editSiteCapacity').val(site.capacity || 0);
+                    $('#editSiteAddress').val(site.address || '');
+                    $('#editSiteTimezone').val(site.timezone || 'America/Sao_Paulo');
+                    
+                    $('#editSiteModal').modal('show');
+                }
+            }
+        })
+        .fail(function() {
+            showAlert('Erro ao carregar dados do local', 'error');
+        });
+}
+
+function updateSite() {
+    if (!currentEditingSite) return;
+    
+    const formData = {
+        name: $('#editSiteName').val().trim(),
+        capacity: parseInt($('#editSiteCapacity').val()) || 0,
+        address: $('#editSiteAddress').val().trim() || null,
+        timezone: $('#editSiteTimezone').val()
+    };
+    
+    // Validação
+    if (!formData.name) {
+        showAlert('Nome do local é obrigatório', 'warning');
+        return;
+    }
+    
+    // Desabilitar botão durante salvamento
+    const $updateBtn = $('#updateSiteBtn');
+    $updateBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Salvando...');
+    
+    $.ajax({
+        url: `/config/sites?id=${currentEditingSite.id}`,
+        method: 'PUT',
+        data: JSON.stringify(formData),
+        contentType: 'application/json',
+        headers: {
+            'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+        }
+    })
+    .done(function(response) {
+        if (response.success) {
+            $('#editSiteModal').modal('hide');
+            loadSites();
+            showAlert('Local atualizado com sucesso!', 'success');
+        } else {
+            showAlert(response.message || 'Erro ao atualizar local', 'error');
+        }
+    })
+    .fail(function(xhr) {
+        const message = xhr.responseJSON?.message || 'Erro ao atualizar local';
+        showAlert(message, 'error');
+    })
+    .always(function() {
+        $updateBtn.prop('disabled', false).html('<i class="fas fa-save"></i> Salvar Alterações');
+        currentEditingSite = null;
+    });
+}
+
+function viewSite(siteId) {
+    // Carregar detalhes do site com setores
+    Promise.all([
+        $.get('/config/sites'),
+        $.get(`/config/sectors?site_id=${siteId}`)
+    ])
+    .then(function([sitesResponse, sectorsResponse]) {
+        if (sitesResponse.success && sectorsResponse.success) {
+            const site = sitesResponse.data.find(s => s.id == siteId);
+            const sectors = sectorsResponse.data;
+            
+            if (site) {
+                showSiteDetailsModal(site, sectors);
+            }
+        }
+    })
+    .catch(function() {
+        showAlert('Erro ao carregar detalhes do local', 'error');
+    });
+}
+
+function showSiteDetailsModal(site, sectors) {
+    // Preencher informações do site
+    $('#siteDetailName').text(site.name);
+    $('#siteDetailCapacity').text(site.total_capacity || 0);
+    $('#siteDetailAddress').text(site.address || 'Não informado');
+    $('#siteDetailTimezone').text(site.timezone || 'America/Sao_Paulo');
+    
+    // Renderizar setores
+    let sectorsHtml = '';
+    if (sectors.length === 0) {
+        sectorsHtml = '<div class="text-muted">Nenhum setor cadastrado ainda.</div>';
+    } else {
+        sectors.forEach(function(sector) {
+            sectorsHtml += `
+                <div class="sector-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>${sector.name}</strong>
+                        ${sector.capacity ? `<span class="text-muted ml-2">(${sector.capacity} pessoas)</span>` : ''}
+                    </div>
+                    <div>
+                        <button class="btn btn-sm btn-outline-primary mr-1" onclick="editSector(${sector.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteSector(${sector.id}, '${sector.name}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+    }
+    $('#siteDetailsSectors').html(sectorsHtml);
+    
+    // Configurar botão para adicionar setor
+    $('#addSectorBtn').attr('onclick', `showAddSectorModal(${site.id})`);
+    
+    $('#siteDetailsModal').modal('show');
+}
+
+function deleteSite(siteId, siteName) {
+    if (confirm(`Tem certeza que deseja excluir o local "${siteName}"?\n\nEsta ação também excluirá todos os setores relacionados e não pode ser desfeita.`)) {
+        $.ajax({
+            url: `/config/sites?id=${siteId}`,
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+            }
+        })
+        .done(function(response) {
+            if (response.success) {
+                loadSites();
+                showAlert('Local excluído com sucesso!', 'success');
+            } else {
+                showAlert(response.message || 'Erro ao excluir local', 'error');
+            }
+        })
+        .fail(function(xhr) {
+            const message = xhr.responseJSON?.message || 'Erro ao excluir local';
+            showAlert(message, 'error');
+        });
+    }
+}
+
+// ========== SETORES ==========
+let currentSiteForSector = null;
+let currentEditingSector = null;
+
+function showAddSectorModal(siteId) {
+    currentSiteForSector = siteId;
+    $('#addSectorForm')[0].reset();
+    $('#addSectorModal').modal('show');
+}
+
+function saveSector() {
+    if (!currentSiteForSector) return;
+    
+    const formData = {
+        site_id: currentSiteForSector,
+        name: $('#sectorName').val().trim(),
+        capacity: parseInt($('#sectorCapacity').val()) || 0
+    };
+    
+    // Validação
+    if (!formData.name) {
+        showAlert('Nome do setor é obrigatório', 'warning');
+        return;
+    }
+    
+    // Desabilitar botão durante salvamento
+    const $saveBtn = $('#saveSectorBtn');
+    $saveBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Salvando...');
+    
+    $.ajax({
+        url: '/config/sectors',
+        method: 'POST',
+        data: JSON.stringify(formData),
+        contentType: 'application/json',
+        headers: {
+            'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+        }
+    })
+    .done(function(response) {
+        if (response.success) {
+            $('#addSectorModal').modal('hide');
+            // Recarregar detalhes do site se estiver aberto
+            if ($('#siteDetailsModal').hasClass('show')) {
+                viewSite(currentSiteForSector);
+            } else {
+                loadSites(); // Atualizar contagem de setores
+            }
+            showAlert('Setor criado com sucesso!', 'success');
+        } else {
+            showAlert(response.message || 'Erro ao criar setor', 'error');
+        }
+    })
+    .fail(function(xhr) {
+        const message = xhr.responseJSON?.message || 'Erro ao criar setor';
+        showAlert(message, 'error');
+    })
+    .always(function() {
+        $saveBtn.prop('disabled', false).html('<i class="fas fa-save"></i> Salvar');
+        currentSiteForSector = null;
+    });
+}
+
+function editSector(sectorId) {
+    // Buscar dados do setor
+    // Como não temos endpoint específico para um setor, vamos pegar de todos os setores
+    const siteId = currentSiteForSector; // Preciso pegar o site atual
+    
+    $.get(`/config/sectors?site_id=${siteId}`)
+        .done(function(response) {
+            if (response.success) {
+                const sector = response.data.find(s => s.id == sectorId);
+                if (sector) {
+                    currentEditingSector = sector;
+                    
+                    // Preencher modal de edição  
+                    $('#editSectorName').val(sector.name);
+                    $('#editSectorCapacity').val(sector.capacity || 0);
+                    
+                    $('#editSectorModal').modal('show');
+                }
+            }
+        })
+        .fail(function() {
+            showAlert('Erro ao carregar dados do setor', 'error');
+        });
+}
+
+function updateSector() {
+    if (!currentEditingSector) return;
+    
+    const formData = {
+        name: $('#editSectorName').val().trim(),
+        capacity: parseInt($('#editSectorCapacity').val()) || 0
+    };
+    
+    // Validação
+    if (!formData.name) {
+        showAlert('Nome do setor é obrigatório', 'warning');
+        return;
+    }
+    
+    // Desabilitar botão durante salvamento
+    const $updateBtn = $('#updateSectorBtn');
+    $updateBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Salvando...');
+    
+    $.ajax({
+        url: `/config/sectors?id=${currentEditingSector.id}`,
+        method: 'PUT',
+        data: JSON.stringify(formData),
+        contentType: 'application/json',
+        headers: {
+            'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+        }
+    })
+    .done(function(response) {
+        if (response.success) {
+            $('#editSectorModal').modal('hide');
+            // Recarregar vista do site
+            viewSite(currentEditingSector.site_id);
+            showAlert('Setor atualizado com sucesso!', 'success');
+        } else {
+            showAlert(response.message || 'Erro ao atualizar setor', 'error');
+        }
+    })
+    .fail(function(xhr) {
+        const message = xhr.responseJSON?.message || 'Erro ao atualizar setor';
+        showAlert(message, 'error');
+    })
+    .always(function() {
+        $updateBtn.prop('disabled', false).html('<i class="fas fa-save"></i> Salvar Alterações');
+        currentEditingSector = null;
+    });
+}
+
+function deleteSector(sectorId, sectorName) {
+    if (confirm(`Tem certeza que deseja excluir o setor "${sectorName}"?\n\nEsta ação não pode ser desfeita.`)) {
+        $.ajax({
+            url: `/config/sectors?id=${sectorId}`,
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+            }
+        })
+        .done(function(response) {
+            if (response.success) {
+                // Recarregar vista do site se estiver aberta
+                if ($('#siteDetailsModal').hasClass('show') && currentSiteForSector) {
+                    viewSite(currentSiteForSector);
+                } else {
+                    loadSites(); // Atualizar contagem de setores
+                }
+                showAlert('Setor excluído com sucesso!', 'success');
+            } else {
+                showAlert(response.message || 'Erro ao excluir setor', 'error');
+            }
+        })
+        .fail(function(xhr) {
+            const message = xhr.responseJSON?.message || 'Erro ao excluir setor';
+            showAlert(message, 'error');
+        });
+    }
 }
 
 // ========== RBAC ==========

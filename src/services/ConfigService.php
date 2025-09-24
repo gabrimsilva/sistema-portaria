@@ -202,6 +202,38 @@ class ConfigService {
         return true;
     }
     
+    /**
+     * Deletar site (soft delete)
+     */
+    public function deleteSite($siteId) {
+        $current = $this->db->fetch("SELECT * FROM sites WHERE id = ?", [$siteId]);
+        if (!$current) {
+            throw new Exception('Site não encontrado');
+        }
+        
+        // Soft delete - marcar como inativo
+        $this->db->query(
+            "UPDATE sites SET active = FALSE, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+            [$siteId]
+        );
+        
+        // Também desativar setores do site
+        $this->db->query(
+            "UPDATE sectors SET active = FALSE, updated_at = CURRENT_TIMESTAMP WHERE site_id = ?",
+            [$siteId]
+        );
+        
+        $this->auditService->log(
+            'delete',
+            'sites',
+            $siteId,
+            $current,
+            ['active' => false]
+        );
+        
+        return true;
+    }
+    
     // ========== SETORES ==========
     
     /**
@@ -254,6 +286,67 @@ class ConfigService {
         );
         
         return $sectorId;
+    }
+    
+    /**
+     * Atualizar setor
+     */
+    public function updateSector($sectorId, $data) {
+        $current = $this->db->fetch("SELECT * FROM sectors WHERE id = ?", [$sectorId]);
+        if (!$current) {
+            throw new Exception('Setor não encontrado');
+        }
+        
+        if (isset($data['capacity']) && $data['capacity'] < 0) {
+            throw new Exception('Capacidade deve ser maior ou igual a zero');
+        }
+        
+        $this->db->query(
+            "UPDATE sectors SET name = ?, capacity = ?, active = ?, updated_at = CURRENT_TIMESTAMP 
+             WHERE id = ?",
+            [
+                $data['name'] ?? $current['name'],
+                $data['capacity'] ?? $current['capacity'],
+                $data['active'] ?? $current['active'],
+                $sectorId
+            ]
+        );
+        
+        $this->auditService->log(
+            'update',
+            'sectors',
+            $sectorId,
+            $current,
+            array_merge($current, $data)
+        );
+        
+        return true;
+    }
+    
+    /**
+     * Deletar setor (soft delete)
+     */
+    public function deleteSector($sectorId) {
+        $current = $this->db->fetch("SELECT * FROM sectors WHERE id = ?", [$sectorId]);
+        if (!$current) {
+            throw new Exception('Setor não encontrado');
+        }
+        
+        // Soft delete - marcar como inativo
+        $this->db->query(
+            "UPDATE sectors SET active = FALSE, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+            [$sectorId]
+        );
+        
+        $this->auditService->log(
+            'delete',
+            'sectors',
+            $sectorId,
+            $current,
+            ['active' => false]
+        );
+        
+        return true;
     }
     
     // ========== RBAC ==========

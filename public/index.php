@@ -294,6 +294,8 @@ try {
                         $controller->createSite();
                     } elseif ($_SERVER['REQUEST_METHOD'] === 'PUT') {
                         $controller->updateSite();
+                    } elseif ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
+                        $controller->deleteSite();
                     }
                     break;
                 case 'sectors':
@@ -301,6 +303,10 @@ try {
                         $controller->getSectorsBySite();
                     } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $controller->createSector();
+                    } elseif ($_SERVER['REQUEST_METHOD'] === 'PUT') {
+                        $controller->updateSector();
+                    } elseif ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
+                        $controller->deleteSector();
                     }
                     break;
                 case 'rbac-matrix':

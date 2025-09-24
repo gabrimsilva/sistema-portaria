@@ -233,6 +233,7 @@
                                                     <th>CPF</th>
                                                     <th>Empresa</th>
                                                     <th>Setor</th>
+                                                    <th>Responsável</th>
                                                     <th>Placa</th>
                                                     <th>Hora de Entrada</th>
                                                     <th width="100">Ações</th>
@@ -266,6 +267,14 @@
                                                     <td><?= !empty($pessoa['cpf']) ? htmlspecialchars($pessoa['cpf']) : '-' ?></td>
                                                     <td><?= !empty($pessoa['empresa']) ? htmlspecialchars($pessoa['empresa']) : '-' ?></td>
                                                     <td><?= !empty($pessoa['setor']) ? htmlspecialchars($pessoa['setor']) : '-' ?></td>
+                                                    <td>
+                                                        <?php if ($pessoa['tipo'] === 'Visitante' && !empty($pessoa['funcionario_responsavel'])): ?>
+                                                            <i class="fas fa-user-tie text-primary mr-1"></i>
+                                                            <?= htmlspecialchars($pessoa['funcionario_responsavel']) ?>
+                                                        <?php else: ?>
+                                                            -
+                                                        <?php endif; ?>
+                                                    </td>
                                                     <td>
                                                         <?php if (!empty($pessoa['placa_veiculo'])): ?>
                                                             <i class="fas fa-car text-muted mr-1"></i>

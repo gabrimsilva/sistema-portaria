@@ -425,6 +425,35 @@ class VisitantesNovoController {
                     echo json_encode(['success' => false, 'message' => 'Nome é obrigatório']);
                     return;
                 }
+                if (empty($setor)) {
+                    echo json_encode(['success' => false, 'message' => 'Setor é obrigatório']);
+                    return;
+                }
+                if (empty($cpf)) {
+                    echo json_encode(['success' => false, 'message' => 'CPF é obrigatório']);
+                    return;
+                }
+                if (empty($placa_veiculo)) {
+                    echo json_encode(['success' => false, 'message' => 'Placa de veículo é obrigatória']);
+                    return;
+                }
+                
+                // Validar CPF
+                $cpfValidation = CpfValidator::validateAndNormalize($cpf);
+                if (!$cpfValidation['isValid']) {
+                    echo json_encode(['success' => false, 'message' => $cpfValidation['message']]);
+                    return;
+                }
+                $cpf = $cpfValidation['normalized'];
+                
+                // Validar placa se não for "APE" (a pé)
+                if (!empty($placa_veiculo) && $placa_veiculo !== 'APE') {
+                    $placaValidation = $this->duplicityService->validatePlacaNotOpen($placa_veiculo, null, 'visitantes_novo');
+                    if (!$placaValidation['isValid']) {
+                        echo json_encode(['success' => false, 'message' => $placaValidation['message']]);
+                        return;
+                    }
+                }
                 
                 // Usar hora especificada ou hora atual se não fornecida
                 if (!empty($hora_entrada_input)) {

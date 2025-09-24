@@ -102,19 +102,6 @@
             
             <section class="content">
                 <div class="container-fluid">
-                    <?php if (isset($_GET['success'])): ?>
-                        <div class="alert alert-success alert-dismissible">
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            Prestador de serviço cadastrado com sucesso!
-                        </div>
-                    <?php endif; ?>
-                    
-                    <?php if (isset($_GET['updated'])): ?>
-                        <div class="alert alert-info alert-dismissible">
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            Prestador de serviço atualizado com sucesso!
-                        </div>
-                    <?php endif; ?>
                     
                     <div class="card">
                         <div class="card-header">
@@ -214,52 +201,55 @@
                                 
                                 <!-- Paginação -->
                                 <?php if ($pagination['total'] > 1): ?>
-                                <nav aria-label="Paginação">
-                                    <ul class="pagination justify-content-center">
-                                        <!-- Primeira página -->
-                                        <?php if ($pagination['current'] > 1): ?>
-                                        <li class="page-item">
-                                            <a class="page-link" href="?<?= http_build_query(array_merge($_GET, ['page' => 1])) ?>">
-                                                <i class="fas fa-angle-double-left"></i>
-                                            </a>
-                                        </li>
-                                        <li class="page-item">
-                                            <a class="page-link" href="?<?= http_build_query(array_merge($_GET, ['page' => $pagination['current'] - 1])) ?>">
-                                                <i class="fas fa-angle-left"></i>
-                                            </a>
-                                        </li>
-                                        <?php endif; ?>
-                                        
-                                        <!-- Páginas -->
-                                        <?php 
-                                        $start = max(1, $pagination['current'] - 2);
-                                        $end = min($pagination['total'], $pagination['current'] + 2);
-                                        for ($i = $start; $i <= $end; $i++): 
-                                        ?>
-                                        <li class="page-item <?= $i === $pagination['current'] ? 'active' : '' ?>">
-                                            <a class="page-link" href="?<?= http_build_query(array_merge($_GET, ['page' => $i])) ?>"><?= $i ?></a>
-                                        </li>
-                                        <?php endfor; ?>
-                                        
-                                        <!-- Última página -->
-                                        <?php if ($pagination['current'] < $pagination['total']): ?>
-                                        <li class="page-item">
-                                            <a class="page-link" href="?<?= http_build_query(array_merge($_GET, ['page' => $pagination['current'] + 1])) ?>">
-                                                <i class="fas fa-angle-right"></i>
-                                            </a>
-                                        </li>
-                                        <li class="page-item">
-                                            <a class="page-link" href="?<?= http_build_query(array_merge($_GET, ['page' => $pagination['total']])) ?>">
-                                                <i class="fas fa-angle-double-right"></i>
-                                            </a>
-                                        </li>
-                                        <?php endif; ?>
-                                    </ul>
-                                </nav>
-                                
-                                <div class="text-center text-muted">
-                                    Exibindo <?= count($prestadores) ?> de <?= $pagination['totalItems'] ?> registros 
-                                    (Página <?= $pagination['current'] ?> de <?= $pagination['total'] ?>)
+                                <div class="d-flex justify-content-between align-items-center mt-3">
+                                    <div class="text-muted">
+                                        Exibindo <?= count($prestadores) ?> de <?= $pagination['totalItems'] ?> registros
+                                    </div>
+                                    <nav aria-label="Navegação de páginas">
+                                        <ul class="pagination pagination-sm mb-0">
+                                            <!-- Primeira página -->
+                                            <?php if ($pagination['current'] > 1): ?>
+                                            <li class="page-item">
+                                                <a class="page-link" href="?<?= http_build_query(array_merge(array_filter($_GET), ['page' => 1])) ?>" title="Primeira página">
+                                                    <i class="fas fa-angle-double-left"></i>
+                                                </a>
+                                            </li>
+                                            <li class="page-item">
+                                                <a class="page-link" href="?<?= http_build_query(array_merge(array_filter($_GET), ['page' => $pagination['current'] - 1])) ?>" title="Página anterior">
+                                                    <i class="fas fa-angle-left"></i>
+                                                </a>
+                                            </li>
+                                            <?php endif; ?>
+                                            
+                                            <!-- Páginas -->
+                                            <?php 
+                                            $start = max(1, $pagination['current'] - 2);
+                                            $end = min($pagination['total'], $pagination['current'] + 2);
+                                            for ($i = $start; $i <= $end; $i++): 
+                                            ?>
+                                            <li class="page-item <?= $i === $pagination['current'] ? 'active' : '' ?>">
+                                                <a class="page-link" href="?<?= http_build_query(array_merge(array_filter($_GET), ['page' => $i])) ?>"><?= $i ?></a>
+                                            </li>
+                                            <?php endfor; ?>
+                                            
+                                            <!-- Última página -->
+                                            <?php if ($pagination['current'] < $pagination['total']): ?>
+                                            <li class="page-item">
+                                                <a class="page-link" href="?<?= http_build_query(array_merge(array_filter($_GET), ['page' => $pagination['current'] + 1])) ?>" title="Próxima página">
+                                                    <i class="fas fa-angle-right"></i>
+                                                </a>
+                                            </li>
+                                            <li class="page-item">
+                                                <a class="page-link" href="?<?= http_build_query(array_merge(array_filter($_GET), ['page' => $pagination['total']])) ?>" title="Última página">
+                                                    <i class="fas fa-angle-double-right"></i>
+                                                </a>
+                                            </li>
+                                            <?php endif; ?>
+                                        </ul>
+                                    </nav>
+                                    <div class="text-muted">
+                                        Página <?= $pagination['current'] ?> de <?= $pagination['total'] ?>
+                                    </div>
                                 </div>
                                 <?php endif; ?>
                             </div>
@@ -275,8 +265,11 @@
     
     <script>
     $(document).ready(function() {
-        // Limpeza ao desmontar a página
-        $(window).on('beforeunload', function() {
+        // Inicialização de controles para relatórios read-only
+        const REPORT_NS = 'prestadores-report';
+        
+        // Limpeza completa de estado ao navegar para outra seção
+        function cleanupReportState() {
             // Cancelar requests AJAX pendentes
             if (window.activeRequests) {
                 window.activeRequests.forEach(function(xhr) {
@@ -287,23 +280,82 @@
                 window.activeRequests = [];
             }
             
-            // Limpar timers
+            // Limpar timers de relatórios
             if (window.reportTimers) {
                 window.reportTimers.forEach(clearTimeout);
                 window.reportTimers = [];
             }
             
-            // Limpar event listeners específicos
-            $(document).off('.prestadores-report');
+            // Limpar event listeners específicos desta seção
+            $(document).off('.' + REPORT_NS);
             
-            // Remover loading states
+            // Remover estados de loading
             $('.loading').removeClass('loading');
+            $('button:disabled').prop('disabled', false);
+            
+            // Limpar storage temporário de filtros (se houver)
+            try {
+                sessionStorage.removeItem('prestadores-report-filters');
+                sessionStorage.removeItem('prestadores-last-query');
+            } catch(e) {}
+        }
+        
+        // Limpeza ao desmontar a página
+        $(window).on('beforeunload.' + REPORT_NS, cleanupReportState);
+        
+        // Limpeza ao detectar navegação para outra seção de relatórios
+        $(document).on('click.' + REPORT_NS, 'a[href*="/reports/"]', function(e) {
+            if (!$(this).attr('href').includes('/prestadores-servico')) {
+                cleanupReportState();
+            }
         });
         
-        // Namespace para eventos desta tela
-        $('#report-filters').on('submit.prestadores-report', function() {
-            $(this).find('button[type="submit"]').addClass('loading').prop('disabled', true);
+        // Gestão de formulário de filtros
+        $('#report-filters').on('submit.' + REPORT_NS, function(e) {
+            const $form = $(this);
+            const $btn = $form.find('button[type="submit"]');
+            
+            // Evitar submissão dupla
+            if ($btn.hasClass('loading')) {
+                e.preventDefault();
+                return false;
+            }
+            
+            $btn.addClass('loading').prop('disabled', true);
+            
+            // Auto-restaurar após timeout caso haja problema
+            setTimeout(function() {
+                $btn.removeClass('loading').prop('disabled', false);
+            }, 10000);
         });
+        
+        // Controle de paginação
+        $('.pagination a').on('click.' + REPORT_NS, function(e) {
+            const $link = $(this);
+            if ($link.hasClass('loading')) {
+                e.preventDefault();
+                return false;
+            }
+            $link.addClass('loading');
+        });
+        
+        // Preservar filtros na URL limpa (sem parâmetros vazios)
+        if (window.location.search) {
+            const url = new URL(window.location);
+            let hasChanges = false;
+            
+            // Remover parâmetros vazios da URL
+            for (const [key, value] of url.searchParams.entries()) {
+                if (!value || value === 'todos' || value === '') {
+                    url.searchParams.delete(key);
+                    hasChanges = true;
+                }
+            }
+            
+            if (hasChanges) {
+                history.replaceState({}, '', url.toString());
+            }
+        }
     });
     </script>
 </body>

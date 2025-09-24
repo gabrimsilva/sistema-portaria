@@ -469,6 +469,7 @@ class PrestadoresServicoController {
                         'cpf' => $cpf,
                         'empresa' => $empresa,
                         'setor' => $setor,
+                        'funcionario_responsavel' => $funcionario_responsavel,
                         'placa_veiculo' => $placa_veiculo,
                         'hora_entrada' => $entrada
                     ]

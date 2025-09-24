@@ -792,6 +792,7 @@
                                 <th>CPF</th>
                                 <th>Empresa</th>
                                 <th>Setor</th>
+                                <th>Responsável</th>
                                 <th>Placa</th>
                                 <th>Hora de Entrada</th>
                                 <th width="100">Ações</th>
@@ -824,6 +825,7 @@
                     <td>${data.cpf || '-'}</td>
                     <td>${data.empresa || '-'}</td>
                     <td>${data.setor || '-'}</td>
+                    <td>${data.funcionario_responsavel || '-'}</td>
                     <td>${data.placa_veiculo || '-'}</td>
                     <td><i class="fas fa-clock text-muted"></i> ${dataFormatada}</td>
                     <td>

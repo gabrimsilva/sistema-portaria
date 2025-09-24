@@ -411,12 +411,12 @@ class PrestadoresServicoController {
                 }
                 
                 // Validar CPF
-                $cpfValidator = new CpfValidator();
-                if (!$cpfValidator->isValid($cpf)) {
-                    echo json_encode(['success' => false, 'message' => 'CPF inválido']);
+                $cpfValidation = CpfValidator::validateAndNormalize($cpf);
+                if (!$cpfValidation['isValid']) {
+                    echo json_encode(['success' => false, 'message' => $cpfValidation['message']]);
                     return;
                 }
-                $cpf = $cpfValidator->normalize($cpf);
+                $cpf = $cpfValidation['normalized'];
                 
                 // Usar hora especificada ou hora atual se não fornecida
                 if (!empty($entrada_input)) {
@@ -526,12 +526,12 @@ class PrestadoresServicoController {
                 }
                 
                 // Validar e normalizar CPF
-                $cpfValidator = new CpfValidator();
-                if (!$cpfValidator->isValid($cpf)) {
-                    echo json_encode(['success' => false, 'message' => 'CPF inválido']);
+                $cpfValidation = CpfValidator::validateAndNormalize($cpf);
+                if (!$cpfValidation['isValid']) {
+                    echo json_encode(['success' => false, 'message' => $cpfValidation['message']]);
                     return;
                 }
-                $cpf = $cpfValidator->normalize($cpf);
+                $cpf = $cpfValidation['normalized'];
                 
                 // Normalizar placa de veículo
                 $placa_veiculo = strtoupper(preg_replace('/[^A-Z0-9]/', '', $placa_veiculo));

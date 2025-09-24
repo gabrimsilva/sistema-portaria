@@ -380,6 +380,7 @@ class PrestadoresServicoController {
                 $nome = trim($_POST['nome'] ?? '');
                 $cpf = trim($_POST['cpf'] ?? '');
                 $empresa = trim($_POST['empresa'] ?? '');
+                $funcionario_responsavel = trim($_POST['funcionario_responsavel'] ?? '');
                 $setor = trim($_POST['setor'] ?? '');
                 $observacao = trim($_POST['observacao'] ?? '');
                 $placa_veiculo = trim($_POST['placa_veiculo'] ?? '');
@@ -502,6 +503,7 @@ class PrestadoresServicoController {
                 $nome = trim($_POST['nome'] ?? '');
                 $cpf = trim($_POST['cpf'] ?? '');
                 $empresa = trim($_POST['empresa'] ?? '');
+                $funcionario_responsavel = trim($_POST['funcionario_responsavel'] ?? '');
                 $setor = trim($_POST['setor'] ?? '');
                 $observacao = trim($_POST['observacao'] ?? '');
                 $placa_veiculo = trim($_POST['placa_veiculo'] ?? '');

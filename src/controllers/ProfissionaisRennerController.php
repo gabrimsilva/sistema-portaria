@@ -379,32 +379,9 @@ class ProfissionaisRennerController {
             header('Content-Type: application/json');
             
             try {
-                // Debug: verificar dados da sessão
-                $sessionStatus = [
-                    'session_id' => session_id(),
-                    'user_id' => $_SESSION['user_id'] ?? 'NOT_SET',
-                    'user_name' => $_SESSION['user_name'] ?? 'NOT_SET',
-                    'csrf_token_session' => $_SESSION['csrf_token'] ?? 'NOT_SET',
-                    'csrf_token_post' => $_POST['csrf_token'] ?? 'NOT_SET'
-                ];
-                
-                // Se não tem usuário na sessão, retornar erro
-                if (!isset($_SESSION['user_id'])) {
-                    echo json_encode([
-                        'success' => false, 
-                        'message' => 'Sessão expirada. Faça login novamente.',
-                        'debug' => $sessionStatus
-                    ]);
-                    exit;
-                }
-                
                 // Verificação CSRF manual para retorno JSON adequado
                 if (!isset($_POST['csrf_token']) || !CSRFProtection::validateToken($_POST['csrf_token'])) {
-                    echo json_encode([
-                        'success' => false, 
-                        'message' => 'Token CSRF inválido',
-                        'debug' => $sessionStatus
-                    ]);
+                    echo json_encode(['success' => false, 'message' => 'Token CSRF inválido']);
                     exit;
                 }
                 

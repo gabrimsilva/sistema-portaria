@@ -74,15 +74,39 @@ try {
             break;
             
         case 'profissionais-renner':
-            // Página antiga removida - redirecionamento para relatório
-            header('Location: /reports/profissionais-renner');
-            exit;
+            require_once '../src/controllers/ProfissionaisRennerController.php';
+            $controller = new ProfissionaisRennerController();
+            $action = $_GET['action'] ?? 'index';
+            switch ($action) {
+                case 'save_ajax':
+                    $controller->saveAjax();
+                    break;
+                case 'update_ajax':
+                    $controller->updateAjax();
+                    break;
+                default:
+                    // Outras ações redirecionam para relatório
+                    header('Location: /reports/profissionais-renner');
+                    exit;
+            }
             break;
             
         case 'visitantes':
-            // Página antiga removida - redirecionamento para relatório
-            header('Location: /reports/visitantes');
-            exit;
+            require_once '../src/controllers/VisitantesNovoController.php';
+            $controller = new VisitantesNovoController();
+            $action = $_GET['action'] ?? 'index';
+            switch ($action) {
+                case 'save_ajax':
+                    $controller->saveAjax();
+                    break;
+                case 'update_ajax':
+                    $controller->updateAjax();
+                    break;
+                default:
+                    // Outras ações redirecionam para relatório
+                    header('Location: /reports/visitantes');
+                    exit;
+            }
             break;
             
         case 'prestadores-servico':

@@ -238,9 +238,9 @@ class DashboardController {
             
             // Profissionais que estão na empresa (têm data_entrada ou retorno, mas não saída_final)
             $profissionaisAtivos = $this->db->fetchAll("
-                SELECT nome, '' as cpf, '' as empresa, setor, 
+                SELECT nome, cpf, empresa, setor, 
                        COALESCE(retorno, data_entrada) as hora_entrada, 
-                       'Profissional Renner' as tipo, id, '' as placa_veiculo
+                       'Profissional Renner' as tipo, id, placa_veiculo
                 FROM profissionais_renner 
                 WHERE (data_entrada IS NOT NULL OR retorno IS NOT NULL) 
                   AND saida_final IS NULL

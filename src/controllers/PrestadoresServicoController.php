@@ -38,6 +38,18 @@ class PrestadoresServicoController {
     }
     
     public function index() {
+        // Detectar se estamos em contexto de relatórios
+        $isReport = strpos($_SERVER['REQUEST_URI'], '/reports/') !== false;
+        
+        if ($isReport) {
+            $this->handleReportsIndex();
+        } else {
+            $this->handleRegularIndex();
+        }
+    }
+    
+    private function handleRegularIndex() {
+        // Código atual da listagem regular
         $search = $_GET['search'] ?? '';
         $setor = $_GET['setor'] ?? '';
         $empresa = $_GET['empresa'] ?? '';
@@ -71,6 +83,129 @@ class PrestadoresServicoController {
         $empresas = $this->db->fetchAll("SELECT DISTINCT empresa FROM prestadores_servico WHERE empresa IS NOT NULL ORDER BY empresa");
         
         include $this->getViewPath('list.php');
+    }
+    
+    private function handleReportsIndex() {
+        // Configurar timezone
+        date_default_timezone_set('America/Sao_Paulo');
+        
+        // Parâmetros de filtro
+        $data = $_GET['data'] ?? date('Y-m-d'); // Padrão: hoje
+        $setor = $_GET['setor'] ?? '';
+        $status = $_GET['status'] ?? 'todos'; // todos|aberto|finalizado
+        $empresa = $_GET['empresa'] ?? '';
+        $responsavel = $_GET['responsavel'] ?? '';
+        $page = max(1, intval($_GET['page'] ?? 1));
+        $pageSize = 20;
+        $offset = ($page - 1) * $pageSize;
+        
+        // Query base para relatórios
+        $query = "
+            SELECT 
+                id,
+                nome,
+                setor,
+                CASE 
+                    WHEN placa_veiculo IS NULL OR placa_veiculo = '' OR placa_veiculo = 'APE' THEN 'A pé'
+                    ELSE UPPER(placa_veiculo)
+                END as placa_ou_ape,
+                empresa,
+                funcionario_responsavel,
+                cpf,
+                entrada as entrada_at
+            FROM prestadores_servico 
+            WHERE entrada IS NOT NULL";
+        
+        $countQuery = "SELECT COUNT(*) as total FROM prestadores_servico WHERE entrada IS NOT NULL";
+        $params = [];
+        $countParams = [];
+        
+        // Filtro por data
+        if (!empty($data)) {
+            $query .= " AND DATE(entrada) = ?";
+            $countQuery .= " AND DATE(entrada) = ?";
+            $params[] = $data;
+            $countParams[] = $data;
+        }
+        
+        // Filtro por setor
+        if (!empty($setor)) {
+            $query .= " AND setor = ?";
+            $countQuery .= " AND setor = ?";
+            $params[] = $setor;
+            $countParams[] = $setor;
+        }
+        
+        // Filtro por status
+        if ($status === 'aberto') {
+            $query .= " AND saida IS NULL";
+            $countQuery .= " AND saida IS NULL";
+        } elseif ($status === 'finalizado') {
+            $query .= " AND saida IS NOT NULL";
+            $countQuery .= " AND saida IS NOT NULL";
+        }
+        
+        // Filtro por empresa
+        if (!empty($empresa)) {
+            $query .= " AND empresa ILIKE ?";
+            $countQuery .= " AND empresa ILIKE ?";
+            $params[] = "%$empresa%";
+            $countParams[] = "%$empresa%";
+        }
+        
+        // Filtro por responsável
+        if (!empty($responsavel)) {
+            $query .= " AND funcionario_responsavel ILIKE ?";
+            $countQuery .= " AND funcionario_responsavel ILIKE ?";
+            $params[] = "%$responsavel%";
+            $countParams[] = "%$responsavel%";
+        }
+        
+        // Ordenação e paginação
+        $query .= " ORDER BY entrada DESC LIMIT ? OFFSET ?";
+        $params[] = $pageSize;
+        $params[] = $offset;
+        
+        // Executar consultas
+        $prestadores = $this->db->fetchAll($query, $params);
+        $totalResult = $this->db->fetch($countQuery, $countParams);
+        $total = $totalResult['total'];
+        
+        // Mascarar CPFs se necessário
+        $canViewFullCpf = $this->canViewFullCpf();
+        foreach ($prestadores as &$prestador) {
+            if (!$canViewFullCpf) {
+                $prestador['cpf'] = $this->maskCpf($prestador['cpf']);
+            }
+        }
+        
+        // Dados para filtros
+        $setores = $this->db->fetchAll("SELECT DISTINCT setor FROM prestadores_servico WHERE setor IS NOT NULL ORDER BY setor");
+        $empresas = $this->db->fetchAll("SELECT DISTINCT empresa FROM prestadores_servico WHERE empresa IS NOT NULL ORDER BY empresa");
+        $responsaveis = $this->db->fetchAll("SELECT DISTINCT funcionario_responsavel FROM prestadores_servico WHERE funcionario_responsavel IS NOT NULL ORDER BY funcionario_responsavel");
+        
+        // Dados de paginação
+        $totalPages = ceil($total / $pageSize);
+        $pagination = [
+            'current' => $page,
+            'total' => $totalPages,
+            'pageSize' => $pageSize,
+            'totalItems' => $total
+        ];
+        
+        include $this->getViewPath('list.php');
+    }
+    
+    private function canViewFullCpf() {
+        // Implementar RBAC - por enquanto, todos podem ver
+        return true;
+    }
+    
+    private function maskCpf($cpf) {
+        if (empty($cpf)) return '';
+        $cpf = preg_replace('/\D/', '', $cpf);
+        if (strlen($cpf) !== 11) return $cpf;
+        return '***.***.***-' . substr($cpf, -2);
     }
     
     public function create() {

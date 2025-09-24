@@ -119,27 +119,25 @@
                     <div class="card">
                         <div class="card-header">
                             <div class="row">
-                                <div class="col-md-6">
-                                    <h3 class="card-title">Lista de Prestadores de Serviço</h3>
-                                </div>
-                                <div class="col-md-6 text-right">
-                                    <a href="/prestadores-servico?action=new" class="btn btn-primary">
-                                        <i class="fas fa-plus"></i> Novo Prestador
-                                    </a>
+                                <div class="col-md-12">
+                                    <h3 class="card-title"><i class="fas fa-chart-line"></i> Relatório - Prestadores de Serviço</h3>
+                                    <p class="text-muted mb-0">Relatório de entradas do dia com filtros avançados</p>
                                 </div>
                             </div>
                         </div>
                         
                         <div class="card-body">
-                            <!-- Filtros -->
-                            <form method="GET" class="mb-3">
+                            <!-- Filtros de Relatório -->
+                            <form method="GET" class="mb-3" id="report-filters">
                                 <div class="row">
-                                    <div class="col-md-3">
-                                        <input type="text" name="search" class="form-control" placeholder="Buscar por nome, CPF ou empresa" value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
+                                    <div class="col-md-2">
+                                        <label class="form-label">Data</label>
+                                        <input type="date" name="data" class="form-control" value="<?= htmlspecialchars($_GET['data'] ?? date('Y-m-d')) ?>">
                                     </div>
                                     <div class="col-md-2">
+                                        <label class="form-label">Setor</label>
                                         <select name="setor" class="form-control">
-                                            <option value="">Todos os setores</option>
+                                            <option value="">Todos</option>
                                             <?php foreach ($setores as $s): ?>
                                                 <option value="<?= htmlspecialchars($s['setor']) ?>" <?= ($_GET['setor'] ?? '') === $s['setor'] ? 'selected' : '' ?>>
                                                     <?= htmlspecialchars($s['setor']) ?>
@@ -148,17 +146,30 @@
                                         </select>
                                     </div>
                                     <div class="col-md-2">
-                                        <select name="empresa" class="form-control">
-                                            <option value="">Todas as empresas</option>
-                                            <?php foreach ($empresas as $e): ?>
-                                                <option value="<?= htmlspecialchars($e['empresa']) ?>" <?= ($_GET['empresa'] ?? '') === $e['empresa'] ? 'selected' : '' ?>>
-                                                    <?= htmlspecialchars($e['empresa']) ?>
+                                        <label class="form-label">Status</label>
+                                        <select name="status" class="form-control">
+                                            <option value="todos" <?= ($_GET['status'] ?? 'todos') === 'todos' ? 'selected' : '' ?>>Todos</option>
+                                            <option value="aberto" <?= ($_GET['status'] ?? '') === 'aberto' ? 'selected' : '' ?>>Em aberto</option>
+                                            <option value="finalizado" <?= ($_GET['status'] ?? '') === 'finalizado' ? 'selected' : '' ?>>Finalizado</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label">Empresa</label>
+                                        <input type="text" name="empresa" class="form-control" placeholder="Nome da empresa" value="<?= htmlspecialchars($_GET['empresa'] ?? '') ?>">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label">Responsável</label>
+                                        <select name="responsavel" class="form-control">
+                                            <option value="">Todos</option>
+                                            <?php foreach ($responsaveis as $r): ?>
+                                                <option value="<?= htmlspecialchars($r['funcionario_responsavel']) ?>" <?= ($_GET['responsavel'] ?? '') === $r['funcionario_responsavel'] ? 'selected' : '' ?>>
+                                                    <?= htmlspecialchars($r['funcionario_responsavel']) ?>
                                                 </option>
                                             <?php endforeach; ?>
                                         </select>
                                     </div>
-                                    <div class="col-md-2">
-                                        <button type="submit" class="btn btn-secondary">
+                                    <div class="col-md-2 d-flex align-items-end">
+                                        <button type="submit" class="btn btn-primary">
                                             <i class="fas fa-search"></i> Filtrar
                                         </button>
                                     </div>
@@ -169,106 +180,88 @@
                                 <table class="table table-bordered table-hover">
                                     <thead class="table-dark">
                                         <tr>
-                                            <th>Nome</th>
-                                            <th>CPF</th>
-                                            <th>Empresa</th>
+                                            <th>Nome Completo</th>
                                             <th>Setor</th>
-                                            <th>Responsável</th>
-                                            <th>Entrada</th>
-                                            <th>Saída</th>
-                                            <th>Status</th>
-                                            <th>Observações</th>
-                                            <th>Ações</th>
+                                            <th>Placa / A pé</th>
+                                            <th>Empresa</th>
+                                            <th>Funcionário Responsável</th>
+                                            <th>CPF</th>
+                                            <th>Data/Hora Entrada</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <?php if (empty($prestadores)): ?>
                                             <tr>
-                                                <td colspan="10" class="text-center">Nenhum prestador encontrado</td>
+                                                <td colspan="7" class="text-center text-muted">
+                                                    <i class="fas fa-info-circle"></i> Nenhum registro encontrado para os filtros selecionados.
+                                                </td>
                                             </tr>
                                         <?php else: ?>
-                                            <?php foreach ($prestadores as $prestador): ?>
+                                            <?php foreach ($prestadores as $p): ?>
                                             <tr>
-                                                <td><?= htmlspecialchars($prestador['nome']) ?></td>
-                                                <td><?= htmlspecialchars($prestador['cpf']) ?></td>
-                                                <td><?= htmlspecialchars($prestador['empresa']) ?></td>
-                                                <td><?= htmlspecialchars($prestador['setor']) ?></td>
-                                                <td><?= htmlspecialchars($prestador['funcionario_responsavel'] ?: '-') ?></td>
-                                                <td><?= $prestador['entrada'] ? date('d/m/Y H:i', strtotime($prestador['entrada'])) : '-' ?></td>
-                                                <td><?= $prestador['saida'] ? date('d/m/Y H:i', strtotime($prestador['saida'])) : '-' ?></td>
-                                                <td>
-                                                    <?php 
-                                                    $status = '';
-                                                    $badgeClass = '';
-                                                    if ($prestador['entrada'] && !$prestador['saida']) {
-                                                        $status = 'Trabalhando';
-                                                        $badgeClass = 'success';
-                                                    } elseif ($prestador['saida']) {
-                                                        $status = 'Finalizado';
-                                                        $badgeClass = 'secondary';
-                                                    } else {
-                                                        $status = 'Aguardando';
-                                                        $badgeClass = 'warning';
-                                                    }
-                                                    ?>
-                                                    <span class="badge badge-<?= $badgeClass ?>"><?= $status ?></span>
-                                                </td>
-                                                <td>
-                                                    <?php if ($prestador['observacao']): ?>
-                                                        <span title="<?= htmlspecialchars($prestador['observacao']) ?>">
-                                                            <?= strlen($prestador['observacao']) > 30 ? substr(htmlspecialchars($prestador['observacao']), 0, 30) . '...' : htmlspecialchars($prestador['observacao']) ?>
-                                                        </span>
-                                                    <?php else: ?>
-                                                        -
-                                                    <?php endif; ?>
-                                                </td>
-                                                <td>
-                                                    <div class="btn-group">
-                                                        <button type="button" 
-                                                            class="btn btn-sm btn-primary btn-editar" 
-                                                            data-id="<?= $prestador['id'] ?>"
-                                                            data-tipo="Prestador"
-                                                            data-nome="<?= htmlspecialchars($prestador['nome']) ?>"
-                                                            data-cpf="<?= htmlspecialchars($prestador['cpf']) ?>"
-                                                            data-empresa="<?= htmlspecialchars($prestador['empresa']) ?>"
-                                                            data-setor="<?= htmlspecialchars($prestador['setor']) ?>"
-                                                            data-funcionario="<?= htmlspecialchars($prestador['funcionario_responsavel'] ?? '') ?>"
-                                                            data-placa_veiculo="<?= htmlspecialchars($prestador['placa_veiculo'] ?? '') ?>"
-                                                            data-toggle="modal" 
-                                                            data-target="#modalEditar">
-                                                            <i class="fas fa-edit"></i>
-                                                        </button>
-                                                        <?php if (!$prestador['entrada']): ?>
-                                                            <form method="POST" action="/prestadores-servico?action=entrada" class="d-inline">
-                                                                <?= CSRFProtection::getHiddenInput() ?>
-                                                                <input type="hidden" name="id" value="<?= $prestador['id'] ?>">
-                                                                <button type="submit" class="btn btn-sm btn-success" title="Registrar Entrada">
-                                                                    <i class="fas fa-sign-in-alt"></i>
-                                                                </button>
-                                                            </form>
-                                                        <?php elseif (!$prestador['saida']): ?>
-                                                            <form method="POST" action="/prestadores-servico?action=saida" class="d-inline">
-                                                                <?= CSRFProtection::getHiddenInput() ?>
-                                                                <input type="hidden" name="id" value="<?= $prestador['id'] ?>">
-                                                                <button type="submit" class="btn btn-sm btn-warning" title="Registrar Saída">
-                                                                    <i class="fas fa-sign-out-alt"></i>
-                                                                </button>
-                                                            </form>
-                                                        <?php endif; ?>
-                                                        <form method="POST" action="/prestadores-servico?action=delete" class="d-inline">
-                                                            <?= CSRFProtection::getHiddenInput() ?>
-                                                            <input type="hidden" name="id" value="<?= $prestador['id'] ?>">
-                                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Tem certeza que deseja excluir?')">
-                                                                <i class="fas fa-trash"></i>
-                                                            </button>
-                                                        </form>
-                                                    </div>
-                                                </td>
+                                                <td><?= htmlspecialchars($p['nome']) ?></td>
+                                                <td><?= htmlspecialchars($p['setor'] ?? '-') ?></td>
+                                                <td><?= htmlspecialchars($p['placa_ou_ape']) ?></td>
+                                                <td><?= htmlspecialchars($p['empresa'] ?? '-') ?></td>
+                                                <td><?= htmlspecialchars($p['funcionario_responsavel'] ?? '-') ?></td>
+                                                <td><?= htmlspecialchars($p['cpf']) ?></td>
+                                                <td><?= $p['entrada_at'] ? date('d/m/Y H:i', strtotime($p['entrada_at'])) : '-' ?></td>
                                             </tr>
                                             <?php endforeach; ?>
                                         <?php endif; ?>
                                     </tbody>
                                 </table>
+                                
+                                <!-- Paginação -->
+                                <?php if ($pagination['total'] > 1): ?>
+                                <nav aria-label="Paginação">
+                                    <ul class="pagination justify-content-center">
+                                        <!-- Primeira página -->
+                                        <?php if ($pagination['current'] > 1): ?>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?<?= http_build_query(array_merge($_GET, ['page' => 1])) ?>">
+                                                <i class="fas fa-angle-double-left"></i>
+                                            </a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?<?= http_build_query(array_merge($_GET, ['page' => $pagination['current'] - 1])) ?>">
+                                                <i class="fas fa-angle-left"></i>
+                                            </a>
+                                        </li>
+                                        <?php endif; ?>
+                                        
+                                        <!-- Páginas -->
+                                        <?php 
+                                        $start = max(1, $pagination['current'] - 2);
+                                        $end = min($pagination['total'], $pagination['current'] + 2);
+                                        for ($i = $start; $i <= $end; $i++): 
+                                        ?>
+                                        <li class="page-item <?= $i === $pagination['current'] ? 'active' : '' ?>">
+                                            <a class="page-link" href="?<?= http_build_query(array_merge($_GET, ['page' => $i])) ?>"><?= $i ?></a>
+                                        </li>
+                                        <?php endfor; ?>
+                                        
+                                        <!-- Última página -->
+                                        <?php if ($pagination['current'] < $pagination['total']): ?>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?<?= http_build_query(array_merge($_GET, ['page' => $pagination['current'] + 1])) ?>">
+                                                <i class="fas fa-angle-right"></i>
+                                            </a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?<?= http_build_query(array_merge($_GET, ['page' => $pagination['total']])) ?>">
+                                                <i class="fas fa-angle-double-right"></i>
+                                            </a>
+                                        </li>
+                                        <?php endif; ?>
+                                    </ul>
+                                </nav>
+                                
+                                <div class="text-center text-muted">
+                                    Exibindo <?= count($prestadores) ?> de <?= $pagination['totalItems'] ?> registros 
+                                    (Página <?= $pagination['current'] ?> de <?= $pagination['total'] ?>)
+                                </div>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
@@ -276,241 +269,40 @@
             </section>
         </div>
     </div>
-    
-    <!-- Modal para Edição de Registros -->
-    <div class="modal fade" id="modalEditar" tabindex="-1" role="dialog" aria-labelledby="modalEditarLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content">
-                <div class="modal-header bg-info">
-                    <h5 class="modal-title text-white" id="modalEditarLabel">
-                        <i class="fas fa-edit"></i> Editar Registro
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="formEditar">
-                        <input type="hidden" name="csrf_token" value="<?= CSRFProtection::generateToken() ?>">
-                        <input type="hidden" id="edit_id" name="id">
-                        <input type="hidden" id="edit_tipo_original" name="tipo_original">
-                        
-                        <div class="form-group">
-                            <label>Tipo de Registro</label>
-                            <div class="alert alert-info">
-                                <i class="fas fa-info-circle"></i> 
-                                <span id="edit_tipo_display"></span>
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-8">
-                                <div class="form-group">
-                                    <label for="edit_nome">Nome Completo *</label>
-                                    <input type="text" class="form-control" id="edit_nome" name="nome" required>
-                                </div>
-                            </div>
-                            <div id="campo_cpf" class="col-md-4">
-                                <div class="form-group">
-                                    <label for="edit_cpf">CPF</label>
-                                    <input type="text" class="form-control" id="edit_cpf" name="cpf" placeholder="000.000.000-00">
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div id="campo_empresa" class="col-md-6">
-                                <div class="form-group">
-                                    <label for="edit_empresa">Empresa</label>
-                                    <input type="text" class="form-control" id="edit_empresa" name="empresa">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="edit_setor">Setor</label>
-                                    <input type="text" class="form-control" id="edit_setor" name="setor">
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Campo Placa de Veículo - visível apenas para Visitantes e Prestadores -->
-                        <div id="campo_placa_veiculo" class="form-group" style="display: none;">
-                            <label for="edit_placa_veiculo">Placa de Veículo</label>
-                            <input type="text" class="form-control" id="edit_placa_veiculo" name="placa_veiculo" placeholder="ABC-1234">
-                        </div>
-                        
-                        <!-- Campos específicos para visitantes -->
-                        <div id="campo_funcionario_responsavel" class="form-group" style="display: none;">
-                            <label for="edit_funcionario_responsavel">Funcionário Responsável</label>
-                            <input type="text" class="form-control" id="edit_funcionario_responsavel" name="funcionario_responsavel">
-                        </div>
-                        
-                        <div id="campo_hora_saida" class="form-group" style="display: none;">
-                            <label for="edit_hora_saida">Hora de Saída</label>
-                            <input type="datetime-local" class="form-control" id="edit_hora_saida" name="hora_saida">
-                            <small class="form-text text-muted">Deixe em branco se a pessoa ainda não saiu da empresa</small>
-                        </div>
-                        
-                        <!-- Campo específico para prestadores -->
-                        <div id="campo_observacao" class="form-group" style="display: none;">
-                            <label for="edit_observacao">Observações</label>
-                            <textarea class="form-control" id="edit_observacao" name="observacao" rows="3"></textarea>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-info" id="btnSalvarEdicao">
-                        <i class="fas fa-save"></i> Salvar Alterações
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
     
     <script>
     $(document).ready(function() {
-        // Manipular clique do botão editar
-        $(document).on('click', '.btn-editar', function(e) {
-            e.preventDefault();
-            const btn = $(this);
-            
-            // Evitar múltiplos cliques
-            if (btn.hasClass('loading')) {
-                return false;
-            }
-            btn.addClass('loading');
-            
-            const id = btn.data('id');
-            const tipo = btn.data('tipo');
-            const nome = btn.data('nome');
-            const cpf = btn.data('cpf');
-            const empresa = btn.data('empresa');
-            const setor = btn.data('setor');
-            const funcionario = btn.data('funcionario');
-            const placa_veiculo = btn.data('placa_veiculo');
-            
-            // Preencher campos básicos
-            $('#edit_id').val(id);
-            $('#edit_tipo_original').val(tipo);
-            $('#edit_tipo_display').text(tipo);
-            $('#edit_nome').val(nome);
-            $('#edit_cpf').val(cpf);
-            $('#edit_empresa').val(empresa);
-            $('#edit_setor').val(setor);
-            $('#edit_placa_veiculo').val(placa_veiculo);
-            
-            // Mostrar/ocultar campos específicos baseado no tipo
-            $('#campo_funcionario_responsavel, #campo_hora_saida, #campo_observacao').hide();
-            
-            // Mostrar campo de hora de saída para todos os tipos
-            $('#campo_hora_saida').show();
-            
-            // Mostrar/ocultar campos específicos para Profissional Renner
-            if (tipo === 'Profissional Renner') {
-                $('#campo_empresa').hide();
-                $('#campo_cpf').hide();
-                $('#campo_placa_veiculo').hide();
-                $('.modal-header').removeClass('bg-info').addClass('bg-primary');
-            } else {
-                $('#campo_empresa').show();
-                $('#campo_cpf').show();
-                $('#campo_placa_veiculo').show();
-                $('.modal-header').removeClass('bg-primary').addClass('bg-info');
-            }
-            
-            if (tipo === 'Visitante' || tipo === 'Prestador') {
-                $('#campo_funcionario_responsavel').show();
-                $('#edit_funcionario_responsavel').val(funcionario || '');
-            }
-            
-            if (tipo === 'Visitante') {
-                // Buscar dados específicos do visitante para preencher hora de saída
-                $.ajax({
-                    url: `/visitantes?action=get_data&id=${id}`,
-                    method: 'GET',
-                    dataType: 'json',
-                    success: function(response) {
-                        if (response.success && response.data.hora_saida) {
-                            const horaSaidaFormatada = response.data.hora_saida.replace(' ', 'T').slice(0, 16);
-                            $('#edit_hora_saida').val(horaSaidaFormatada);
-                        }
-                    },
-                    error: function() {
-                        $('#edit_hora_saida').val('');
+        // Limpeza ao desmontar a página
+        $(window).on('beforeunload', function() {
+            // Cancelar requests AJAX pendentes
+            if (window.activeRequests) {
+                window.activeRequests.forEach(function(xhr) {
+                    if (xhr.readyState !== 4) {
+                        xhr.abort();
                     }
                 });
-            } else if (tipo === 'Prestador') {
-                $('#campo_observacao').show();
-                $('#edit_observacao').val('');
-                
-                $.ajax({
-                    url: `/prestadores-servico?action=get_data&id=${id}`,
-                    method: 'GET',
-                    dataType: 'json',
-                    success: function(response) {
-                        if (response.success && response.data.saida) {
-                            const saidaFormatada = response.data.saida.replace(' ', 'T').slice(0, 16);
-                            $('#edit_hora_saida').val(saidaFormatada);
-                        }
-                        if (response.data.observacao) {
-                            $('#edit_observacao').val(response.data.observacao);
-                        }
-                        if (response.data.funcionario_responsavel) {
-                            $('#edit_funcionario_responsavel').val(response.data.funcionario_responsavel);
-                        }
-                    },
-                    error: function() {
-                        $('#edit_hora_saida').val('');
-                    },
-                    complete: function() {
-                        btn.removeClass('loading');
-                    }
-                });
-            } else {
-                btn.removeClass('loading');
+                window.activeRequests = [];
             }
             
-            // Abrir o modal usando Bootstrap 5
-            const modalElement = document.getElementById('modalEditar');
-            const modal = new bootstrap.Modal(modalElement);
-            modal.show();
+            // Limpar timers
+            if (window.reportTimers) {
+                window.reportTimers.forEach(clearTimeout);
+                window.reportTimers = [];
+            }
+            
+            // Limpar event listeners específicos
+            $(document).off('.prestadores-report');
+            
+            // Remover loading states
+            $('.loading').removeClass('loading');
         });
-
-        // Salvar edições
-        $('#btnSalvarEdicao').click(function() {
-            const formData = new FormData($('#formEditar')[0]);
-            const tipo = $('#edit_tipo_original').val();
-            
-            let url = '';
-            if (tipo === 'Visitante') {
-                url = '/visitantes?action=update_ajax';
-            } else if (tipo === 'Prestador') {
-                url = '/prestadores-servico?action=update_ajax';
-            } else if (tipo === 'Profissional Renner') {
-                url = '/profissionais-renner?action=update_ajax';
-            }
-            
-            $.ajax({
-                url: url,
-                method: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                dataType: 'json',
-                success: function(response) {
-                    if (response.success) {
-                        location.reload();
-                    } else {
-                        alert('Erro: ' + response.message);
-                    }
-                },
-                error: function() {
-                    alert('Erro ao salvar alterações');
-                }
-            });
+        
+        // Namespace para eventos desta tela
+        $('#report-filters').on('submit.prestadores-report', function() {
+            $(this).find('button[type="submit"]').addClass('loading').prop('disabled', true);
         });
     });
     </script>

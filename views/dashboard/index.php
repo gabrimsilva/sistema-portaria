@@ -518,6 +518,10 @@
                             <small class="form-text text-muted">Marque "A pé" se não houver veículo</small>
                         </div>
                         <div class="form-group">
+                            <label for="prestador_funcionario_responsavel">Funcionário Responsável *</label>
+                            <input type="text" class="form-control" id="prestador_funcionario_responsavel" name="funcionario_responsavel" required>
+                        </div>
+                        <div class="form-group">
                             <label for="prestador_observacao">Observações</label>
                             <textarea class="form-control" id="prestador_observacao" name="observacao" rows="3"></textarea>
                         </div>
@@ -970,9 +974,15 @@
         $('#btnSalvarPrestador').click(function() {
             const formData = $('#formPrestador').serialize();
             const nome = $('#prestador_nome').val().trim();
+            const funcionario_responsavel = $('#prestador_funcionario_responsavel').val().trim();
             
             if (!nome) {
                 showToast('Nome é obrigatório', 'error');
+                return;
+            }
+            
+            if (!funcionario_responsavel) {
+                showToast('Funcionário Responsável é obrigatório', 'error');
                 return;
             }
             
@@ -1186,8 +1196,10 @@
                     }
                 });
             } else if (tipo === 'Prestador') {
+                $('#campo_funcionario_responsavel').show();
                 $('#campo_observacao').show();
-                // Buscar dados específicos do prestador para preencher hora de saída
+                // Preencher campos específicos do prestador
+                $('#edit_funcionario_responsavel').val(btn.data('funcionario_responsavel') || '');
                 $('#edit_observacao').val('');
                 
                 $.ajax({
@@ -1291,6 +1303,7 @@
                     break;
                 case 'Prestador':
                     endpoint = '/prestadores-servico?action=update_ajax';
+                    formData.append('funcionario_responsavel', $('#edit_funcionario_responsavel').val());
                     formData.append('observacao', $('#edit_observacao').val());
                     if (horaSaida) {
                         formData.append('saida', horaSaida);

@@ -53,23 +53,34 @@
                                 <p>Dashboard</p>
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a href="/profissionais-renner" class="nav-link">
-                                <i class="nav-icon fas fa-user-tie"></i>
-                                <p>Profissionais Renner</p>
+                        <li class="nav-item has-treeview menu-open">
+                            <a href="#" class="nav-link active">
+                                <i class="nav-icon fas fa-chart-bar"></i>
+                                <p>
+                                    Relatórios
+                                    <i class="fas fa-angle-left right"></i>
+                                </p>
                             </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="/visitantes" class="nav-link active">
-                                <i class="nav-icon fas fa-users"></i>
-                                <p>Visitantes</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="/prestadores-servico" class="nav-link">
-                                <i class="nav-icon fas fa-tools"></i>
-                                <p>Prestador de Serviços</p>
-                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="/reports/profissionais-renner" class="nav-link">
+                                        <i class="nav-icon fas fa-user-tie"></i>
+                                        <p>Profissionais Renner</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="/reports/visitantes" class="nav-link active">
+                                        <i class="nav-icon fas fa-users"></i>
+                                        <p>Visitantes</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="/reports/prestadores-servico" class="nav-link">
+                                        <i class="nav-icon fas fa-tools"></i>
+                                        <p>Prestador de Serviços</p>
+                                    </a>
+                                </li>
+                            </ul>
                         </li>
                     </ul>
                 </nav>

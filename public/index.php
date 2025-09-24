@@ -80,47 +80,9 @@ try {
             break;
             
         case 'visitantes':
-            require_once '../src/controllers/VisitantesNovoController.php';
-            $controller = new VisitantesNovoController();
-            $action = $_GET['action'] ?? 'index';
-            switch ($action) {
-                case 'new':
-                    $controller->create();
-                    break;
-                case 'save':
-                    $controller->save();
-                    break;
-                case 'save_ajax':
-                    $controller->saveAjax();
-                    break;
-                case 'update_ajax':
-                    $controller->updateAjax();
-                    break;
-                case 'edit':
-                    $controller->edit();
-                    break;
-                case 'update':
-                    $controller->update();
-                    break;
-                case 'entrada':
-                    $controller->registrarEntrada();
-                    break;
-                case 'saida':
-                    $controller->registrarSaida();
-                    break;
-                case 'registrar_saida':
-                    $controller->registrarSaida();
-                    break;
-                case 'get_data':
-                    $controller->getData();
-                    break;
-                case 'delete':
-                    $controller->delete();
-                    break;
-                default:
-                    $controller->index();
-                    break;
-            }
+            // Página antiga removida - redirecionamento para relatório
+            header('Location: /reports/visitantes');
+            exit;
             break;
             
         case 'prestadores-servico':

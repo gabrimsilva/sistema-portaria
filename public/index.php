@@ -282,6 +282,11 @@ try {
                         $controller->updateOrganization();
                     }
                     break;
+                case 'organization/logo':
+                    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                        $controller->uploadLogo();
+                    }
+                    break;
                 case 'sites':
                     if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                         $controller->getSites();

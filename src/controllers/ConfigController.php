@@ -453,4 +453,85 @@ class ConfigController {
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
     }
+    
+    /**
+     * Upload de logo da organização
+     * POST /config/organization/logo
+     */
+    public function uploadLogo() {
+        if (!$this->authService->hasPermission('audit_log.read')) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acesso negado']);
+            return;
+        }
+        
+        header('Content-Type: application/json');
+        CSRFProtection::verifyRequest();
+        
+        try {
+            if (!isset($_FILES['logo']) || $_FILES['logo']['error'] !== UPLOAD_ERR_OK) {
+                throw new Exception('Erro no upload do arquivo');
+            }
+            
+            $file = $_FILES['logo'];
+            $maxSize = 2 * 1024 * 1024; // 2MB
+            $allowedTypes = ['image/png', 'image/jpeg', 'image/jpg']; // SVG removido por segurança
+            
+            // Validações
+            if ($file['size'] > $maxSize) {
+                throw new Exception('Arquivo muito grande. Máximo 2MB permitido.');
+            }
+            
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $mimeType = finfo_file($finfo, $file['tmp_name']);
+            finfo_close($finfo);
+            
+            if (!in_array($mimeType, $allowedTypes)) {
+                throw new Exception('Formato não suportado. Use PNG ou JPG.');
+            }
+            
+            // Gerar nome único para o arquivo
+            $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+            $fileName = 'logo_' . uniqid() . '.' . $extension;
+            
+            // Diretório de upload (caminho absoluto seguro)
+            $uploadDir = $_SERVER['DOCUMENT_ROOT'] . '/uploads/logos/';
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0755, true);
+            }
+            
+            // Criar .htaccess para segurança se não existir
+            $htaccessPath = $uploadDir . '.htaccess';
+            if (!file_exists($htaccessPath)) {
+                file_put_contents($htaccessPath, "Options -Indexes\nOptions -ExecCGI\nAddHandler cgi-script .php .php3 .php4 .phtml .pl .py .jsp .asp .sh .cgi\n");
+            }
+            
+            $uploadPath = $uploadDir . $fileName;
+            
+            // Mover arquivo para destino final
+            if (!move_uploaded_file($file['tmp_name'], $uploadPath)) {
+                throw new Exception('Erro ao salvar arquivo no servidor');
+            }
+            
+            // URL pública do arquivo
+            $logoUrl = '/uploads/logos/' . $fileName;
+            
+            // Atualizar configurações da organização com novo logo
+            $current = $this->configService->getOrganizationSettings();
+            $updateData = array_merge($current, ['logo_url' => $logoUrl]);
+            $this->configService->updateOrganizationSettings($updateData);
+            
+            echo json_encode([
+                'success' => true,
+                'data' => [
+                    'url' => $logoUrl,
+                    'file_name' => $fileName
+                ]
+            ]);
+            
+        } catch (Exception $e) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
 }

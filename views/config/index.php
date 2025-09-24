@@ -193,14 +193,37 @@ include '../views/includes/header.php';
                                         </div>
                                     </div>
                                     <div class="row">
-                                        <div class="col-md-12">
+                                        <div class="col-md-8">
                                             <div class="form-group">
-                                                <label for="logoUrl">URL do Logo</label>
-                                                <input type="url" class="form-control" id="logoUrl" name="logo_url" 
-                                                       placeholder="https://exemplo.com/logo.png">
+                                                <label for="logoUpload">Logo da Empresa</label>
+                                                <div class="custom-file">
+                                                    <input type="file" class="custom-file-input" id="logoUpload" 
+                                                           accept=".png,.jpg,.jpeg" onchange="handleLogoUpload(this)">
+                                                    <label class="custom-file-label" for="logoUpload">Escolher arquivo...</label>
+                                                </div>
                                                 <small class="form-text text-muted">
-                                                    Recomendado: 200x60px, formato PNG ou SVG
+                                                    Formatos aceitos: PNG, JPG. Tamanho máximo: 2MB. Recomendado: 200x60px.
                                                 </small>
+                                                <div class="progress mt-2" id="logoUploadProgress" style="display:none;">
+                                                    <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="form-group">
+                                                <label>Preview</label>
+                                                <div class="logo-preview-container" 
+                                                     style="border: 1px dashed #ccc; padding: 15px; text-align: center; min-height: 80px; background: #f9f9f9;">
+                                                    <img id="logoPreview" style="max-width: 100%; max-height: 60px; display: none;" />
+                                                    <div id="logoPlaceholder" class="text-muted">
+                                                        <i class="fas fa-image fa-2x mb-2"></i><br>
+                                                        Nenhuma imagem selecionada
+                                                    </div>
+                                                </div>
+                                                <button type="button" class="btn btn-sm btn-outline-danger mt-2" 
+                                                        id="removeLogo" style="display:none;" onclick="removeLogo()">
+                                                    <i class="fas fa-times"></i> Remover Logo
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
@@ -550,14 +573,38 @@ function setupNavigation() {
 }
 
 // ========== ORGANIZAÇÃO ==========
+let autoSaveTimeout;
+let isSaving = false;
+
 function setupAutoSave() {
-    $('#organizationForm input, #organizationForm select').on('change', function() {
-        saveOrganizationData();
+    // Auto-save com debounce para não sobrecarregar o servidor
+    $('#organizationForm input, #organizationForm select').on('input change', function() {
+        clearTimeout(autoSaveTimeout);
+        showSavingIndicator();
+        
+        autoSaveTimeout = setTimeout(() => {
+            if (!isSaving) {
+                saveOrganizationData();
+            }
+        }, 1500); // Aguarda 1.5s após parar de digitar
     });
     
-    // Validação de CNPJ em tempo real
+    // Máscara de CNPJ em tempo real
+    $('#cnpj').on('input', function() {
+        const value = $(this).val().replace(/\D/g, '');
+        const masked = value
+            .replace(/^(\d{2})(\d)/, '$1.$2')
+            .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+            .replace(/\.(\d{3})(\d)/, '.$1/$2')
+            .replace(/(\d{4})(\d)/, '$1-$2');
+        $(this).val(masked);
+    });
+    
+    // Validação de CNPJ em tempo real (ao sair do campo)
     $('#cnpj').on('blur', function() {
-        validateCnpj($(this).val());
+        if ($(this).val().trim()) {
+            validateCnpj($(this).val());
+        }
     });
 }
 
@@ -570,7 +617,14 @@ function loadOrganizationData() {
                 $('#cnpj').val(data.cnpj_formatted || data.cnpj || '');
                 $('#timezone').val(data.timezone || 'America/Sao_Paulo');
                 $('#locale').val(data.locale || 'pt-BR');
-                $('#logoUrl').val(data.logo_url || '');
+                
+                // Carregar preview do logo se existir
+                if (data.logo_url) {
+                    showLogoPreview(data.logo_url);
+                }
+                
+                // Mostrar indicador de dados carregados
+                $('.auto-save-indicator').text('Dados carregados').show().delay(1000).fadeOut();
             }
         })
         .fail(function() {
@@ -579,13 +633,24 @@ function loadOrganizationData() {
 }
 
 function saveOrganizationData() {
+    if (isSaving) return; // Prevenir chamadas múltiplas
+    
+    isSaving = true;
     const formData = {
         company_name: $('#companyName').val(),
         cnpj: $('#cnpj').val().replace(/\D/g, ''),
         timezone: $('#timezone').val(),
         locale: $('#locale').val(),
-        logo_url: $('#logoUrl').val() || null
+        logo_url: getCurrentLogoUrl() // Função para pegar URL atual do logo
     };
+    
+    // Validação mínima antes de salvar
+    if (!formData.company_name.trim()) {
+        showAlert('Nome da empresa é obrigatório', 'warning');
+        isSaving = false;
+        hideSavingIndicator();
+        return;
+    }
     
     $.ajax({
         url: '/config/organization',
@@ -598,14 +663,158 @@ function saveOrganizationData() {
     })
     .done(function(response) {
         if (response.success) {
-            $('.auto-save-indicator').show().delay(2000).fadeOut();
+            showSavedIndicator();
         } else {
             showAlert(response.message || 'Erro ao salvar', 'error');
         }
     })
-    .fail(function() {
-        showAlert('Erro ao salvar dados da organização', 'error');
+    .fail(function(xhr) {
+        const message = xhr.responseJSON?.message || 'Erro ao salvar dados da organização';
+        showAlert(message, 'error');
+    })
+    .always(function() {
+        isSaving = false;
+        hideSavingIndicator();
     });
+}
+
+// ========== FEEDBACK VISUAL ==========
+function showSavingIndicator() {
+    $('.auto-save-indicator')
+        .removeClass('text-success text-danger')
+        .addClass('text-warning')
+        .html('<i class="fas fa-spinner fa-spin"></i> Salvando...')
+        .show();
+}
+
+function showSavedIndicator() {
+    $('.auto-save-indicator')
+        .removeClass('text-warning text-danger')
+        .addClass('text-success')
+        .html('<i class="fas fa-check-circle"></i> Salvo automaticamente')
+        .show()
+        .delay(3000)
+        .fadeOut();
+}
+
+function hideSavingIndicator() {
+    setTimeout(() => {
+        if (!isSaving) {
+            $('.auto-save-indicator').fadeOut();
+        }
+    }, 500);
+}
+
+// ========== UPLOAD DE LOGO ==========
+let currentLogoUrl = null;
+
+function handleLogoUpload(input) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    // Validações
+    const maxSize = 2 * 1024 * 1024; // 2MB
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+    
+    if (file.size > maxSize) {
+        showAlert('Arquivo muito grande. Máximo 2MB permitido.', 'error');
+        input.value = '';
+        return;
+    }
+    
+    if (!allowedTypes.includes(file.type)) {
+        showAlert('Formato não suportado. Use PNG ou JPG.', 'error');
+        input.value = '';
+        return;
+    }
+    
+    // Atualizar label do arquivo
+    $(input).next('.custom-file-label').text(file.name);
+    
+    // Mostrar preview
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        showLogoPreview(e.target.result, false);
+    };
+    reader.readAsDataURL(file);
+    
+    // Upload do arquivo
+    uploadLogoFile(file);
+}
+
+function uploadLogoFile(file) {
+    const formData = new FormData();
+    formData.append('logo', file);
+    
+    // Mostrar progress
+    $('#logoUploadProgress').show();
+    $('.progress-bar').css('width', '0%');
+    
+    $.ajax({
+        url: '/config/organization/logo',
+        method: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        headers: {
+            'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+        },
+        xhr: function() {
+            const xhr = new window.XMLHttpRequest();
+            xhr.upload.addEventListener('progress', function(evt) {
+                if (evt.lengthComputable) {
+                    const percentComplete = Math.round((evt.loaded / evt.total) * 100);
+                    $('.progress-bar').css('width', percentComplete + '%');
+                }
+            });
+            return xhr;
+        }
+    })
+    .done(function(response) {
+        if (response.success) {
+            currentLogoUrl = response.data.url;
+            showLogoPreview(response.data.url, true);
+            showAlert('Logo carregado com sucesso!', 'success');
+            // Salvar automaticamente a organização com novo logo
+            saveOrganizationData();
+        } else {
+            showAlert(response.message || 'Erro ao fazer upload', 'error');
+        }
+    })
+    .fail(function() {
+        showAlert('Erro ao fazer upload do logo', 'error');
+    })
+    .always(function() {
+        $('#logoUploadProgress').fadeOut();
+    });
+}
+
+function showLogoPreview(url, isUploaded = true) {
+    $('#logoPreview').attr('src', url).show();
+    $('#logoPlaceholder').hide();
+    $('#removeLogo').show();
+    
+    if (isUploaded) {
+        currentLogoUrl = url;
+    }
+}
+
+function removeLogo() {
+    if (confirm('Tem certeza que deseja remover o logo?')) {
+        currentLogoUrl = null;
+        $('#logoPreview').hide();
+        $('#logoPlaceholder').show();
+        $('#removeLogo').hide();
+        $('#logoUpload').val('');
+        $('.custom-file-label').text('Escolher arquivo...');
+        
+        // Salvar automaticamente sem logo
+        saveOrganizationData();
+    }
+}
+
+function getCurrentLogoUrl() {
+    return currentLogoUrl;
 }
 
 function validateCnpj(cnpj) {

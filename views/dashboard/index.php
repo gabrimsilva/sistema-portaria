@@ -1132,6 +1132,15 @@
             $('#edit_setor').val(setor);
             $('#edit_placa_veiculo').val(placa_veiculo);
             
+            // Verificar se é APE e marcar checkbox imediatamente
+            if (placa_veiculo === 'APE') {
+                $('#edit_ape_checkbox').prop('checked', true);
+                $('#edit_placa_veiculo').prop('readonly', true);
+            } else {
+                $('#edit_ape_checkbox').prop('checked', false);
+                $('#edit_placa_veiculo').prop('readonly', false);
+            }
+            
             // Mostrar/ocultar campos específicos baseado no tipo
             $('#campo_funcionario_responsavel, #campo_hora_saida, #campo_observacao, #botoes_saida').hide();
             

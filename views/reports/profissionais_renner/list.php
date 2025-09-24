@@ -108,89 +108,115 @@
                     <div class="card">
                         <div class="card-header">
                             <div class="row">
-                                <div class="col-md-6">
-                                    <h3 class="card-title">Lista de Profissionais</h3>
-                                </div>
-                                <div class="col-md-6 text-right">
-                                    <a href="/profissionais-renner?action=new" class="btn btn-primary">
-                                        <i class="fas fa-plus"></i> Novo Profissional
-                                    </a>
+                                <div class="col-md-12">
+                                    <h3 class="card-title"><i class="fas fa-chart-line"></i> Relatório de Entradas - Profissionais Renner</h3>
+                                    <p class="text-muted mt-1">Visualização de registros de entrada por data</p>
                                 </div>
                             </div>
                         </div>
                         
                         <div class="card-body">
-                            <!-- Filtros -->
-                            <form method="GET" class="mb-3">
-                                <div class="row">
-                                    <div class="col-md-3">
-                                        <input type="text" name="search" class="form-control" placeholder="Buscar por nome ou setor" value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
-                                    </div>
-                                    <div class="col-md-2">
-                                        <select name="setor" class="form-control">
-                                            <option value="">Todos os setores</option>
-                                            <?php foreach ($setores as $s): ?>
-                                                <option value="<?= htmlspecialchars($s['setor']) ?>" <?= ($_GET['setor'] ?? '') === $s['setor'] ? 'selected' : '' ?>>
-                                                    <?= htmlspecialchars($s['setor']) ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <select name="status" class="form-control">
-                                            <option value="">Todos os status</option>
-                                            <option value="ativo" <?= ($_GET['status'] ?? '') === 'ativo' ? 'selected' : '' ?>>Ativo (na empresa)</option>
-                                            <option value="saiu" <?= ($_GET['status'] ?? '') === 'saiu' ? 'selected' : '' ?>>Saiu</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <button type="submit" class="btn btn-secondary">
-                                            <i class="fas fa-search"></i> Filtrar
-                                        </button>
+                            <!-- Filtros para Relatório -->
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <div class="bg-light p-3 rounded">
+                                        <form method="GET" class="row align-items-end">
+                                            <div class="col-md-3">
+                                                <label class="form-label">Data:</label>
+                                                <input type="date" name="data" class="form-control" value="<?= htmlspecialchars($_GET['data'] ?? date('Y-m-d')) ?>">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">Nome:</label>
+                                                <input type="text" name="search" class="form-control" placeholder="Buscar por nome" value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label">Setor:</label>
+                                                <select name="setor" class="form-control">
+                                                    <option value="">Todos</option>
+                                                    <?php foreach ($setores as $s): ?>
+                                                        <option value="<?= htmlspecialchars($s['setor']) ?>" <?= ($_GET['setor'] ?? '') === $s['setor'] ? 'selected' : '' ?>>
+                                                            <?= htmlspecialchars($s['setor']) ?>
+                                                        </option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label">Status:</label>
+                                                <select name="status" class="form-control">
+                                                    <option value="">Todos</option>
+                                                    <option value="ativo" <?= ($_GET['status'] ?? '') === 'ativo' ? 'selected' : '' ?>>Na empresa</option>
+                                                    <option value="saiu" <?= ($_GET['status'] ?? '') === 'saiu' ? 'selected' : '' ?>>Saiu</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <button type="submit" class="btn btn-primary w-100">
+                                                    <i class="fas fa-filter"></i> Filtrar
+                                                </button>
+                                            </div>
+                                        </form>
                                     </div>
                                 </div>
-                            </form>
+                            </div>
                             
+                            <!-- Informações do Relatório -->
+                            <?php if (isset($pagination)): ?>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <p class="text-muted mb-0">
+                                        <i class="fas fa-calendar"></i> Data: <?= date('d/m/Y', strtotime($_GET['data'] ?? date('Y-m-d'))) ?> |
+                                        <i class="fas fa-list"></i> Total: <?= $pagination['total'] ?> registros
+                                    </p>
+                                </div>
+                                <div class="col-md-6 text-right">
+                                    <p class="text-muted mb-0">
+                                        Página <?= $pagination['page'] ?> de <?= $pagination['totalPages'] ?>
+                                    </p>
+                                </div>
+                            </div>
+                            <?php endif; ?>
+
                             <div class="table-responsive">
-                                <table class="table table-bordered table-hover">
+                                <table class="table table-bordered table-hover table-sm">
                                     <thead class="table-dark">
                                         <tr>
-                                            <th>Nome</th>
-                                            <th>Data Entrada</th>
-                                            <th>Saída</th>
-                                            <th>Retorno</th>
-                                            <th>Saída Final</th>
-                                            <th>Setor</th>
-                                            <th>Ações</th>
+                                            <th width="35%">Nome</th>
+                                            <th width="20%">Setor</th>
+                                            <th width="20%">Placa/Veículo</th>
+                                            <th width="25%">Data/Hora Entrada</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <?php if (empty($profissionais)): ?>
                                             <tr>
-                                                <td colspan="7" class="text-center">Nenhum profissional encontrado</td>
+                                                <td colspan="4" class="text-center py-4">
+                                                    <i class="fas fa-info-circle text-muted"></i>
+                                                    Nenhum registro encontrado para esta data
+                                                </td>
                                             </tr>
                                         <?php else: ?>
                                             <?php foreach ($profissionais as $prof): ?>
                                             <tr>
-                                                <td><?= htmlspecialchars($prof['nome']) ?></td>
-                                                <td><?= $prof['data_entrada'] ? date('d/m/Y H:i', strtotime($prof['data_entrada'])) : '-' ?></td>
-                                                <td><?= $prof['saida'] ? date('d/m/Y H:i', strtotime($prof['saida'])) : '-' ?></td>
-                                                <td><?= $prof['retorno'] ? date('d/m/Y H:i', strtotime($prof['retorno'])) : '-' ?></td>
-                                                <td><?= $prof['saida_final'] ? date('d/m/Y H:i', strtotime($prof['saida_final'])) : '-' ?></td>
+                                                <td>
+                                                    <strong><?= htmlspecialchars($prof['nome']) ?></strong>
+                                                    <?php if (!empty($prof['saida_final'])): ?>
+                                                        <span class="badge bg-secondary ms-2">Saiu</span>
+                                                    <?php else: ?>
+                                                        <span class="badge bg-success ms-2">Na empresa</span>
+                                                    <?php endif; ?>
+                                                </td>
                                                 <td><?= htmlspecialchars($prof['setor']) ?></td>
                                                 <td>
-                                                    <div class="btn-group">
-                                                        <a href="/profissionais-renner?action=edit&id=<?= $prof['id'] ?>" class="btn btn-sm btn-primary">
-                                                            <i class="fas fa-edit"></i>
-                                                        </a>
-                                                        <form method="POST" action="/profissionais-renner?action=delete" class="d-inline">
-                                                            <?= CSRFProtection::getHiddenInput() ?>
-                                                            <input type="hidden" name="id" value="<?= $prof['id'] ?>">
-                                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Tem certeza que deseja excluir?')">
-                                                                <i class="fas fa-trash"></i>
-                                                            </button>
-                                                        </form>
-                                                    </div>
+                                                    <?php 
+                                                    $placa = strtoupper(trim($prof['placa_veiculo'] ?? ''));
+                                                    if (empty($placa) || $placa === 'APE' || $placa === 'A PÉ'): 
+                                                    ?>
+                                                        <span class="text-muted"><i class="fas fa-walking"></i> A pé</span>
+                                                    <?php else: ?>
+                                                        <span class="badge bg-primary"><?= htmlspecialchars($placa) ?></span>
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td>
+                                                    <?= $prof['data_entrada'] ? date('d/m/Y H:i', strtotime($prof['data_entrada'])) : '-' ?>
                                                 </td>
                                             </tr>
                                             <?php endforeach; ?>
@@ -198,6 +224,90 @@
                                     </tbody>
                                 </table>
                             </div>
+
+                            <!-- Paginação -->
+                            <?php if (isset($pagination) && $pagination['totalPages'] > 1): ?>
+                            <div class="row mt-3">
+                                <div class="col-md-12">
+                                    <nav aria-label="Paginação do relatório">
+                                        <ul class="pagination justify-content-center">
+                                            <?php 
+                                            $currentPage = $pagination['page'];
+                                            $totalPages = $pagination['totalPages'];
+                                            $queryParams = $_GET;
+                                            ?>
+                                            
+                                            <!-- Primeira página -->
+                                            <?php if ($currentPage > 1): ?>
+                                                <?php 
+                                                $queryParams['page'] = 1;
+                                                $queryString = http_build_query($queryParams);
+                                                ?>
+                                                <li class="page-item">
+                                                    <a class="page-link" href="?<?= $queryString ?>">
+                                                        <i class="fas fa-angle-double-left"></i>
+                                                    </a>
+                                                </li>
+                                            <?php endif; ?>
+                                            
+                                            <!-- Página anterior -->
+                                            <?php if ($currentPage > 1): ?>
+                                                <?php 
+                                                $queryParams['page'] = $currentPage - 1;
+                                                $queryString = http_build_query($queryParams);
+                                                ?>
+                                                <li class="page-item">
+                                                    <a class="page-link" href="?<?= $queryString ?>">
+                                                        <i class="fas fa-angle-left"></i>
+                                                    </a>
+                                                </li>
+                                            <?php endif; ?>
+                                            
+                                            <!-- Páginas numéricas -->
+                                            <?php 
+                                            $start = max(1, $currentPage - 2);
+                                            $end = min($totalPages, $currentPage + 2);
+                                            for ($i = $start; $i <= $end; $i++): 
+                                            ?>
+                                                <?php 
+                                                $queryParams['page'] = $i;
+                                                $queryString = http_build_query($queryParams);
+                                                ?>
+                                                <li class="page-item <?= $i === $currentPage ? 'active' : '' ?>">
+                                                    <a class="page-link" href="?<?= $queryString ?>"><?= $i ?></a>
+                                                </li>
+                                            <?php endfor; ?>
+                                            
+                                            <!-- Próxima página -->
+                                            <?php if ($currentPage < $totalPages): ?>
+                                                <?php 
+                                                $queryParams['page'] = $currentPage + 1;
+                                                $queryString = http_build_query($queryParams);
+                                                ?>
+                                                <li class="page-item">
+                                                    <a class="page-link" href="?<?= $queryString ?>">
+                                                        <i class="fas fa-angle-right"></i>
+                                                    </a>
+                                                </li>
+                                            <?php endif; ?>
+                                            
+                                            <!-- Última página -->
+                                            <?php if ($currentPage < $totalPages): ?>
+                                                <?php 
+                                                $queryParams['page'] = $totalPages;
+                                                $queryString = http_build_query($queryParams);
+                                                ?>
+                                                <li class="page-item">
+                                                    <a class="page-link" href="?<?= $queryString ?>">
+                                                        <i class="fas fa-angle-double-right"></i>
+                                                    </a>
+                                                </li>
+                                            <?php endif; ?>
+                                        </ul>
+                                    </nav>
+                                </div>
+                            </div>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>

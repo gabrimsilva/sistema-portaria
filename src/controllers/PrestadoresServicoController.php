@@ -517,7 +517,12 @@ class PrestadoresServicoController {
             header('Content-Type: application/json');
             
             try {
-                CSRFProtection::verifyRequest();
+                // Verificação CSRF manual para retorno JSON adequado
+                if (!isset($_POST['csrf_token']) || !CSRFProtection::validateToken($_POST['csrf_token'])) {
+                    echo json_encode(['success' => false, 'message' => 'Token CSRF inválido']);
+                    exit;
+                }
+                
                 $nome = trim($_POST['nome'] ?? '');
                 $cpf = trim($_POST['cpf'] ?? '');
                 $empresa = trim($_POST['empresa'] ?? '');

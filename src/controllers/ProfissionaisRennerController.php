@@ -379,7 +379,12 @@ class ProfissionaisRennerController {
             header('Content-Type: application/json');
             
             try {
-                CSRFProtection::verifyRequest();
+                // Verificação CSRF manual para retorno JSON adequado
+                if (!isset($_POST['csrf_token']) || !CSRFProtection::validateToken($_POST['csrf_token'])) {
+                    echo json_encode(['success' => false, 'message' => 'Token CSRF inválido']);
+                    exit;
+                }
+                
                 $nome = trim($_POST['nome'] ?? '');
                 $setor = trim($_POST['setor'] ?? '');
                 $placa_veiculo = trim($_POST['placa_veiculo'] ?? '');

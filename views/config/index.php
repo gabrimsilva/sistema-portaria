@@ -6,59 +6,360 @@ include '../views/includes/header.php';
 
 <!-- Estilos CSS customizados para configurações -->
 <style>
+/* ===== VARIÁVEIS CSS MODERNAS ===== */
+:root {
+    --primary-color: #667eea;
+    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --secondary-color: #f093fb;
+    --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    --success-color: #4facfe;
+    --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    --warning-color: #ffecd2;
+    --warning-gradient: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+    --dark-color: #2c3e50;
+    --light-color: #ecf0f1;
+    --shadow-light: 0 2px 10px rgba(102, 126, 234, 0.1);
+    --shadow-medium: 0 8px 30px rgba(102, 126, 234, 0.15);
+    --shadow-strong: 0 15px 40px rgba(102, 126, 234, 0.2);
+    --border-radius: 12px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ===== LAYOUT GERAL ===== */
+.content-wrapper {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    min-height: 100vh;
+    padding: 20px 0;
+}
+
+.content-header h1 {
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 700;
+    font-size: 2.5rem;
+    margin-bottom: 0;
+}
+
+/* ===== NAVEGAÇÃO LATERAL MODERNA ===== */
+.config-navigation {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-medium);
+    overflow: hidden;
+    border: none;
+}
+
+.config-navigation .card-header {
+    background: var(--primary-gradient);
+    color: white;
+    border: none;
+    padding: 20px;
+}
+
+.config-navigation .card-header h3 {
+    color: white;
+    font-weight: 600;
+    font-size: 1.2rem;
+    margin: 0;
+}
+
+.nav-sidebar {
+    padding: 0;
+}
+
+.nav-sidebar .nav-link {
+    color: var(--dark-color);
+    border: none;
+    border-radius: 0;
+    padding: 18px 25px;
+    margin: 0;
+    font-weight: 500;
+    transition: var(--transition);
+    border-left: 4px solid transparent;
+    background: white;
+}
+
+.nav-sidebar .nav-link:hover {
+    background: linear-gradient(90deg, rgba(102, 126, 234, 0.1) 0%, transparent 100%);
+    border-left-color: var(--primary-color);
+    transform: translateX(2px);
+}
+
+.nav-sidebar .nav-link.active {
+    background: var(--primary-gradient);
+    color: white !important;
+    border-left-color: rgba(255, 255, 255, 0.3);
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.1);
+}
+
+.nav-sidebar .nav-link i {
+    margin-right: 12px;
+    width: 20px;
+    text-align: center;
+}
+
+/* ===== SECTIONS E CARDS ===== */
 .config-section {
     display: none;
 }
+
 .config-section.active {
     display: block;
+    animation: fadeInUp 0.5s ease;
 }
-.nav-pills .nav-link.active {
-    background-color: #007bff;
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modern-card {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-medium);
+    border: none;
+    margin-bottom: 30px;
+    overflow: hidden;
+    transition: var(--transition);
+}
+
+.modern-card:hover {
+    box-shadow: var(--shadow-strong);
+    transform: translateY(-2px);
+}
+
+.modern-card .card-header {
+    background: var(--primary-gradient);
     color: white;
+    border: none;
+    padding: 25px;
+    position: relative;
 }
-.auto-save-indicator {
-    font-size: 12px;
-    color: #28a745;
-    display: none;
-}
-.rbac-matrix-table {
-    font-size: 13px;
-}
-.rbac-matrix-table th {
-    background-color: #f8f9fa;
-    position: sticky;
+
+.modern-card .card-header::before {
+    content: '';
+    position: absolute;
     top: 0;
-    z-index: 10;
+    left: 0;
+    right: 0;
+    height: 100%;
+    background: linear-gradient(45deg, rgba(255, 255, 255, 0.1) 0%, transparent 100%);
+    pointer-events: none;
 }
-.rbac-matrix-table .permission-checkbox {
+
+.modern-card .card-header h3 {
+    color: white;
+    font-weight: 600;
+    font-size: 1.4rem;
     margin: 0;
-    transform: scale(1.2);
+    display: flex;
+    align-items: center;
 }
-.module-group {
-    background-color: #e9ecef;
-    font-weight: bold;
-    color: #495057;
+
+.modern-card .card-header i {
+    margin-right: 15px;
+    font-size: 1.3rem;
 }
-.audit-filters {
-    background-color: #f8f9fa;
-    border-radius: 8px;
-    padding: 15px;
+
+.modern-card .card-body {
+    padding: 30px;
+}
+
+/* ===== FORMULÁRIOS MODERNOS ===== */
+.modern-form-group {
+    margin-bottom: 25px;
+    position: relative;
+}
+
+.modern-form-group label {
+    font-weight: 600;
+    color: var(--dark-color);
+    margin-bottom: 8px;
+    display: block;
+    font-size: 0.95rem;
+}
+
+.modern-input {
+    width: 100%;
+    padding: 15px 20px;
+    border: 2px solid #e1e8ed;
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: var(--transition);
+    background: white;
+    color: var(--dark-color);
+}
+
+.modern-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    transform: translateY(-1px);
+}
+
+.modern-input:hover {
+    border-color: #c1c8d1;
+}
+
+.modern-select {
+    width: 100%;
+    padding: 15px 20px;
+    border: 2px solid #e1e8ed;
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: var(--transition);
+    background: white url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 5"><path fill="%23667eea" d="M2 0L0 2h4zm0 5L0 3h4z"/></svg>') no-repeat;
+    background-position: right 15px center;
+    background-size: 12px;
+    appearance: none;
+    cursor: pointer;
+}
+
+.modern-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* ===== BOTÕES MODERNOS ===== */
+.modern-btn {
+    padding: 12px 25px;
+    border-radius: 25px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: var(--transition);
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+}
+
+.modern-btn-primary {
+    background: var(--primary-gradient);
+    color: white;
+    box-shadow: var(--shadow-light);
+}
+
+.modern-btn-primary:hover {
+    color: white;
+    box-shadow: var(--shadow-medium);
+    transform: translateY(-2px);
+}
+
+.modern-btn-secondary {
+    background: var(--secondary-gradient);
+    color: white;
+    box-shadow: var(--shadow-light);
+}
+
+.modern-btn-secondary:hover {
+    color: white;
+    box-shadow: var(--shadow-medium);
+    transform: translateY(-2px);
+}
+
+.modern-btn-success {
+    background: var(--success-gradient);
+    color: white;
+    box-shadow: var(--shadow-light);
+}
+
+.modern-btn-success:hover {
+    color: white;
+    box-shadow: var(--shadow-medium);
+    transform: translateY(-2px);
+}
+
+/* ===== INDICADORES E ALERTAS ===== */
+.auto-save-indicator {
+    background: var(--success-gradient);
+    color: white;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    display: none;
+    animation: slideInRight 0.3s ease;
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.modern-alert {
+    border: none;
+    border-radius: var(--border-radius);
+    padding: 20px;
     margin-bottom: 20px;
+    font-weight: 500;
 }
-.pagination-info {
-    color: #6c757d;
-    font-size: 14px;
+
+.modern-alert-info {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(102, 126, 234, 0.05) 100%);
+    border-left: 4px solid var(--primary-color);
+    color: var(--dark-color);
 }
+
+.modern-alert-warning {
+    background: var(--warning-gradient);
+    color: var(--dark-color);
+}
+
+/* ===== UPLOAD DE ARQUIVO MODERNO ===== */
+.modern-file-upload {
+    position: relative;
+    display: inline-block;
+    overflow: hidden;
+    background: var(--primary-gradient);
+    color: white;
+    padding: 12px 25px;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: var(--transition);
+    font-weight: 600;
+}
+
+.modern-file-upload:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-medium);
+}
+
+.modern-file-upload input[type=file] {
+    position: absolute;
+    left: -9999px;
+    opacity: 0;
+}
+
+/* ===== LOADING E ANIMAÇÕES ===== */
 .btn-loading {
     position: relative;
     opacity: 0.7;
     pointer-events: none;
 }
+
 .btn-loading::after {
     content: '';
     position: absolute;
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
     margin: auto;
     border: 2px solid transparent;
     border-top-color: #ffffff;
@@ -69,24 +370,10 @@ include '../views/includes/header.php';
     bottom: 0;
     right: 0;
 }
+
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
-}
-.site-card {
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
-    padding: 15px;
-    margin-bottom: 15px;
-    background-color: #ffffff;
-}
-.sector-item {
-    background-color: #f8f9fa;
-    border: 1px solid #e9ecef;
-    border-radius: 4px;
-    padding: 8px 12px;
-    margin: 4px;
-    display: inline-block;
 }
 
 /* Melhorias para RBAC Matrix */
@@ -162,9 +449,9 @@ include '../views/includes/header.php';
             <div class="row">
                 <!-- Menu Lateral -->
                 <div class="col-md-3">
-                    <div class="card">
+                    <div class="modern-card config-navigation">
                         <div class="card-header">
-                            <h3 class="card-title">Seções</h3>
+                            <h3 class="card-title"><i class="fas fa-cog"></i> Seções</h3>
                         </div>
                         <div class="card-body p-0">
                             <nav class="nav nav-pills nav-sidebar flex-column">
@@ -193,10 +480,10 @@ include '../views/includes/header.php';
                     
                     <!-- Seção: Organização -->
                     <div id="organization" class="config-section active">
-                        <div class="card">
+                        <div class="modern-card">
                             <div class="card-header">
                                 <h3 class="card-title"><i class="fas fa-building"></i> Configurações da Organização</h3>
-                                <div class="auto-save-indicator">
+                                <div class="auto-save-indicator" id="orgAutoSave">
                                     <i class="fas fa-check-circle"></i> Auto-salvamento ativado
                                 </div>
                             </div>
@@ -204,16 +491,16 @@ include '../views/includes/header.php';
                                 <form id="organizationForm">
                                     <div class="row">
                                         <div class="col-md-8">
-                                            <div class="form-group">
+                                            <div class="modern-form-group">
                                                 <label for="companyName">Nome da Empresa *</label>
-                                                <input type="text" class="form-control" id="companyName" name="company_name" 
+                                                <input type="text" class="modern-input" id="companyName" name="company_name" 
                                                        placeholder="Digite o nome da empresa" required>
                                             </div>
                                         </div>
                                         <div class="col-md-4">
-                                            <div class="form-group">
+                                            <div class="modern-form-group">
                                                 <label for="cnpj">CNPJ</label>
-                                                <input type="text" class="form-control" id="cnpj" name="cnpj" 
+                                                <input type="text" class="modern-input" id="cnpj" name="cnpj" 
                                                        placeholder="00.000.000/0000-00" data-mask="00.000.000/0000-00">
                                                 <div class="invalid-feedback" id="cnpjError"></div>
                                             </div>
@@ -221,9 +508,9 @@ include '../views/includes/header.php';
                                     </div>
                                     <div class="row">
                                         <div class="col-md-6">
-                                            <div class="form-group">
+                                            <div class="modern-form-group">
                                                 <label for="timezone">Fuso Horário</label>
-                                                <select class="form-control" id="timezone" name="timezone">
+                                                <select class="modern-select" id="timezone" name="timezone">
                                                     <option value="America/Sao_Paulo">Brasília (GMT-3)</option>
                                                     <option value="America/Manaus">Manaus (GMT-4)</option>
                                                     <option value="America/Rio_Branco">Rio Branco (GMT-5)</option>
@@ -232,9 +519,9 @@ include '../views/includes/header.php';
                                             </div>
                                         </div>
                                         <div class="col-md-6">
-                                            <div class="form-group">
+                                            <div class="modern-form-group">
                                                 <label for="locale">Idioma</label>
-                                                <select class="form-control" id="locale" name="locale">
+                                                <select class="modern-select" id="locale" name="locale">
                                                     <option value="pt-BR">Português (Brasil)</option>
                                                     <option value="en-US">English (US)</option>
                                                     <option value="es-ES">Español</option>
@@ -270,7 +557,7 @@ include '../views/includes/header.php';
                                                         Nenhuma imagem selecionada
                                                     </div>
                                                 </div>
-                                                <button type="button" class="btn btn-sm btn-outline-danger mt-2" 
+                                                <button type="button" class="modern-btn modern-btn-secondary mt-2" 
                                                         id="removeLogo" style="display:none;" onclick="removeLogo()">
                                                     <i class="fas fa-times"></i> Remover Logo
                                                 </button>
@@ -284,11 +571,11 @@ include '../views/includes/header.php';
 
                     <!-- Seção: Sites/Locais -->
                     <div id="sites" class="config-section">
-                        <div class="card">
+                        <div class="modern-card">
                             <div class="card-header">
                                 <h3 class="card-title"><i class="fas fa-map-marker-alt"></i> Locais e Sites</h3>
                                 <div class="card-tools">
-                                    <button type="button" class="btn btn-primary btn-sm" onclick="showAddSiteModal()">
+                                    <button type="button" class="modern-btn modern-btn-primary" onclick="showAddSiteModal()">
                                         <i class="fas fa-plus"></i> Novo Local
                                     </button>
                                 </div>
@@ -312,20 +599,20 @@ include '../views/includes/header.php';
                             </div>
                         </div>
                         
-                        <div class="card">
+                        <div class="modern-card">
                             <div class="card-header">
                                 <h3 class="card-title"><i class="fas fa-user-shield"></i> Matriz de Permissões (RBAC)</h3>
                                 <div class="card-tools">
-                                    <button type="button" class="btn btn-info btn-sm mr-2" onclick="showRbacUsers()">
+                                    <button type="button" class="modern-btn modern-btn-secondary mr-2" onclick="showRbacUsers()">
                                         <i class="fas fa-users"></i> Ver Usuários por Perfil
                                     </button>
-                                    <button type="button" class="btn btn-success btn-sm" onclick="saveRbacMatrix()">
+                                    <button type="button" class="modern-btn modern-btn-success" onclick="saveRbacMatrix()">
                                         <i class="fas fa-save"></i> Salvar Alterações
                                     </button>
                                 </div>
                             </div>
                             <div class="card-body">
-                                <div class="alert alert-info">
+                                <div class="modern-alert modern-alert-info">
                                     <i class="fas fa-info-circle"></i>
                                     Configure as permissões para cada perfil de usuário. O perfil <strong>Administrador</strong> 
                                     sempre mantém acesso total às configurações.
@@ -335,7 +622,7 @@ include '../views/includes/header.php';
                                 </div>
                                 
                                 <!-- Indicador de alterações pendentes -->
-                                <div id="rbacChanges" class="alert alert-warning" style="display:none;">
+                                <div id="rbacChanges" class="modern-alert modern-alert-warning" style="display:none;">
                                     <i class="fas fa-exclamation-triangle"></i>
                                     <span id="rbacChangesCount">0</span> alteração(ões) pendente(s). 
                                     <strong>Clique em "Salvar Alterações" para aplicar.</strong>

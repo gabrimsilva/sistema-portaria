@@ -371,6 +371,36 @@ include '../views/includes/header.php';
     user-select: none;
 }
 
+/* ===== PROGRESS MODERNO ===== */
+.modern-progress {
+    background: rgba(102, 126, 234, 0.1);
+    border-radius: 15px;
+    height: 8px;
+    overflow: hidden;
+    margin-top: 10px;
+}
+
+.modern-progress-bar {
+    background: var(--primary-gradient);
+    height: 100%;
+    border-radius: 15px;
+    transition: var(--transition);
+}
+
+/* ===== PREVIEW MODERNO ===== */
+.logo-preview {
+    border: 2px dashed var(--primary-color);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    text-align: center;
+    min-height: 100px;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(102, 126, 234, 0.02) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
 /* ===== UPLOAD DE ARQUIVO MODERNO ===== */
 .modern-file-upload {
     position: relative;
@@ -589,16 +619,15 @@ include '../views/includes/header.php';
                                                 <small class="form-text text-muted">
                                                     Formatos aceitos: PNG, JPG. Tamanho máximo: 2MB. Recomendado: 200x60px.
                                                 </small>
-                                                <div class="progress mt-2" id="logoUploadProgress" style="display:none;">
-                                                    <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                                                <div class="modern-progress" id="logoUploadProgress" style="display:none;">
+                                                    <div class="modern-progress-bar" role="progressbar" style="width: 0%"></div>
                                                 </div>
                                             </div>
                                         </div>
                                         <div class="col-md-4">
                                             <div class="modern-form-group">
                                                 <label>Preview</label>
-                                                <div class="logo-preview-container" 
-                                                     style="border: 1px dashed #ccc; padding: 15px; text-align: center; min-height: 80px; background: #f9f9f9;">
+                                                <div class="logo-preview">
                                                     <img id="logoPreview" style="max-width: 100%; max-height: 60px; display: none;" />
                                                     <div id="logoPlaceholder" class="text-muted">
                                                         <i class="fas fa-image fa-2x mb-2"></i><br>

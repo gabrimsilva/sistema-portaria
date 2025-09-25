@@ -1,7 +1,7 @@
 <?php
 
 require_once __DIR__ . '/RbacService.php';
-require_once __DIR__ . '/../config/Database.php';
+require_once __DIR__ . '/../../config/database.php';
 
 class AuthorizationService {
     private $rbacService;

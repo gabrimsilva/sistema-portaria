@@ -682,7 +682,13 @@
                 if (data.success) {
                     // Atualizar preview da logo
                     const logoPreview = document.getElementById('logoPreview');
+                    const logoPlaceholder = document.getElementById('logoPlaceholder');
+                    const removeBtn = document.getElementById('removeLogo');
+                    
                     logoPreview.src = data.data.url + '?' + new Date().getTime(); // Cache bust
+                    logoPreview.style.display = 'block';
+                    logoPlaceholder.style.display = 'none';
+                    removeBtn.style.display = 'block';
                     
                     // Mostrar mensagem de sucesso
                     showAlert('Logo atualizada com sucesso!', 'success');

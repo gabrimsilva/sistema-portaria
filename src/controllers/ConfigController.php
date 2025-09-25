@@ -569,20 +569,21 @@ class ConfigController {
     }
     
     /**
-     * Validar CNPJ via AJAX
+     * Validar CNPJ via AJAX/POST
+     * POST /config - action=validate_cnpj
      */
     public function validateCnpj() {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo json_encode(['success' => false, 'message' => 'Método não permitido']);
-            return;
-        }
-        
         header('Content-Type: application/json');
         
         try {
+            // Aceitar tanto JSON quanto form data
             $input = json_decode(file_get_contents('php://input'), true);
-            $cnpj = $input['cnpj'] ?? '';
+            $cnpj = $input['cnpj'] ?? $_POST['cnpj'] ?? '';
+            
+            if (empty($cnpj)) {
+                echo json_encode(['success' => true, 'data' => ['valid' => false, 'message' => 'CNPJ vazio']]);
+                return;
+            }
             
             $isValid = CnpjValidator::isValid($cnpj);
             $formatted = $isValid ? CnpjValidator::format($cnpj) : null;
@@ -591,7 +592,8 @@ class ConfigController {
                 'success' => true, 
                 'data' => [
                     'valid' => $isValid,
-                    'formatted' => $formatted
+                    'formatted' => $formatted,
+                    'message' => $isValid ? 'CNPJ válido' : 'CNPJ inválido'
                 ]
             ]);
         } catch (Exception $e) {
@@ -720,36 +722,6 @@ class ConfigController {
         }
     }
     
-    /**
-     * Validar CNPJ via POST
-     * POST /config - action=validate_cnpj
-     */
-    public function validateCnpj() {
-        header('Content-Type: application/json');
-        
-        try {
-            $cnpj = $_POST['cnpj'] ?? '';
-            
-            if (empty($cnpj)) {
-                echo json_encode(['success' => true, 'data' => ['valid' => false, 'message' => 'CNPJ vazio']]);
-                return;
-            }
-            
-            $isValid = CnpjValidator::isValid($cnpj);
-            $formatted = $isValid ? CnpjValidator::format($cnpj) : null;
-            
-            echo json_encode([
-                'success' => true, 
-                'data' => [
-                    'valid' => $isValid,
-                    'formatted' => $formatted,
-                    'message' => $isValid ? 'CNPJ válido' : 'CNPJ inválido'
-                ]
-            ]);
-        } catch (Exception $e) {
-            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
-        }
-    }
     
     /**
      * Salvar configurações da organização via POST form

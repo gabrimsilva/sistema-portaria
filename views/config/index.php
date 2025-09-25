@@ -271,14 +271,37 @@
                                             <i class="fas fa-map-marker-alt mr-2"></i>Locais e Sites
                                         </h3>
                                         <div class="card-tools">
-                                            <button type="button" class="btn btn-primary btn-sm" onclick="showAddSiteModal()">
+                                            <button type="button" class="btn btn-primary btn-sm" onclick="showSiteModal()">
                                                 <i class="fas fa-plus mr-1"></i>Novo Local
                                             </button>
                                         </div>
                                     </div>
                                     <div class="card-body">
-                                        <div id="sitesList">
-                                            <!-- Sites serão carregados via JavaScript -->
+                                        <div class="alert alert-info">
+                                            <i class="fas fa-info-circle mr-2"></i>
+                                            Gerencie os locais físicos da empresa. Cada local pode ter setores específicos e horários de funcionamento.
+                                        </div>
+                                        
+                                        <div class="table-responsive">
+                                            <table class="table table-hover" id="sitesTable">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Nome do Local</th>
+                                                        <th>Endereço</th>
+                                                        <th>Capacidade Total</th>
+                                                        <th>Setores</th>
+                                                        <th>Status</th>
+                                                        <th width="120">Ações</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="sitesTableBody">
+                                                    <tr>
+                                                        <td colspan="6" class="text-center">
+                                                            <i class="fas fa-spinner fa-spin mr-2"></i>Carregando sites...
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
                                         </div>
                                     </div>
                                 </div>
@@ -835,8 +858,419 @@
         }, 5000);
     }
     
+    // ========== SITES MANAGEMENT ==========
+    
+    let currentSites = [];
+    let editingSiteId = null;
+    
+    // Helper para requisições com CSRF
+    function fetchWithCSRF(url, options = {}) {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        
+        // Default options
+        const defaultOptions = {
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': csrfToken
+            }
+        };
+        
+        // Merge options
+        const mergedOptions = {
+            ...defaultOptions,
+            ...options,
+            headers: {
+                ...defaultOptions.headers,
+                ...options.headers
+            }
+        };
+        
+        return fetch(url, mergedOptions);
+    }
+    
+    // Carregar sites na inicialização
+    function loadSites() {
+        fetch('/config/sites')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                currentSites = data.data;
+                renderSitesTable(currentSites);
+            } else {
+                console.error('Erro ao carregar sites:', data.message);
+                document.getElementById('sitesTableBody').innerHTML = `
+                    <tr><td colspan="6" class="text-center text-danger">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>Erro ao carregar sites: ${data.message}
+                    </td></tr>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Erro na requisição:', error);
+            document.getElementById('sitesTableBody').innerHTML = `
+                <tr><td colspan="6" class="text-center text-danger">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>Erro de conexão
+                </td></tr>
+            `;
+        });
+    }
+    
+    // Renderizar tabela de sites
+    function renderSitesTable(sites) {
+        const tbody = document.getElementById('sitesTableBody');
+        
+        if (sites.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center text-muted">
+                        <i class="fas fa-map-marker-alt fa-2x mb-2"></i><br>
+                        Nenhum local cadastrado. Clique em "Novo Local" para começar.
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        tbody.innerHTML = sites.map(site => `
+            <tr>
+                <td>
+                    <strong>${site.name}</strong>
+                    <small class="d-block text-muted">ID: ${site.id}</small>
+                </td>
+                <td>
+                    <span class="text-muted">${site.address || 'Não informado'}</span>
+                </td>
+                <td>
+                    <span class="badge badge-info">${site.total_capacity || 0} pessoas</span>
+                </td>
+                <td>
+                    <span class="badge badge-secondary">${site.sectors_count || 0} setores</span>
+                </td>
+                <td>
+                    <span class="badge badge-${site.active ? 'success' : 'secondary'}">
+                        ${site.active ? 'Ativo' : 'Inativo'}
+                    </span>
+                </td>
+                <td>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-primary" onclick="editSite(${site.id})" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-outline-info" onclick="manageSectors(${site.id})" title="Setores">
+                            <i class="fas fa-list"></i>
+                        </button>
+                        <button class="btn btn-outline-danger" onclick="deleteSite(${site.id})" title="Excluir">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
+    
+    // Modal para criar/editar site
+    function showSiteModal(siteId = null) {
+        editingSiteId = siteId;
+        const modalTitle = siteId ? 'Editar Local' : 'Novo Local';
+        const site = siteId ? currentSites.find(s => s.id == siteId) : {};
+        
+        document.getElementById('siteModalTitle').textContent = modalTitle;
+        document.getElementById('siteName').value = site.name || '';
+        document.getElementById('siteAddress').value = site.address || '';
+        document.getElementById('siteCapacity').value = site.capacity || 0;
+        document.getElementById('siteActive').checked = site.active !== false;
+        
+        $('#siteModal').modal('show');
+    }
+    
+    function editSite(siteId) {
+        showSiteModal(siteId);
+    }
+    
+    // Salvar site
+    function saveSite() {
+        const form = document.getElementById('siteForm');
+        const submitBtn = document.getElementById('saveSiteBtn');
+        const originalText = submitBtn.innerHTML;
+        
+        // Validação
+        const name = document.getElementById('siteName').value.trim();
+        if (!name) {
+            showAlert('Nome do local é obrigatório', 'warning');
+            return;
+        }
+        
+        const capacity = parseInt(document.getElementById('siteCapacity').value) || 0;
+        if (capacity < 0) {
+            showAlert('Capacidade deve ser maior ou igual a zero', 'warning');
+            return;
+        }
+        
+        // Preparar dados
+        const siteData = {
+            name: name,
+            address: document.getElementById('siteAddress').value.trim(),
+            capacity: capacity,
+            active: document.getElementById('siteActive').checked
+        };
+        
+        // Loading state
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+        submitBtn.disabled = true;
+        
+        // Endpoint e método
+        const url = editingSiteId ? `/config/sites?id=${editingSiteId}` : '/config/sites';
+        const method = editingSiteId ? 'PUT' : 'POST';
+        
+        fetchWithCSRF(url, {
+            method: method,
+            body: JSON.stringify(siteData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+            
+            if (data.success) {
+                showAlert(editingSiteId ? 'Local atualizado!' : 'Local criado com sucesso!', 'success');
+                $('#siteModal').modal('hide');
+                loadSites(); // Recarregar lista
+            } else {
+                showAlert(data.message || 'Erro ao salvar local', 'danger');
+            }
+        })
+        .catch(error => {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+            console.error('Erro:', error);
+            showAlert('Erro ao salvar local', 'danger');
+        });
+    }
+    
+    // Excluir site
+    function deleteSite(siteId) {
+        const site = currentSites.find(s => s.id == siteId);
+        if (!site) return;
+        
+        if (confirm(`Tem certeza que deseja excluir o local "${site.name}"?`)) {
+            fetchWithCSRF(`/config/sites?id=${siteId}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('Local excluído com sucesso!', 'success');
+                    loadSites();
+                } else {
+                    showAlert(data.message || 'Erro ao excluir local', 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                showAlert('Erro ao excluir local', 'danger');
+            });
+        }
+    }
+    
+    // ========== SETORES MANAGEMENT ==========
+    
+    let currentSectors = [];
+    let managingSiteId = null;
+    let editingSectorId = null;
+    
+    function manageSectors(siteId) {
+        managingSiteId = siteId;
+        const site = currentSites.find(s => s.id == siteId);
+        
+        document.getElementById('sectorsModalTitle').textContent = `Setores - ${site.name}`;
+        
+        loadSectors(siteId);
+        $('#sectorsModal').modal('show');
+    }
+    
+    // Carregar setores de um site
+    function loadSectors(siteId) {
+        document.getElementById('sectorsTableBody').innerHTML = `
+            <tr><td colspan="4" class="text-center">
+                <i class="fas fa-spinner fa-spin mr-2"></i>Carregando setores...
+            </td></tr>
+        `;
+        
+        fetch(`/config/sectors?site_id=${siteId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                currentSectors = data.data;
+                renderSectorsTable(currentSectors);
+            } else {
+                console.error('Erro ao carregar setores:', data.message);
+                document.getElementById('sectorsTableBody').innerHTML = `
+                    <tr><td colspan="4" class="text-center text-danger">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>Erro ao carregar setores: ${data.message}
+                    </td></tr>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Erro na requisição:', error);
+            document.getElementById('sectorsTableBody').innerHTML = `
+                <tr><td colspan="4" class="text-center text-danger">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>Erro de conexão
+                </td></tr>
+            `;
+        });
+    }
+    
+    // Renderizar tabela de setores
+    function renderSectorsTable(sectors) {
+        const tbody = document.getElementById('sectorsTableBody');
+        
+        if (sectors.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="4" class="text-center text-muted">
+                        <i class="fas fa-list fa-2x mb-2"></i><br>
+                        Nenhum setor cadastrado. Clique em "Novo Setor" para começar.
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        tbody.innerHTML = sectors.map(sector => `
+            <tr>
+                <td>
+                    <strong>${sector.name}</strong>
+                    <small class="d-block text-muted">ID: ${sector.id}</small>
+                </td>
+                <td>
+                    <span class="badge badge-info">${sector.capacity || 0} pessoas</span>
+                </td>
+                <td>
+                    <span class="badge badge-${sector.active ? 'success' : 'secondary'}">
+                        ${sector.active ? 'Ativo' : 'Inativo'}
+                    </span>
+                </td>
+                <td>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-primary" onclick="editSector(${sector.id})" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-outline-danger" onclick="deleteSector(${sector.id})" title="Excluir">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
+    
+    // Modal para criar/editar setor
+    function showSectorModal(sectorId = null) {
+        editingSectorId = sectorId;
+        const modalTitle = sectorId ? 'Editar Setor' : 'Novo Setor';
+        const sector = sectorId ? currentSectors.find(s => s.id == sectorId) : {};
+        
+        document.getElementById('sectorModalTitle').textContent = modalTitle;
+        document.getElementById('sectorName').value = sector.name || '';
+        document.getElementById('sectorCapacity').value = sector.capacity || 0;
+        document.getElementById('sectorActive').checked = sector.active !== false;
+        
+        $('#sectorModal').modal('show');
+    }
+    
+    function editSector(sectorId) {
+        showSectorModal(sectorId);
+    }
+    
+    // Salvar setor
+    function saveSector() {
+        const submitBtn = document.getElementById('saveSectorBtn');
+        const originalText = submitBtn.innerHTML;
+        
+        // Validação
+        const name = document.getElementById('sectorName').value.trim();
+        if (!name) {
+            showAlert('Nome do setor é obrigatório', 'warning');
+            return;
+        }
+        
+        const capacity = parseInt(document.getElementById('sectorCapacity').value) || 0;
+        if (capacity < 0) {
+            showAlert('Capacidade deve ser maior ou igual a zero', 'warning');
+            return;
+        }
+        
+        // Preparar dados
+        const sectorData = {
+            site_id: managingSiteId,
+            name: name,
+            capacity: capacity,
+            active: document.getElementById('sectorActive').checked
+        };
+        
+        // Loading state
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+        submitBtn.disabled = true;
+        
+        // Endpoint e método
+        const url = editingSectorId ? `/config/sectors?id=${editingSectorId}` : '/config/sectors';
+        const method = editingSectorId ? 'PUT' : 'POST';
+        
+        fetchWithCSRF(url, {
+            method: method,
+            body: JSON.stringify(sectorData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+            
+            if (data.success) {
+                showAlert(editingSectorId ? 'Setor atualizado!' : 'Setor criado com sucesso!', 'success');
+                $('#sectorModal').modal('hide');
+                loadSectors(managingSiteId); // Recarregar lista
+                loadSites(); // Atualizar contadores na tabela principal
+            } else {
+                showAlert(data.message || 'Erro ao salvar setor', 'danger');
+            }
+        })
+        .catch(error => {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+            console.error('Erro:', error);
+            showAlert('Erro ao salvar setor', 'danger');
+        });
+    }
+    
+    // Excluir setor
+    function deleteSector(sectorId) {
+        const sector = currentSectors.find(s => s.id == sectorId);
+        if (!sector) return;
+        
+        if (confirm(`Tem certeza que deseja excluir o setor "${sector.name}"?`)) {
+            fetchWithCSRF(`/config/sectors?id=${sectorId}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('Setor excluído com sucesso!', 'success');
+                    loadSectors(managingSiteId);
+                    loadSites(); // Atualizar contadores
+                } else {
+                    showAlert(data.message || 'Erro ao excluir setor', 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                showAlert('Erro ao excluir setor', 'danger');
+            });
+        }
+    }
+    
     function showAddSiteModal() {
-        // Implementar modal de adicionar site
+        showSiteModal();
     }
     
     function showRbacUsers() {
@@ -851,5 +1285,138 @@
         // Implementar exportação de logs
     }
     </script>
+
+    <!-- Modal: Site -->
+    <div class="modal fade" id="siteModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="siteModalTitle">Novo Local</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="siteForm" onsubmit="event.preventDefault(); saveSite();">
+                    <div class="modal-body">
+                        <div class="form-group mb-3">
+                            <label for="siteName">Nome do Local *</label>
+                            <input type="text" class="form-control" id="siteName" required maxlength="100"
+                                   placeholder="Ex: Matriz São Paulo">
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="siteAddress">Endereço</label>
+                            <textarea class="form-control" id="siteAddress" rows="3"
+                                      placeholder="Endereço completo do local"></textarea>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="siteCapacity">Capacidade Total (pessoas)</label>
+                            <input type="number" class="form-control" id="siteCapacity" min="0" max="99999" value="0">
+                            <small class="form-text text-muted">Capacidade máxima de pessoas no local</small>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="siteActive" checked>
+                                <label class="form-check-label" for="siteActive">
+                                    Local ativo (disponível para controle de acesso)
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary" id="saveSiteBtn">
+                            <i class="fas fa-save mr-1"></i>Salvar Local
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Setores -->
+    <div class="modal fade" id="sectorsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="sectorsModalTitle">Setores</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0">Lista de Setores</h6>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="showSectorModal()">
+                            <i class="fas fa-plus mr-1"></i>Novo Setor
+                        </button>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Nome do Setor</th>
+                                    <th>Capacidade</th>
+                                    <th>Status</th>
+                                    <th width="100">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sectorsTableBody">
+                                <tr>
+                                    <td colspan="4" class="text-center">
+                                        <i class="fas fa-spinner fa-spin mr-2"></i>Carregando setores...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Setor Individual -->
+    <div class="modal fade" id="sectorModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="sectorModalTitle">Novo Setor</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="sectorForm" onsubmit="event.preventDefault(); saveSector();">
+                    <div class="modal-body">
+                        <div class="form-group mb-3">
+                            <label for="sectorName">Nome do Setor *</label>
+                            <input type="text" class="form-control" id="sectorName" required maxlength="100"
+                                   placeholder="Ex: Administração, Produção, etc.">
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="sectorCapacity">Capacidade (pessoas)</label>
+                            <input type="number" class="form-control" id="sectorCapacity" min="0" max="9999" value="0">
+                            <small class="form-text text-muted">Capacidade máxima de pessoas neste setor</small>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="sectorActive" checked>
+                                <label class="form-check-label" for="sectorActive">
+                                    Setor ativo (disponível para controle de acesso)
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary" id="saveSectorBtn">
+                            <i class="fas fa-save mr-1"></i>Salvar Setor
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

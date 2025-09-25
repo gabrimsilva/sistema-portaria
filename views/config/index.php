@@ -525,6 +525,17 @@
         // Máscara CNPJ
         $('#cnpj').mask('00.000.000/0000-00');
         
+        // Validação CNPJ em tempo real
+        $('#cnpj').on('blur', function() {
+            validateCNPJ(this.value);
+        });
+        
+        // Submissão do formulário de organização
+        $('#organizationForm').on('submit', function(e) {
+            e.preventDefault();
+            saveOrganizationSettings();
+        });
+        
         // Inicializar seções
         loadOrganizationSettings();
         loadSites();
@@ -535,7 +546,55 @@
     
     // Funções para carregar dados
     function loadOrganizationSettings() {
-        // Implementar carregamento das configurações da organização
+        fetch('/config', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'action=get_organization'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const org = data.data || {};
+                
+                // Preencher campos do formulário com valores padrão
+                document.getElementById('companyName').value = org.company_name || '';
+                document.getElementById('cnpj').value = org.cnpj_formatted || org.cnpj || '';
+                document.getElementById('timezone').value = org.timezone || 'America/Sao_Paulo';
+                document.getElementById('locale').value = org.locale || 'pt-BR';
+                
+                // Carregar logo se existir
+                if (org.logo_url) {
+                    const logoPreview = document.getElementById('logoPreview');
+                    const logoPlaceholder = document.getElementById('logoPlaceholder');
+                    const removeLogo = document.getElementById('removeLogo');
+                    
+                    logoPreview.src = org.logo_url;
+                    logoPreview.style.display = 'block';
+                    logoPlaceholder.style.display = 'none';
+                    removeLogo.style.display = 'block';
+                } else {
+                    // Garantir que está no estado inicial
+                    const logoPreview = document.getElementById('logoPreview');
+                    const logoPlaceholder = document.getElementById('logoPlaceholder');
+                    const removeLogo = document.getElementById('removeLogo');
+                    
+                    logoPreview.style.display = 'none';
+                    logoPlaceholder.style.display = 'block';
+                    removeLogo.style.display = 'none';
+                }
+                
+                console.log('✅ Configurações carregadas:', org);
+            } else {
+                console.warn('⚠️ Erro ao carregar configurações:', data.message);
+                showAlert('Aviso: ' + (data.message || 'Configurações não encontradas'), 'info');
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao carregar configurações:', error);
+            showAlert('Erro ao carregar configurações da organização', 'warning');
+        });
     }
     
     function loadSites() {
@@ -635,7 +694,12 @@
             if (data.success) {
                 // Resetar preview da logo para default
                 const logoPreview = document.getElementById('logoPreview');
-                logoPreview.src = '/logo.jpg';
+                const logoPlaceholder = document.getElementById('logoPlaceholder');
+                const removeBtn = document.getElementById('removeLogo');
+                
+                logoPreview.style.display = 'none';
+                logoPlaceholder.style.display = 'block';
+                removeBtn.style.display = 'none';
                 
                 showAlert('Logo removida com sucesso!', 'success');
             } else {
@@ -645,6 +709,107 @@
         .catch(error => {
             console.error('Erro:', error);
             showAlert('Erro ao remover logo', 'danger');
+        });
+    }
+    
+    // Validação CNPJ em tempo real
+    function validateCNPJ(cnpj) {
+        const cnpjInput = document.getElementById('cnpj');
+        const cnpjError = document.getElementById('cnpjError');
+        
+        if (!cnpj || cnpj.trim() === '') {
+            cnpjInput.classList.remove('is-invalid', 'is-valid');
+            cnpjError.textContent = '';
+            return;
+        }
+        
+        // Validar no servidor
+        fetch('/config', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `action=validate_cnpj&cnpj=${encodeURIComponent(cnpj)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.data.valid) {
+                cnpjInput.classList.remove('is-invalid');
+                cnpjInput.classList.add('is-valid');
+                cnpjError.textContent = '';
+                
+                // Aplicar formatação se retornada
+                if (data.data.formatted) {
+                    cnpjInput.value = data.data.formatted;
+                }
+            } else {
+                cnpjInput.classList.remove('is-valid');
+                cnpjInput.classList.add('is-invalid');
+                cnpjError.textContent = 'CNPJ inválido';
+            }
+        })
+        .catch(error => {
+            console.error('Erro na validação CNPJ:', error);
+        });
+    }
+    
+    // Salvar configurações da organização
+    function saveOrganizationSettings() {
+        const form = document.getElementById('organizationForm');
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        
+        // Validação básica
+        const companyName = document.getElementById('companyName').value.trim();
+        if (!companyName) {
+            showAlert('Nome da empresa é obrigatório', 'warning');
+            return;
+        }
+        
+        // Preparar dados
+        const formData = {
+            action: 'save_organization',
+            company_name: companyName,
+            cnpj: document.getElementById('cnpj').value.trim(),
+            timezone: document.getElementById('timezone').value,
+            locale: document.getElementById('locale').value
+        };
+        
+        // Indicador de carregamento
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+        submitBtn.disabled = true;
+        
+        // Enviar dados
+        fetch('/config', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: Object.keys(formData).map(key => 
+                encodeURIComponent(key) + '=' + encodeURIComponent(formData[key])
+            ).join('&')
+        })
+        .then(response => response.json())
+        .then(data => {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+            
+            if (data.success) {
+                showAlert('Configurações salvas com sucesso!', 'success');
+                
+                // Recarregar dados para confirmar salvamento
+                setTimeout(() => {
+                    loadOrganizationSettings();
+                }, 1000);
+            } else {
+                showAlert(data.message || 'Erro ao salvar configurações', 'danger');
+            }
+        })
+        .catch(error => {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+            console.error('Erro:', error);
+            showAlert('Erro ao salvar configurações', 'danger');
         });
     }
     

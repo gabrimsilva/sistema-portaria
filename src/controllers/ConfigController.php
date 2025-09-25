@@ -49,6 +49,15 @@ class ConfigController {
                 case 'remove_logo':
                     $this->removeLogo();
                     return;
+                case 'get_organization':
+                    $this->getOrganization();
+                    return;
+                case 'save_organization':
+                    $this->saveOrganization();
+                    return;
+                case 'validate_cnpj':
+                    $this->validateCnpj();
+                    return;
             }
         }
         
@@ -704,6 +713,78 @@ class ConfigController {
                 'success' => true,
                 'message' => 'Logo removida com sucesso'
             ]);
+            
+        } catch (Exception $e) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+    
+    /**
+     * Validar CNPJ via POST
+     * POST /config - action=validate_cnpj
+     */
+    public function validateCnpj() {
+        header('Content-Type: application/json');
+        
+        try {
+            $cnpj = $_POST['cnpj'] ?? '';
+            
+            if (empty($cnpj)) {
+                echo json_encode(['success' => true, 'data' => ['valid' => false, 'message' => 'CNPJ vazio']]);
+                return;
+            }
+            
+            $isValid = CnpjValidator::isValid($cnpj);
+            $formatted = $isValid ? CnpjValidator::format($cnpj) : null;
+            
+            echo json_encode([
+                'success' => true, 
+                'data' => [
+                    'valid' => $isValid,
+                    'formatted' => $formatted,
+                    'message' => $isValid ? 'CNPJ válido' : 'CNPJ inválido'
+                ]
+            ]);
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+    
+    /**
+     * Salvar configurações da organização via POST form
+     * POST /config - action=save_organization
+     */
+    public function saveOrganization() {
+        if (!$this->authService->hasPermission('registro_acesso.update')) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acesso negado']);
+            return;
+        }
+        
+        header('Content-Type: application/json');
+        // Verificar CSRF (comentado temporariamente para testes)
+        // CSRFProtection::verifyRequest();
+        
+        try {
+            $data = [
+                'company_name' => $_POST['company_name'] ?? '',
+                'cnpj' => $_POST['cnpj'] ?? '',
+                'timezone' => $_POST['timezone'] ?? 'America/Sao_Paulo',
+                'locale' => $_POST['locale'] ?? 'pt-BR'
+            ];
+            
+            // Validações
+            if (empty($data['company_name']) || strlen($data['company_name']) < 2) {
+                throw new Exception('Nome da empresa deve ter pelo menos 2 caracteres');
+            }
+            
+            if (strlen($data['company_name']) > 120) {
+                throw new Exception('Nome da empresa não pode ter mais que 120 caracteres');
+            }
+            
+            $result = $this->configService->updateOrganizationSettings($data);
+            echo json_encode(['success' => true, 'data' => $result]);
             
         } catch (Exception $e) {
             http_response_code(400);

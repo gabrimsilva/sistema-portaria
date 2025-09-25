@@ -890,7 +890,7 @@
     
     // Carregar sites na inicialização
     function loadSites() {
-        fetch('/config/sites')
+        fetch('/config?action=sites')
         .then(response => response.json())
         .then(data => {
             if (data.success) {
@@ -1019,7 +1019,7 @@
         submitBtn.disabled = true;
         
         // Endpoint e método
-        const url = editingSiteId ? `/config/sites?id=${editingSiteId}` : '/config/sites';
+        const url = editingSiteId ? `/config?action=sites&id=${editingSiteId}` : '/config?action=sites';
         const method = editingSiteId ? 'PUT' : 'POST';
         
         fetchWithCSRF(url, {
@@ -1053,7 +1053,7 @@
         if (!site) return;
         
         if (confirm(`Tem certeza que deseja excluir o local "${site.name}"?`)) {
-            fetchWithCSRF(`/config/sites?id=${siteId}`, {
+            fetchWithCSRF(`/config?action=sites&id=${siteId}`, {
                 method: 'DELETE'
             })
             .then(response => response.json())
@@ -1096,7 +1096,7 @@
             </td></tr>
         `;
         
-        fetch(`/config/sectors?site_id=${siteId}`)
+        fetch(`/config?action=sectors&site_id=${siteId}`)
         .then(response => response.json())
         .then(data => {
             if (data.success) {
@@ -1214,7 +1214,7 @@
         submitBtn.disabled = true;
         
         // Endpoint e método
-        const url = editingSectorId ? `/config/sectors?id=${editingSectorId}` : '/config/sectors';
+        const url = editingSectorId ? `/config?action=sectors&id=${editingSectorId}` : '/config?action=sectors';
         const method = editingSectorId ? 'PUT' : 'POST';
         
         fetchWithCSRF(url, {
@@ -1249,7 +1249,7 @@
         if (!sector) return;
         
         if (confirm(`Tem certeza que deseja excluir o setor "${sector.name}"?`)) {
-            fetchWithCSRF(`/config/sectors?id=${sectorId}`, {
+            fetchWithCSRF(`/config?action=sectors&id=${sectorId}`, {
                 method: 'DELETE'
             })
             .then(response => response.json())

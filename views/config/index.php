@@ -966,7 +966,7 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    const logs = data.data;
+                    const logs = data.data.logs || [];
                     let html = '';
                     
                     if (logs.length === 0) {

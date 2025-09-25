@@ -344,13 +344,34 @@ try {
                     $controller->exportAuditLogs();
                     break;
                 case 'users':
-                    $controller->getUsers();
+                    if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+                        $controller->getUsers();
+                    } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                        $controller->createUser();
+                    }
                     break;
                 case 'validate-cnpj':
                     $controller->validateCnpj();
                     break;
                 default:
-                    $controller->index();
+                    // Verificar se é uma rota específica de usuários
+                    if (preg_match('/^users\/(\d+)\/toggle-status$/', $action, $matches)) {
+                        $_GET['id'] = $matches[1];
+                        $controller->toggleUserStatus();
+                    } elseif (preg_match('/^users\/(\d+)\/reset-password$/', $action, $matches)) {
+                        $_GET['id'] = $matches[1];
+                        $controller->resetUserPassword();
+                    } elseif (preg_match('/^users\/(\d+)$/', $action, $matches)) {
+                        $_GET['id'] = $matches[1];
+                        if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
+                            $controller->updateUser();
+                        } else {
+                            http_response_code(405);
+                            echo json_encode(['success' => false, 'message' => 'Método não permitido']);
+                        }
+                    } else {
+                        $controller->index();
+                    }
                     break;
             }
             break;

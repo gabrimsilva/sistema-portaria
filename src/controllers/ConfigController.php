@@ -488,6 +488,383 @@ class ConfigController {
         }
     }
     
+    // ========== USUÁRIOS ==========
+    
+    /**
+     * GET /config/users
+     */
+    public function getUsers() {
+        if (!$this->authService->hasPermission('config.rbac.write')) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acesso negado. Permissão necessária: config.rbac.write']);
+            return;
+        }
+        
+        header('Content-Type: application/json');
+        
+        try {
+            // Buscar usuários
+            $users = $this->db->fetchAll(
+                "SELECT u.id, u.nome, u.email, u.perfil, u.ativo, u.data_criacao, u.ultimo_login, u.role_id,
+                        r.name as role_name, r.description as role_description
+                 FROM usuarios u 
+                 LEFT JOIN roles r ON u.role_id = r.id 
+                 ORDER BY u.id"
+            );
+            
+            // Buscar roles disponíveis
+            $roles = $this->rbacService->getRoles();
+            
+            echo json_encode([
+                'success' => true, 
+                'users' => $users,
+                'roles' => $roles
+            ]);
+            
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+    
+    /**
+     * POST /config/users
+     */
+    public function createUser() {
+        if (!$this->authService->hasPermission('config.rbac.write')) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acesso negado. Permissão necessária: config.rbac.write']);
+            return;
+        }
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método não permitido']);
+            return;
+        }
+        
+        header('Content-Type: application/json');
+        CSRFProtection::verifyRequest();
+        
+        try {
+            $input = json_decode(file_get_contents('php://input'), true);
+            
+            // Validações
+            if (empty($input['nome']) || empty($input['email']) || empty($input['senha'])) {
+                throw new Exception('Nome, email e senha são obrigatórios');
+            }
+            
+            if (strlen($input['senha']) < 6) {
+                throw new Exception('Senha deve ter pelo menos 6 caracteres');
+            }
+            
+            if (!filter_var($input['email'], FILTER_VALIDATE_EMAIL)) {
+                throw new Exception('Email inválido');
+            }
+            
+            // Verificar se email já existe
+            $existingUser = $this->db->fetch("SELECT id FROM usuarios WHERE email = ?", [$input['email']]);
+            if ($existingUser) {
+                throw new Exception('Email já está em uso');
+            }
+            
+            // Verificar se role_id é válido
+            if (!empty($input['role_id'])) {
+                $roleExists = $this->db->fetch("SELECT id FROM roles WHERE id = ? AND active = TRUE", [$input['role_id']]);
+                if (!$roleExists) {
+                    throw new Exception('Perfil/Role inválido');
+                }
+            }
+            
+            // Criar usuário
+            $senhaHash = password_hash($input['senha'], PASSWORD_DEFAULT);
+            $ativo = isset($input['ativo']) ? (bool)$input['ativo'] : true;
+            
+            $result = $this->db->fetch(
+                "INSERT INTO usuarios (nome, email, senha_hash, role_id, ativo, data_criacao) 
+                 VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP) RETURNING id",
+                [
+                    $input['nome'],
+                    $input['email'],
+                    $senhaHash,
+                    $input['role_id'] ?: null,
+                    $ativo
+                ]
+            );
+            
+            $userId = $result['id'];
+            
+            // Log de auditoria
+            $this->auditService->log(
+                'create',
+                'usuarios',
+                $userId,
+                null,
+                ['nome' => $input['nome'], 'email' => $input['email'], 'role_id' => $input['role_id']]
+            );
+            
+            echo json_encode([
+                'success' => true, 
+                'message' => 'Usuário criado com sucesso',
+                'user_id' => $userId
+            ]);
+            
+        } catch (Exception $e) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+    
+    /**
+     * PUT /config/users/{id}
+     */
+    public function updateUser() {
+        if (!$this->authService->hasPermission('config.rbac.write')) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acesso negado. Permissão necessária: config.rbac.write']);
+            return;
+        }
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'PUT') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método não permitido']);
+            return;
+        }
+        
+        header('Content-Type: application/json');
+        CSRFProtection::verifyRequest();
+        
+        try {
+            // Extrair ID da URL
+            $pathParts = explode('/', trim($_SERVER['REQUEST_URI'], '/'));
+            $userId = end($pathParts);
+            
+            if (!$userId || !is_numeric($userId)) {
+                throw new Exception('ID do usuário é obrigatório');
+            }
+            
+            // Verificar se usuário existe
+            $currentUser = $this->db->fetch("SELECT * FROM usuarios WHERE id = ?", [$userId]);
+            if (!$currentUser) {
+                throw new Exception('Usuário não encontrado');
+            }
+            
+            $input = json_decode(file_get_contents('php://input'), true);
+            
+            // Validações
+            if (empty($input['nome']) || empty($input['email'])) {
+                throw new Exception('Nome e email são obrigatórios');
+            }
+            
+            if (!filter_var($input['email'], FILTER_VALIDATE_EMAIL)) {
+                throw new Exception('Email inválido');
+            }
+            
+            // Verificar se email já existe para outro usuário
+            $existingUser = $this->db->fetch("SELECT id FROM usuarios WHERE email = ? AND id != ?", [$input['email'], $userId]);
+            if ($existingUser) {
+                throw new Exception('Email já está em uso por outro usuário');
+            }
+            
+            // Verificar se role_id é válido
+            if (!empty($input['role_id'])) {
+                $roleExists = $this->db->fetch("SELECT id FROM roles WHERE id = ? AND active = TRUE", [$input['role_id']]);
+                if (!$roleExists) {
+                    throw new Exception('Perfil/Role inválido');
+                }
+            }
+            
+            // Preparar dados para atualização
+            $updateData = [
+                'nome' => $input['nome'],
+                'email' => $input['email'],
+                'role_id' => $input['role_id'] ?: null,
+                'ativo' => isset($input['ativo']) ? (bool)$input['ativo'] : true
+            ];
+            
+            // Atualizar senha se fornecida
+            if (!empty($input['senha'])) {
+                if (strlen($input['senha']) < 6) {
+                    throw new Exception('Senha deve ter pelo menos 6 caracteres');
+                }
+                $updateData['senha_hash'] = password_hash($input['senha'], PASSWORD_DEFAULT);
+            }
+            
+            // Atualizar usuário
+            $setParts = [];
+            $values = [];
+            foreach ($updateData as $field => $value) {
+                $setParts[] = "$field = ?";
+                $values[] = $value;
+            }
+            $values[] = $userId; // Para WHERE
+            
+            $this->db->query(
+                "UPDATE usuarios SET " . implode(', ', $setParts) . " WHERE id = ?",
+                $values
+            );
+            
+            // Log de auditoria
+            $this->auditService->log(
+                'update',
+                'usuarios',
+                $userId,
+                $currentUser,
+                $updateData
+            );
+            
+            echo json_encode(['success' => true, 'message' => 'Usuário atualizado com sucesso']);
+            
+        } catch (Exception $e) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+    
+    /**
+     * POST /config/users/{id}/toggle-status
+     */
+    public function toggleUserStatus() {
+        if (!$this->authService->hasPermission('config.rbac.write')) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acesso negado. Permissão necessária: config.rbac.write']);
+            return;
+        }
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método não permitido']);
+            return;
+        }
+        
+        header('Content-Type: application/json');
+        CSRFProtection::verifyRequest();
+        
+        try {
+            // Extrair ID da URL
+            $pathParts = explode('/', trim($_SERVER['REQUEST_URI'], '/'));
+            $userId = $pathParts[array_search('users', $pathParts) + 1];
+            
+            if (!$userId || !is_numeric($userId)) {
+                throw new Exception('ID do usuário é obrigatório');
+            }
+            
+            // Não permitir desativar o administrador principal
+            if ($userId == 1) {
+                throw new Exception('Não é possível desativar o administrador principal');
+            }
+            
+            // Buscar usuário atual
+            $currentUser = $this->db->fetch("SELECT * FROM usuarios WHERE id = ?", [$userId]);
+            if (!$currentUser) {
+                throw new Exception('Usuário não encontrado');
+            }
+            
+            // Alternar status
+            $newStatus = !$currentUser['ativo'];
+            
+            $this->db->query(
+                "UPDATE usuarios SET ativo = ? WHERE id = ?",
+                [$newStatus, $userId]
+            );
+            
+            // Log de auditoria
+            $this->auditService->log(
+                'update',
+                'usuarios',
+                $userId,
+                ['ativo' => $currentUser['ativo']],
+                ['ativo' => $newStatus]
+            );
+            
+            $action = $newStatus ? 'ativado' : 'desativado';
+            echo json_encode(['success' => true, 'message' => "Usuário $action com sucesso"]);
+            
+        } catch (Exception $e) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+    
+    /**
+     * POST /config/users/{id}/reset-password
+     */
+    public function resetUserPassword() {
+        if (!$this->authService->hasPermission('config.rbac.write')) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acesso negado. Permissão necessária: config.rbac.write']);
+            return;
+        }
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método não permitido']);
+            return;
+        }
+        
+        header('Content-Type: application/json');
+        CSRFProtection::verifyRequest();
+        
+        try {
+            // Extrair ID da URL
+            $pathParts = explode('/', trim($_SERVER['REQUEST_URI'], '/'));
+            $userId = $pathParts[array_search('users', $pathParts) + 1];
+            
+            if (!$userId || !is_numeric($userId)) {
+                throw new Exception('ID do usuário é obrigatório');
+            }
+            
+            // Buscar usuário
+            $user = $this->db->fetch("SELECT * FROM usuarios WHERE id = ?", [$userId]);
+            if (!$user) {
+                throw new Exception('Usuário não encontrado');
+            }
+            
+            // Gerar nova senha aleatória
+            $newPassword = $this->generateSecurePassword();
+            $senhaHash = password_hash($newPassword, PASSWORD_DEFAULT);
+            
+            // Atualizar senha
+            $this->db->query(
+                "UPDATE usuarios SET senha_hash = ? WHERE id = ?",
+                [$senhaHash, $userId]
+            );
+            
+            // Log de auditoria
+            $this->auditService->log(
+                'update',
+                'usuarios',
+                $userId,
+                null,
+                ['action' => 'password_reset']
+            );
+            
+            // TODO: Aqui você pode implementar envio de email com a nova senha
+            // Por enquanto, vamos retornar a senha gerada (apenas para desenvolvimento)
+            
+            echo json_encode([
+                'success' => true, 
+                'message' => 'Senha resetada com sucesso',
+                'new_password' => $newPassword // REMOVER EM PRODUÇÃO
+            ]);
+            
+        } catch (Exception $e) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+    
+    /**
+     * Gerar senha segura aleatória
+     */
+    private function generateSecurePassword($length = 8) {
+        $chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%&*';
+        $password = '';
+        for ($i = 0; $i < $length; $i++) {
+            $password .= $chars[random_int(0, strlen($chars) - 1)];
+        }
+        return $password;
+    }
+    
     // ========== POLÍTICAS DE AUTENTICAÇÃO ==========
     
     /**
@@ -598,9 +975,9 @@ class ConfigController {
     // ========== UTILITÁRIOS ==========
     
     /**
-     * GET /config/users - Listar usuários para filtros
+     * GET /config/users-for-filters - Listar usuários para filtros/utilitários
      */
-    public function getUsers() {
+    public function getUsersForFilters() {
         if (!$this->authService->hasPermission('registro_acesso.update')) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Acesso negado']);

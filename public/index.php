@@ -277,6 +277,24 @@ try {
         case 'config/auth-policies':
         case 'config/audit':
         case 'config/users':
+            // Also catch specific user routes like config/users/5
+            if (preg_match('/^config\/users\/\d+/', $path)) {
+                require_once '../src/controllers/ConfigController.php';
+                $controller = new ConfigController();
+                
+                // Extract the ID from path like config/users/5
+                if (preg_match('/^config\/users\/(\d+)/', $path, $matches)) {
+                    $_GET['id'] = $matches[1];
+                    
+                    if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
+                        $controller->updateUser();
+                    } else {
+                        http_response_code(405);
+                        echo json_encode(['success' => false, 'message' => 'Método não permitido']);
+                    }
+                }
+                break;
+            }
             require_once '../src/controllers/ConfigController.php';
             $controller = new ConfigController();
             

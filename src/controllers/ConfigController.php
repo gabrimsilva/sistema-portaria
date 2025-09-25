@@ -19,6 +19,11 @@ class ConfigController {
     private $auditService;
     
     public function __construct() {
+        // Iniciar sessão se ainda não foi iniciada
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        
         $this->checkAuthentication();
         $this->db = new Database();
         $this->authService = new AuthorizationService();

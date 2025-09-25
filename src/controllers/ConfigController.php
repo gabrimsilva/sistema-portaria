@@ -40,6 +40,18 @@ class ConfigController {
             exit;
         }
         
+        // Tratar requisições POST com ações específicas
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+            switch ($_POST['action']) {
+                case 'upload_logo':
+                    $this->uploadLogo();
+                    return;
+                case 'remove_logo':
+                    $this->removeLogo();
+                    return;
+            }
+        }
+        
         include '../views/config/index.php';
     }
     
@@ -590,7 +602,6 @@ class ConfigController {
         }
         
         header('Content-Type: application/json');
-        CSRFProtection::verifyRequest();
         
         try {
             if (!isset($_FILES['logo']) || $_FILES['logo']['error'] !== UPLOAD_ERR_OK) {
@@ -649,8 +660,49 @@ class ConfigController {
                 'success' => true,
                 'data' => [
                     'url' => $logoUrl,
+                    'logo_url' => $logoUrl,
                     'file_name' => $fileName
                 ]
+            ]);
+            
+        } catch (Exception $e) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+    
+    /**
+     * Remover logo da organização
+     * POST /config - action=remove_logo
+     */
+    public function removeLogo() {
+        if (!$this->authService->hasPermission('registro_acesso.update')) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acesso negado']);
+            return;
+        }
+        
+        header('Content-Type: application/json');
+        
+        try {
+            // Obter configuração atual
+            $current = $this->configService->getOrganizationSettings();
+            
+            // Se há logo atualmente configurada, tentar remover arquivo
+            if (!empty($current['logo_url'])) {
+                $logoPath = $_SERVER['DOCUMENT_ROOT'] . $current['logo_url'];
+                if (file_exists($logoPath)) {
+                    @unlink($logoPath); // @ para suprimir erros se não conseguir deletar
+                }
+            }
+            
+            // Remover URL da logo das configurações
+            $updateData = array_merge($current, ['logo_url' => null]);
+            $this->configService->updateOrganizationSettings($updateData);
+            
+            echo json_encode([
+                'success' => true,
+                'message' => 'Logo removida com sucesso'
             ]);
             
         } catch (Exception $e) {

@@ -561,11 +561,113 @@
     }
     
     function handleLogoUpload(input) {
-        // Implementar upload de logo
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            
+            // Verificar se é uma imagem válida
+            if (!file.type.startsWith('image/')) {
+                alert('Por favor, selecione apenas arquivos de imagem (JPG, PNG, GIF)');
+                return;
+            }
+            
+            // Verificar tamanho máximo (2MB)
+            if (file.size > 2 * 1024 * 1024) {
+                alert('O arquivo deve ter no máximo 2MB');
+                return;
+            }
+            
+            // Criar FormData para upload
+            const formData = new FormData();
+            formData.append('logo', file);
+            formData.append('action', 'upload_logo');
+            
+            // Mostrar indicador de carregamento
+            const uploadBtn = document.querySelector('.upload-logo-btn');
+            const originalText = uploadBtn.innerHTML;
+            uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+            uploadBtn.disabled = true;
+            
+            // Enviar via AJAX
+            fetch('/config', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                uploadBtn.innerHTML = originalText;
+                uploadBtn.disabled = false;
+                
+                if (data.success) {
+                    // Atualizar preview da logo
+                    const logoPreview = document.getElementById('logoPreview');
+                    logoPreview.src = data.data.url + '?' + new Date().getTime(); // Cache bust
+                    
+                    // Mostrar mensagem de sucesso
+                    showAlert('Logo atualizada com sucesso!', 'success');
+                } else {
+                    showAlert(data.error || 'Erro ao fazer upload da logo', 'danger');
+                }
+            })
+            .catch(error => {
+                uploadBtn.innerHTML = originalText;
+                uploadBtn.disabled = false;
+                console.error('Erro:', error);
+                showAlert('Erro ao fazer upload da logo', 'danger');
+            });
+        }
     }
     
     function removeLogo() {
-        // Implementar remoção de logo
+        if (!confirm('Tem certeza que deseja remover a logo?')) {
+            return;
+        }
+        
+        // Enviar requisição para remover logo
+        const formData = new FormData();
+        formData.append('action', 'remove_logo');
+        
+        fetch('/config', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Resetar preview da logo para default
+                const logoPreview = document.getElementById('logoPreview');
+                logoPreview.src = '/logo.jpg';
+                
+                showAlert('Logo removida com sucesso!', 'success');
+            } else {
+                showAlert(data.error || 'Erro ao remover logo', 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            showAlert('Erro ao remover logo', 'danger');
+        });
+    }
+    
+    // Função auxiliar para mostrar alertas
+    function showAlert(message, type) {
+        const alertHtml = `
+            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+        
+        // Inserir no topo do content
+        const content = document.querySelector('.content-wrapper .content');
+        content.insertAdjacentHTML('afterbegin', alertHtml);
+        
+        // Auto-remove após 5 segundos
+        setTimeout(() => {
+            const alert = content.querySelector('.alert');
+            if (alert) {
+                alert.remove();
+            }
+        }, 5000);
     }
     
     function showAddSiteModal() {

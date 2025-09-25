@@ -5,6 +5,7 @@ require_once __DIR__ . '/../../config/csrf.php';
 require_once __DIR__ . '/../services/ConfigService.php';
 require_once __DIR__ . '/../services/AuthorizationService.php';
 require_once __DIR__ . '/../services/RbacService.php';
+require_once __DIR__ . '/../services/AuditService.php';
 require_once __DIR__ . '/../utils/CnpjValidator.php';
 
 /**
@@ -15,6 +16,7 @@ class ConfigController {
     private $authService;
     private $configService;
     private $rbacService;
+    private $auditService;
     
     public function __construct() {
         $this->checkAuthentication();
@@ -22,6 +24,7 @@ class ConfigController {
         $this->authService = new AuthorizationService();
         $this->configService = new ConfigService();
         $this->rbacService = new RbacService();
+        $this->auditService = new AuditService();
     }
     
     private function checkAuthentication() {

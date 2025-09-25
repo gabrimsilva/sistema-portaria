@@ -271,9 +271,21 @@ try {
             break;
             
         case 'config':
+        case 'config/rbac-matrix':
+        case 'config/rbac-users':
+        case 'config/role-permissions':
+        case 'config/auth-policies':
+        case 'config/audit':
+        case 'config/users':
             require_once '../src/controllers/ConfigController.php';
             $controller = new ConfigController();
-            $action = $_GET['action'] ?? 'index';
+            
+            // Suporte tanto para rotas diretas (/config/rbac-matrix) quanto query string (?action=rbac-matrix)
+            if (strpos($path, 'config/') === 0) {
+                $action = substr($path, strlen('config/'));
+            } else {
+                $action = $_GET['action'] ?? 'index';
+            }
             switch ($action) {
                 case 'organization':
                     if ($_SERVER['REQUEST_METHOD'] === 'GET') {

@@ -648,59 +648,89 @@
             
             // Verificar se é uma imagem válida
             if (!file.type.startsWith('image/')) {
-                alert('Por favor, selecione apenas arquivos de imagem (JPG, PNG, GIF)');
+                showAlert('Por favor, selecione apenas arquivos de imagem (JPG, PNG)', 'warning');
+                input.value = ''; // Limpar seleção
                 return;
             }
             
             // Verificar tamanho máximo (2MB)
             if (file.size > 2 * 1024 * 1024) {
-                alert('O arquivo deve ter no máximo 2MB');
+                showAlert('O arquivo deve ter no máximo 2MB', 'warning');
+                input.value = ''; // Limpar seleção
                 return;
             }
+            
+            // Mostrar preview temporário enquanto carrega
+            const logoPreview = document.getElementById('logoPreview');
+            const logoPlaceholder = document.getElementById('logoPlaceholder');
+            
+            // Criar URL temporária para preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                logoPreview.src = e.target.result;
+                logoPreview.style.display = 'block';
+                logoPlaceholder.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
             
             // Criar FormData para upload
             const formData = new FormData();
             formData.append('logo', file);
             formData.append('action', 'upload_logo');
             
-            // Mostrar indicador de carregamento
-            const uploadBtn = document.querySelector('.upload-logo-btn');
-            const originalText = uploadBtn.innerHTML;
-            uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
-            uploadBtn.disabled = true;
+            // Adicionar token CSRF
+            formData.append('csrf_token', document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '');
+            
+            // Mostrar indicador de progresso
+            const progressBar = document.getElementById('logoUploadProgress');
+            progressBar.style.display = 'block';
+            const progress = progressBar.querySelector('.progress-bar');
+            progress.style.width = '50%';
             
             // Enviar via AJAX
             fetch('/config', {
                 method: 'POST',
+                headers: {
+                    'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                },
                 body: formData
             })
             .then(response => response.json())
             .then(data => {
-                uploadBtn.innerHTML = originalText;
-                uploadBtn.disabled = false;
+                progress.style.width = '100%';
+                setTimeout(() => {
+                    progressBar.style.display = 'none';
+                    progress.style.width = '0%';
+                }, 1000);
                 
                 if (data.success) {
-                    // Atualizar preview da logo
-                    const logoPreview = document.getElementById('logoPreview');
-                    const logoPlaceholder = document.getElementById('logoPlaceholder');
-                    const removeBtn = document.getElementById('removeLogo');
-                    
+                    // Atualizar preview com URL real
                     logoPreview.src = data.data.url + '?' + new Date().getTime(); // Cache bust
-                    logoPreview.style.display = 'block';
-                    logoPlaceholder.style.display = 'none';
-                    removeBtn.style.display = 'block';
                     
-                    // Mostrar mensagem de sucesso
+                    // Mostrar botão de remover
+                    const removeBtn = document.getElementById('removeLogo');
+                    if (removeBtn) removeBtn.style.display = 'block';
+                    
+                    // Atualizar label do input
+                    const fileLabel = input.nextElementSibling;
+                    fileLabel.textContent = file.name;
+                    
                     showAlert('Logo atualizada com sucesso!', 'success');
                 } else {
                     showAlert(data.error || 'Erro ao fazer upload da logo', 'danger');
+                    // Reverter preview em caso de erro
+                    logoPreview.style.display = 'none';
+                    logoPlaceholder.style.display = 'block';
                 }
             })
             .catch(error => {
-                uploadBtn.innerHTML = originalText;
-                uploadBtn.disabled = false;
+                progressBar.style.display = 'none';
+                progress.style.width = '0%';
                 console.error('Erro:', error);
                 showAlert('Erro ao fazer upload da logo', 'danger');
+                // Reverter preview em caso de erro
+                logoPreview.style.display = 'none';
+                logoPlaceholder.style.display = 'block';
             });
         }
     }

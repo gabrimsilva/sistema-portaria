@@ -21,11 +21,22 @@ class CSRFProtection {
     }
     
     public static function verifyRequest() {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $token = $_POST['csrf_token'] ?? '';
+        $method = $_SERVER['REQUEST_METHOD'] ?? '';
+        
+        // Verificar CSRF em requisições que alteram dados
+        if (in_array($method, ['POST', 'PUT', 'DELETE', 'PATCH'])) {
+            // Tentar pegar token do header primeiro (para APIs JSON)
+            $token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+            
+            // Se não há header, tentar form data (para formulários tradicionais)
+            if (empty($token)) {
+                $token = $_POST['csrf_token'] ?? '';
+            }
+            
             if (!self::validateToken($token)) {
                 http_response_code(403);
-                die('CSRF token validation failed');
+                echo json_encode(['success' => false, 'message' => 'CSRF token validation failed']);
+                die();
             }
         }
     }

@@ -90,6 +90,14 @@ $prestadores = $prestadores ?? [];
                                 </li>
                             </ul>
                         </li>
+                        <?php if ($_SESSION['user_profile'] === 'administrador' || $_SESSION['user_profile'] === 'seguranca'): ?>
+                        <li class="nav-item">
+                            <a href="/config" class="nav-link">
+                                <i class="nav-icon fas fa-cogs"></i>
+                                <p>Configurações</p>
+                            </a>
+                        </li>
+                        <?php endif; ?>
                     </ul>
                 </nav>
             </div>

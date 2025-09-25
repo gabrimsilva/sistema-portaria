@@ -841,7 +841,9 @@
         const alertHtml = `
             <div class="alert alert-${type} alert-dismissible fade show" role="alert">
                 ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
             </div>
         `;
         
@@ -1292,7 +1294,9 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="siteModalTitle">Novo Local</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                 </div>
                 <form id="siteForm" onsubmit="event.preventDefault(); saveSite();">
                     <div class="modal-body">
@@ -1324,7 +1328,7 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
                         <button type="submit" class="btn btn-primary" id="saveSiteBtn">
                             <i class="fas fa-save mr-1"></i>Salvar Local
                         </button>
@@ -1340,7 +1344,9 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="sectorsModalTitle">Setores</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                 </div>
                 <div class="modal-body">
                     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -1371,7 +1377,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
                 </div>
             </div>
         </div>
@@ -1383,7 +1389,9 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="sectorModalTitle">Novo Setor</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                 </div>
                 <form id="sectorForm" onsubmit="event.preventDefault(); saveSector();">
                     <div class="modal-body">
@@ -1409,7 +1417,7 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
                         <button type="submit" class="btn btn-primary" id="saveSectorBtn">
                             <i class="fas fa-save mr-1"></i>Salvar Setor
                         </button>

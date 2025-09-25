@@ -967,14 +967,16 @@
             .then(data => {
                 if (data.success) {
                     const logs = data.data.logs || [];
+                    // Armazenar logs globalmente para acesso no modal de detalhes
+                    window.currentAuditLogs = logs;
                     let html = '';
                     
                     if (logs.length === 0) {
                         html = '<tr><td colspan="6" class="text-center text-muted">Nenhum log encontrado</td></tr>';
                     } else {
-                        logs.forEach(log => {
+                        logs.forEach((log, index) => {
                             const timestamp = new Date(log.timestamp).toLocaleString('pt-BR');
-                            const details = log.dados_depois ? JSON.stringify(JSON.parse(log.dados_depois)) : '';
+                            const details = formatAuditDetails(log);
                             
                             html += `
                                 <tr>
@@ -982,7 +984,12 @@
                                     <td>${log.usuario_nome || 'Sistema'}</td>
                                     <td><span class="badge badge-${getActionBadgeClass(log.acao)}">${log.acao}</span></td>
                                     <td>${log.entidade}</td>
-                                    <td><small>${details.length > 100 ? details.substring(0, 100) + '...' : details}</small></td>
+                                    <td>
+                                        <div class="audit-details" style="max-width: 300px;">
+                                            ${details.summary}
+                                            ${details.hasMore ? `<br><button class="btn btn-link btn-sm p-0" onclick="showAuditDetails(${index}, '${log.id}')" title="Ver detalhes completos"><i class="fas fa-eye"></i> Ver mais</button>` : ''}
+                                        </div>
+                                    </td>
                                     <td>${log.ip_address || ''}</td>
                                 </tr>
                             `;
@@ -1007,6 +1014,128 @@
             case 'delete': return 'danger';
             default: return 'info';
         }
+    }
+    
+    function formatAuditDetails(log) {
+        try {
+            const antes = log.dados_antes ? JSON.parse(log.dados_antes) : {};
+            const depois = log.dados_depois ? JSON.parse(log.dados_depois) : {};
+            
+            let changes = [];
+            let hasMore = false;
+            
+            if (log.acao === 'create') {
+                // Para criação, mostrar campos principais
+                const importantFields = ['nome', 'name', 'email', 'empresa', 'company_name'];
+                importantFields.forEach(field => {
+                    if (depois[field]) {
+                        changes.push(`<strong>${field}:</strong> ${depois[field]}`);
+                    }
+                });
+                
+                // Se tem mais campos, marcar para mostrar botão "ver mais"
+                if (Object.keys(depois).length > importantFields.filter(f => depois[f]).length) {
+                    hasMore = true;
+                }
+            } else if (log.acao === 'update') {
+                // Para atualização, mostrar apenas campos que mudaram
+                Object.keys(depois).forEach(key => {
+                    if (antes[key] !== depois[key] && key !== 'id' && key !== 'updated_at' && key !== 'data_atualizacao') {
+                        if (changes.length < 3) {
+                            const oldValue = antes[key] || '(vazio)';
+                            const newValue = depois[key] || '(vazio)';
+                            changes.push(`<strong>${key}:</strong> ${oldValue} → ${newValue}`);
+                        } else {
+                            hasMore = true;
+                        }
+                    }
+                });
+            } else if (log.acao === 'delete') {
+                // Para exclusão, mostrar identificador principal
+                const identifier = antes.nome || antes.name || antes.email || antes.id;
+                changes.push(`<strong>Removido:</strong> ${identifier}`);
+            }
+            
+            const summary = changes.length > 0 
+                ? `<small class="text-muted">${changes.join('<br>')}</small>`
+                : '<small class="text-muted">Sem alterações visíveis</small>';
+                
+            return { summary, hasMore };
+            
+        } catch (error) {
+            return { 
+                summary: '<small class="text-danger">Erro ao processar dados</small>', 
+                hasMore: false 
+            };
+        }
+    }
+    
+    function showAuditDetails(index, logId) {
+        // Buscar log específico para mostrar detalhes completos
+        const allLogs = window.currentAuditLogs || [];
+        const log = allLogs[index];
+        
+        if (!log) {
+            showAlert('Log não encontrado', 'warning');
+            return;
+        }
+        
+        let modalContent = '';
+        
+        try {
+            const antes = log.dados_antes ? JSON.parse(log.dados_antes) : {};
+            const depois = log.dados_depois ? JSON.parse(log.dados_depois) : {};
+            
+            modalContent = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Dados Anteriores:</h6>
+                        <pre class="bg-light p-2 small">${JSON.stringify(antes, null, 2)}</pre>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Dados Posteriores:</h6>
+                        <pre class="bg-light p-2 small">${JSON.stringify(depois, null, 2)}</pre>
+                    </div>
+                </div>
+                <hr>
+                <p><strong>IP:</strong> ${log.ip_address || 'N/A'}</p>
+                <p><strong>User Agent:</strong> <small>${log.user_agent || 'N/A'}</small></p>
+                <p><strong>Data/Hora:</strong> ${new Date(log.timestamp).toLocaleString('pt-BR')}</p>
+            `;
+        } catch (error) {
+            modalContent = '<p class="text-danger">Erro ao processar dados do log</p>';
+        }
+        
+        // Criar modal dinamicamente
+        const modalHtml = `
+            <div class="modal fade" id="auditDetailsModal" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Detalhes do Log de Auditoria</h5>
+                            <button type="button" class="close" data-dismiss="modal">
+                                <span>&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            ${modalContent}
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Remover modal existente e adicionar novo
+        const existingModal = document.getElementById('auditDetailsModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+        
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        $('#auditDetailsModal').modal('show');
     }
     
     function toggleSsoFields() {

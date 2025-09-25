@@ -101,9 +101,14 @@ class RbacService {
         );
         $current = array_column($currentPermissions, 'key');
         
-        // Proteção: Admin sempre deve ter config.write
-        if ($role['name'] === 'administrador' && !in_array('config.write', $permissionKeys)) {
-            $permissionKeys[] = 'config.write';
+        // Proteção: Admin sempre deve ter permissões críticas
+        if ($role['name'] === 'administrador') {
+            $criticalPermissions = ['config.write', 'config.rbac.write'];
+            foreach ($criticalPermissions as $permission) {
+                if (!in_array($permission, $permissionKeys)) {
+                    $permissionKeys[] = $permission;
+                }
+            }
         }
         
         // Remover todas as permissões atuais

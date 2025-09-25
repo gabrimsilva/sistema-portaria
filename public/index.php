@@ -315,6 +315,9 @@ try {
                 case 'role-permissions':
                     $controller->updateRolePermissions();
                     break;
+                case 'rbac-users':
+                    $controller->getRbacUsers();
+                    break;
                 case 'auth-policies':
                     if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                         $controller->getAuthPolicies();

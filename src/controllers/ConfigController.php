@@ -345,9 +345,9 @@ class ConfigController {
      * GET /config/rbac-matrix
      */
     public function getRbacMatrix() {
-        if (!$this->authService->hasPermission('registro_acesso.update')) {
+        if (!$this->authService->hasPermission('config.rbac.write')) {
             http_response_code(403);
-            echo json_encode(['success' => false, 'message' => 'Acesso negado']);
+            echo json_encode(['success' => false, 'message' => 'Acesso negado. Permissão necessária: config.rbac.write']);
             return;
         }
         
@@ -365,9 +365,9 @@ class ConfigController {
      * PUT /config/role-permissions
      */
     public function updateRolePermissions() {
-        if (!$this->authService->hasPermission('registro_acesso.update')) {
+        if (!$this->authService->hasPermission('config.rbac.write')) {
             http_response_code(403);
-            echo json_encode(['success' => false, 'message' => 'Acesso negado']);
+            echo json_encode(['success' => false, 'message' => 'Acesso negado. Permissão necessária: config.rbac.write']);
             return;
         }
         
@@ -400,9 +400,9 @@ class ConfigController {
      * GET /config/rbac-users
      */
     public function getRbacUsers() {
-        if (!$this->authService->hasPermission('registro_acesso.update')) {
+        if (!$this->authService->hasPermission('config.rbac.write')) {
             http_response_code(403);
-            echo json_encode(['success' => false, 'message' => 'Acesso negado']);
+            echo json_encode(['success' => false, 'message' => 'Acesso negado. Permissão necessária: config.rbac.write']);
             return;
         }
         

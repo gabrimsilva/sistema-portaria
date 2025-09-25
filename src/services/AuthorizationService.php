@@ -1,8 +1,16 @@
 <?php
 
+require_once __DIR__ . '/RbacService.php';
+require_once __DIR__ . '/../config/Database.php';
+
 class AuthorizationService {
+    private $rbacService;
     
-    // Definição de permissões por perfil
+    public function __construct() {
+        $this->rbacService = new RbacService();
+    }
+    
+    // Definição de permissões por perfil (COMPATIBILIDADE - sistema legado)
     private const PERMISSIONS = [
         'administrador' => [
             'registro_acesso.create',
@@ -50,17 +58,36 @@ class AuthorizationService {
     
     /**
      * Verifica se o usuário tem uma permissão específica
+     * Híbrido: sistema legado + novo RBAC
      */
     public function hasPermission($permission) {
         $userProfile = $_SESSION['user_profile'] ?? null;
+        $userId = $_SESSION['user_id'] ?? null;
         
-        if (!$userProfile) {
+        if (!$userProfile || !$userId) {
             return false;
         }
         
+        // 1️⃣ PRIMEIRO: Verificar sistema legado (compatibilidade)
         $userPermissions = self::PERMISSIONS[$userProfile] ?? [];
+        if (in_array($permission, $userPermissions)) {
+            return true;
+        }
         
-        return in_array($permission, $userPermissions);
+        // 2️⃣ SEGUNDO: Verificar sistema RBAC moderno (banco de dados)
+        try {
+            // Buscar role_id do usuário
+            $db = new Database();
+            $user = $db->fetch("SELECT role_id FROM usuarios WHERE id = ?", [$userId]);
+            
+            if ($user && $user['role_id']) {
+                return $this->rbacService->roleHasPermission($user['role_id'], $permission);
+            }
+        } catch (Exception $e) {
+            error_log("Erro ao verificar permissão RBAC: " . $e->getMessage());
+        }
+        
+        return false;
     }
     
     /**

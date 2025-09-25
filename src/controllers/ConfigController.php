@@ -4,6 +4,7 @@ require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../config/csrf.php';
 require_once __DIR__ . '/../services/ConfigService.php';
 require_once __DIR__ . '/../services/AuthorizationService.php';
+require_once __DIR__ . '/../services/RbacService.php';
 require_once __DIR__ . '/../utils/CnpjValidator.php';
 
 /**
@@ -13,12 +14,14 @@ class ConfigController {
     private $db;
     private $authService;
     private $configService;
+    private $rbacService;
     
     public function __construct() {
         $this->checkAuthentication();
         $this->db = new Database();
         $this->authService = new AuthorizationService();
         $this->configService = new ConfigService();
+        $this->rbacService = new RbacService();
     }
     
     private function checkAuthentication() {
@@ -57,6 +60,15 @@ class ConfigController {
                     return;
                 case 'validate_cnpj':
                     $this->validateCnpj();
+                    return;
+                case 'get_rbac_matrix':
+                    $this->getRbacMatrix();
+                    return;
+                case 'save_rbac_matrix':
+                    $this->saveRbacMatrix();
+                    return;
+                case 'get_users_by_role':
+                    $this->getUsersByRole();
                     return;
             }
         }
@@ -375,7 +387,7 @@ class ConfigController {
         header('Content-Type: application/json');
         
         try {
-            $matrix = $this->configService->getRbacMatrix();
+            $matrix = $this->rbacService->getRbacMatrix();
             echo json_encode(['success' => true, 'data' => $matrix]);
         } catch (Exception $e) {
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
@@ -408,8 +420,8 @@ class ConfigController {
                 throw new Exception('role_id e permissions são obrigatórios');
             }
             
-            $result = $this->configService->updateRolePermissions($input['role_id'], $input['permissions']);
-            echo json_encode(['success' => true, 'data' => $result]);
+            $this->rbacService->updateRolePermissions($input['role_id'], $input['permissions']);
+            echo json_encode(['success' => true, 'message' => 'Permissões atualizadas com sucesso']);
             
         } catch (Exception $e) {
             http_response_code(400);
@@ -430,8 +442,25 @@ class ConfigController {
         header('Content-Type: application/json');
         
         try {
-            $data = $this->configService->getRbacUsers();
-            echo json_encode(['success' => true, 'data' => $data]);
+            $roleId = $_GET['role_id'] ?? null;
+            
+            if ($roleId) {
+                $users = $this->rbacService->getUsersByRole($roleId);
+                echo json_encode(['success' => true, 'data' => $users]);
+            } else {
+                // Buscar usuários agrupados por role
+                $roles = $this->rbacService->getRoles();
+                $usersByRole = [];
+                
+                foreach ($roles as $role) {
+                    $usersByRole[$role['id']] = [
+                        'role' => $role,
+                        'users' => $this->rbacService->getUsersByRole($role['id'])
+                    ];
+                }
+                
+                echo json_encode(['success' => true, 'data' => $usersByRole]);
+            }
         } catch (Exception $e) {
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
@@ -763,4 +792,5 @@ class ConfigController {
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
     }
+    
 }

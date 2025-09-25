@@ -84,8 +84,9 @@ class RbacService {
     
     /**
      * Atualizar permissões de uma role
+     * @param bool $manageTransaction Se deve gerenciar transação (padrão: true)
      */
-    public function updateRolePermissions($roleId, $permissionKeys) {
+    public function updateRolePermissions($roleId, $permissionKeys, $manageTransaction = true) {
         // Buscar role
         $role = $this->db->fetch("SELECT * FROM roles WHERE id = ?", [$roleId]);
         if (!$role) {
@@ -110,14 +111,7 @@ class RbacService {
             );
             $configKeys = array_column($configPermissions, 'key');
             
-            // Verificar se está tentando remover alguma permissão config.*
-            foreach ($configKeys as $configKey) {
-                if (!in_array($configKey, $permissionKeys)) {
-                    throw new Exception("❌ SEGURANÇA: Administrador não pode perder permissão: " . $configKey);
-                }
-            }
-            
-            // Garantir que todas as config.* estejam presentes
+            // Garantir que todas as config.* estejam sempre presentes para Admin
             foreach ($configKeys as $configKey) {
                 if (!in_array($configKey, $permissionKeys)) {
                     $permissionKeys[] = $configKey;
@@ -134,8 +128,10 @@ class RbacService {
         );
         $current = array_column($currentPermissions, 'key');
         
-        // 💾 TRANSAÇÃO PARA GARANTIR INTEGRIDADE
-        $this->db->query("BEGIN");
+        // 💾 TRANSAÇÃO PARA GARANTIR INTEGRIDADE (apenas se solicitado)
+        if ($manageTransaction) {
+            $this->db->query("BEGIN");
+        }
         
         try {
             // Deduplicar permissões para evitar conflitos
@@ -159,12 +155,16 @@ class RbacService {
                 }
             }
             
-            // Commit da transação
-            $this->db->query("COMMIT");
+            // Commit da transação (apenas se gerenciando)
+            if ($manageTransaction) {
+                $this->db->query("COMMIT");
+            }
             
         } catch (Exception $e) {
-            // Rollback em caso de erro
-            $this->db->query("ROLLBACK");
+            // Rollback em caso de erro (apenas se gerenciando)
+            if ($manageTransaction) {
+                $this->db->query("ROLLBACK");
+            }
             throw new Exception("Erro ao atualizar permissões da role: " . $e->getMessage());
         }
         
@@ -275,5 +275,81 @@ class RbacService {
         );
         
         return true;
+    }
+    
+    /**
+     * Salvar matriz RBAC completa
+     */
+    public function saveRbacMatrix($matrix) {
+        $this->db->query("BEGIN");
+        
+        try {
+            foreach ($matrix as $roleId => $permissions) {
+                // Validar se a role existe
+                $role = $this->db->fetch("SELECT id FROM roles WHERE id = ?", [$roleId]);
+                if (!$role) {
+                    throw new Exception("Role {$roleId} não encontrada");
+                }
+                
+                // Atualizar permissões desta role (sem gerenciar transação)
+                $this->updateRolePermissions($roleId, $permissions, false);
+            }
+            
+            $this->db->query("COMMIT");
+            
+            // Log de auditoria
+            $this->auditService->log(
+                'update',
+                'rbac_matrix',
+                null,
+                null,
+                ['matrix_updated' => count($matrix) . ' roles']
+            );
+            
+            return true;
+            
+        } catch (Exception $e) {
+            $this->db->query("ROLLBACK");
+            throw new Exception("Erro ao salvar matriz RBAC: " . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Buscar todos os usuários agrupados por roles
+     */
+    public function getAllUsersByRoles() {
+        $users = $this->db->fetchAll(
+            "SELECT u.id, u.nome, u.email, u.ativo, u.ultimo_login, u.role_id,
+                    r.name as role_name, r.description as role_description
+             FROM usuarios u 
+             LEFT JOIN roles r ON u.role_id = r.id 
+             ORDER BY r.name, u.nome"
+        );
+        
+        // Agrupar por role
+        $grouped = [];
+        foreach ($users as $user) {
+            $roleId = $user['role_id'] ?? 'no_role';
+            $roleName = $user['role_name'] ?? 'Sem Role';
+            
+            if (!isset($grouped[$roleId])) {
+                $grouped[$roleId] = [
+                    'role_id' => $roleId,
+                    'role_name' => $roleName,
+                    'role_description' => $user['role_description'] ?? '',
+                    'users' => []
+                ];
+            }
+            
+            $grouped[$roleId]['users'][] = [
+                'id' => $user['id'],
+                'nome' => $user['nome'],
+                'email' => $user['email'],
+                'ativo' => $user['ativo'],
+                'ultimo_login' => $user['ultimo_login']
+            ];
+        }
+        
+        return array_values($grouped);
     }
 }

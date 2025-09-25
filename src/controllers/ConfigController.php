@@ -395,6 +395,67 @@ class ConfigController {
     }
     
     /**
+     * POST /config - action=save_rbac_matrix
+     * Salvar matriz de permissões RBAC
+     */
+    public function saveRbacMatrix() {
+        if (!$this->authService->hasPermission('config.rbac.write')) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acesso negado. Permissão necessária: config.rbac.write']);
+            return;
+        }
+        
+        header('Content-Type: application/json');
+        CSRFProtection::verifyRequest();
+        
+        try {
+            $input = json_decode(file_get_contents('php://input'), true);
+            
+            if (!isset($input['matrix']) || !is_array($input['matrix'])) {
+                throw new Exception('Matriz de permissões inválida');
+            }
+            
+            $this->rbacService->saveRbacMatrix($input['matrix']);
+            echo json_encode(['success' => true, 'message' => 'Matriz RBAC salva com sucesso']);
+            
+        } catch (Exception $e) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+    
+    /**
+     * POST /config - action=get_users_by_role
+     * Obter usuários por role
+     */
+    public function getUsersByRole() {
+        if (!$this->authService->hasPermission('config.rbac.read')) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acesso negado. Permissão necessária: config.rbac.read']);
+            return;
+        }
+        
+        header('Content-Type: application/json');
+        
+        try {
+            $roleId = $_POST['role_id'] ?? $_GET['role_id'] ?? null;
+            
+            if (!$roleId) {
+                // Se não especificar role, retorna todos os usuários agrupados por role
+                $users = $this->rbacService->getAllUsersByRoles();
+            } else {
+                // Se especificar role, retorna apenas usuários daquela role
+                $users = $this->rbacService->getUsersByRole($roleId);
+            }
+            
+            echo json_encode(['success' => true, 'data' => $users]);
+            
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+    
+    /**
      * PUT /config/role-permissions
      */
     public function updateRolePermissions() {

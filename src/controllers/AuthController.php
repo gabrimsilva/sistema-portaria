@@ -17,7 +17,9 @@ class AuthController {
             } else {
                 try {
                     $user = $this->db->fetch(
-                        "SELECT * FROM usuarios WHERE email = ? AND ativo = TRUE",
+                        "SELECT u.*, r.name as role_name FROM usuarios u 
+                         LEFT JOIN roles r ON u.role_id = r.id 
+                         WHERE u.email = ? AND u.ativo = TRUE",
                         [$email]
                     );
                     
@@ -27,7 +29,8 @@ class AuthController {
                         
                         $_SESSION['user_id'] = $user['id'];
                         $_SESSION['user_name'] = $user['nome'];
-                        $_SESSION['user_profile'] = $user['perfil'];
+                        // Usar role RBAC se disponível, senão fallback para perfil legacy
+                        $_SESSION['user_profile'] = $user['role_name'] ?? $user['perfil'];
                         
                         // Update last login
                         $this->db->query(

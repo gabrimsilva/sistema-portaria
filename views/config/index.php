@@ -531,12 +531,12 @@ include '../views/includes/header.php';
                                     </div>
                                     <div class="row">
                                         <div class="col-md-8">
-                                            <div class="form-group">
+                                            <div class="modern-form-group">
                                                 <label for="logoUpload">Logo da Empresa</label>
-                                                <div class="custom-file">
-                                                    <input type="file" class="custom-file-input" id="logoUpload" 
+                                                <div class="modern-file-upload">
+                                                    <input type="file" id="logoUpload" 
                                                            accept=".png,.jpg,.jpeg" onchange="handleLogoUpload(this)">
-                                                    <label class="custom-file-label" for="logoUpload">Escolher arquivo...</label>
+                                                    <i class="fas fa-cloud-upload-alt"></i> Escolher Arquivo
                                                 </div>
                                                 <small class="form-text text-muted">
                                                     Formatos aceitos: PNG, JPG. Tamanho máximo: 2MB. Recomendado: 200x60px.
@@ -645,7 +645,7 @@ include '../views/includes/header.php';
 
                     <!-- Seção: Autenticação -->
                     <div id="auth" class="config-section">
-                        <div class="card">
+                        <div class="modern-card">
                             <div class="card-header">
                                 <h3 class="card-title"><i class="fas fa-lock"></i> Políticas de Autenticação</h3>
                             </div>
@@ -654,22 +654,22 @@ include '../views/includes/header.php';
                                     <div class="row">
                                         <div class="col-md-6">
                                             <h5>Políticas de Senha</h5>
-                                            <div class="form-group">
+                                            <div class="modern-form-group">
                                                 <label for="passwordMinLength">Comprimento Mínimo</label>
-                                                <input type="number" class="form-control" id="passwordMinLength" 
+                                                <input type="number" class="modern-input" id="passwordMinLength" 
                                                        name="password_min_length" min="4" max="50" value="8">
                                             </div>
-                                            <div class="form-group">
+                                            <div class="modern-form-group">
                                                 <label for="passwordExpiryDays">Expiração (dias)</label>
-                                                <input type="number" class="form-control" id="passwordExpiryDays" 
+                                                <input type="number" class="modern-input" id="passwordExpiryDays" 
                                                        name="password_expiry_days" min="30" max="365" value="90">
                                             </div>
                                         </div>
                                         <div class="col-md-6">
                                             <h5>Sessão e Segurança</h5>
-                                            <div class="form-group">
+                                            <div class="modern-form-group">
                                                 <label for="sessionTimeout">Timeout de Sessão (minutos)</label>
-                                                <input type="number" class="form-control" id="sessionTimeout" 
+                                                <input type="number" class="modern-input" id="sessionTimeout" 
                                                        name="session_timeout_minutes" min="15" max="1440" value="1440">
                                             </div>
                                             <div class="form-group">
@@ -694,9 +694,9 @@ include '../views/includes/header.php';
                                             <div id="ssoFields" style="display: none;">
                                                 <div class="row">
                                                     <div class="col-md-4">
-                                                        <div class="form-group">
+                                                        <div class="modern-form-group">
                                                             <label for="ssoProvider">Provedor</label>
-                                                            <select class="form-control" id="ssoProvider" name="sso_provider">
+                                                            <select class="modern-select" id="ssoProvider" name="sso_provider">
                                                                 <option value="">Selecione</option>
                                                                 <option value="azure">Azure AD</option>
                                                                 <option value="google">Google Workspace</option>
@@ -705,15 +705,15 @@ include '../views/includes/header.php';
                                                         </div>
                                                     </div>
                                                     <div class="col-md-4">
-                                                        <div class="form-group">
+                                                        <div class="modern-form-group">
                                                             <label for="ssoClientId">Client ID</label>
-                                                            <input type="text" class="form-control" id="ssoClientId" name="sso_client_id">
+                                                            <input type="text" class="modern-input" id="ssoClientId" name="sso_client_id">
                                                         </div>
                                                     </div>
                                                     <div class="col-md-4">
-                                                        <div class="form-group">
+                                                        <div class="modern-form-group">
                                                             <label for="ssoIssuer">Issuer</label>
-                                                            <input type="text" class="form-control" id="ssoIssuer" name="sso_issuer">
+                                                            <input type="text" class="modern-input" id="ssoIssuer" name="sso_issuer">
                                                         </div>
                                                     </div>
                                                 </div>
@@ -721,7 +721,7 @@ include '../views/includes/header.php';
                                         </div>
                                     </div>
                                     <div class="form-group">
-                                        <button type="submit" class="btn btn-primary">
+                                        <button type="submit" class="modern-btn modern-btn-primary">
                                             <i class="fas fa-save"></i> Salvar Políticas
                                         </button>
                                     </div>
@@ -732,11 +732,11 @@ include '../views/includes/header.php';
 
                     <!-- Seção: Auditoria -->
                     <div id="audit" class="config-section">
-                        <div class="card">
+                        <div class="modern-card">
                             <div class="card-header">
                                 <h3 class="card-title"><i class="fas fa-history"></i> Logs de Auditoria</h3>
                                 <div class="card-tools">
-                                    <button type="button" class="btn btn-success btn-sm" onclick="exportAuditLogs()">
+                                    <button type="button" class="modern-btn modern-btn-success" onclick="exportAuditLogs()">
                                         <i class="fas fa-download"></i> Exportar CSV
                                     </button>
                                 </div>

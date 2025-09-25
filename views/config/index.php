@@ -15,13 +15,14 @@ if (!$rbacService->checkPermission($_SESSION['user_id'], 'view_system_settings')
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="<?= CSRFProtection::generateToken() ?>">
     <title>Configurações do Sistema - Controle de Acesso</title>
     
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap4.min.css">
     
     <style>
@@ -49,7 +50,7 @@ if (!$rbacService->checkPermission($_SESSION['user_id'], 'view_system_settings')
                         <span class="d-none d-md-inline"><?= htmlspecialchars($_SESSION['user_name'] ?? 'Usuário') ?></span>
                     </a>
                     <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
-                        <span class="dropdown-item-text"><?= htmlspecialchars($_SESSION['user_profile'] ?? 'Administrador') ?></span>
+                        <span class="dropdown-item-text"><?= htmlspecialchars($_SESSION['user_profile'] ?? 'Porteiro') ?></span>
                         <div class="dropdown-divider"></div>
                         <a href="/logout" class="dropdown-item">
                             <i class="fas fa-sign-out-alt mr-2"></i>Sair
@@ -85,31 +86,33 @@ if (!$rbacService->checkPermission($_SESSION['user_id'], 'view_system_settings')
                             </a>
                             <ul class="nav nav-treeview">
                                 <li class="nav-item">
-                                    <a href="/relatorios/funcionarios" class="nav-link">
-                                        <i class="far fa-circle nav-icon"></i>
+                                    <a href="/reports/profissionais-renner" class="nav-link">
+                                        <i class="nav-icon fas fa-user-tie"></i>
                                         <p>Profissionais Renner</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a href="/visitantes-novo" class="nav-link">
-                                        <i class="far fa-circle nav-icon"></i>
+                                    <a href="/reports/visitantes" class="nav-link">
+                                        <i class="nav-icon fas fa-users"></i>
                                         <p>Visitantes</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a href="/prestadores-servico" class="nav-link">
-                                        <i class="far fa-circle nav-icon"></i>
+                                    <a href="/reports/prestadores-servico" class="nav-link">
+                                        <i class="nav-icon fas fa-tools"></i>
                                         <p>Prestador de Serviços</p>
                                     </a>
                                 </li>
                             </ul>
                         </li>
+                        <?php if ($_SESSION['user_profile'] === 'administrador' || $_SESSION['user_profile'] === 'seguranca'): ?>
                         <li class="nav-item">
                             <a href="/config" class="nav-link active">
                                 <i class="nav-icon fas fa-cogs"></i>
                                 <p>Configurações</p>
                             </a>
                         </li>
+                        <?php endif; ?>
                     </ul>
                 </nav>
             </div>

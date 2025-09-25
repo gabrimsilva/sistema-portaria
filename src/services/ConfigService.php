@@ -365,6 +365,23 @@ class ConfigService {
         return $this->rbacService->updateRolePermissions($roleId, $permissions);
     }
     
+    /**
+     * Buscar usuários organizados por role (delegando para RbacService)
+     */
+    public function getRbacUsers() {
+        $roles = $this->rbacService->getRoles();
+        $usersByRole = [];
+        
+        foreach ($roles as $role) {
+            $usersByRole[$role['id']] = $this->rbacService->getUsersByRole($role['id']);
+        }
+        
+        return [
+            'roles' => $roles,
+            'usersByRole' => $usersByRole
+        ];
+    }
+    
     // ========== POLÍTICAS DE AUTENTICAÇÃO ==========
     
     /**

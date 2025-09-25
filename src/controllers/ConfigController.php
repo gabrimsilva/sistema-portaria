@@ -396,6 +396,26 @@ class ConfigController {
         }
     }
     
+    /**
+     * GET /config/rbac-users
+     */
+    public function getRbacUsers() {
+        if (!$this->authService->hasPermission('registro_acesso.update')) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acesso negado']);
+            return;
+        }
+        
+        header('Content-Type: application/json');
+        
+        try {
+            $data = $this->configService->getRbacUsers();
+            echo json_encode(['success' => true, 'data' => $data]);
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+    
     // ========== POLÍTICAS DE AUTENTICAÇÃO ==========
     
     /**

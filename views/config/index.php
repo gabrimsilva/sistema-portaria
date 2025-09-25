@@ -88,6 +88,56 @@ include '../views/includes/header.php';
     margin: 4px;
     display: inline-block;
 }
+
+/* Melhorias para RBAC Matrix */
+.rbac-matrix-table .permission-row:hover {
+    background-color: #f1f3f4;
+}
+
+.rbac-matrix-table .permission-info {
+    padding: 8px 0;
+}
+
+.rbac-matrix-table .checkbox-cell {
+    padding: 12px 8px;
+    vertical-align: middle;
+}
+
+.rbac-matrix-table .custom-control-input:checked ~ .custom-control-label::before {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.rbac-matrix-table .custom-control-input:disabled:checked ~ .custom-control-label::before {
+    background-color: #ffc107;
+    border-color: #ffc107;
+}
+
+/* Cards de estatísticas */
+.border-left-primary {
+    border-left: 4px solid #007bff !important;
+}
+
+.text-gray-800 {
+    color: #495057 !important;
+}
+
+/* Modal de usuários */
+#rbacUsersModal .card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e3e6f0;
+}
+
+#rbacUsersModal .list-group-item {
+    border-left: none;
+    border-right: none;
+}
+
+/* Indicador de alterações */
+#rbacChanges {
+    border-left: 4px solid #ffc107;
+    margin-bottom: 20px;
+}
 </style>
 
 <div class="content-wrapper">
@@ -253,10 +303,22 @@ include '../views/includes/header.php';
 
                     <!-- Seção: RBAC -->
                     <div id="rbac" class="config-section">
+                        <!-- Cards de Estatísticas -->
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <div id="rbacStats">
+                                    <!-- Estatísticas serão carregadas aqui -->
+                                </div>
+                            </div>
+                        </div>
+                        
                         <div class="card">
                             <div class="card-header">
                                 <h3 class="card-title"><i class="fas fa-user-shield"></i> Matriz de Permissões (RBAC)</h3>
                                 <div class="card-tools">
+                                    <button type="button" class="btn btn-info btn-sm mr-2" onclick="showRbacUsers()">
+                                        <i class="fas fa-users"></i> Ver Usuários por Perfil
+                                    </button>
                                     <button type="button" class="btn btn-success btn-sm" onclick="saveRbacMatrix()">
                                         <i class="fas fa-save"></i> Salvar Alterações
                                     </button>
@@ -267,10 +329,27 @@ include '../views/includes/header.php';
                                     <i class="fas fa-info-circle"></i>
                                     Configure as permissões para cada perfil de usuário. O perfil <strong>Administrador</strong> 
                                     sempre mantém acesso total às configurações.
+                                    <br><small class="mt-2 d-block">
+                                        <strong>Dica:</strong> Clique nos checkboxes para alterar permissões. As alterações são salvas em lote.
+                                    </small>
                                 </div>
+                                
+                                <!-- Indicador de alterações pendentes -->
+                                <div id="rbacChanges" class="alert alert-warning" style="display:none;">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    <span id="rbacChangesCount">0</span> alteração(ões) pendente(s). 
+                                    <strong>Clique em "Salvar Alterações" para aplicar.</strong>
+                                </div>
+                                
                                 <div class="table-responsive">
                                     <table class="table table-sm rbac-matrix-table" id="rbacMatrix">
-                                        <!-- Matriz será carregada via JavaScript -->
+                                        <tbody>
+                                            <tr>
+                                                <td colspan="100%" class="text-center">
+                                                    <i class="fas fa-spinner fa-spin"></i> Carregando matriz RBAC...
+                                                </td>
+                                            </tr>
+                                        </tbody>
                                     </table>
                                 </div>
                             </div>
@@ -1417,15 +1496,22 @@ function deleteSector(sectorId, sectorName) {
 }
 
 // ========== RBAC ==========
+let originalRbacMatrix = {}; // Armazenar matriz original para detectar alterações
+let rbacChangesCount = 0;
+
 function loadRbacMatrix() {
     $.get('/config/rbac-matrix')
         .done(function(response) {
             if (response.success) {
+                // Armazenar matriz original
+                originalRbacMatrix = JSON.parse(JSON.stringify(response.data.matrix));
                 renderRbacMatrix(response.data);
+                renderRbacStats(response.data);
+                setupRbacChangeTracking();
             }
         })
         .fail(function() {
-            $('#rbacMatrix').html('<tr><td colspan="100%" class="text-center text-danger">Erro ao carregar matriz RBAC</td></tr>');
+            $('#rbacMatrix').html('<tbody><tr><td colspan="100%" class="text-center text-danger">Erro ao carregar matriz RBAC</td></tr></tbody>');
         });
 }
 
@@ -1441,10 +1527,14 @@ function renderRbacMatrix(data) {
         permissionsByModule[perm.module].push(perm);
     });
     
-    // Cabeçalho
-    let html = '<thead><tr><th style="width: 300px;">Permissões</th>';
+    // Cabeçalho com ícones para cada role
+    let html = '<thead><tr><th style="width: 350px;">Permissões</th>';
     roles.forEach(function(role) {
-        html += `<th class="text-center" style="width: 120px;">${role.name}</th>`;
+        const roleIcon = getRoleIcon(role.name);
+        html += `<th class="text-center" style="width: 140px;">
+            <div>${roleIcon} <strong>${role.name}</strong></div>
+            <div><small class="text-muted">${role.description}</small></div>
+        </th>`;
     });
     html += '</tr></thead><tbody>';
     
@@ -1453,26 +1543,36 @@ function renderRbacMatrix(data) {
         // Linha do módulo
         html += `<tr class="module-group">
             <td colspan="${roles.length + 1}">
-                <i class="fas fa-folder"></i> ${module.toUpperCase()}
+                <i class="fas fa-folder-open text-primary"></i> <strong>${getModuleName(module)}</strong>
             </td>
         </tr>`;
         
         // Permissões do módulo
         permissionsByModule[module].forEach(function(permission) {
-            html += `<tr>
+            html += `<tr class="permission-row">
                 <td>
-                    <strong>${permission.key}</strong><br>
-                    <small class="text-muted">${permission.description}</small>
+                    <div class="permission-info">
+                        <strong class="text-dark">${permission.key}</strong>
+                        <br><small class="text-muted">${permission.description}</small>
+                    </div>
                 </td>`;
             
             roles.forEach(function(role) {
                 const hasPermission = matrix[role.id] && matrix[role.id].includes(permission.key);
-                const disabled = role.name === 'administrador' && permission.key === 'config.write' ? 'disabled checked' : '';
+                const isProtected = role.name === 'administrador' && 
+                                  (permission.key === 'config.write' || permission.key.startsWith('config.'));
+                const disabled = isProtected ? 'disabled' : '';
+                const checked = hasPermission ? 'checked' : '';
                 
-                html += `<td class="text-center">
-                    <input type="checkbox" class="permission-checkbox" 
-                           data-role="${role.id}" data-permission="${permission.key}"
-                           ${hasPermission ? 'checked' : ''} ${disabled}>
+                html += `<td class="text-center checkbox-cell">
+                    <div class="custom-control custom-checkbox">
+                        <input type="checkbox" class="permission-checkbox custom-control-input" 
+                               id="perm_${role.id}_${permission.key.replace(/\./g, '_')}"
+                               data-role="${role.id}" data-permission="${permission.key}"
+                               ${checked} ${disabled}>
+                        <label class="custom-control-label" for="perm_${role.id}_${permission.key.replace(/\./g, '_')}"></label>
+                        ${isProtected ? '<i class="fas fa-lock text-warning ml-1" title="Protegido - Admin sempre tem acesso"></i>' : ''}
+                    </div>
                 </td>`;
             });
             
@@ -1484,7 +1584,98 @@ function renderRbacMatrix(data) {
     $('#rbacMatrix').html(html);
 }
 
+function getRoleIcon(roleName) {
+    const icons = {
+        'administrador': '<i class="fas fa-crown text-warning"></i>',
+        'porteiro': '<i class="fas fa-door-open text-info"></i>',
+        'seguranca': '<i class="fas fa-shield-alt text-success"></i>',
+        'recepcao': '<i class="fas fa-concierge-bell text-primary"></i>',
+        'rh': '<i class="fas fa-user-tie text-secondary"></i>'
+    };
+    return icons[roleName] || '<i class="fas fa-user text-muted"></i>';
+}
+
+function getModuleName(module) {
+    const names = {
+        'config': 'Configurações do Sistema',
+        'reports': 'Relatórios e Análises',
+        'access': 'Controle de Acesso',
+        'audit': 'Auditoria e Logs',
+        'users': 'Gerenciamento de Usuários',
+        'privacy': 'Privacidade e LGPD'
+    };
+    return names[module] || module.toUpperCase();
+}
+
+function renderRbacStats(data) {
+    const {roles, permissions} = data;
+    
+    let html = '<div class="row">';
+    
+    roles.forEach(function(role) {
+        const rolePermissions = data.matrix[role.id] || [];
+        const percentageAllowed = Math.round((rolePermissions.length / permissions.length) * 100);
+        const roleIcon = getRoleIcon(role.name);
+        
+        html += `
+            <div class="col-md-2 col-sm-6 mb-3">
+                <div class="card border-left-primary h-100">
+                    <div class="card-body text-center">
+                        <div class="text-primary mb-2">${roleIcon}</div>
+                        <div class="h6 font-weight-bold text-primary text-uppercase mb-1">
+                            ${role.name}
+                        </div>
+                        <div class="h4 mb-0 font-weight-bold text-gray-800">
+                            ${rolePermissions.length}
+                        </div>
+                        <small class="text-muted">
+                            de ${permissions.length} permissões (${percentageAllowed}%)
+                        </small>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    $('#rbacStats').html(html);
+}
+
+function setupRbacChangeTracking() {
+    $('#rbacMatrix').on('change', '.permission-checkbox', function() {
+        updateRbacChangesCounter();
+    });
+}
+
+function updateRbacChangesCounter() {
+    let changes = 0;
+    $('.permission-checkbox').each(function() {
+        const roleId = $(this).data('role');
+        const permission = $(this).data('permission');
+        const isChecked = $(this).is(':checked');
+        const wasChecked = originalRbacMatrix[roleId] && originalRbacMatrix[roleId].includes(permission);
+        
+        if (isChecked !== wasChecked) {
+            changes++;
+        }
+    });
+    
+    rbacChangesCount = changes;
+    
+    if (changes > 0) {
+        $('#rbacChangesCount').text(changes);
+        $('#rbacChanges').show();
+    } else {
+        $('#rbacChanges').hide();
+    }
+}
+
 function saveRbacMatrix() {
+    if (rbacChangesCount === 0) {
+        showAlert('Nenhuma alteração para salvar.', 'info');
+        return;
+    }
+    
     const btn = event.target;
     const originalText = btn.innerHTML;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
@@ -1508,6 +1699,7 @@ function saveRbacMatrix() {
     
     // Salvar cada role
     let completed = 0;
+    let errors = 0;
     const totalRoles = Object.keys(updates).length;
     
     Object.keys(updates).forEach(function(roleId) {
@@ -1523,15 +1715,151 @@ function saveRbacMatrix() {
                 'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
             }
         })
+        .done(function(response) {
+            if (!response.success) {
+                errors++;
+            }
+        })
+        .fail(function() {
+            errors++;
+        })
         .always(function() {
             completed++;
             if (completed === totalRoles) {
                 btn.innerHTML = originalText;
                 btn.disabled = false;
-                showAlert('Matriz RBAC atualizada com sucesso!', 'success');
+                
+                if (errors === 0) {
+                    showAlert(`${rbacChangesCount} alteração(ões) salva(s) com sucesso!`, 'success');
+                    // Atualizar matriz original e resetar contador
+                    originalRbacMatrix = {};
+                    $('.permission-checkbox').each(function() {
+                        const roleId = $(this).data('role');
+                        const permission = $(this).data('permission');
+                        const isChecked = $(this).is(':checked');
+                        
+                        if (!originalRbacMatrix[roleId]) {
+                            originalRbacMatrix[roleId] = [];
+                        }
+                        
+                        if (isChecked) {
+                            originalRbacMatrix[roleId].push(permission);
+                        }
+                    });
+                    updateRbacChangesCounter();
+                } else {
+                    showAlert(`Algumas alterações não foram salvas (${errors} erro(s))`, 'error');
+                }
             }
         });
     });
+}
+
+function showRbacUsers() {
+    $.get('/config/rbac-users')
+        .done(function(response) {
+            if (response.success) {
+                renderRbacUsersModal(response.data);
+            } else {
+                showAlert('Erro ao carregar usuários por perfil', 'error');
+            }
+        })
+        .fail(function() {
+            showAlert('Erro ao carregar usuários por perfil', 'error');
+        });
+}
+
+function renderRbacUsersModal(data) {
+    const {roles, usersByRole} = data;
+    
+    let html = `
+        <div class="modal fade" id="rbacUsersModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-users"></i> Usuários por Perfil
+                        </h5>
+                        <button type="button" class="close" data-dismiss="modal">
+                            <span>&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+    `;
+    
+    roles.forEach(function(role) {
+        const users = usersByRole[role.id] || [];
+        const roleIcon = getRoleIcon(role.name);
+        
+        html += `
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            ${roleIcon} ${role.name}
+                            <span class="badge badge-primary ml-2">${users.length}</span>
+                        </h6>
+                        <small class="text-muted">${role.description}</small>
+                    </div>
+                    <div class="card-body">
+                        ${users.length === 0 ? 
+                            '<p class="text-muted text-center">Nenhum usuário neste perfil</p>' :
+                            '<div class="list-group list-group-flush">'
+                        }
+        `;
+        
+        users.forEach(function(user) {
+            const statusClass = user.ativo ? 'success' : 'secondary';
+            const statusText = user.ativo ? 'Ativo' : 'Inativo';
+            const lastLogin = user.ultimo_login ? 
+                new Date(user.ultimo_login).toLocaleDateString('pt-BR') : 
+                'Nunca';
+            
+            html += `
+                <div class="list-group-item px-0">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <strong>${user.nome}</strong>
+                            <br><small class="text-muted">${user.email}</small>
+                            <br><small class="text-muted">Último login: ${lastLogin}</small>
+                        </div>
+                        <span class="badge badge-${statusClass}">${statusText}</span>
+                    </div>
+                </div>
+            `;
+        });
+        
+        if (users.length > 0) {
+            html += '</div>';
+        }
+        
+        html += `
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += `
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                            Fechar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remover modal existente se houver
+    $('#rbacUsersModal').remove();
+    
+    // Adicionar e mostrar novo modal
+    $('body').append(html);
+    $('#rbacUsersModal').modal('show');
 }
 
 // ========== AUTENTICAÇÃO ==========

@@ -323,6 +323,54 @@ include '../views/includes/header.php';
     color: var(--dark-color);
 }
 
+/* ===== SWITCHES MODERNOS ===== */
+.modern-switch {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.modern-switch input[type="checkbox"] {
+    position: relative;
+    width: 50px;
+    height: 26px;
+    background: #e0e0e0;
+    border-radius: 13px;
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    transition: var(--transition);
+}
+
+.modern-switch input[type="checkbox"]:before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 22px;
+    height: 22px;
+    background: white;
+    border-radius: 50%;
+    transition: var(--transition);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.modern-switch input[type="checkbox"]:checked {
+    background: var(--primary-gradient);
+}
+
+.modern-switch input[type="checkbox"]:checked:before {
+    transform: translateX(24px);
+}
+
+.modern-switch label {
+    font-weight: 500;
+    color: var(--dark-color);
+    cursor: pointer;
+    user-select: none;
+}
+
 /* ===== UPLOAD DE ARQUIVO MODERNO ===== */
 .modern-file-upload {
     position: relative;
@@ -547,7 +595,7 @@ include '../views/includes/header.php';
                                             </div>
                                         </div>
                                         <div class="col-md-4">
-                                            <div class="form-group">
+                                            <div class="modern-form-group">
                                                 <label>Preview</label>
                                                 <div class="logo-preview-container" 
                                                      style="border: 1px dashed #ccc; padding: 15px; text-align: center; min-height: 80px; background: #f9f9f9;">
@@ -672,10 +720,10 @@ include '../views/includes/header.php';
                                                 <input type="number" class="modern-input" id="sessionTimeout" 
                                                        name="session_timeout_minutes" min="15" max="1440" value="1440">
                                             </div>
-                                            <div class="form-group">
-                                                <div class="custom-control custom-switch">
-                                                    <input type="checkbox" class="custom-control-input" id="require2fa" name="require_2fa">
-                                                    <label class="custom-control-label" for="require2fa">Exigir 2FA</label>
+                                            <div class="modern-form-group">
+                                                <div class="modern-switch">
+                                                    <input type="checkbox" id="require2fa" name="require_2fa">
+                                                    <label for="require2fa">Exigir 2FA</label>
                                                 </div>
                                             </div>
                                         </div>
@@ -684,11 +732,11 @@ include '../views/includes/header.php';
                                     <div class="row">
                                         <div class="col-md-12">
                                             <h5>Single Sign-On (SSO)</h5>
-                                            <div class="form-group">
-                                                <div class="custom-control custom-switch">
-                                                    <input type="checkbox" class="custom-control-input" id="enableSso" 
+                                            <div class="modern-form-group">
+                                                <div class="modern-switch">
+                                                    <input type="checkbox" id="enableSso" 
                                                            name="enable_sso" onchange="toggleSsoFields()">
-                                                    <label class="custom-control-label" for="enableSso">Habilitar SSO</label>
+                                                    <label for="enableSso">Habilitar SSO</label>
                                                 </div>
                                             </div>
                                             <div id="ssoFields" style="display: none;">
@@ -720,7 +768,7 @@ include '../views/includes/header.php';
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="form-group">
+                                    <div class="modern-form-group">
                                         <button type="submit" class="modern-btn modern-btn-primary">
                                             <i class="fas fa-save"></i> Salvar Políticas
                                         </button>
@@ -746,17 +794,17 @@ include '../views/includes/header.php';
                                 <div class="audit-filters">
                                     <form id="auditFiltersForm" class="row">
                                         <div class="col-md-3">
-                                            <div class="form-group mb-2">
+                                            <div class="modern-form-group mb-2">
                                                 <label for="filterUser" class="form-label">Usuário</label>
-                                                <select class="form-control form-control-sm" id="filterUser" name="user_id">
+                                                <select class="modern-select" id="filterUser" name="user_id">
                                                     <option value="">Todos</option>
                                                 </select>
                                             </div>
                                         </div>
                                         <div class="col-md-3">
-                                            <div class="form-group mb-2">
+                                            <div class="modern-form-group mb-2">
                                                 <label for="filterEntity" class="form-label">Entidade</label>
-                                                <select class="form-control form-control-sm" id="filterEntity" name="entity">
+                                                <select class="modern-select" id="filterEntity" name="entity">
                                                     <option value="">Todas</option>
                                                     <option value="usuarios">Usuários</option>
                                                     <option value="funcionarios">Funcionários</option>
@@ -769,9 +817,9 @@ include '../views/includes/header.php';
                                             </div>
                                         </div>
                                         <div class="col-md-2">
-                                            <div class="form-group mb-2">
+                                            <div class="modern-form-group mb-2">
                                                 <label for="filterAction" class="form-label">Ação</label>
-                                                <select class="form-control form-control-sm" id="filterAction" name="action">
+                                                <select class="modern-select" id="filterAction" name="action">
                                                     <option value="">Todas</option>
                                                     <option value="create">Criar</option>
                                                     <option value="update">Atualizar</option>
@@ -780,24 +828,24 @@ include '../views/includes/header.php';
                                             </div>
                                         </div>
                                         <div class="col-md-2">
-                                            <div class="form-group mb-2">
+                                            <div class="modern-form-group mb-2">
                                                 <label for="filterDateStart" class="form-label">De</label>
-                                                <input type="date" class="form-control form-control-sm" id="filterDateStart" name="date_start">
+                                                <input type="date" class="modern-input" id="filterDateStart" name="date_start">
                                             </div>
                                         </div>
                                         <div class="col-md-2">
-                                            <div class="form-group mb-2">
+                                            <div class="modern-form-group mb-2">
                                                 <label for="filterDateEnd" class="form-label">Até</label>
-                                                <input type="date" class="form-control form-control-sm" id="filterDateEnd" name="date_end">
+                                                <input type="date" class="modern-input" id="filterDateEnd" name="date_end">
                                             </div>
                                         </div>
                                     </form>
                                     <div class="row">
                                         <div class="col-md-12">
-                                            <button type="button" class="btn btn-primary btn-sm" onclick="loadAuditLogs()">
+                                            <button type="button" class="modern-btn modern-btn-primary" onclick="loadAuditLogs()">
                                                 <i class="fas fa-search"></i> Filtrar
                                             </button>
-                                            <button type="button" class="btn btn-secondary btn-sm ml-2" onclick="clearAuditFilters()">
+                                            <button type="button" class="modern-btn modern-btn-secondary ml-2" onclick="clearAuditFilters()">
                                                 <i class="fas fa-times"></i> Limpar
                                             </button>
                                         </div>

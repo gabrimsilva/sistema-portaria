@@ -411,17 +411,39 @@ class ConfigController {
         }
         
         header('Content-Type: application/json');
+        
+        // 🛡️ VERIFICAÇÃO CRÍTICA CSRF - OBRIGATÓRIA PARA RBAC
         CSRFProtection::verifyRequest();
         
         try {
             $input = json_decode(file_get_contents('php://input'), true);
             
-            if (!isset($input['role_id']) || !isset($input['permissions'])) {
-                throw new Exception('role_id e permissions são obrigatórios');
+            // Suporte ao formato de múltiplas mudanças (lote)
+            if (isset($input['changes']) && is_array($input['changes'])) {
+                $results = [];
+                foreach ($input['changes'] as $change) {
+                    if (!isset($change['role_id'], $change['permissions'])) {
+                        continue;
+                    }
+                    
+                    $this->rbacService->updateRolePermissions($change['role_id'], $change['permissions']);
+                    $results[] = ['role_id' => $change['role_id'], 'status' => 'updated'];
+                }
+                
+                echo json_encode([
+                    'success' => true, 
+                    'message' => 'Matriz RBAC atualizada com sucesso',
+                    'data' => $results
+                ]);
+                
+            } else if (isset($input['role_id'], $input['permissions'])) {
+                // Formato original (single role)
+                $this->rbacService->updateRolePermissions($input['role_id'], $input['permissions']);
+                echo json_encode(['success' => true, 'message' => 'Permissões atualizadas com sucesso']);
+                
+            } else {
+                throw new Exception('role_id e permissions ou changes são obrigatórios');
             }
-            
-            $this->rbacService->updateRolePermissions($input['role_id'], $input['permissions']);
-            echo json_encode(['success' => true, 'message' => 'Permissões atualizadas com sucesso']);
             
         } catch (Exception $e) {
             http_response_code(400);

@@ -625,7 +625,190 @@
     }
     
     function loadRbacMatrix() {
-        // Implementar carregamento da matriz RBAC
+        // Fazer request para buscar a matriz RBAC
+        fetch('/config/rbac-matrix')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                renderRbacMatrix(data.data);
+            } else {
+                console.error('Erro ao carregar matriz RBAC:', data.message);
+                document.getElementById('rbacMatrix').innerHTML = `
+                    <tr><td colspan="100%" class="text-center text-danger">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        Erro ao carregar matriz RBAC: ${data.message}
+                    </td></tr>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            document.getElementById('rbacMatrix').innerHTML = `
+                <tr><td colspan="100%" class="text-center text-danger">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                    Erro ao carregar matriz RBAC
+                </td></tr>
+            `;
+        });
+    }
+    
+    // Variáveis globais para a matriz RBAC
+    let currentRbacMatrix = null;
+    let rbacChanges = {};
+    
+    function renderRbacMatrix(data) {
+        currentRbacMatrix = data;
+        const tbody = document.getElementById('rbacMatrix').querySelector('tbody');
+        
+        if (!data.roles || !data.permissions) {
+            tbody.innerHTML = '<tr><td colspan="100%" class="text-center">Dados incompletos da matriz RBAC</td></tr>';
+            return;
+        }
+        
+        // Agrupar permissões por módulo
+        const permissionsByModule = {};
+        data.permissions.forEach(perm => {
+            if (!permissionsByModule[perm.module]) {
+                permissionsByModule[perm.module] = [];
+            }
+            permissionsByModule[perm.module].push(perm);
+        });
+        
+        // Criar cabeçalho
+        let html = `
+            <tr class="table-primary">
+                <th style="width: 300px;">Permissão</th>
+                ${data.roles.map(role => `
+                    <th class="text-center" style="width: 120px;">
+                        <div class="d-flex flex-column align-items-center">
+                            <strong>${role.name}</strong>
+                            <small class="text-muted">${getRoleIcon(role.name)}</small>
+                        </div>
+                    </th>
+                `).join('')}
+            </tr>
+        `;
+        
+        // Criar linhas por módulo
+        Object.keys(permissionsByModule).forEach(module => {
+            // Cabeçalho do módulo
+            html += `
+                <tr class="table-secondary">
+                    <td colspan="${data.roles.length + 1}">
+                        <strong><i class="${getModuleIcon(module)} mr-2"></i>${getModuleName(module)}</strong>
+                    </td>
+                </tr>
+            `;
+            
+            // Permissões do módulo
+            permissionsByModule[module].forEach(permission => {
+                html += `
+                    <tr>
+                        <td>
+                            <div class="d-flex flex-column">
+                                <strong>${permission.description}</strong>
+                                <small class="text-muted">${permission.key}</small>
+                            </div>
+                        </td>
+                        ${data.roles.map(role => {
+                            const hasPermission = data.matrix[role.id] && data.matrix[role.id].includes(permission.key);
+                            const isAdminProtected = role.name === 'administrador' && permission.key.startsWith('config.');
+                            
+                            return `
+                                <td class="text-center">
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" 
+                                               class="custom-control-input rbac-checkbox" 
+                                               id="rbac_${role.id}_${permission.id}"
+                                               data-role-id="${role.id}"
+                                               data-permission-key="${permission.key}"
+                                               ${hasPermission ? 'checked' : ''}
+                                               ${isAdminProtected ? 'disabled title="Admin sempre mantém permissões de config"' : ''}
+                                               onchange="onRbacChange(${role.id}, '${permission.key}', this.checked)">
+                                        <label class="custom-control-label" for="rbac_${role.id}_${permission.id}"></label>
+                                    </div>
+                                </td>
+                            `;
+                        }).join('')}
+                    </tr>
+                `;
+            });
+        });
+        
+        tbody.innerHTML = html;
+        
+        // Limpar mudanças pendentes
+        rbacChanges = {};
+        updateSaveButtonState();
+    }
+    
+    // Ícones para roles
+    function getRoleIcon(roleName) {
+        const icons = {
+            'administrador': '👑',
+            'seguranca': '🛡️',  
+            'recepcao': '📞',
+            'rh': '👥',
+            'porteiro': '🚪'
+        };
+        return icons[roleName] || '👤';
+    }
+    
+    // Ícones para módulos
+    function getModuleIcon(module) {
+        const icons = {
+            'config': 'fas fa-cogs',
+            'reports': 'fas fa-chart-bar',
+            'access': 'fas fa-sign-in-alt',
+            'audit': 'fas fa-history',
+            'users': 'fas fa-users',
+            'privacy': 'fas fa-shield-alt'
+        };
+        return icons[module] || 'fas fa-circle';
+    }
+    
+    // Nomes para módulos
+    function getModuleName(module) {
+        const names = {
+            'config': 'CONFIGURAÇÕES',
+            'reports': 'RELATÓRIOS',
+            'access': 'CONTROLE DE ACESSO',
+            'audit': 'AUDITORIA',
+            'users': 'GESTÃO DE USUÁRIOS', 
+            'privacy': 'PRIVACIDADE (LGPD)'
+        };
+        return names[module] || module.toUpperCase();
+    }
+    
+    // Handler para mudanças nos checkboxes
+    function onRbacChange(roleId, permissionKey, isChecked) {
+        if (!rbacChanges[roleId]) {
+            rbacChanges[roleId] = new Set(currentRbacMatrix.matrix[roleId] || []);
+        }
+        
+        if (isChecked) {
+            rbacChanges[roleId].add(permissionKey);
+        } else {
+            rbacChanges[roleId].delete(permissionKey);
+        }
+        
+        updateSaveButtonState();
+    }
+    
+    // Atualizar estado do botão salvar
+    function updateSaveButtonState() {
+        const hasChanges = Object.keys(rbacChanges).length > 0;
+        const saveBtn = document.querySelector('button[onclick="saveRbacMatrix()"]');
+        
+        if (hasChanges) {
+            saveBtn.classList.remove('btn-success');
+            saveBtn.classList.add('btn-warning');
+            saveBtn.innerHTML = '<i class="fas fa-save mr-1"></i>Salvar Alterações *';
+        } else {
+            saveBtn.classList.remove('btn-warning'); 
+            saveBtn.classList.add('btn-success');
+            saveBtn.innerHTML = '<i class="fas fa-save mr-1"></i>Salvar Alterações';
+        }
     }
     
     function loadAuthSettings() {
@@ -1312,11 +1495,159 @@
     }
     
     function showRbacUsers() {
-        // Implementar modal de usuários por perfil
+        // Buscar usuários por perfil
+        fetch('/config/rbac-users')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                renderUsersModal(data.data);
+            } else {
+                showAlert('Erro ao carregar usuários: ' + data.message, 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            showAlert('Erro ao carregar usuários por perfil', 'danger');
+        });
     }
     
     function saveRbacMatrix() {
-        // Implementar salvamento da matriz RBAC
+        // Verificar se há mudanças
+        if (Object.keys(rbacChanges).length === 0) {
+            showAlert('Nenhuma alteração para salvar', 'info');
+            return;
+        }
+        
+        // Preparar dados das mudanças
+        const changes = [];
+        Object.keys(rbacChanges).forEach(roleId => {
+            changes.push({
+                role_id: parseInt(roleId),
+                permissions: Array.from(rbacChanges[roleId])
+            });
+        });
+        
+        const saveBtn = document.querySelector('button[onclick="saveRbacMatrix()"]');
+        const originalHtml = saveBtn.innerHTML;
+        
+        // Loading state
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Salvando...';
+        saveBtn.disabled = true;
+        
+        // Enviar alterações com CSRF
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        
+        fetch('/config/role-permissions', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': csrfToken
+            },
+            body: JSON.stringify({ changes: changes })
+        })
+        .then(response => response.json())
+        .then(data => {
+            saveBtn.innerHTML = originalHtml;
+            saveBtn.disabled = false;
+            
+            if (data.success) {
+                showAlert('Matriz RBAC atualizada com sucesso!', 'success');
+                
+                // Recarregar matriz para refletir mudanças
+                setTimeout(() => {
+                    loadRbacMatrix();
+                }, 1000);
+                
+            } else {
+                showAlert('Erro ao salvar: ' + data.message, 'danger');
+            }
+        })
+        .catch(error => {
+            saveBtn.innerHTML = originalHtml;
+            saveBtn.disabled = false;
+            console.error('Erro:', error);
+            showAlert('Erro ao salvar matriz RBAC', 'danger');
+        });
+    }
+    
+    // Renderizar modal de usuários
+    function renderUsersModal(usersByRole) {
+        let modalHtml = `
+            <div class="modal fade" id="rbacUsersModal" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <i class="fas fa-users mr-2"></i>Usuários por Perfil
+                            </h5>
+                            <button type="button" class="close" data-dismiss="modal">
+                                <span>&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+        `;
+        
+        Object.values(usersByRole).forEach(roleData => {
+            const role = roleData.role;
+            const users = roleData.users;
+            
+            modalHtml += `
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <span class="mr-2">${getRoleIcon(role.name)}</span>
+                            <strong>${role.name}</strong>
+                            <span class="badge badge-secondary ml-2">${users.length} usuário(s)</span>
+                        </h6>
+                        <small class="text-muted">${role.description}</small>
+                    </div>
+                    <div class="card-body">
+            `;
+            
+            if (users.length === 0) {
+                modalHtml += '<p class="text-muted mb-0">Nenhum usuário com este perfil</p>';
+            } else {
+                modalHtml += `
+                    <div class="row">
+                        ${users.map(user => `
+                            <div class="col-md-6 mb-2">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-user-circle text-muted mr-2"></i>
+                                    <div>
+                                        <strong>${user.name}</strong>
+                                        <br><small class="text-muted">${user.email}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+            
+            modalHtml += `
+                    </div>
+                </div>
+            `;
+        });
+        
+        modalHtml += `
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Remover modal existente e adicionar novo
+        const existingModal = document.getElementById('rbacUsersModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+        
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        $('#rbacUsersModal').modal('show');
     }
     
     function exportAuditLogs() {

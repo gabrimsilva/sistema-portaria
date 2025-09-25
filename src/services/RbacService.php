@@ -92,6 +92,39 @@ class RbacService {
             throw new Exception("Role não encontrada");
         }
         
+        // ⚡ VALIDAÇÃO CRÍTICA DE SEGURANÇA ⚡
+        // Validar se todas as permissões solicitadas existem
+        $validPermissions = $this->db->fetchAll("SELECT key FROM permissions");
+        $validKeys = array_column($validPermissions, 'key');
+        
+        foreach ($permissionKeys as $permKey) {
+            if (!in_array($permKey, $validKeys)) {
+                throw new Exception("Permissão inválida: " . $permKey);
+            }
+        }
+        
+        // 🛡️ PROTEÇÃO CRÍTICA: Admin SEMPRE mantém TODAS as permissões config.*
+        if ($role['name'] === 'administrador') {
+            $configPermissions = $this->db->fetchAll(
+                "SELECT key FROM permissions WHERE key LIKE 'config.%'"
+            );
+            $configKeys = array_column($configPermissions, 'key');
+            
+            // Verificar se está tentando remover alguma permissão config.*
+            foreach ($configKeys as $configKey) {
+                if (!in_array($configKey, $permissionKeys)) {
+                    throw new Exception("❌ SEGURANÇA: Administrador não pode perder permissão: " . $configKey);
+                }
+            }
+            
+            // Garantir que todas as config.* estejam presentes
+            foreach ($configKeys as $configKey) {
+                if (!in_array($configKey, $permissionKeys)) {
+                    $permissionKeys[] = $configKey;
+                }
+            }
+        }
+        
         // Buscar permissões atuais para auditoria
         $currentPermissions = $this->db->fetchAll(
             "SELECT p.key FROM role_permissions rp 
@@ -101,32 +134,38 @@ class RbacService {
         );
         $current = array_column($currentPermissions, 'key');
         
-        // Proteção: Admin sempre deve ter permissões críticas
-        if ($role['name'] === 'administrador') {
-            $criticalPermissions = ['config.write', 'config.rbac.write'];
-            foreach ($criticalPermissions as $permission) {
-                if (!in_array($permission, $permissionKeys)) {
-                    $permissionKeys[] = $permission;
+        // 💾 TRANSAÇÃO PARA GARANTIR INTEGRIDADE
+        $this->db->query("BEGIN");
+        
+        try {
+            // Deduplicar permissões para evitar conflitos
+            $permissionKeys = array_unique($permissionKeys);
+            
+            // Remover todas as permissões atuais
+            $this->db->query("DELETE FROM role_permissions WHERE role_id = ?", [$roleId]);
+            
+            // Inserir novas permissões
+            foreach ($permissionKeys as $permissionKey) {
+                $permission = $this->db->fetch(
+                    "SELECT id FROM permissions WHERE key = ?",
+                    [$permissionKey]
+                );
+                
+                if ($permission) {
+                    $this->db->query(
+                        "INSERT INTO role_permissions (role_id, permission_id) VALUES (?, ?)",
+                        [$roleId, $permission['id']]
+                    );
                 }
             }
-        }
-        
-        // Remover todas as permissões atuais
-        $this->db->query("DELETE FROM role_permissions WHERE role_id = ?", [$roleId]);
-        
-        // Inserir novas permissões
-        foreach ($permissionKeys as $permissionKey) {
-            $permission = $this->db->fetch(
-                "SELECT id FROM permissions WHERE key = ?",
-                [$permissionKey]
-            );
             
-            if ($permission) {
-                $this->db->query(
-                    "INSERT INTO role_permissions (role_id, permission_id) VALUES (?, ?)",
-                    [$roleId, $permission['id']]
-                );
-            }
+            // Commit da transação
+            $this->db->query("COMMIT");
+            
+        } catch (Exception $e) {
+            // Rollback em caso de erro
+            $this->db->query("ROLLBACK");
+            throw new Exception("Erro ao atualizar permissões da role: " . $e->getMessage());
         }
         
         // Log de auditoria

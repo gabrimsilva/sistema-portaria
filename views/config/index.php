@@ -1110,7 +1110,7 @@
     // Função auxiliar para mostrar alertas
     function showAlert(message, type) {
         const alertHtml = `
-            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+            <div class="alert alert-${type} alert-dismissible fade show" role="alert" style="position: fixed; top: 20px; right: 20px; z-index: 9999; max-width: 400px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
                 ${message}
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
@@ -1118,15 +1118,14 @@
             </div>
         `;
         
-        // Inserir no topo do content
-        const content = document.querySelector('.content-wrapper .content');
-        content.insertAdjacentHTML('afterbegin', alertHtml);
+        // Inserir direto no body para garantir que apareça acima de tudo
+        document.body.insertAdjacentHTML('beforeend', alertHtml);
         
         // Auto-remove após 5 segundos
         setTimeout(() => {
-            const alert = content.querySelector('.alert');
-            if (alert) {
-                alert.remove();
+            const alerts = document.querySelectorAll('.alert');
+            if (alerts.length > 0) {
+                alerts[alerts.length - 1].remove(); // Remove o último alerta
             }
         }, 5000);
     }

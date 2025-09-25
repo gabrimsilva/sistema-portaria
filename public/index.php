@@ -50,6 +50,21 @@ if (!$isAuthenticated && !in_array(explode('/', $path)[0], $publicRoutes)) {
 }
 
 try {
+    // Handle specific user routes like config/users/5 BEFORE the main switch
+    if (preg_match('/^config\/users\/(\d+)$/', $path, $matches)) {
+        require_once '../src/controllers/ConfigController.php';
+        $controller = new ConfigController();
+        $_GET['id'] = $matches[1];
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
+            $controller->updateUser();
+        } else {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método não permitido']);
+        }
+        exit; // Important: exit here so the switch doesn't run
+    }
+    
     switch ($path) {
         case 'login':
             if ($isAuthenticated) {
@@ -277,24 +292,6 @@ try {
         case 'config/auth-policies':
         case 'config/audit':
         case 'config/users':
-            // Also catch specific user routes like config/users/5
-            if (preg_match('/^config\/users\/\d+/', $path)) {
-                require_once '../src/controllers/ConfigController.php';
-                $controller = new ConfigController();
-                
-                // Extract the ID from path like config/users/5
-                if (preg_match('/^config\/users\/(\d+)/', $path, $matches)) {
-                    $_GET['id'] = $matches[1];
-                    
-                    if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
-                        $controller->updateUser();
-                    } else {
-                        http_response_code(405);
-                        echo json_encode(['success' => false, 'message' => 'Método não permitido']);
-                    }
-                }
-                break;
-            }
             require_once '../src/controllers/ConfigController.php';
             $controller = new ConfigController();
             

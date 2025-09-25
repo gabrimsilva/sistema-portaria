@@ -45,7 +45,10 @@ class ConfigController {
     public function index() {
         // Verificar permissão básica para acessar configurações
         if (!$this->authService->hasPermission('audit_log.read') && 
-            !$this->authService->hasPermission('registro_acesso.update')) {
+            !$this->authService->hasPermission('registro_acesso.update') &&
+            !$this->authService->hasPermission('config.auth.write') &&
+            !$this->authService->hasPermission('config.rbac.write') &&
+            !$this->authService->hasPermission('config.write')) {
             http_response_code(403);
             echo "Acesso negado. Você não tem permissão para acessar as configurações.";
             exit;
@@ -954,9 +957,9 @@ class ConfigController {
      * PUT /config/auth-policies
      */
     public function updateAuthPolicies() {
-        if (!$this->authService->hasPermission('registro_acesso.update')) {
+        if (!$this->authService->hasPermission('config.auth.write')) {
             http_response_code(403);
-            echo json_encode(['success' => false, 'message' => 'Acesso negado']);
+            echo json_encode(['success' => false, 'message' => 'Acesso negado. Permissão necessária: config.auth.write']);
             return;
         }
         
@@ -987,9 +990,9 @@ class ConfigController {
      * GET /config/audit
      */
     public function getAuditLogs() {
-        if (!$this->authService->hasPermission('registro_acesso.update')) {
+        if (!$this->authService->hasPermission('audit_log.read')) {
             http_response_code(403);
-            echo json_encode(['success' => false, 'message' => 'Acesso negado']);
+            echo json_encode(['success' => false, 'message' => 'Acesso negado. Permissão necessária: audit_log.read']);
             return;
         }
         
@@ -1017,9 +1020,9 @@ class ConfigController {
      * GET /config/audit/export
      */
     public function exportAuditLogs() {
-        if (!$this->authService->hasPermission('registro_acesso.update')) {
+        if (!$this->authService->hasPermission('audit_log.export')) {
             http_response_code(403);
-            echo json_encode(['success' => false, 'message' => 'Acesso negado']);
+            echo json_encode(['success' => false, 'message' => 'Acesso negado. Permissão necessária: audit_log.export']);
             return;
         }
         

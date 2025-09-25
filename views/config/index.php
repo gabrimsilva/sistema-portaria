@@ -405,7 +405,7 @@
                                         </h3>
                                     </div>
                                     <div class="card-body">
-                                        <form id="authPoliciesForm">
+                                        <form id="authPoliciesForm" onsubmit="event.preventDefault(); saveAuthPolicies();">
                                             <div class="row">
                                                 <div class="col-md-6">
                                                     <h5>Políticas de Senha</h5>
@@ -864,11 +864,149 @@
     }
     
     function loadAuthSettings() {
-        // Implementar carregamento das configurações de autenticação
+        fetch('/config/auth-policies')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const policies = data.data;
+                    
+                    // Preencher campos do formulário
+                    document.getElementById('passwordMinLength').value = policies.password_min_length || 8;
+                    document.getElementById('passwordExpiryDays').value = policies.password_expiry_days || 90;
+                    document.getElementById('sessionTimeout').value = policies.session_timeout_minutes || 1440;
+                    document.getElementById('require2fa').checked = policies.require_2fa || false;
+                    document.getElementById('enableSso').checked = policies.enable_sso || false;
+                    document.getElementById('ssoProvider').value = policies.sso_provider || '';
+                    document.getElementById('ssoClientId').value = policies.sso_client_id || '';
+                    document.getElementById('ssoIssuer').value = policies.sso_issuer || '';
+                    
+                    // Mostrar/ocultar campos SSO
+                    toggleSsoFields();
+                } else {
+                    showAlert('Erro ao carregar configurações de autenticação: ' + data.message, 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                showAlert('Erro ao carregar configurações de autenticação', 'danger');
+            });
+    }
+    
+    function saveAuthPolicies() {
+        const form = document.getElementById('authPoliciesForm');
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        
+        // Preparar dados
+        const formData = {
+            password_min_length: parseInt(document.getElementById('passwordMinLength').value),
+            password_expiry_days: parseInt(document.getElementById('passwordExpiryDays').value),
+            session_timeout_minutes: parseInt(document.getElementById('sessionTimeout').value),
+            require_2fa: document.getElementById('require2fa').checked,
+            enable_sso: document.getElementById('enableSso').checked,
+            sso_provider: document.getElementById('ssoProvider').value || null,
+            sso_client_id: document.getElementById('ssoClientId').value || null,
+            sso_issuer: document.getElementById('ssoIssuer').value || null
+        };
+        
+        // Indicador de carregamento
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Salvando...';
+        submitBtn.disabled = true;
+        
+        // Enviar dados
+        fetch('/config/auth-policies', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+            
+            if (data.success) {
+                showAlert('Políticas de autenticação salvas com sucesso!', 'success');
+            } else {
+                showAlert(data.message || 'Erro ao salvar políticas', 'danger');
+            }
+        })
+        .catch(error => {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+            console.error('Erro:', error);
+            showAlert('Erro ao salvar políticas de autenticação', 'danger');
+        });
     }
     
     function loadAuditLogs() {
-        // Implementar carregamento dos logs de auditoria
+        const filters = {
+            user_id: document.getElementById('filterUser').value,
+            entity: document.getElementById('filterEntity').value,
+            action: document.getElementById('filterAction').value,
+            date_start: document.getElementById('filterDateStart').value,
+            date_end: document.getElementById('filterDateEnd').value
+        };
+        
+        // Construir query string
+        const queryParams = new URLSearchParams();
+        Object.keys(filters).forEach(key => {
+            if (filters[key]) {
+                queryParams.append(key, filters[key]);
+            }
+        });
+        
+        // Indicador de carregamento
+        const tableBody = document.querySelector('#auditTable tbody');
+        tableBody.innerHTML = '<tr><td colspan="6" class="text-center"><i class="fas fa-spinner fa-spin mr-2"></i>Carregando logs...</td></tr>';
+        
+        fetch(`/config/audit?${queryParams.toString()}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const logs = data.data;
+                    let html = '';
+                    
+                    if (logs.length === 0) {
+                        html = '<tr><td colspan="6" class="text-center text-muted">Nenhum log encontrado</td></tr>';
+                    } else {
+                        logs.forEach(log => {
+                            const timestamp = new Date(log.timestamp).toLocaleString('pt-BR');
+                            const details = log.dados_depois ? JSON.stringify(JSON.parse(log.dados_depois)) : '';
+                            
+                            html += `
+                                <tr>
+                                    <td>${timestamp}</td>
+                                    <td>${log.usuario_nome || 'Sistema'}</td>
+                                    <td><span class="badge badge-${getActionBadgeClass(log.acao)}">${log.acao}</span></td>
+                                    <td>${log.entidade}</td>
+                                    <td><small>${details.length > 100 ? details.substring(0, 100) + '...' : details}</small></td>
+                                    <td>${log.ip_address || ''}</td>
+                                </tr>
+                            `;
+                        });
+                    }
+                    
+                    tableBody.innerHTML = html;
+                } else {
+                    tableBody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Erro ao carregar logs: ' + data.message + '</td></tr>';
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                tableBody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Erro ao carregar logs de auditoria</td></tr>';
+            });
+    }
+    
+    function getActionBadgeClass(action) {
+        switch(action) {
+            case 'create': return 'success';
+            case 'update': return 'warning';
+            case 'delete': return 'danger';
+            default: return 'info';
+        }
     }
     
     function toggleSsoFields() {
@@ -1973,7 +2111,32 @@
     }
     
     function exportAuditLogs() {
-        // Implementar exportação de logs
+        const filters = {
+            user_id: document.getElementById('filterUser').value,
+            entity: document.getElementById('filterEntity').value,
+            action: document.getElementById('filterAction').value,
+            date_start: document.getElementById('filterDateStart').value,
+            date_end: document.getElementById('filterDateEnd').value
+        };
+        
+        // Construir query string
+        const queryParams = new URLSearchParams();
+        Object.keys(filters).forEach(key => {
+            if (filters[key]) {
+                queryParams.append(key, filters[key]);
+            }
+        });
+        
+        // Baixar o arquivo
+        const url = `/config/audit/export?${queryParams.toString()}`;
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `audit_logs_${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        showAlert('Exportação iniciada. O download será iniciado em breve.', 'info');
     }
     </script>
 

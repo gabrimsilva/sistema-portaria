@@ -149,6 +149,11 @@
                                             </a>
                                         </li>
                                         <li class="nav-item">
+                                            <a href="#users" class="nav-link" data-section="users">
+                                                <i class="fas fa-users-cog mr-2"></i> Usuários
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
                                             <a href="#auth" class="nav-link" data-section="auth">
                                                 <i class="fas fa-lock mr-2"></i> Autenticação
                                             </a>
@@ -336,6 +341,52 @@
                                                     <tr>
                                                         <td colspan="100%" class="text-center">
                                                             <i class="fas fa-spinner fa-spin mr-2"></i>Carregando matriz RBAC...
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Seção: Usuários -->
+                            <div id="users" class="config-section">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3 class="card-title">
+                                            <i class="fas fa-users-cog mr-2"></i>Gestão de Usuários
+                                        </h3>
+                                        <div class="card-tools">
+                                            <button type="button" class="btn btn-primary btn-sm" onclick="openUserModal()">
+                                                <i class="fas fa-plus mr-1"></i>Novo Usuário
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="alert alert-info">
+                                            <i class="fas fa-info-circle mr-2"></i>
+                                            Gerencie os usuários do sistema e suas permissões por perfil/role.
+                                        </div>
+                                        
+                                        <!-- Tabela de Usuários -->
+                                        <div class="table-responsive">
+                                            <table id="usersTable" class="table table-bordered table-striped">
+                                                <thead>
+                                                    <tr>
+                                                        <th>ID</th>
+                                                        <th>Nome</th>
+                                                        <th>Email</th>
+                                                        <th>Perfil/Role</th>
+                                                        <th>Status</th>
+                                                        <th>Último Login</th>
+                                                        <th>Ações</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="usersTableBody">
+                                                    <tr>
+                                                        <td colspan="7" class="text-center">
+                                                            <i class="fas fa-spinner fa-spin mr-2"></i>Carregando usuários...
                                                         </td>
                                                     </tr>
                                                 </tbody>
@@ -563,6 +614,7 @@
         loadOrganizationSettings();
         loadSites();
         loadRbacMatrix();
+        loadUsers();
         loadAuthSettings();
         loadAuditLogs();
     });
@@ -1077,6 +1129,277 @@
                 alert.remove();
             }
         }, 5000);
+    }
+    
+    // ========== USERS MANAGEMENT ==========
+    
+    let currentUsers = [];
+    let availableRoles = [];
+    let editingUserId = null;
+    
+    // Carregar usuários do sistema
+    function loadUsers() {
+        const tableBody = document.getElementById('usersTableBody');
+        tableBody.innerHTML = '<tr><td colspan="7" class="text-center"><i class="fas fa-spinner fa-spin mr-2"></i>Carregando usuários...</td></tr>';
+        
+        fetchWithCSRF('/config/users', { method: 'GET' })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                currentUsers = data.users || [];
+                availableRoles = data.roles || [];
+                renderUsersTable();
+                populateRoleSelect();
+            } else {
+                tableBody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Erro ao carregar usuários</td></tr>';
+                console.error('Erro:', data.message);
+            }
+        })
+        .catch(error => {
+            tableBody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Erro ao carregar usuários</td></tr>';
+            console.error('Erro:', error);
+        });
+    }
+    
+    // Renderizar tabela de usuários
+    function renderUsersTable() {
+        const tableBody = document.getElementById('usersTableBody');
+        
+        if (currentUsers.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Nenhum usuário cadastrado</td></tr>';
+            return;
+        }
+        
+        const rows = currentUsers.map(user => {
+            const statusBadge = user.ativo ? 
+                '<span class="badge badge-success">Ativo</span>' : 
+                '<span class="badge badge-secondary">Inativo</span>';
+                
+            const lastLogin = user.ultimo_login ? 
+                new Date(user.ultimo_login).toLocaleDateString('pt-BR') : 
+                '<span class="text-muted">Nunca</span>';
+                
+            const roleInfo = availableRoles.find(r => r.id == user.role_id);
+            const roleName = roleInfo ? roleInfo.name : user.perfil || 'N/A';
+            
+            return `
+                <tr>
+                    <td>${user.id}</td>
+                    <td>${user.nome}</td>
+                    <td>${user.email}</td>
+                    <td>
+                        <span class="badge badge-info">${roleName}</span>
+                    </td>
+                    <td>${statusBadge}</td>
+                    <td>${lastLogin}</td>
+                    <td>
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="editUser(${user.id})" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-warning" onclick="toggleUserStatus(${user.id})" title="${user.ativo ? 'Desativar' : 'Ativar'}">
+                                <i class="fas fa-${user.ativo ? 'user-slash' : 'user-check'}"></i>
+                            </button>
+                            ${user.id != 1 ? `<button type="button" class="btn btn-sm btn-outline-danger" onclick="resetUserPassword(${user.id})" title="Reset senha">
+                                <i class="fas fa-key"></i>
+                            </button>` : ''}
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+        
+        tableBody.innerHTML = rows;
+    }
+    
+    // Preencher select de roles
+    function populateRoleSelect() {
+        const select = document.getElementById('userRole');
+        const currentOptions = select.innerHTML;
+        
+        let options = '<option value="">Selecione um perfil...</option>';
+        availableRoles.forEach(role => {
+            options += `<option value="${role.id}">${role.name} - ${role.description}</option>`;
+        });
+        
+        select.innerHTML = options;
+    }
+    
+    // Abrir modal para novo usuário
+    function openUserModal(userId = null) {
+        editingUserId = userId;
+        
+        // Reset form
+        document.getElementById('userForm').reset();
+        document.getElementById('userActive').checked = true;
+        document.getElementById('sendEmailNotification').checked = true;
+        document.getElementById('userAuditInfo').style.display = 'none';
+        
+        if (userId) {
+            // Modo edição
+            const user = currentUsers.find(u => u.id == userId);
+            if (user) {
+                document.getElementById('userModalTitle').textContent = 'Editar Usuário';
+                document.getElementById('userName').value = user.nome;
+                document.getElementById('userEmail').value = user.email;
+                document.getElementById('userRole').value = user.role_id || '';
+                document.getElementById('userActive').checked = user.ativo;
+                
+                // Mostrar informações de auditoria
+                document.getElementById('userAuditInfo').style.display = 'block';
+                document.getElementById('userCreatedAt').textContent = new Date(user.data_criacao).toLocaleString('pt-BR');
+                document.getElementById('userLastLogin').textContent = user.ultimo_login ? 
+                    new Date(user.ultimo_login).toLocaleString('pt-BR') : 'Nunca';
+                
+                // Senha não obrigatória na edição
+                document.getElementById('userPassword').required = false;
+                document.getElementById('userPassword').placeholder = 'Deixe em branco para manter a senha atual';
+                
+                // Esconder opção de envio de email na edição
+                document.getElementById('sendEmailGroup').style.display = 'none';
+            }
+        } else {
+            // Modo criação
+            document.getElementById('userModalTitle').textContent = 'Novo Usuário';
+            document.getElementById('userPassword').required = true;
+            document.getElementById('userPassword').placeholder = 'Mínimo 6 caracteres';
+            document.getElementById('sendEmailGroup').style.display = 'block';
+        }
+        
+        $('#userModal').modal('show');
+    }
+    
+    // Salvar usuário
+    function saveUser() {
+        const form = document.getElementById('userForm');
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+        
+        const userData = {
+            nome: document.getElementById('userName').value,
+            email: document.getElementById('userEmail').value,
+            role_id: document.getElementById('userRole').value,
+            senha: document.getElementById('userPassword').value,
+            ativo: document.getElementById('userActive').checked,
+            send_email: document.getElementById('sendEmailNotification').checked
+        };
+        
+        const saveBtn = document.getElementById('saveUserBtn');
+        const originalText = saveBtn.innerHTML;
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Salvando...';
+        saveBtn.disabled = true;
+        
+        const url = editingUserId ? `/config/users/${editingUserId}` : '/config/users';
+        const method = editingUserId ? 'PUT' : 'POST';
+        
+        fetchWithCSRF(url, {
+            method: method,
+            body: JSON.stringify(userData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            saveBtn.innerHTML = originalText;
+            saveBtn.disabled = false;
+            
+            if (data.success) {
+                $('#userModal').modal('hide');
+                showAlert(editingUserId ? 'Usuário atualizado com sucesso!' : 'Usuário criado com sucesso!', 'success');
+                loadUsers(); // Recarregar lista
+            } else {
+                showAlert('Erro: ' + data.message, 'danger');
+            }
+        })
+        .catch(error => {
+            saveBtn.innerHTML = originalText;
+            saveBtn.disabled = false;
+            console.error('Erro:', error);
+            showAlert('Erro ao salvar usuário', 'danger');
+        });
+    }
+    
+    // Editar usuário
+    function editUser(userId) {
+        openUserModal(userId);
+    }
+    
+    // Alternar status do usuário
+    function toggleUserStatus(userId) {
+        const user = currentUsers.find(u => u.id == userId);
+        if (!user) return;
+        
+        const action = user.ativo ? 'desativar' : 'ativar';
+        const confirmMessage = `Tem certeza que deseja ${action} o usuário "${user.nome}"?`;
+        
+        if (!confirm(confirmMessage)) return;
+        
+        fetchWithCSRF(`/config/users/${userId}/toggle-status`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert(`Usuário ${action}do com sucesso!`, 'success');
+                loadUsers(); // Recarregar lista
+            } else {
+                showAlert('Erro: ' + data.message, 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            showAlert('Erro ao alterar status do usuário', 'danger');
+        });
+    }
+    
+    // Reset password do usuário
+    function resetUserPassword(userId) {
+        const user = currentUsers.find(u => u.id == userId);
+        if (!user) return;
+        
+        const confirmMessage = `Tem certeza que deseja resetar a senha do usuário "${user.nome}"?\nUma nova senha será gerada e enviada por email.`;
+        
+        if (!confirm(confirmMessage)) return;
+        
+        fetchWithCSRF(`/config/users/${userId}/reset-password`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert('Senha resetada com sucesso! Nova senha enviada por email.', 'success');
+            } else {
+                showAlert('Erro: ' + data.message, 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            showAlert('Erro ao resetar senha', 'danger');
+        });
+    }
+    
+    // Gerar senha aleatória
+    function generatePassword() {
+        const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%&*';
+        let password = '';
+        for (let i = 0; i < 8; i++) {
+            password += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        document.getElementById('userPassword').value = password;
+    }
+    
+    // Alternar visibilidade da senha
+    function togglePasswordVisibility() {
+        const passwordInput = document.getElementById('userPassword');
+        const toggleIcon = document.getElementById('passwordToggleIcon');
+        
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            toggleIcon.className = 'fas fa-eye-slash';
+        } else {
+            passwordInput.type = 'password';
+            toggleIcon.className = 'fas fa-eye';
+        }
     }
     
     // ========== SITES MANAGEMENT ==========
@@ -1787,6 +2110,120 @@
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
                         <button type="submit" class="btn btn-primary" id="saveSectorBtn">
                             <i class="fas fa-save mr-1"></i>Salvar Setor
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Gestão de Usuários -->
+    <div class="modal fade" id="userModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="userModalTitle">Novo Usuário</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form id="userForm" onsubmit="event.preventDefault(); saveUser();">
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="userName">Nome Completo *</label>
+                                    <input type="text" class="form-control" id="userName" required maxlength="100"
+                                           placeholder="Digite o nome completo">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="userEmail">Email *</label>
+                                    <input type="email" class="form-control" id="userEmail" required maxlength="150"
+                                           placeholder="usuario@empresa.com">
+                                    <small class="form-text text-muted">Email será usado para login</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="userRole">Perfil/Role *</label>
+                                    <select class="form-control" id="userRole" required>
+                                        <option value="">Selecione um perfil...</option>
+                                        <!-- Será preenchido via JavaScript -->
+                                    </select>
+                                    <small class="form-text text-muted">Perfil determina as permissões do usuário</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="userPassword">Senha *</label>
+                                    <div class="input-group">
+                                        <input type="password" class="form-control" id="userPassword" 
+                                               placeholder="Mínimo 6 caracteres">
+                                        <div class="input-group-append">
+                                            <button type="button" class="btn btn-outline-secondary" onclick="generatePassword()" title="Gerar senha aleatória">
+                                                <i class="fas fa-dice"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility()" title="Mostrar/ocultar senha">
+                                                <i class="fas fa-eye" id="passwordToggleIcon"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <small class="form-text text-muted">Mínimo 6 caracteres</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" id="userActive" checked>
+                                        <label class="form-check-label" for="userActive">
+                                            <strong>Usuário ativo</strong>
+                                        </label>
+                                        <small class="form-text text-muted">Usuários inativos não podem fazer login</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6" id="sendEmailGroup">
+                                <div class="form-group">
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" id="sendEmailNotification" checked>
+                                        <label class="form-check-label" for="sendEmailNotification">
+                                            Enviar credenciais por email
+                                        </label>
+                                        <small class="form-text text-muted">Notifica o usuário sobre a criação da conta</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Informações de Auditoria (apenas na edição) -->
+                        <div id="userAuditInfo" style="display: none;">
+                            <hr>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <small class="text-muted">
+                                        <strong>Criado em:</strong> <span id="userCreatedAt">-</span>
+                                    </small>
+                                </div>
+                                <div class="col-md-6">
+                                    <small class="text-muted">
+                                        <strong>Último login:</strong> <span id="userLastLogin">Nunca</span>
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary" id="saveUserBtn">
+                            <i class="fas fa-save mr-1"></i>Salvar Usuário
                         </button>
                     </div>
                 </form>

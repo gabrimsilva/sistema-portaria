@@ -48,8 +48,10 @@ class CookieService
             include BASE_PATH . '/views/components/cookie-banner.php';
         }
         
-        // Adiciona script JavaScript
-        echo '<script src="/assets/js/cookie-consent.js?v=' . filemtime(PUBLIC_PATH . '/assets/js/cookie-consent.js') . '"></script>';
+        // Adiciona script JavaScript com verificação de arquivo
+        $jsFile = PUBLIC_PATH . '/assets/js/cookie-consent.js';
+        $version = file_exists($jsFile) ? filemtime($jsFile) : time();
+        echo '<script src="/assets/js/cookie-consent.js?v=' . $version . '"></script>';
         
         // CSS personalizado se fornecido
         if (!empty($config['customCSS'])) {

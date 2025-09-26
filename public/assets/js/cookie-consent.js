@@ -388,13 +388,20 @@ window.CookieConsent = (function() {
 })();
 
 // Auto-inicialização quando DOM estiver pronto
-document.addEventListener('DOMContentLoaded', function() {
-    CookieConsent.init();
-});
-
-// Compatibilidade com navegadores antigos
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', CookieConsent.init);
-} else {
-    CookieConsent.init();
-}
+(function() {
+    function initWhenReady() {
+        if (typeof $ === 'undefined') {
+            console.warn('⚠️ jQuery não encontrado, aguardando...');
+            setTimeout(initWhenReady, 100);
+            return;
+        }
+        
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', CookieConsent.init);
+        } else {
+            CookieConsent.init();
+        }
+    }
+    
+    initWhenReady();
+})();

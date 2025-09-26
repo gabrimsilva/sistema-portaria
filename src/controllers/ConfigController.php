@@ -1187,8 +1187,8 @@ class ConfigController {
             $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
             $fileName = 'logo_' . uniqid() . '.' . $extension;
             
-            // Diretório de upload (caminho absoluto seguro)
-            $uploadDir = $_SERVER['DOCUMENT_ROOT'] . '/uploads/logos/';
+            // Diretório de logos organizacionais (caminho absoluto seguro)
+            $uploadDir = $_SERVER['DOCUMENT_ROOT'] . '/assets/logos/';
             if (!is_dir($uploadDir)) {
                 mkdir($uploadDir, 0755, true);
             }
@@ -1207,7 +1207,7 @@ class ConfigController {
             }
             
             // URL pública do arquivo
-            $logoUrl = '/uploads/logos/' . $fileName;
+            $logoUrl = '/assets/logos/' . $fileName;
             
             // Atualizar configurações da organização com novo logo
             $current = $this->configService->getOrganizationSettings();

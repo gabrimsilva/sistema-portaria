@@ -626,6 +626,9 @@
     </script>
     
     <?php
+    // Incluir rodapé LGPD
+    require_once __DIR__ . '/../components/lgpd-footer.php';
+    
     // Banner de Cookies LGPD
     require_once BASE_PATH . '/src/services/CookieService.php';
     CookieService::includeBanner();

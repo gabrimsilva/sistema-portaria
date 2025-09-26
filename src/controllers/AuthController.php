@@ -66,9 +66,11 @@ class AuthController {
                         $attemptInfo = $this->throttleService->recordFailedAttempt($ipAddress, $email);
                         
                         if ($attemptInfo['blocked']) {
-                            $error = "Muitas tentativas incorretas. Acesso bloqueado por 15 minutos.";
+                            $lockoutMinutes = ceil($this->throttleService->getLockoutDuration() / 60);
+                            $error = "Muitas tentativas incorretas. Acesso bloqueado por $lockoutMinutes minutos.";
                         } else {
-                            $remaining = 5 - $attemptInfo['attempts'];
+                            $maxAttempts = $this->throttleService->getMaxAttempts();
+                            $remaining = $maxAttempts - $attemptInfo['attempts'];
                             $error = "Email ou senha incorretos. ($remaining tentativas restantes)";
                         }
                     }

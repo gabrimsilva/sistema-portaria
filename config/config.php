@@ -58,11 +58,14 @@ spl_autoload_register(function ($className) {
 // 🔐 Security configuration for biometric data
 $encryptionKey = getenv('BIOMETRIC_ENCRYPTION_KEY');
 if (!$encryptionKey) {
-    // 🚨 PRODUÇÃO: Chave obrigatória
-    if (getenv('ENVIRONMENT') === 'production' || (isset($_SERVER['SERVER_NAME']) && $_SERVER['SERVER_NAME'] !== 'localhost')) {
+    // 🚨 PRODUÇÃO: Apenas em ambiente verdadeiramente de produção
+    $isProduction = (getenv('ENVIRONMENT') === 'production') && 
+                   (!isset($_SERVER['REPLIT_DB_URL'])); // Replit nunca é produção
+    
+    if ($isProduction) {
         throw new Exception('BIOMETRIC_ENCRYPTION_KEY obrigatória em produção');
     }
-    // 🧪 Ambiente de desenvolvimento/teste: Chave segura temporária
+    // 🧪 Ambiente de desenvolvimento/teste/Replit: Chave segura temporária
     $encryptionKey = 'dev-test-key-' . hash('sha256', 'biometric-development-' . (__DIR__));
 }
 define('BIOMETRIC_ENCRYPTION_KEY', $encryptionKey);

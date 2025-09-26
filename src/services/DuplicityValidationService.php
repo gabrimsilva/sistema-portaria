@@ -134,10 +134,10 @@ class DuplicityValidationService {
             ];
         }
         
-        // 2. Verificar visitantes com placa ativa (acesso aberto)
+        // 2. Verificar visitantes com a mesma placa (globalmente única)
         $sql = "SELECT nome, cpf, empresa, placa_veiculo, hora_entrada, 'Visitante' as tipo 
                 FROM visitantes_novo 
-                WHERE placa_veiculo = ? AND hora_entrada IS NOT NULL AND hora_saida IS NULL";
+                WHERE placa_veiculo = ?";
         $params = [$placa];
         
         if ($excludeId && $excludeTable === 'visitantes_novo') {
@@ -145,20 +145,19 @@ class DuplicityValidationService {
             $params[] = $excludeId;
         }
         
-        $visitanteAtivo = $this->db->fetch($sql, $params);
-        if ($visitanteAtivo) {
-            $horarioFormatado = date('H:i', strtotime($visitanteAtivo['hora_entrada']));
+        $visitanteExistente = $this->db->fetch($sql, $params);
+        if ($visitanteExistente) {
             return [
                 'isValid' => false,
-                'message' => "Placa já está em uso em um acesso aberto às {$horarioFormatado} (Visitante: {$visitanteAtivo['nome']}).",
-                'entry' => $visitanteAtivo
+                'message' => "Esta placa já foi cadastrada anteriormente para outro visitante ({$visitanteExistente['nome']}). Placas devem ser únicas no sistema.",
+                'entry' => $visitanteExistente
             ];
         }
         
-        // 3. Verificar prestadores com placa ativa (acesso aberto)
+        // 3. Verificar prestadores com a mesma placa (globalmente única)
         $sql = "SELECT nome, cpf, empresa, placa_veiculo, entrada, 'Prestador' as tipo 
                 FROM prestadores_servico 
-                WHERE placa_veiculo = ? AND entrada IS NOT NULL AND saida IS NULL";
+                WHERE placa_veiculo = ?";
         $params = [$placa];
         
         if ($excludeId && $excludeTable === 'prestadores_servico') {
@@ -166,13 +165,12 @@ class DuplicityValidationService {
             $params[] = $excludeId;
         }
         
-        $prestadorAtivo = $this->db->fetch($sql, $params);
-        if ($prestadorAtivo) {
-            $horarioFormatado = date('H:i', strtotime($prestadorAtivo['entrada']));
+        $prestadorExistente = $this->db->fetch($sql, $params);
+        if ($prestadorExistente) {
             return [
                 'isValid' => false,
-                'message' => "Placa já está em uso em um acesso aberto às {$horarioFormatado} (Prestador: {$prestadorAtivo['nome']}).",
-                'entry' => $prestadorAtivo
+                'message' => "Esta placa já foi cadastrada anteriormente para outro prestador ({$prestadorExistente['nome']}). Placas devem ser únicas no sistema.",
+                'entry' => $prestadorExistente
             ];
         }
         

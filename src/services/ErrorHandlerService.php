@@ -210,16 +210,53 @@ window.ErrorHandler = {
     }
 };
 
-// Configurar handler global para erros não capturados
+// Configurar handler global para erros não capturados (incluindo non-Error objects)
 window.addEventListener('error', function(event) {
-    ErrorHandler.handle(event.error || event.message, 'global');
+    let errorToHandle = event.error || event.message || 'Unknown error';
+    
+    // Tratar especificamente o caso de non-Error objects
+    if (!(errorToHandle instanceof Error)) {
+        console.warn('🚨 Non-Error object detected:', typeof errorToHandle, errorToHandle);
+        errorToHandle = new Error(`Non-Error thrown: ${JSON.stringify(errorToHandle)}`);
+    }
+    
+    ErrorHandler.handle(errorToHandle, 'global');
 });
 
 // Configurar handler para promises rejeitadas
 window.addEventListener('unhandledrejection', function(event) {
-    ErrorHandler.handle(event.reason, 'promise');
+    let reason = event.reason;
+    
+    // Normalizar non-Error objects em promises
+    if (!(reason instanceof Error)) {
+        console.warn('🚨 Promise rejected with non-Error:', typeof reason, reason);
+        reason = new Error(`Promise rejection (non-Error): ${JSON.stringify(reason)}`);
+    }
+    
+    ErrorHandler.handle(reason, 'promise');
     event.preventDefault(); // Prevenir o log padrão
 });
+
+// Handler específico para capturar o erro "uncaught exception occured but the error was not an error object"
+if (typeof window.onerror !== 'undefined') {
+    const originalOnerror = window.onerror;
+    window.onerror = function(message, source, lineno, colno, error) {
+        
+        // Detectar especificamente nossa mensagem problema
+        if (message && message.includes('uncaught exception occured but the error was not an error object')) {
+            console.warn('🎯 ERRO ESPECÍFICO DETECTADO: Non-Error object thrown somewhere in the code');
+            ErrorHandler.handle(new Error('Non-Error object thrown in application code'), 'non-error-object');
+            return true; // Prevenir o erro de aparecer no console
+        }
+        
+        // Chamar handler original se existir
+        if (originalOnerror) {
+            return originalOnerror.call(this, message, source, lineno, colno, error);
+        }
+        
+        return false;
+    };
+}
 
 // Inicialização
 if (ErrorHandler.config.enableConsoleLog) {

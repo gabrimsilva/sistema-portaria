@@ -497,7 +497,11 @@
                 submitBtn.disabled = false;
             })
             .catch(error => {
-                console.error('Erro:', error);
+                if (typeof ErrorHandler !== 'undefined') {
+                    ErrorHandler.handle(error, 'fetch');
+                } else {
+                    console.error('Erro:', error);
+                }
                 showAlert('Erro de comunicação com o servidor', 'warning');
                 
                 // Fechar modal e restaurar botão

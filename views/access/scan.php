@@ -208,6 +208,11 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
     
+    <?php
+    require_once '../src/services/ErrorHandlerService.php';
+    echo ErrorHandlerService::renderComplete(['enableConsoleLog' => true]);
+    ?>
+    
     <script>
     let codeReader = null;
     let stream = null;
@@ -238,7 +243,11 @@
             document.getElementById('stop-scanner').style.display = 'inline-block';
             
         } catch (err) {
-            alert('Erro ao acessar a câmera: ' + err.message);
+            if (typeof ErrorHandler !== 'undefined') {
+                ErrorHandler.handle(err, 'camera', true);
+            } else {
+                alert('Erro ao acessar a câmera: ' + err.message);
+            }
         }
     });
     
@@ -301,6 +310,9 @@
                 document.getElementById('qr-result').innerHTML += '<br><span class="text-danger">Visitante não encontrado para este QR Code</span>';
             }
         } catch (error) {
+            if (typeof ErrorHandler !== 'undefined') {
+                ErrorHandler.handle(error, 'fetch');
+            }
             document.getElementById('qr-result').innerHTML += '<br><span class="text-warning">Erro ao buscar informações do visitante</span>';
         }
     }

@@ -35,10 +35,17 @@
                                         Privacidade
                                     </a>
                                     <a href="/privacy/cookies" class="btn btn-outline-info btn-sm mx-1 mb-1" 
-                                       title="Gerenciar Cookies">
+                                       title="Página de Cookies">
                                         <i class="fas fa-cookie-bite mr-1"></i>
                                         Cookies
                                     </a>
+                                    <!-- 🍪 NOVO: Link Persistente Gerenciar Cookies -->
+                                    <button type="button" class="btn btn-warning btn-sm mx-1 mb-1" 
+                                            onclick="if (typeof CookieConsent !== 'undefined') { CookieConsent.showPreferences(); } else { alert('Sistema de cookies não disponível'); }"
+                                            title="Gerenciar Preferências de Cookies - Modal Rápido">
+                                        <i class="fas fa-cog mr-1"></i>
+                                        Gerenciar
+                                    </button>
                                     <a href="/privacy/portal" class="btn btn-outline-success btn-sm mx-1 mb-1" 
                                        title="Portal do Titular - Exercer Direitos LGPD">
                                         <i class="fas fa-user-shield mr-1"></i>

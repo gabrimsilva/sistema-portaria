@@ -83,6 +83,12 @@
                                 </li>
                             </ul>
                         </li>
+                        <li class="nav-item">
+                            <a href="/privacy" class="nav-link" target="_blank">
+                                <i class="nav-icon fas fa-shield-alt"></i>
+                                <p>Privacidade & LGPD</p>
+                            </a>
+                        </li>
                         <?php if ($_SESSION['user_profile'] === 'administrador' || $_SESSION['user_profile'] === 'seguranca'): ?>
                         <li class="nav-item">
                             <a href="/config" class="nav-link">

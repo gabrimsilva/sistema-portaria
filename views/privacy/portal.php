@@ -239,6 +239,8 @@
                                     </div>
                                     <div class="card-body">
                                         <form method="POST" action="/privacy/portal" id="lgpd-form">
+                                            <!-- 🛡️ PROTEÇÃO CSRF OBRIGATÓRIA -->
+                                            <input type="hidden" name="csrf_token" value="<?= CSRFProtection::generateToken() ?>">
                                             <input type="hidden" name="request_type" id="request_type">
                                             
                                             <div class="row">

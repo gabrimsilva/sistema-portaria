@@ -52,10 +52,16 @@ class PrivacyController
     /**
      * Processar solicitação de direitos LGPD
      * Rota: POST /privacy/portal
+     * 🛡️ VERSÃO SEGURA: Verificação CSRF + Fluxo assíncrono sem vazamento PII
      */
     public function processRequest()
     {
         try {
+            // 🛡️ PROTEÇÃO CSRF OBRIGATÓRIA
+            if (!CSRFProtection::validateToken($_POST['csrf_token'] ?? '')) {
+                throw new Exception('Token de segurança inválido. Recarregue a página e tente novamente.');
+            }
+            
             $requestType = $_POST['request_type'] ?? null;
             $cpf = $_POST['cpf'] ?? null;
             $email = $_POST['email'] ?? null;
@@ -65,29 +71,25 @@ class PrivacyController
                 throw new Exception('Tipo de solicitação e CPF ou email são obrigatórios');
             }
 
-            // Processar conforme tipo de solicitação
+            // 🔒 FLUXO SEGURO: Todas as solicitações são processadas de forma assíncrona
+            // JAMAIS retornamos dados PII diretamente - sempre enviamos por email seguro
             switch ($requestType) {
                 case 'access':
-                    $result = $this->lgpdService->getPersonalDataSummary($cpf, $email);
+                case 'export':
+                    // 🔐 SEGURANÇA: Registra solicitação para processamento manual seguro
+                    // Nunca exporta dados diretamente - sempre via canal seguro com verificação
+                    $result = $this->lgpdService->createSecureDataRequest($cpf, $email, $requestType, $message);
+                    $successMessage = 'Solicitação registrada! Nossa equipe de privacidade entrará em contato em até 15 dias úteis para verificação de identidade e envio seguro dos dados.';
                     break;
                     
                 case 'correction':
                     $result = $this->lgpdService->requestDataCorrection($cpf, $email, $message);
+                    $successMessage = 'Solicitação de correção registrada com sucesso. Você receberá retorno em até 15 dias úteis.';
                     break;
                     
                 case 'deletion':
                     $result = $this->lgpdService->requestDataDeletion($cpf, $email, $message);
-                    break;
-                    
-                case 'export':
-                    $result = $this->lgpdService->exportPersonalData($cpf, $email);
-                    // Para exportação, fazer download direto
-                    if ($result) {
-                        header('Content-Type: application/json');
-                        header('Content-Disposition: attachment; filename="meus_dados_' . date('Y-m-d') . '.json"');
-                        echo json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-                        exit;
-                    }
+                    $successMessage = 'Solicitação de exclusão registrada com sucesso. Você receberá retorno em até 15 dias úteis.';
                     break;
                     
                 default:
@@ -95,7 +97,7 @@ class PrivacyController
             }
 
             // Redirecionar com sucesso
-            header('Location: /privacy/portal?success=' . urlencode('Solicitação processada com sucesso'));
+            header('Location: /privacy/portal?success=' . urlencode($successMessage ?? 'Solicitação processada com sucesso'));
             exit;
 
         } catch (Exception $e) {
@@ -127,19 +129,38 @@ class PrivacyController
     /**
      * Processar alterações de preferências de cookies
      * Rota: POST /privacy/cookies
+     * 🛡️ VERSÃO SEGURA: Proteção CSRF + Flags de segurança nos cookies
      */
     public function updateCookiePreferences()
     {
         try {
+            // 🛡️ PROTEÇÃO CSRF OBRIGATÓRIA
+            if (!CSRFProtection::validateToken($_POST['csrf_token'] ?? '')) {
+                throw new Exception('Token de segurança inválido. Recarregue a página e tente novamente.');
+            }
+            
             $preferences = [
                 'functional' => isset($_POST['cookies_functional']),
                 'performance' => isset($_POST['cookies_performance']),
                 'marketing' => isset($_POST['cookies_marketing'])
             ];
 
-            // Salvar preferências em cookies (duração: 1 ano)
-            $expiry = time() + (365 * 24 * 60 * 60);
-            setcookie('cookie_preferences', json_encode($preferences), $expiry, '/', '', false, true);
+            // 🔒 COOKIES SEGUROS: Configuração com flags de segurança adequadas
+            $expiry = time() + (365 * 24 * 60 * 60); // 1 ano
+            $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443;
+            
+            setcookie(
+                'cookie_preferences', 
+                json_encode($preferences), 
+                [
+                    'expires' => $expiry,
+                    'path' => '/',
+                    'domain' => '',
+                    'secure' => $isHttps,        // Só HTTPS em produção
+                    'httponly' => true,          // Não acessível via JavaScript
+                    'samesite' => 'Lax'         // Proteção CSRF adicional
+                ]
+            );
 
             header('Location: /privacy/cookies?success=' . urlencode('Preferências atualizadas com sucesso'));
             exit;

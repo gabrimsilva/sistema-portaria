@@ -168,6 +168,9 @@
                     <?php endif; ?>
 
                     <form method="POST" action="/privacy/cookies" id="cookie-form">
+                        <!-- 🛡️ PROTEÇÃO CSRF OBRIGATÓRIA -->
+                        <input type="hidden" name="csrf_token" value="<?= CSRFProtection::generateToken() ?>">
+                        
                         <!-- Essential Cookies -->
                         <div class="cookie-category">
                             <div class="card cookie-card essential">

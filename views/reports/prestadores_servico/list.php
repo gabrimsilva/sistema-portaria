@@ -299,6 +299,11 @@ $prestadores = $prestadores ?? [];
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
     
+    <?php
+    require_once '../src/services/ErrorHandlerService.php';
+    echo ErrorHandlerService::renderComplete(['enableConsoleLog' => true]);
+    ?>
+    
     <script>
     $(document).ready(function() {
         // Inicialização de controles para relatórios read-only
@@ -330,10 +335,17 @@ $prestadores = $prestadores ?? [];
             $('button:disabled').prop('disabled', false);
             
             // Limpar storage temporário de filtros (se houver)
-            try {
-                sessionStorage.removeItem('prestadores-report-filters');
-                sessionStorage.removeItem('prestadores-last-query');
-            } catch(e) {}
+            if (typeof ErrorHandler !== 'undefined' && ErrorHandler.safeSessionStorage) {
+                ErrorHandler.safeSessionStorage.removeItem('prestadores-report-filters');
+                ErrorHandler.safeSessionStorage.removeItem('prestadores-last-query');
+            } else {
+                try {
+                    sessionStorage.removeItem('prestadores-report-filters');
+                    sessionStorage.removeItem('prestadores-last-query');
+                } catch(error) {
+                    // Silencioso - problemático em modo privado/incógnito
+                }
+            }
         }
         
         // Limpeza ao desmontar a página

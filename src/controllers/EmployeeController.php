@@ -77,18 +77,23 @@ class EmployeeController {
                 $telefone = $_POST['telefone'] ?? '';
                 $data_admissao = $_POST['data_admissao'] ?? date('Y-m-d');
                 
-                // Handle photo upload
-                $fotoPath = '';
-                if (isset($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
-                    $fotoPath = $this->uploadPhoto($_FILES['foto']);
-                }
-                
-                $this->db->query("
-                    INSERT INTO funcionarios (nome, cpf, cargo, email, telefone, foto, data_admissao) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                // 🔒 Insert employee first, then handle biometric photo securely
+                $funcionarioId = $this->db->query("
+                    INSERT INTO funcionarios (nome, cpf, cargo, email, telefone, data_admissao) 
+                    VALUES (?, ?, ?, ?, ?, ?) RETURNING id
                 ", [
-                    $nome, $cpf, $cargo, $email, $telefone, $fotoPath, $data_admissao
-                ]);
+                    $nome, $cpf, $cargo, $email, $telefone, $data_admissao
+                ])->fetch()['id'];
+                
+                // Handle biometric photo upload AFTER employee creation
+                if (isset($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
+                    $biometricId = $this->uploadSecureBiometricPhoto($_FILES['foto'], 'employees', $funcionarioId);
+                    
+                    // Update employee with biometric_id
+                    $this->db->query("
+                        UPDATE funcionarios SET biometric_id = ? WHERE id = ?
+                    ", [$biometricId, $funcionarioId]);
+                }
                 
                 header('Location: /employees?success=1');
                 exit;
@@ -151,8 +156,14 @@ class EmployeeController {
         include '../views/employees/history.php';
     }
     
-    private function uploadPhoto($file) {
-        // Validate file type and size
+    /**
+     * 🔒 MIGRATED: Secure biometric photo upload using LGPD-compliant storage
+     */
+    private function uploadSecureBiometricPhoto($file, $entityType, $entityId) {
+        require_once __DIR__ . '/../services/SecureBiometricStorageService.php';
+        require_once __DIR__ . '/../services/AuditService.php';
+        
+        // Validate file type and size using same validation
         $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
         $maxSize = 2 * 1024 * 1024; // 2MB
         
@@ -169,26 +180,31 @@ class EmployeeController {
             throw new Exception("Tipo de arquivo não permitido. Use JPG, PNG, GIF ou WebP");
         }
         
-        $uploadDir = UPLOAD_PATH . '/employees/';
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0755, true);
-        }
+        // Use secure biometric storage service with correct API
+        $storageService = new SecureBiometricStorageService();
+        $imageData = file_get_contents($file['tmp_name']);
+        $originalFilename = $file['name'];
         
-        // Generate secure filename with safe extension based on MIME type
-        $safeExtensions = [
-            'image/jpeg' => 'jpg',
-            'image/png' => 'png', 
-            'image/gif' => 'gif',
-            'image/webp' => 'webp'
-        ];
-        $extension = $safeExtensions[$mimeType] ?? 'jpg';
-        $filename = bin2hex(random_bytes(16)) . '.' . $extension;
-        $filepath = $uploadDir . $filename;
+        // Store encrypted biometric photo with correct parameters
+        $biometricId = $storageService->storeBiometricPhoto($entityType, $entityId, $imageData, $originalFilename);
         
-        if (move_uploaded_file($file['tmp_name'], $filepath)) {
-            return 'uploads/employees/' . $filename;
-        }
+        // Audit log for biometric data handling with correct method
+        $auditService = new AuditService();
+        $auditService->log('biometric_photo_upload', $entityType, $entityId, null, [
+            'biometric_id' => $biometricId,
+            'original_filename' => $originalFilename,
+            'ip_address' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+            'user_id' => $_SESSION['user_id'] ?? null
+        ]);
         
-        throw new Exception("Erro ao fazer upload da foto");
+        return $biometricId;
+    }
+    
+    /**
+     * ⚠️ DEPRECATED: Legacy photo upload - DO NOT USE FOR NEW UPLOADS
+     * Kept for backward compatibility during migration period
+     */
+    private function uploadPhoto($file) {
+        throw new Exception("🚀 DEPRECATED: Use uploadSecureBiometricPhoto() for secure LGPD-compliant storage");
     }
 }

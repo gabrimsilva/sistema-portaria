@@ -267,7 +267,7 @@
             <!-- Header com logo e título -->
             <div class="login-header">
                 <div class="company-logo">
-                    <img src="/logo-renner.png" alt="Renner Coatings" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <img src="/assets/logos/logo-renner.png" alt="Renner Coatings" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
                     <i class="fas fa-building" style="font-size: 35px; color: #dc3545; display: none;"></i>
                 </div>
             </div>

@@ -35,7 +35,7 @@
         .login-header {
             background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
             color: #333;
-            padding: 40px 30px;
+            padding: 30px 30px 25px;
             text-align: center;
             position: relative;
             border-bottom: 3px solid #e9ecef;
@@ -44,22 +44,23 @@
         .company-logo {
             width: 100%;
             max-width: 350px;
-            height: 120px;
+            height: 90px;
             background: white;
             border-radius: 12px;
-            margin: 0 auto 30px;
+            margin: 0 auto 25px;
             display: flex;
             align-items: center;
             justify-content: center;
             box-shadow: 0 8px 25px rgba(0,0,0,0.1);
             overflow: hidden;
             border: 2px solid #f0f0f0;
+            padding: 10px;
         }
         
         .company-logo img {
             width: 320px;
             height: auto;
-            max-height: 100px;
+            max-height: 70px;
             object-fit: contain;
         }
         

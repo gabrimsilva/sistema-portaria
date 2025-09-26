@@ -163,6 +163,11 @@
                                                 <i class="fas fa-history mr-2"></i> Auditoria
                                             </a>
                                         </li>
+                                        <li class="nav-item">
+                                            <a href="#lgpd" class="nav-link" data-section="lgpd">
+                                                <i class="fas fa-shield-alt mr-2"></i> LGPD
+                                            </a>
+                                        </li>
                                     </ul>
                                 </div>
                             </div>
@@ -566,10 +571,258 @@
                                     </div>
                                 </div>
                             </div>
+                            
+                            <!-- Seção: LGPD -->
+                            <div id="lgpd" class="config-section">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3 class="card-title">
+                                            <i class="fas fa-shield-alt mr-2"></i>Direitos do Titular (LGPD)
+                                        </h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <!-- Direitos do Titular -->
+                                            <div class="col-md-8">
+                                                <div class="card card-outline card-info">
+                                                    <div class="card-header">
+                                                        <h5 class="card-title"><i class="fas fa-user-shield mr-2"></i>Exercer Direitos LGPD</h5>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <div class="row">
+                                                            <!-- Direito de Acesso -->
+                                                            <div class="col-md-6 mb-3">
+                                                                <div class="card border-primary">
+                                                                    <div class="card-header bg-primary text-white">
+                                                                        <h6 class="mb-0"><i class="fas fa-search mr-2"></i>Acesso aos Dados</h6>
+                                                                    </div>
+                                                                    <div class="card-body">
+                                                                        <p class="text-muted small">Consultar quais dados pessoais são processados</p>
+                                                                        <form id="lgpdAccessForm">
+                                                                            <div class="form-group">
+                                                                                <input type="text" class="form-control form-control-sm" id="accessEmail" name="email" placeholder="Email ou CPF">
+                                                                            </div>
+                                                                            <button type="submit" class="btn btn-primary btn-sm btn-block">
+                                                                                <i class="fas fa-search mr-1"></i>Consultar Dados
+                                                                            </button>
+                                                                        </form>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            <!-- Direito de Portabilidade -->
+                                                            <div class="col-md-6 mb-3">
+                                                                <div class="card border-success">
+                                                                    <div class="card-header bg-success text-white">
+                                                                        <h6 class="mb-0"><i class="fas fa-download mr-2"></i>Portabilidade</h6>
+                                                                    </div>
+                                                                    <div class="card-body">
+                                                                        <p class="text-muted small">Exportar dados em formato estruturado</p>
+                                                                        <form id="lgpdExportForm">
+                                                                            <div class="form-group">
+                                                                                <input type="text" class="form-control form-control-sm" id="exportEmail" name="email" placeholder="Email ou CPF">
+                                                                            </div>
+                                                                            <button type="submit" class="btn btn-success btn-sm btn-block">
+                                                                                <i class="fas fa-download mr-1"></i>Exportar JSON
+                                                                            </button>
+                                                                        </form>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            <!-- Direito de Retificação -->
+                                                            <div class="col-md-6 mb-3">
+                                                                <div class="card border-warning">
+                                                                    <div class="card-header bg-warning text-dark">
+                                                                        <h6 class="mb-0"><i class="fas fa-edit mr-2"></i>Retificação</h6>
+                                                                    </div>
+                                                                    <div class="card-body">
+                                                                        <p class="text-muted small">Solicitar correção de dados incorretos</p>
+                                                                        <button type="button" class="btn btn-warning btn-sm btn-block" data-toggle="modal" data-target="#lgpdCorrectionModal">
+                                                                            <i class="fas fa-edit mr-1"></i>Solicitar Correção
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            <!-- Direito de Exclusão -->
+                                                            <div class="col-md-6 mb-3">
+                                                                <div class="card border-danger">
+                                                                    <div class="card-header bg-danger text-white">
+                                                                        <h6 class="mb-0"><i class="fas fa-trash mr-2"></i>Exclusão</h6>
+                                                                    </div>
+                                                                    <div class="card-body">
+                                                                        <p class="text-muted small">Solicitar remoção dos dados pessoais</p>
+                                                                        <button type="button" class="btn btn-danger btn-sm btn-block" data-toggle="modal" data-target="#lgpdDeletionModal">
+                                                                            <i class="fas fa-trash mr-1"></i>Solicitar Exclusão
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Gestão de Solicitações -->
+                                            <div class="col-md-4">
+                                                <div class="card card-outline card-secondary">
+                                                    <div class="card-header">
+                                                        <h5 class="card-title"><i class="fas fa-tasks mr-2"></i>Solicitações Pendentes</h5>
+                                                        <div class="card-tools">
+                                                            <button type="button" class="btn btn-sm btn-secondary" onclick="loadLGPDRequests()">
+                                                                <i class="fas fa-sync"></i>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <div id="lgpdRequestsList">
+                                                            <div class="text-center text-muted">
+                                                                <i class="fas fa-spinner fa-spin mr-2"></i>Carregando...
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Resultados de Consulta -->
+                                        <div id="lgpdDataResults" style="display: none;">
+                                            <div class="card card-outline card-info mt-3">
+                                                <div class="card-header">
+                                                    <h5 class="card-title"><i class="fas fa-database mr-2"></i>Dados Pessoais Encontrados</h5>
+                                                </div>
+                                                <div class="card-body" id="lgpdDataResultsBody">
+                                                    <!-- Conteúdo será inserido dinamicamente -->
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </section>
+        </div>
+    </div>
+    
+    <!-- Modais LGPD -->
+    <!-- Modal para Retificação -->
+    <div class="modal fade" id="lgpdCorrectionModal" tabindex="-1" role="dialog" aria-labelledby="lgpdCorrectionModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="lgpdCorrectionModalLabel">
+                        <i class="fas fa-edit mr-2"></i>Solicitar Retificação de Dados
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form id="lgpdCorrectionForm">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="correctionCpfEmail">CPF ou Email do Titular *</label>
+                            <input type="text" class="form-control" id="correctionCpfEmail" name="cpf_email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="correctionTable">Tabela *</label>
+                            <select class="form-control" id="correctionTable" name="table" required>
+                                <option value="">Selecione...</option>
+                                <option value="usuarios">Usuários</option>
+                                <option value="funcionarios">Funcionários</option>
+                                <option value="visitantes_novo">Visitantes</option>
+                                <option value="prestadores_servico">Prestadores de Serviço</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="correctionField">Campo a Corrigir *</label>
+                            <select class="form-control" id="correctionField" name="field" required>
+                                <option value="">Selecione primeiro a tabela...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="correctionCurrentValue">Valor Atual *</label>
+                            <input type="text" class="form-control" id="correctionCurrentValue" name="current_value" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="correctionNewValue">Valor Correto *</label>
+                            <input type="text" class="form-control" id="correctionNewValue" name="new_value" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="correctionJustification">Justificativa *</label>
+                            <textarea class="form-control" id="correctionJustification" name="justification" rows="3" required 
+                                placeholder="Explique por que os dados estão incorretos e precisam ser corrigidos..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-edit mr-1"></i>Solicitar Retificação
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para Exclusão -->
+    <div class="modal fade" id="lgpdDeletionModal" tabindex="-1" role="dialog" aria-labelledby="lgpdDeletionModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="lgpdDeletionModalLabel">
+                        <i class="fas fa-trash mr-2"></i>Solicitar Exclusão de Dados
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form id="lgpdDeletionForm">
+                    <div class="modal-body">
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>
+                            <strong>Atenção:</strong> A exclusão de dados pessoais é irreversível e pode afetar funcionalidades do sistema.
+                        </div>
+                        <div class="form-group">
+                            <label for="deletionCpfEmail">CPF ou Email do Titular *</label>
+                            <input type="text" class="form-control" id="deletionCpfEmail" name="cpf_email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="deletionTables">Tabelas Afetadas</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="tables[]" value="usuarios" id="delUsuarios">
+                                <label class="form-check-label" for="delUsuarios">Usuários</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="tables[]" value="funcionarios" id="delFuncionarios">
+                                <label class="form-check-label" for="delFuncionarios">Funcionários</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="tables[]" value="visitantes_novo" id="delVisitantes">
+                                <label class="form-check-label" for="delVisitantes">Visitantes</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="tables[]" value="prestadores_servico" id="delPrestadores">
+                                <label class="form-check-label" for="delPrestadores">Prestadores de Serviço</label>
+                            </div>
+                            <small class="form-text text-muted">Se nenhuma tabela for selecionada, todas serão consideradas</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="deletionJustification">Justificativa *</label>
+                            <textarea class="form-control" id="deletionJustification" name="justification" rows="3" required 
+                                placeholder="Explique o motivo da solicitação de exclusão dos dados pessoais..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash mr-1"></i>Solicitar Exclusão
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
     
@@ -617,6 +870,7 @@
         loadUsers();
         loadAuthSettings();
         loadAuditLogs();
+        loadLGPDRequests();
     });
     
     // Funções para carregar dados
@@ -2521,5 +2775,170 @@
             </div>
         </div>
     </div>
+    
+    <script>
+    // ============= FUNÇÕES LGPD =============
+    
+    // Funções para carregar e processar solicitações LGPD
+    function loadLGPDRequests() {
+        fetch('/config', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+            },
+            body: 'action=lgpd_get_requests&csrf_token=' + encodeURIComponent(csrf_token)
+        })
+        .then(response => response.json())
+        .then(data => {
+            const container = document.getElementById('lgpdRequestsList');
+            
+            if (data.success && data.data) {
+                if (data.data.length === 0) {
+                    container.innerHTML = '<div class="text-center text-muted">Nenhuma solicitação pendente</div>';
+                } else {
+                    let html = '';
+                    data.data.forEach(request => {
+                        const typeIcon = {
+                            'retificacao': 'fas fa-edit text-warning',
+                            'exclusao': 'fas fa-trash text-danger',
+                            'portabilidade': 'fas fa-download text-success',
+                            'acesso': 'fas fa-search text-info'
+                        };
+                        
+                        html += `
+                            <div class="border p-2 mb-2 rounded">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="${typeIcon[request.tipo] || 'fas fa-question-circle'}"></i>
+                                        <strong>${request.tipo.charAt(0).toUpperCase() + request.tipo.slice(1)}</strong>
+                                    </div>
+                                    <small class="text-muted">#${request.id}</small>
+                                </div>
+                                <div class="small text-muted">
+                                    ${request.dados_titular.substring(0, 20)}...
+                                </div>
+                                <div class="mt-2">
+                                    <button class="btn btn-success btn-xs" onclick="processLGPDRequest(${request.id}, 'aprovar')">
+                                        <i class="fas fa-check"></i> Aprovar
+                                    </button>
+                                    <button class="btn btn-danger btn-xs ml-1" onclick="processLGPDRequest(${request.id}, 'rejeitar')">
+                                        <i class="fas fa-times"></i> Rejeitar
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    container.innerHTML = html;
+                }
+            } else {
+                container.innerHTML = '<div class="text-center text-danger">Erro ao carregar solicitações</div>';
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao carregar solicitações LGPD:', error);
+            document.getElementById('lgpdRequestsList').innerHTML = 
+                '<div class="text-center text-danger">Erro ao carregar</div>';
+        });
+    }
+    
+    // Formulário de acesso aos dados
+    $('#lgpdAccessForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const email = $('#accessEmail').val();
+        if (!email) {
+            showAlert('Por favor, informe um email ou CPF', 'warning');
+            return;
+        }
+        
+        fetch('/config', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+            },
+            body: `action=lgpd_data_summary&email=${encodeURIComponent(email)}&csrf_token=${encodeURIComponent(csrf_token)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayLGPDDataResults(data.data);
+            } else {
+                showAlert('Erro: ' + data.message, 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Erro na consulta LGPD:', error);
+            showAlert('Erro ao consultar dados', 'danger');
+        });
+    });
+    
+    // Formulário de exportação
+    $('#lgpdExportForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const email = $('#exportEmail').val();
+        if (!email) {
+            showAlert('Por favor, informe um email ou CPF', 'warning');
+            return;
+        }
+        
+        // Criar formulário oculto para download
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/config';
+        form.style.display = 'none';
+        
+        const fields = {
+            'action': 'lgpd_export_data',
+            'email': email,
+            'format': 'json',
+            'csrf_token': csrf_token
+        };
+        
+        for (const [key, value] of Object.entries(fields)) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = value;
+            form.appendChild(input);
+        }
+        
+        document.body.appendChild(form);
+        form.submit();
+        document.body.removeChild(form);
+        
+        showAlert('Download iniciado. Verifique seus downloads.', 'success');
+    });
+    
+    // Processar solicitação LGPD
+    function processLGPDRequest(requestId, action) {
+        const reason = prompt(`Motivo para ${action === 'aprovar' ? 'aprovação' : 'rejeição'}:`);
+        if (reason === null) return; // Cancelado
+        
+        fetch('/config', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+            },
+            body: `action=lgpd_process_request&request_id=${requestId}&action=${action}&reason=${encodeURIComponent(reason)}&csrf_token=${encodeURIComponent(csrf_token)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert(`Solicitação ${action === 'aprovar' ? 'aprovada' : 'rejeitada'} com sucesso!`, 'success');
+                loadLGPDRequests();
+            } else {
+                showAlert('Erro: ' + data.message, 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao processar solicitação:', error);
+            showAlert('Erro ao processar solicitação', 'danger');
+        });
+    }
+    </script>
 </body>
 </html>

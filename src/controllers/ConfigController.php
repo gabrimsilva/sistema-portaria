@@ -6,6 +6,8 @@ require_once __DIR__ . '/../services/ConfigService.php';
 require_once __DIR__ . '/../services/AuthorizationService.php';
 require_once __DIR__ . '/../services/RbacService.php';
 require_once __DIR__ . '/../services/AuditService.php';
+require_once __DIR__ . '/../services/LGPDService.php';
+require_once __DIR__ . '/../services/DataRetentionService.php';
 require_once __DIR__ . '/../utils/CnpjValidator.php';
 
 /**
@@ -30,6 +32,8 @@ class ConfigController {
         $this->configService = new ConfigService();
         $this->rbacService = new RbacService();
         $this->auditService = new AuditService();
+        $this->lgpdService = new LGPDService();
+        $this->retentionService = new DataRetentionService();
     }
     
     private function checkAuthentication() {
@@ -80,6 +84,49 @@ class ConfigController {
                     return;
                 case 'get_users_by_role':
                     $this->getUsersByRole();
+                    return;
+                case 'lgpd_data_summary':
+                    $this->getLGPDDataSummary();
+                    return;
+                case 'lgpd_export_data':
+                    $this->exportLGPDData();
+                    return;
+                case 'lgpd_request_correction':
+                    $this->requestLGPDDataCorrection();
+                    return;
+                case 'lgpd_request_deletion':
+                    $this->requestLGPDDataDeletion();
+                    return;
+                case 'lgpd_get_requests':
+                    $this->getLGPDRequests();
+                    return;
+                case 'lgpd_process_request':
+                    $this->processLGPDRequest();
+                    return;
+                // Endpoints de Retenção de Dados
+                case 'get_retention_policies':
+                    $this->getRetentionPolicies();
+                    return;
+                case 'save_retention_policy':
+                    $this->saveRetentionPolicy();
+                    return;
+                case 'get_retention_statistics':
+                    $this->getRetentionStatistics();
+                    return;
+                case 'soft_delete_record':
+                    $this->softDeleteRecord();
+                    return;
+                case 'restore_record':
+                    $this->restoreRecord();
+                    return;
+                case 'anonymize_record':
+                    $this->anonymizeRecord();
+                    return;
+                case 'get_expired_records':
+                    $this->getExpiredRecords();
+                    return;
+                case 'process_retention_tasks':
+                    $this->processRetentionTasks();
                     return;
             }
         }
@@ -1264,4 +1311,481 @@ class ConfigController {
         }
     }
     
+    // ========== LGPD ==========
+    
+    /**
+     * POST /config - action=lgpd_data_summary
+     * Consultar dados pessoais do titular (Direito de Acesso)
+     */
+    public function getLGPDDataSummary() {
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método não permitido']);
+            return;
+        }
+        
+        CSRFProtection::verifyRequest();
+        
+        try {
+            $cpf = $_POST['cpf'] ?? null;
+            $email = $_POST['email'] ?? null;
+            
+            if (!$cpf && !$email) {
+                throw new Exception('CPF ou email é obrigatório');
+            }
+            
+            $summary = $this->lgpdService->getPersonalDataSummary($cpf, $email);
+            echo json_encode(['success' => true, 'data' => $summary]);
+            
+        } catch (Exception $e) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+    
+    /**
+     * POST /config - action=lgpd_export_data
+     * Exportar dados pessoais (Direito de Portabilidade)
+     */
+    public function exportLGPDData() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método não permitido']);
+            return;
+        }
+        
+        CSRFProtection::verifyRequest();
+        
+        try {
+            $cpf = $_POST['cpf'] ?? null;
+            $email = $_POST['email'] ?? null;
+            $format = $_POST['format'] ?? 'json';
+            
+            if (!$cpf && !$email) {
+                throw new Exception('CPF ou email é obrigatório');
+            }
+            
+            $export = $this->lgpdService->exportPersonalData($cpf, $email, $format);
+            
+            // Configurar headers para download
+            header('Content-Type: application/json');
+            header('Content-Disposition: attachment; filename="dados_pessoais_' . date('Y-m-d_H-i-s') . '.json"');
+            echo json_encode($export, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+            
+        } catch (Exception $e) {
+            header('Content-Type: application/json');
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+    
+    /**
+     * POST /config - action=lgpd_request_correction
+     * Solicitar retificação de dados (Direito de Retificação)
+     */
+    public function requestLGPDDataCorrection() {
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método não permitido']);
+            return;
+        }
+        
+        CSRFProtection::verifyRequest();
+        
+        try {
+            $data = [
+                'cpf_email' => $_POST['cpf_email'] ?? '',
+                'table' => $_POST['table'] ?? '',
+                'field' => $_POST['field'] ?? '',
+                'current_value' => $_POST['current_value'] ?? '',
+                'new_value' => $_POST['new_value'] ?? '',
+                'justification' => $_POST['justification'] ?? ''
+            ];
+            
+            $requestId = $this->lgpdService->requestDataCorrection($data);
+            echo json_encode([
+                'success' => true, 
+                'message' => 'Solicitação de retificação registrada com sucesso',
+                'request_id' => $requestId
+            ]);
+            
+        } catch (Exception $e) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+    
+    /**
+     * POST /config - action=lgpd_request_deletion
+     * Solicitar exclusão de dados (Direito de Exclusão)
+     */
+    public function requestLGPDDataDeletion() {
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método não permitido']);
+            return;
+        }
+        
+        CSRFProtection::verifyRequest();
+        
+        try {
+            $cpf_email = $_POST['cpf_email'] ?? '';
+            $justification = $_POST['justification'] ?? '';
+            $tables = $_POST['tables'] ? explode(',', $_POST['tables']) : [];
+            
+            $requestId = $this->lgpdService->requestDataDeletion($cpf_email, $justification, $tables);
+            echo json_encode([
+                'success' => true, 
+                'message' => 'Solicitação de exclusão registrada com sucesso',
+                'request_id' => $requestId
+            ]);
+            
+        } catch (Exception $e) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+    
+    /**
+     * GET /config - action=lgpd_get_requests
+     * Listar solicitações LGPD pendentes
+     */
+    public function getLGPDRequests() {
+        if (!$this->authService->hasPermission('config.rbac.write')) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acesso negado']);
+            return;
+        }
+        
+        header('Content-Type: application/json');
+        
+        try {
+            $requests = $this->lgpdService->getPendingRequests();
+            echo json_encode(['success' => true, 'data' => $requests]);
+            
+        } catch (Exception $e) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+    
+    /**
+     * POST /config - action=lgpd_process_request
+     * Processar solicitação LGPD (aprovar/rejeitar)
+     */
+    public function processLGPDRequest() {
+        if (!$this->authService->hasPermission('config.rbac.write')) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acesso negado']);
+            return;
+        }
+        
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método não permitido']);
+            return;
+        }
+        
+        CSRFProtection::verifyRequest();
+        
+        try {
+            $requestId = $_POST['request_id'] ?? '';
+            $action = $_POST['action'] ?? '';
+            $reason = $_POST['reason'] ?? '';
+            
+            if (!in_array($action, ['aprovar', 'rejeitar'])) {
+                throw new Exception('Ação deve ser "aprovar" ou "rejeitar"');
+            }
+            
+            $this->lgpdService->processRequest($requestId, $action, $reason);
+            echo json_encode([
+                'success' => true, 
+                'message' => 'Solicitação processada com sucesso'
+            ]);
+            
+        } catch (Exception $e) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+    
+    // ============ RETENÇÃO DE DADOS ============
+    
+    /**
+     * GET /config - action=get_retention_policies
+     * Obter políticas de retenção configuradas
+     */
+    public function getRetentionPolicies() {
+        if (!$this->authService->hasPermission('config.rbac.write')) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acesso negado']);
+            return;
+        }
+        
+        header('Content-Type: application/json');
+        
+        try {
+            $policies = $this->retentionService->getAllRetentionPolicies();
+            echo json_encode(['success' => true, 'data' => $policies]);
+            
+        } catch (Exception $e) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+    
+    /**
+     * POST /config - action=save_retention_policy
+     * Salvar política de retenção para uma entidade
+     */
+    public function saveRetentionPolicy() {
+        // Verificar permissão específica para retenção de dados
+        if (!$this->authService->hasPermission('config.retention.write')) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acesso negado para gerenciar políticas de retenção']);
+            return;
+        }
+        
+        CSRFProtection::verifyRequest();
+        
+        try {
+            $entityType = $_POST['entity_type'] ?? '';
+            $retentionMonths = (int)($_POST['retention_months'] ?? 60);
+            $anonymizationMonths = (int)($_POST['anonymization_months'] ?? 72);
+            $legalBasis = $_POST['legal_basis'] ?? '';
+            $purpose = $_POST['purpose'] ?? '';
+            $canBeDeleted = isset($_POST['can_be_deleted']) ? (bool)$_POST['can_be_deleted'] : true;
+            $notes = $_POST['notes'] ?? '';
+            
+            if (empty($entityType) || empty($purpose)) {
+                throw new Exception('Tipo de entidade e finalidade são obrigatórios');
+            }
+            
+            $this->retentionService->setRetentionPolicy(
+                $entityType, 
+                $retentionMonths, 
+                $anonymizationMonths, 
+                $legalBasis, 
+                $purpose, 
+                $canBeDeleted, 
+                $notes
+            );
+            
+            echo json_encode([
+                'success' => true, 
+                'message' => 'Política de retenção salva com sucesso'
+            ]);
+            
+        } catch (Exception $e) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+    
+    /**
+     * GET /config - action=get_retention_statistics
+     * Obter estatísticas de retenção de dados
+     */
+    public function getRetentionStatistics() {
+        if (!$this->authService->hasPermission('config.rbac.write')) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acesso negado']);
+            return;
+        }
+        
+        header('Content-Type: application/json');
+        
+        try {
+            $stats = $this->retentionService->getRetentionStatistics();
+            echo json_encode(['success' => true, 'data' => $stats]);
+            
+        } catch (Exception $e) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+    
+    /**
+     * POST /config - action=soft_delete_record
+     * Realizar soft delete de um registro
+     */
+    public function softDeleteRecord() {
+        // Verificar permissão específica para operações de retenção
+        if (!$this->authService->hasPermission('config.retention.delete')) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acesso negado para operações de exclusão']);
+            return;
+        }
+        
+        CSRFProtection::verifyRequest();
+        
+        try {
+            $entityType = $_POST['entity_type'] ?? '';
+            $entityId = (int)($_POST['entity_id'] ?? 0);
+            $reason = $_POST['reason'] ?? 'Exclusão manual pelo administrador';
+            
+            if (empty($entityType) || $entityId <= 0) {
+                throw new Exception('Tipo de entidade e ID são obrigatórios');
+            }
+            
+            $this->retentionService->softDelete($entityType, $entityId, $reason);
+            
+            echo json_encode([
+                'success' => true, 
+                'message' => 'Registro excluído logicamente com sucesso'
+            ]);
+            
+        } catch (Exception $e) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+    
+    /**
+     * POST /config - action=restore_record
+     * Restaurar registro que foi soft deleted
+     */
+    public function restoreRecord() {
+        // Verificar permissão específica para restaurar dados
+        if (!$this->authService->hasPermission('config.retention.restore')) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acesso negado para restaurar registros']);
+            return;
+        }
+        
+        CSRFProtection::verifyRequest();
+        
+        try {
+            $entityType = $_POST['entity_type'] ?? '';
+            $entityId = (int)($_POST['entity_id'] ?? 0);
+            $reason = $_POST['reason'] ?? 'Restauração pelo administrador';
+            
+            if (empty($entityType) || $entityId <= 0) {
+                throw new Exception('Tipo de entidade e ID são obrigatórios');
+            }
+            
+            $this->retentionService->restoreDeleted($entityType, $entityId, $reason);
+            
+            echo json_encode([
+                'success' => true, 
+                'message' => 'Registro restaurado com sucesso'
+            ]);
+            
+        } catch (Exception $e) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+    
+    /**
+     * POST /config - action=anonymize_record
+     * Anonimizar dados de um registro (irreversível)
+     */
+    public function anonymizeRecord() {
+        // Verificar permissão específica para anonimização (operação crítica)
+        if (!$this->authService->hasPermission('config.retention.anonymize')) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acesso negado para anonimizar dados']);
+            return;
+        }
+        
+        CSRFProtection::verifyRequest();
+        
+        try {
+            $entityType = $_POST['entity_type'] ?? '';
+            $entityId = (int)($_POST['entity_id'] ?? 0);
+            $reason = $_POST['reason'] ?? 'Anonimização manual pelo administrador';
+            
+            if (empty($entityType) || $entityId <= 0) {
+                throw new Exception('Tipo de entidade e ID são obrigatórios');
+            }
+            
+            $this->retentionService->anonymizeData($entityType, $entityId, $reason);
+            
+            echo json_encode([
+                'success' => true, 
+                'message' => 'Registro anonimizado com sucesso'
+            ]);
+            
+        } catch (Exception $e) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+    
+    /**
+     * GET /config - action=get_expired_records
+     * Obter registros que precisam ser processados conforme política
+     */
+    public function getExpiredRecords() {
+        if (!$this->authService->hasPermission('config.rbac.write')) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acesso negado']);
+            return;
+        }
+        
+        header('Content-Type: application/json');
+        
+        try {
+            $entityType = $_GET['entity_type'] ?? '';
+            
+            if (empty($entityType)) {
+                throw new Exception('Tipo de entidade é obrigatório');
+            }
+            
+            $records = $this->retentionService->getRecordsForProcessing($entityType);
+            echo json_encode(['success' => true, 'data' => $records]);
+            
+        } catch (Exception $e) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+    
+    /**
+     * POST /config - action=process_retention_tasks
+     * Processar tarefas de retenção agendadas (APENAS PARA ADMINISTRADORES)
+     */
+    public function processRetentionTasks() {
+        // Verificar permissão de administrador para processamento manual
+        if (!$this->authService->hasPermission('admin.system.manage')) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acesso negado: apenas administradores podem processar tarefas manualmente']);
+            return;
+        }
+        
+        CSRFProtection::verifyRequest();
+        
+        // Verificar se é execução autorizada (prevenir uso inadequado)
+        $authKey = $_POST['admin_key'] ?? '';
+        if ($authKey !== 'MANUAL_ADMIN_EXECUTION') {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Chave de autorização inválida']);
+            return;
+        }
+        
+        try {
+            $limit = (int)($_POST['limit'] ?? 10);
+            
+            $processed = $this->retentionService->processScheduledTasks($limit);
+            
+            echo json_encode([
+                'success' => true, 
+                'message' => "Processadas {$processed} tarefas de retenção",
+                'processed_count' => $processed
+            ]);
+            
+        } catch (Exception $e) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
 }

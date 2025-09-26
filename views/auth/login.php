@@ -357,9 +357,190 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Entrando...';
         });
         
-        // Função para esqueci senha (placeholder)
+        // Função para esqueci senha
         function showForgotPassword() {
-            alert('Funcionalidade de recuperação de senha será implementada em breve.\n\nPara acesso de demonstração, use:\nEmail: admin@sistema.com\nSenha: admin123');
+            // Criar modal de recuperação de senha
+            const modalHtml = `
+                <div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-labelledby="forgotPasswordModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content" style="border-radius: 15px; border: none; box-shadow: 0 15px 35px rgba(0,0,0,0.1);">
+                            <div class="modal-header" style="background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); color: white; border-radius: 15px 15px 0 0; border: none;">
+                                <h5 class="modal-title" id="forgotPasswordModalLabel">
+                                    <i class="fas fa-key me-2"></i>
+                                    Recuperar Senha
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                            </div>
+                            <div class="modal-body" style="padding: 30px;">
+                                <p class="text-center text-muted mb-4">
+                                    Digite seu email para receber as instruções de recuperação de senha
+                                </p>
+                                
+                                <form id="forgotPasswordForm">
+                                    <div class="form-group mb-3">
+                                        <label for="recoveryEmail" class="form-label">Email</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text" style="background: #f8f9fa; border-radius: 8px 0 0 8px;">
+                                                <i class="fas fa-envelope text-muted"></i>
+                                            </span>
+                                            <input type="email" 
+                                                   class="form-control" 
+                                                   id="recoveryEmail" 
+                                                   name="email"
+                                                   placeholder="seu-email@exemplo.com" 
+                                                   required
+                                                   style="border-radius: 0 8px 8px 0; border-left: none;">
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="d-grid gap-2">
+                                        <button type="submit" class="btn btn-primary" style="border-radius: 8px; padding: 12px; font-weight: 600;">
+                                            <i class="fas fa-paper-plane me-2"></i>
+                                            Enviar Instruções
+                                        </button>
+                                    </div>
+                                </form>
+                                
+                                <div class="text-center mt-3">
+                                    <small class="text-muted">
+                                        Lembrou da senha? 
+                                        <a href="#" onclick="$('#forgotPasswordModal').modal('hide');" class="text-decoration-none">
+                                            Voltar ao login
+                                        </a>
+                                    </small>
+                                </div>
+                                
+                                <!-- Informações de demonstração -->
+                                <div class="alert alert-info mt-4 mb-0" style="border-radius: 10px; border: none; background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-info-circle me-2 text-info"></i>
+                                        <div>
+                                            <strong>Acesso de Demonstração</strong><br>
+                                            <small>Email: admin@sistema.com | Senha: admin123</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Remover modal existente se houver
+            const existingModal = document.getElementById('forgotPasswordModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            // Adicionar modal ao body
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            
+            // Mostrar modal
+            const modal = new bootstrap.Modal(document.getElementById('forgotPasswordModal'));
+            modal.show();
+            
+            // Configurar evento de submit do formulário
+            document.getElementById('forgotPasswordForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                handlePasswordRecovery();
+            });
+            
+            // Auto-focus no campo email quando modal abrir
+            document.getElementById('forgotPasswordModal').addEventListener('shown.bs.modal', function() {
+                document.getElementById('recoveryEmail').focus();
+            });
+        }
+        
+        // Função para processar recuperação de senha
+        function handlePasswordRecovery() {
+            const email = document.getElementById('recoveryEmail').value;
+            const submitBtn = document.querySelector('#forgotPasswordForm button[type="submit"]');
+            
+            // Validar email
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showAlert('Por favor, digite um email válido.', 'warning');
+                return;
+            }
+            
+            // Mostrar loading
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Enviando...';
+            submitBtn.disabled = true;
+            
+            // Simular envio de email (implementar backend real posteriormente)
+            setTimeout(() => {
+                // Fechar modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('forgotPasswordModal'));
+                modal.hide();
+                
+                // Mostrar mensagem de sucesso
+                showSuccessMessage(email);
+                
+                // Restaurar botão
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Enviar Instruções';
+                submitBtn.disabled = false;
+            }, 2000);
+        }
+        
+        // Função para mostrar mensagem de sucesso
+        function showSuccessMessage(email) {
+            const successModalHtml = `
+                <div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content" style="border-radius: 15px; border: none; text-align: center;">
+                            <div class="modal-body" style="padding: 40px 30px;">
+                                <div class="mb-4">
+                                    <i class="fas fa-check-circle" style="font-size: 64px; color: #28a745;"></i>
+                                </div>
+                                <h4 class="mb-3">Email Enviado!</h4>
+                                <p class="text-muted mb-4">
+                                    Enviamos as instruções de recuperação de senha para:<br>
+                                    <strong>${email}</strong>
+                                </p>
+                                <p class="text-muted small mb-4">
+                                    Verifique sua caixa de entrada e spam. O email pode levar alguns minutos para chegar.
+                                </p>
+                                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" style="border-radius: 8px; padding: 10px 30px;">
+                                    <i class="fas fa-arrow-left me-2"></i>
+                                    Voltar ao Login
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Remover modal existente se houver
+            const existingModal = document.getElementById('successModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            // Adicionar e mostrar modal
+            document.body.insertAdjacentHTML('beforeend', successModalHtml);
+            const modal = new bootstrap.Modal(document.getElementById('successModal'));
+            modal.show();
+        }
+        
+        // Função para mostrar alertas
+        function showAlert(message, type = 'info') {
+            const alertHtml = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert" style="position: fixed; top: 20px; right: 20px; z-index: 9999; border-radius: 8px;">
+                    <i class="fas fa-${type === 'warning' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', alertHtml);
+            
+            // Auto-remover após 5 segundos
+            setTimeout(() => {
+                const alert = document.querySelector('.alert');
+                if (alert) {
+                    alert.remove();
+                }
+            }, 5000);
         }
         
         // Auto-focus no campo email

@@ -7,7 +7,7 @@ if (strpos($requestUri, '/uploads/') !== false || strpos($requestUri, 'uploads/'
     die('🚫 ACESSO NEGADO: Dados biométricos protegidos pela LGPD');
 }
 
-require_once '../config/config.php';
+require_once __DIR__ . '/../config/config.php';
 
 // Simple router
 $request = $_SERVER['REQUEST_URI'];

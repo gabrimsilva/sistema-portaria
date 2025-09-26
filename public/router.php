@@ -9,8 +9,8 @@
  */
 
 // 🚫 BLOQUEIO CRÍTICO: Impedir acesso direto a uploads
-$uri = $_SERVER['REQUEST_URI'];
-$path = parse_url($uri, PHP_URL_PATH);
+$uri = $_SERVER['REQUEST_URI'] ?? '';
+$path = parse_url($uri, PHP_URL_PATH) ?? '';
 
 // Verificar se é tentativa de acesso a uploads
 if (strpos($path, '/uploads/') !== false) {

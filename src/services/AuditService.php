@@ -8,12 +8,16 @@ class AuditService {
     }
     
     /**
-     * Registra uma ação de auditoria
+     * Registra uma ação de auditoria com anonimização LGPD
      */
     public function log($acao, $entidade, $entidade_id, $dados_antes = null, $dados_depois = null) {
         $user_id = $_SESSION['user_id'] ?? null;
-        $ip_address = $this->getClientIP();
-        $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? null;
+        $ip_address = $this->anonymizeIP($this->getClientIP());
+        $user_agent = $this->anonymizeUserAgent($_SERVER['HTTP_USER_AGENT'] ?? null);
+        
+        // Anonimizar dados pessoais antes de salvar
+        $dados_antes_anonimizados = $dados_antes ? $this->anonymizeData($dados_antes, $entidade) : null;
+        $dados_depois_anonimizados = $dados_depois ? $this->anonymizeData($dados_depois, $entidade) : null;
         
         try {
             $this->db->query(
@@ -24,8 +28,8 @@ class AuditService {
                     $acao,
                     $entidade,
                     $entidade_id,
-                    $dados_antes ? json_encode($dados_antes) : null,
-                    $dados_depois ? json_encode($dados_depois) : null,
+                    $dados_antes_anonimizados ? json_encode($dados_antes_anonimizados) : null,
+                    $dados_depois_anonimizados ? json_encode($dados_depois_anonimizados) : null,
                     $ip_address,
                     $user_agent
                 ]
@@ -97,5 +101,130 @@ class AuditService {
         }
         
         return $this->db->fetchAll($sql, $params);
+    }
+    
+    /**
+     * Anonimiza dados pessoais conforme LGPD
+     */
+    private function anonymizeData($data, $entidade) {
+        if (!is_array($data)) {
+            return $data;
+        }
+        
+        $anonymized = $data;
+        
+        // Campos sempre sensíveis (todas entidades)
+        $sensitiveFields = [
+            'senha_hash', 'password', 'token', 'secret', 'hash',
+            'cpf', 'rg', 'documento', 'telefone', 'celular',
+            'data_nascimento', 'endereco', 'cep',
+            'ultimo_login', 'created_at', 'updated_at'
+        ];
+        
+        // Campos específicos por entidade
+        $entitySensitiveFields = [
+            'usuarios' => ['nome', 'email'],
+            'funcionarios' => ['nome', 'email', 'cargo', 'setor'],
+            'visitantes' => ['nome', 'email', 'empresa', 'telefone'],
+            'prestadores' => ['nome', 'email', 'empresa', 'cnpj']
+        ];
+        
+        // Aplicar anonimização geral
+        foreach ($sensitiveFields as $field) {
+            if (isset($anonymized[$field])) {
+                $anonymized[$field] = '[REMOVIDO-LGPD]';
+            }
+        }
+        
+        // Aplicar anonimização específica da entidade
+        if (isset($entitySensitiveFields[$entidade])) {
+            foreach ($entitySensitiveFields[$entidade] as $field) {
+                if (isset($anonymized[$field])) {
+                    $anonymized[$field] = $this->maskPersonalData($anonymized[$field], $field);
+                }
+            }
+        }
+        
+        // Manter apenas campos essenciais para auditoria
+        $auditEssentialFields = ['id', 'ativo', 'status', 'role_id', 'perfil', 'permissoes'];
+        
+        return array_intersect_key($anonymized, array_flip($auditEssentialFields)) + 
+               array_filter($anonymized, function($key) {
+                   return strpos($key, '_id') !== false || strpos($key, 'acao') !== false;
+               }, ARRAY_FILTER_USE_KEY);
+    }
+    
+    /**
+     * Mascara dados pessoais
+     */
+    private function maskPersonalData($value, $type) {
+        if (empty($value)) return $value;
+        
+        switch ($type) {
+            case 'email':
+                $parts = explode('@', $value);
+                if (count($parts) === 2) {
+                    $local = $parts[0];
+                    $domain = $parts[1];
+                    $maskedLocal = substr($local, 0, 1) . str_repeat('*', max(1, strlen($local) - 2)) . substr($local, -1);
+                    $domainParts = explode('.', $domain);
+                    $maskedDomain = substr($domainParts[0], 0, 1) . '***';
+                    return $maskedLocal . '@' . $maskedDomain . '.***';
+                }
+                return 'e***@***.***';
+                
+            case 'nome':
+                if (strlen($value) <= 2) return str_repeat('*', strlen($value));
+                return substr($value, 0, 1) . str_repeat('*', strlen($value) - 2) . substr($value, -1);
+                
+            case 'telefone':
+            case 'celular':
+                return '(***) ***-**' . substr($value, -2);
+                
+            case 'empresa':
+                if (strlen($value) <= 3) return str_repeat('*', strlen($value));
+                return substr($value, 0, 2) . '***';
+                
+            default:
+                return '[ANONIMIZADO]';
+        }
+    }
+    
+    /**
+     * Anonimiza endereço IP (remove últimos octetos)
+     */
+    private function anonymizeIP($ip) {
+        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+            $parts = explode('.', $ip);
+            return $parts[0] . '.' . $parts[1] . '.xxx.xxx';
+        }
+        
+        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+            $parts = explode(':', $ip);
+            return implode(':', array_slice($parts, 0, 4)) . '::xxxx';
+        }
+        
+        return 'xxx.xxx.xxx.xxx';
+    }
+    
+    /**
+     * Anonimiza User Agent (remove informações específicas)
+     */
+    private function anonymizeUserAgent($userAgent) {
+        if (empty($userAgent)) return null;
+        
+        // Extrair apenas informações básicas do browser/SO
+        $patterns = [
+            '/\b[\d\.]+\b/' => 'x.x.x', // Versões específicas
+            '/\([^)]*\)/' => '(***)', // Informações de sistema detalhadas
+            '/[A-F0-9]{8}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{12}/i' => '[UUID]' // UUIDs
+        ];
+        
+        $anonymized = $userAgent;
+        foreach ($patterns as $pattern => $replacement) {
+            $anonymized = preg_replace($pattern, $replacement, $anonymized);
+        }
+        
+        return substr($anonymized, 0, 100); // Limitar tamanho
     }
 }

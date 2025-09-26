@@ -1,3 +1,11 @@
+<?php
+// Inicializar variáveis para evitar warnings
+$error = $error ?? '';
+$activeVisitors = $activeVisitors ?? [];
+$activeEmployees = $activeEmployees ?? [];
+$selectedVisitor = $selectedVisitor ?? null;
+$selectedEmployee = $selectedEmployee ?? null;
+?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>

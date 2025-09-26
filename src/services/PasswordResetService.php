@@ -48,7 +48,9 @@ class PasswordResetService {
             // Gerar token seguro
             $token = bin2hex(random_bytes(32));
             $hashedToken = hash('sha256', $token);
-            $expiresAt = date('Y-m-d H:i:s', time() + $this->tokenExpiry);
+            
+            // Usar UTC para evitar problemas de timezone com o banco
+            $expiresAt = gmdate('Y-m-d H:i:s', time() + $this->tokenExpiry);
             
             // Remover tokens antigos do usuário
             $stmt = $this->pdo->prepare("DELETE FROM password_resets WHERE usuario_id = ?");
@@ -85,7 +87,7 @@ class PasswordResetService {
                 FROM password_resets pr
                 JOIN usuarios u ON pr.usuario_id = u.id
                 WHERE pr.token = ? 
-                AND pr.expires_at > NOW() 
+                AND pr.expires_at > NOW() AT TIME ZONE 'UTC'
                 AND pr.used_at IS NULL
                 AND u.ativo = true
             ");

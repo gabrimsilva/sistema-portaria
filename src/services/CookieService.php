@@ -145,8 +145,17 @@ class CookieService
             return false;
         }
         
-        return setcookie($name, $value, $expire, '/', '', 
-                        isset($_SERVER['HTTPS']), true);
+        // 🔒 COOKIES SEGUROS: Configuração com flags de segurança adequadas
+        $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443;
+        
+        return setcookie($name, $value, [
+            'expires' => $expire,
+            'path' => '/',
+            'domain' => '',
+            'secure' => $isHttps,        // Só HTTPS em produção
+            'httponly' => true,          // Não acessível via JavaScript
+            'samesite' => 'Lax'         // Proteção CSRF adicional
+        ]);
     }
     
     /**
@@ -188,7 +197,17 @@ class CookieService
             $functionalCookies = ['language_pref', 'theme_mode', 'dashboard_layout'];
             foreach ($functionalCookies as $cookie) {
                 if (isset($_COOKIE[$cookie])) {
-                    setcookie($cookie, '', time() - 3600, '/');
+                    // 🔒 LIMPEZA SEGURA DE COOKIES
+                    $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443;
+                    
+                    setcookie($cookie, '', [
+                        'expires' => time() - 3600,
+                        'path' => '/',
+                        'domain' => '',
+                        'secure' => $isHttps,
+                        'httponly' => true,
+                        'samesite' => 'Lax'
+                    ]);
                     unset($_COOKIE[$cookie]);
                 }
             }
@@ -198,7 +217,17 @@ class CookieService
             $performanceCookies = ['analytics_session', 'error_tracking'];
             foreach ($performanceCookies as $cookie) {
                 if (isset($_COOKIE[$cookie])) {
-                    setcookie($cookie, '', time() - 3600, '/');
+                    // 🔒 LIMPEZA SEGURA DE COOKIES
+                    $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443;
+                    
+                    setcookie($cookie, '', [
+                        'expires' => time() - 3600,
+                        'path' => '/',
+                        'domain' => '',
+                        'secure' => $isHttps,
+                        'httponly' => true,
+                        'samesite' => 'Lax'
+                    ]);
                     unset($_COOKIE[$cookie]);
                 }
             }

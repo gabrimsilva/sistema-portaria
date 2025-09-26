@@ -120,15 +120,13 @@ window.ErrorHandler = {
      * Mostra alert usando Bootstrap se disponível
      */
     showBootstrapAlert: function(message, type = 'warning') {
-        const alertHtml = \`
-            <div class="alert alert-\${type} alert-dismissible fade show" role="alert">
-                <i class="fas fa-exclamation-triangle mr-2"></i>
-                \${message}
-                <button type="button" class="close" data-dismiss="alert">
-                    <span>&times;</span>
-                </button>
-            </div>
-        \`;
+        const alertHtml = '<div class="alert alert-' + type + ' alert-dismissible fade show" role="alert">' +
+            '<i class="fas fa-exclamation-triangle mr-2"></i>' +
+            message +
+            '<button type="button" class="close" data-dismiss="alert">' +
+            '<span>&times;</span>' +
+            '</button>' +
+            '</div>';
         
         // Procurar container para alertas
         let container = document.querySelector('.alert-container');

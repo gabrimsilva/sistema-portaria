@@ -3,102 +3,91 @@
 /**
  * 🛡️ ErrorHandlerService - Centralização de Tratamento de Erros JavaScript
  * 
- * Padroniza o tratamento de erros JavaScript no frontend,
- * removendo console logs desnecessários e criando error handling robusto.
- * 
- * @author Sistema de Controle de Acesso
- * @version 1.6.0
+ * Versão simplificada para corrigir erro de sintaxe
  */
 class ErrorHandlerService
 {
     /**
-     * Renderiza o script de inicialização do ErrorHandler
+     * Renderiza script completo de tratamento de erros
      * 
-     * @param array $options Configurações do error handler
-     * @return string Script HTML pronto para inserção
+     * @param array $options Configurações opcionais
+     * @return string JavaScript do ErrorHandler
      */
     public static function renderErrorHandlerScript($options = [])
     {
-        $isDevelopment = (!isset($_ENV['ENVIRONMENT']) || $_ENV['ENVIRONMENT'] !== 'production');
-        $enableConsoleLog = $options['enableConsoleLog'] ?? $isDevelopment;
-        $enableAlerts = $options['enableAlerts'] ?? false;
+        $defaults = [
+            'enableConsoleLogging' => ($_ENV['ENVIRONMENT'] ?? 'development') !== 'production',
+            'enableGlobalHandlers' => true,
+            'enableToasts' => true
+        ];
         
-        // JSON-encode config para evitar problemas de sintaxe
-        $config = json_encode([
-            'enableConsoleLog' => $enableConsoleLog,
-            'enableAlerts' => $enableAlerts,
-            'isDevelopment' => $isDevelopment,
-            'errorCount' => 0,
-            'maxErrors' => 5
-        ]);
-
-        return "<script>
+        $config = array_merge($defaults, $options);
+        $configJson = json_encode($config);
+        
+        return "
+<script>
+/**
+ * ErrorHandler Global - Tratamento Centralizado de Erros JavaScript
+ * Versão: 2.3.0
+ */
 window.ErrorHandler = {
-    config: {$config},
+    config: {$configJson},
     
     /**
-     * Trata erros de forma padronizada
+     * Função principal de tratamento de erro
      */
-    handle: function(error, context = 'unknown', showUser = false) {
-        this.config.errorCount++;
-        
-        // Prevenir spam de erros
-        if (this.config.errorCount > this.config.maxErrors) {
-            return;
+    handle: function(error, context) {
+        try {
+            const normalizedError = this.normalizeError(error);
+            const userMessage = this.getUserFriendlyMessage(context || 'unknown', normalizedError.message);
+            
+            if (this.config.enableConsoleLogging) {
+                console.error('🚨 Erro capturado:', normalizedError);
+            }
+            
+            if (this.config.enableToasts && typeof $ !== 'undefined' && $.fn.alert) {
+                this.showBootstrapAlert(userMessage, 'warning');
+            } else {
+                alert(userMessage);
+            }
+        } catch (e) {
+            console.error('Erro no ErrorHandler:', e);
         }
-        
-        // Garantir que temos um objeto de erro válido
-        let errorObj = this.normalizeError(error);
-        
-        // Log apenas em desenvolvimento
-        if (this.config.enableConsoleLog) {
-            console.group('🚨 Erro JavaScript - ' + context);
-            console.error('Mensagem:', errorObj.message);
-            console.error('Stack:', errorObj.stack);
-            console.error('Contexto:', context);
-            console.groupEnd();
-        }
-        
-        // Mostrar para usuário se solicitado
-        if (showUser && this.config.enableAlerts) {
-            this.showUserFriendlyError(errorObj, context);
-        }
-        
-        return errorObj;
     },
     
     /**
-     * Normaliza qualquer tipo de erro em objeto Error válido
+     * Normaliza diferentes tipos de erro em formato padrão
      */
     normalizeError: function(error) {
         if (error instanceof Error) {
-            return error;
+            return {
+                name: error.name,
+                message: error.message,
+                stack: error.stack
+            };
         }
         
         if (typeof error === 'string') {
-            return new Error(error);
+            return {
+                name: 'StringError',
+                message: error,
+                stack: null
+            };
         }
         
-        if (error && typeof error === 'object') {
-            const message = error.message || error.msg || error.error || 'Erro desconhecido';
-            return new Error(message);
+        if (typeof error === 'object' && error !== null) {
+            return {
+                name: error.name || 'ObjectError',
+                message: error.message || JSON.stringify(error),
+                stack: error.stack || null
+            };
         }
         
-        return new Error('Erro não identificado');
-    },
-    
-    /**
-     * Mostra erro amigável para o usuário
-     */
-    showUserFriendlyError: function(error, context) {
-        const userMessage = this.getUserFriendlyMessage(context, error.message);
-        
-        // Se Bootstrap está disponível, usar toast/alert
-        if (typeof $ !== 'undefined' && $.fn.alert) {
-            this.showBootstrapAlert(userMessage, 'warning');
-        } else {
-            alert(userMessage);
-        }
+        return {
+            name: 'UnknownError',
+            message: String(error),
+            stack: null
+        };
     },
     
     /**
@@ -119,30 +108,26 @@ window.ErrorHandler = {
     /**
      * Mostra alert usando Bootstrap se disponível
      */
-    showBootstrapAlert: function(message, type = 'warning') {
-        const alertHtml = '<div class="alert alert-' + type + ' alert-dismissible fade show" role="alert">' +
-            '<i class="fas fa-exclamation-triangle mr-2"></i>' +
+    showBootstrapAlert: function(message, type) {
+        type = type || 'warning';
+        
+        const alertHtml = '<div class=\"alert alert-' + type + ' alert-dismissible fade show\" role=\"alert\">' +
+            '<i class=\"fas fa-exclamation-triangle mr-2\"></i>' +
             message +
-            '<button type="button" class="close" data-dismiss="alert">' +
+            '<button type=\"button\" class=\"close\" data-dismiss=\"alert\">' +
             '<span>&times;</span>' +
             '</button>' +
             '</div>';
         
-        // Procurar container para alertas
-        let container = document.querySelector('.alert-container');
-        if (!container) {
-            container = document.querySelector('.content-wrapper');
-        }
-        if (!container) {
-            container = document.body;
-        }
+        var container = document.querySelector('.alert-container') || 
+                       document.querySelector('.content-wrapper') || 
+                       document.body;
         
         const alertDiv = document.createElement('div');
         alertDiv.innerHTML = alertHtml;
         container.insertBefore(alertDiv.firstElementChild, container.firstChild);
         
-        // Auto-remover após 5 segundos
-        setTimeout(() => {
+        setTimeout(function() {
             const alert = container.querySelector('.alert');
             if (alert) {
                 alert.remove();
@@ -182,113 +167,50 @@ window.ErrorHandler = {
                 return false;
             }
         }
-    },
-    
-    /**
-     * Wrapper seguro para fetch
-     */
-    safeFetch: async function(url, options = {}) {
-        try {
-            const response = await fetch(url, options);
-            
-            if (!response.ok) {
-                throw new Error(\`HTTP Error: \${response.status} - \${response.statusText}\`);
-            }
-            
-            return response;
-        } catch (error) {
-            ErrorHandler.handle(error, 'fetch');
-            throw error;
-        }
-    },
-    
-    /**
-     * Safe stringify que nunca falha
-     */
-    safeStringify: function(value) {
-        try {
-            // Tentar JSON.stringify primeiro
-            return JSON.stringify(value);
-        } catch (error) {
-            try {
-                // Fallback para String() com detalhes de tipo
-                return \`[Type: \${typeof value}] \${String(value)}\`;
-            } catch (error2) {
-                // Último recurso - apenas o tipo
-                return \`[Unserializable \${typeof value}]\`;
-            }
-        }
     }
 };
 
-// Configurar handler global para erros não capturados (incluindo non-Error objects)
-window.addEventListener('error', function(event) {
-    let errorToHandle = event.error || event.message || 'Unknown error';
+// Configurar handlers globais se habilitado
+if (ErrorHandler.config.enableGlobalHandlers) {
+    window.addEventListener('error', function(event) {
+        ErrorHandler.handle(event.error || event.message, 'global');
+    });
     
-    // Tratar especificamente o caso de non-Error objects
-    if (!(errorToHandle instanceof Error)) {
-        if (ErrorHandler.config.enableConsoleLog) {
-            console.warn('🚨 Non-Error object detected:', typeof errorToHandle);
-        }
-        errorToHandle = new Error('Non-Error thrown: ' + ErrorHandler.safeStringify(errorToHandle));
-    }
-    
-    ErrorHandler.handle(errorToHandle, 'global');
-});
+    window.addEventListener('unhandledrejection', function(event) {
+        ErrorHandler.handle(event.reason, 'promise');
+    });
+}
 
-// Configurar handler para promises rejeitadas
-window.addEventListener('unhandledrejection', function(event) {
-    let reason = event.reason;
-    
-    // Normalizar non-Error objects em promises
-    if (!(reason instanceof Error)) {
-        if (ErrorHandler.config.enableConsoleLog) {
-            console.warn('🚨 Promise rejected with non-Error:', typeof reason);
-        }
-        reason = new Error('Promise rejection (non-Error): ' + ErrorHandler.safeStringify(reason));
-    }
-    
-    ErrorHandler.handle(reason, 'promise');
-    event.preventDefault(); // Prevenir o log padrão
-});
-
-
-// Inicialização
-if (ErrorHandler.config.enableConsoleLog) {
-    console.log('✅ ErrorHandler inicializado (Desenvolvimento: ' + ErrorHandler.config.isDevelopment + ')');
+if (ErrorHandler.config.enableConsoleLogging) {
+    console.log('✅ ErrorHandler inicializado');
 }
 </script>
-HTML;
+";
     }
     
     /**
-     * Renderiza script específico para limpeza de console em produção
+     * Renderiza apenas limpeza de console para produção
      */
     public static function renderProductionConsoleCleanup()
     {
-        $isProduction = (isset($_ENV['ENVIRONMENT']) && $_ENV['ENVIRONMENT'] === 'production');
-        
-        if (!$isProduction) {
-            return '';
+        if (($_ENV['ENVIRONMENT'] ?? 'development') === 'production') {
+            return "
+<script>
+// Limpeza de console em produção
+if (typeof console !== 'undefined') {
+    ['log', 'warn', 'info', 'debug'].forEach(function(method) {
+        console[method] = function() {};
+    });
+}
+</script>
+";
         }
         
-        return <<<'HTML'
-<script>
-// 🚫 Limpeza de Console para Produção
-(function() {
-    if (typeof console !== 'undefined') {
-        const methods = ['log', 'debug', 'info', 'warn'];
-        methods.forEach(function(method) {
-            console[method] = function() {};
-        });
-    }
-})();
-</script>
-HTML;
+        return '';
     }
     
     /**
-     * Renderiza script completo de error handling
+     * Renderiza script completo (ErrorHandler + Limpeza Produção)
      */
     public static function renderComplete($options = [])
     {

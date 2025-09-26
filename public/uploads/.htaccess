@@ -1,14 +1,77 @@
-# Prevent execution of scripts in uploads directory
-<FilesMatch "\.(php|phtml|pl|py|jsp|asp|sh|cgi)$">
-    Order allow,deny
+# 🚨 BLOQUEIO TOTAL DE ACESSO DIRETO A DADOS BIOMÉTRICOS 🚨
+# Este arquivo .htaccess impede qualquer acesso direto a fotos/arquivos biométricos
+# conforme exigido pela LGPD para proteção de dados sensíveis
+
+# ❌ NEGAR ACESSO A TODOS OS ARQUIVOS NESTE DIRETÓRIO
+Order deny,allow
+Deny from all
+
+# ❌ Bloquear execução de qualquer script
+<FilesMatch "\.(php|phtml|pl|py|jsp|asp|sh|cgi|js|html|htm)$">
+    Order deny,allow
     Deny from all
 </FilesMatch>
 
-# Only allow image files
-<FilesMatch "\.(jpg|jpeg|gif|png|webp)$">
+# ❌ Bloquear acesso a TODAS as imagens (proteção crítica)
+<FilesMatch "\.(jpg|jpeg|png|gif|webp|svg|bmp|tiff|raw|psd|ico)$">
     Order deny,allow
-    Allow from all
+    Deny from all
 </FilesMatch>
 
-# Disable directory browsing
-Options -Indexes
+# ❌ Não permitir listagem de diretório
+Options -Indexes -ExecCGI -FollowSymLinks
+
+# ❌ Bloquear também arquivos de configuração
+<FilesMatch "\.(htaccess|htpasswd|ini|conf|log|xml|json)$">
+    Order deny,allow
+    Deny from all
+</FilesMatch>
+
+# 📋 Mensagens de erro personalizadas
+ErrorDocument 403 "🚫 ACESSO NEGADO: Dados biométricos protegidos pela LGPD. Use o sistema oficial para visualização segura."
+ErrorDocument 404 "❌ Arquivo não encontrado"
+ErrorDocument 401 "🔒 Não autorizado"
+
+# 🛡️ Headers de segurança máxima
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "DENY"
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Referrer-Policy "no-referrer"
+    Header always set Cache-Control "no-cache, no-store, must-revalidate"
+    Header always set Pragma "no-cache"
+    Header always set Expires "0"
+    Header always set Content-Security-Policy "default-src 'none'"
+</IfModule>
+
+# 🔐 Bloquear métodos HTTP não necessários
+<LimitExcept GET>
+    Order deny,allow
+    Deny from all
+</LimitExcept>
+
+# ⚠️ AVISO CRÍTICO PARA DESENVOLVEDORES ⚠️
+# 
+# Este diretório contém dados biométricos sensíveis protegidos pela LGPD:
+# 
+# ✅ ACESSO CORRETO:
+#    - Use o endpoint /secure/biometric/photo?id=X&token=Y
+#    - Autenticação obrigatória via sessão
+#    - Token de acesso temporário necessário
+#    - Logs de auditoria automáticos
+# 
+# ❌ NUNCA PERMITIR:
+#    - Acesso direto via URL (ex: /uploads/employees/foto.jpg)
+#    - Links públicos ou compartilháveis
+#    - Cache de imagens no navegador
+#    - Download direto sem autenticação
+# 
+# 🔧 MIGRAÇÃO NECESSÁRIA:
+#    - Execute /secure/biometric/migrate para mover arquivos
+#    - Atualize controllers para usar SecureBiometricController
+#    - Remova referências diretas aos arquivos
+# 
+# 📋 CONFORMIDADE LGPD:
+#    - Art. 46: Segurança adequada para dados sensíveis
+#    - Art. 49: Criptografia e controle de acesso
+#    - Art. 11: Proteção especial para dados biométricos

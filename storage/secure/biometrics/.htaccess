@@ -1,0 +1,24 @@
+# 🔒 PROTEÇÃO MÁXIMA - DADOS BIOMÉTRICOS CRIPTOGRAFADOS
+# Este diretório contém dados biométricos criptografados
+# ACESSO TOTALMENTE PROIBIDO via web
+
+# ❌ BLOQUEAR TODO E QUALQUER ACESSO
+Order deny,allow
+Deny from all
+
+# ❌ Bloquear todos os tipos de arquivo
+<Files "*">
+    Order deny,allow
+    Deny from all
+</Files>
+
+# ❌ Desabilitar completamente
+Options None
+Options -Indexes -ExecCGI -FollowSymLinks -Includes
+
+# 📋 Mensagem de erro
+ErrorDocument 403 "🚫 ACESSO TOTALMENTE PROIBIDO: Dados biométricos criptografados protegidos pela LGPD"
+
+# ⚠️ AVISO: Este diretório está FORA do web root
+# Não deveria ser acessível via web de forma alguma
+# Se este arquivo está sendo lido via HTTP, há um problema grave de configuração!

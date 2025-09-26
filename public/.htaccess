@@ -1,0 +1,24 @@
+# 🛡️ PROTEÇÃO GERAL DO SISTEMA
+
+# Bloquear acesso direto a arquivos de upload MESMO no servidor PHP
+RewriteEngine On
+
+# CRÍTICO: Bloquear /uploads/ independentemente do servidor
+RewriteRule ^uploads/.*$ - [F,L]
+
+# Bloquear arquivos sensíveis
+<FilesMatch "\.(log|ini|conf|env)$">
+    Require all denied
+</FilesMatch>
+
+# Security headers
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options nosniff
+    Header always set X-Frame-Options SAMEORIGIN
+    Header always set X-XSS-Protection "1; mode=block"
+</IfModule>
+
+# Redirecionar todas as outras requisições para index.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php [QSA,L]

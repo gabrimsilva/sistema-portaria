@@ -1,4 +1,12 @@
 <?php
+// 🛡️ PROTEÇÃO CRÍTICA: Bloquear acesso direto a uploads independente do servidor
+$requestUri = $_SERVER['REQUEST_URI'] ?? '';
+if (strpos($requestUri, '/uploads/') !== false || strpos($requestUri, 'uploads/') !== false) {
+    http_response_code(403);
+    header('Content-Type: text/plain');
+    die('🚫 ACESSO NEGADO: Dados biométricos protegidos pela LGPD');
+}
+
 require_once '../config/config.php';
 
 // Simple router
@@ -431,9 +439,48 @@ try {
                 require_once '../src/controllers/RegistroAcessoController.php';
                 $controller = new RegistroAcessoController();
                 $controller->alertas();
+            } else if (strpos($path, 'secure/biometric/') === 0) {
+                // 🔒 Endpoints seguros para dados biométricos
+                require_once '../src/controllers/SecureBiometricController.php';
+                $controller = new SecureBiometricController();
+                
+                $subPath = substr($path, strlen('secure/biometric/'));
+                switch ($subPath) {
+                    case 'photo':
+                        $controller->servePhoto();
+                        break;
+                    case 'migrate':
+                        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                            $controller->migrateExisting();
+                        } else {
+                            http_response_code(405);
+                            echo json_encode(['error' => 'Método não permitido']);
+                        }
+                        break;
+                    case 'delete':
+                        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                            $controller->deletePhoto();
+                        } else {
+                            http_response_code(405);
+                            echo json_encode(['error' => 'Método não permitido']);
+                        }
+                        break;
+                    case 'stats':
+                        $controller->getUsageStats();
+                        break;
+                    default:
+                        http_response_code(404);
+                        echo json_encode(['error' => 'Endpoint biométrico não encontrado']);
+                }
             } else if (strpos($path, 'assets/') === 0 || strpos($path, 'uploads/') === 0) {
-                // Handle assets and uploads
-                return false; // Let the web server handle static files
+                // 🚫 BLOQUEAR uploads - não servir mais arquivos estáticos de uploads
+                if (strpos($path, 'uploads/') === 0) {
+                    http_response_code(403);
+                    echo json_encode(['error' => 'Acesso negado: dados biométricos protegidos']);
+                } else {
+                    // Apenas assets são permitidos
+                    return false; // Let the web server handle static assets
+                }
             } else {
                 http_response_code(404);
                 echo "<h1>404 - Page Not Found</h1>";

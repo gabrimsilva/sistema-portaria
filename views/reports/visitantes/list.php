@@ -11,7 +11,7 @@ $visitantes = $visitantes ?? [];
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="<?= CSRFProtection::generateToken() ?>">
     <title>Visitantes - Sistema de Controle de Acesso</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
@@ -133,19 +133,19 @@ $visitantes = $visitantes ?? [];
                                     <div class="bg-light p-3 rounded">
                                         <form method="GET" class="row align-items-end">
                                             <div class="col-md-2">
-                                                <label class="form-label">Data de Entrada:</label>
+                                                <label >Data de Entrada:</label>
                                                 <input type="date" name="data_entrada" class="form-control" value="<?= htmlspecialchars($_GET['data_entrada'] ?? '') ?>">
                                             </div>
                                             <div class="col-md-2">
-                                                <label class="form-label">Empresa:</label>
+                                                <label >Empresa:</label>
                                                 <input type="text" name="empresa" class="form-control" placeholder="Nome da empresa" value="<?= htmlspecialchars($_GET['empresa'] ?? '') ?>">
                                             </div>
                                             <div class="col-md-2">
-                                                <label class="form-label">Funcionário Responsável:</label>
+                                                <label >Funcionário Responsável:</label>
                                                 <input type="text" name="funcionario_responsavel" class="form-control" placeholder="Nome do responsável" value="<?= htmlspecialchars($_GET['funcionario_responsavel'] ?? '') ?>">
                                             </div>
                                             <div class="col-md-2">
-                                                <label class="form-label">Setor:</label>
+                                                <label >Setor:</label>
                                                 <select name="setor" class="form-control">
                                                     <option value="">Todos</option>
                                                     <?php foreach ($setores as $s): ?>
@@ -156,7 +156,7 @@ $visitantes = $visitantes ?? [];
                                                 </select>
                                             </div>
                                             <div class="col-md-2">
-                                                <label class="form-label">Buscar:</label>
+                                                <label >Buscar:</label>
                                                 <input type="text" name="search" class="form-control" placeholder="Nome ou CPF" value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
                                             </div>
                                             <div class="col-md-2">
@@ -215,9 +215,9 @@ $visitantes = $visitantes ?? [];
                                                 <td>
                                                     <strong><?= htmlspecialchars($visitante['nome']) ?></strong>
                                                     <?php if (!empty($visitante['hora_saida_formatted'])): ?>
-                                                        <span class="badge bg-secondary ms-2">Saiu</span>
+                                                        <span class="badge bg-secondary ml-2">Saiu</span>
                                                     <?php else: ?>
-                                                        <span class="badge bg-success ms-2">Na empresa</span>
+                                                        <span class="badge bg-success ml-2">Na empresa</span>
                                                     <?php endif; ?>
                                                 </td>
                                                 <td>
@@ -339,7 +339,7 @@ $visitantes = $visitantes ?? [];
     </div>
     
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
 </body>
 </html>

@@ -389,7 +389,7 @@
                                         <input type="text" class="form-control" id="visitante_placa_veiculo" name="placa_veiculo" placeholder="ABC-1234" style="text-transform: uppercase;" maxlength="8" required>
                                         <span class="input-group-text">
                                             <input type="checkbox" id="visitante_ape_checkbox">
-                                            <label for="visitante_ape_checkbox" class="ms-1 mb-0">A pé</label>
+                                            <label for="visitante_ape_checkbox" class="ml-1 mb-0">A pé</label>
                                         </span>
                                     </div>
                                     <small class="form-text text-muted">Marque "A pé" se não houver veículo</small>
@@ -449,7 +449,7 @@
                                 <input type="text" class="form-control" id="profissional_placa_veiculo" name="placa_veiculo" placeholder="ABC-1234" style="text-transform: uppercase;" maxlength="8" required>
                                 <span class="input-group-text">
                                     <input type="checkbox" id="profissional_ape_checkbox">
-                                    <label for="profissional_ape_checkbox" class="ms-1 mb-0">A pé</label>
+                                    <label for="profissional_ape_checkbox" class="ml-1 mb-0">A pé</label>
                                 </span>
                             </div>
                             <small class="form-text text-muted">Marque "A pé" se não houver veículo</small>
@@ -520,7 +520,7 @@
                                 <input type="text" class="form-control" id="prestador_placa_veiculo" name="placa_veiculo" placeholder="ABC-1234" style="text-transform: uppercase;" maxlength="8" required>
                                 <span class="input-group-text">
                                     <input type="checkbox" id="prestador_ape_checkbox">
-                                    <label for="prestador_ape_checkbox" class="ms-1 mb-0">A pé</label>
+                                    <label for="prestador_ape_checkbox" class="ml-1 mb-0">A pé</label>
                                 </span>
                             </div>
                             <small class="form-text text-muted">Marque "A pé" se não houver veículo</small>
@@ -613,7 +613,7 @@
                                 <input type="text" class="form-control" id="edit_placa_veiculo" name="placa_veiculo" placeholder="ABC-1234" style="text-transform: uppercase;" maxlength="8">
                                 <span class="input-group-text">
                                     <input type="checkbox" id="edit_ape_checkbox">
-                                    <label for="edit_ape_checkbox" class="ms-1 mb-0">A pé</label>
+                                    <label for="edit_ape_checkbox" class="ml-1 mb-0">A pé</label>
                                 </span>
                             </div>
                             <small class="form-text text-muted">Marque "A pé" se não houver veículo</small>

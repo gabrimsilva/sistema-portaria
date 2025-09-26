@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Redefinir Senha - Sistema de Controle de Acesso</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -256,7 +256,7 @@
                     
                     <!-- Botão de redefinição -->
                     <button type="submit" class="btn btn-reset" id="resetBtn">
-                        <i class="fas fa-check me-2"></i>
+                        <i class="fas fa-check mr-2"></i>
                         Redefinir Senha
                     </button>
                 </form>
@@ -264,7 +264,7 @@
                 <!-- Link de volta ao login -->
                 <div class="back-login">
                     <a href="/login">
-                        <i class="fas fa-arrow-left me-2"></i>
+                        <i class="fas fa-arrow-left mr-2"></i>
                         Voltar ao Login
                     </a>
                 </div>
@@ -274,7 +274,7 @@
     
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -337,7 +337,7 @@
                 
                 // Loading state
                 resetBtn.disabled = true;
-                resetBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Redefinindo...';
+                resetBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Redefinindo...';
                 
                 // Enviar requisição
                 fetch('/reset-password', {
@@ -361,14 +361,14 @@
                     } else {
                         showAlert(data.message || 'Erro ao redefinir senha', 'danger');
                         resetBtn.disabled = false;
-                        resetBtn.innerHTML = '<i class="fas fa-check me-2"></i>Redefinir Senha';
+                        resetBtn.innerHTML = '<i class="fas fa-check mr-2"></i>Redefinir Senha';
                     }
                 })
                 .catch(error => {
                     console.error('Erro:', error);
                     showAlert('Erro de comunicação com o servidor', 'danger');
                     resetBtn.disabled = false;
-                    resetBtn.innerHTML = '<i class="fas fa-check me-2"></i>Redefinir Senha';
+                    resetBtn.innerHTML = '<i class="fas fa-check mr-2"></i>Redefinir Senha';
                 });
             });
             
@@ -377,9 +377,9 @@
                 const alertContainer = document.getElementById('alertContainer');
                 const alertHtml = `
                     <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-                        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
+                        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} mr-2"></i>
                         ${message}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                     </div>
                 `;
                 alertContainer.innerHTML = alertHtml;

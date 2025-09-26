@@ -12,7 +12,7 @@ $selectedEmployee = $selectedEmployee ?? null;
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Controle de Acesso - Sistema de Controle de Acesso</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -141,14 +141,14 @@ $selectedEmployee = $selectedEmployee ?? null;
                 <div class="container-fluid">
                     <?php if (isset($_GET['success'])): ?>
                         <div class="alert alert-success alert-dismissible">
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                             <?= htmlspecialchars($_GET['success']) ?>
                         </div>
                     <?php endif; ?>
                     
                     <?php if (isset($error)): ?>
                         <div class="alert alert-danger alert-dismissible">
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                             <?= htmlspecialchars($error) ?>
                         </div>
                     <?php endif; ?>
@@ -193,12 +193,12 @@ $selectedEmployee = $selectedEmployee ?? null;
                                             <!-- Tabs -->
                                             <ul class="nav nav-tabs" role="tablist">
                                                 <li class="nav-item">
-                                                    <a class="nav-link active" data-bs-toggle="tab" href="#visitors-tab">
+                                                    <a class="nav-link active" data-toggle="tab" href="#visitors-tab">
                                                         <i class="fas fa-users"></i> Visitantes
                                                     </a>
                                                 </li>
                                                 <li class="nav-item">
-                                                    <a class="nav-link" data-bs-toggle="tab" href="#employees-tab">
+                                                    <a class="nav-link" data-toggle="tab" href="#employees-tab">
                                                         <i class="fas fa-id-badge"></i> Funcionários
                                                     </a>
                                                 </li>
@@ -336,7 +336,7 @@ $selectedEmployee = $selectedEmployee ?? null;
     </div>
     
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
     
     <script>

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Sistema de Controle de Acesso</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -281,7 +281,7 @@
                 $error = $error ?? null;
                 if (isset($error) && !empty($error)): ?>
                     <div class="alert alert-danger" role="alert">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
                         <?= htmlspecialchars($error) ?>
                     </div>
                 <?php endif; ?>
@@ -330,7 +330,7 @@
                     
                     <!-- Botão de login -->
                     <button type="submit" class="btn btn-login" id="loginBtn">
-                        <i class="fas fa-sign-in-alt me-2"></i>
+                        <i class="fas fa-sign-in-alt mr-2"></i>
                         Entrar
                     </button>
                 </form>
@@ -338,7 +338,7 @@
                 <!-- Link esqueci senha -->
                 <div class="forgot-password">
                     <a href="#" onclick="showForgotPassword()">
-                        <i class="fas fa-key me-1"></i>
+                        <i class="fas fa-key mr-1"></i>
                         Esqueci minha senha
                     </a>
                 </div>
@@ -349,7 +349,7 @@
     
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
     
     <script>
@@ -357,7 +357,7 @@
         document.getElementById('loginForm').addEventListener('submit', function(e) {
             const btn = document.getElementById('loginBtn');
             btn.classList.add('loading');
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Entrando...';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Entrando...';
         });
         
         // Função para esqueci senha
@@ -369,10 +369,10 @@
                         <div class="modal-content" style="border-radius: 15px; border: none; box-shadow: 0 15px 35px rgba(0,0,0,0.1);">
                             <div class="modal-header" style="background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); color: white; border-radius: 15px 15px 0 0; border: none;">
                                 <h5 class="modal-title" id="forgotPasswordModalLabel">
-                                    <i class="fas fa-key me-2"></i>
+                                    <i class="fas fa-key mr-2"></i>
                                     Recuperar Senha
                                 </h5>
-                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Fechar"><span aria-hidden="true" style="color: white;">&times;</span></button>
                             </div>
                             <div class="modal-body" style="padding: 30px;">
                                 <p class="text-center text-muted mb-4">
@@ -381,7 +381,7 @@
                                 
                                 <form id="forgotPasswordForm">
                                     <div class="form-group mb-3">
-                                        <label for="recoveryEmail" class="form-label">Email</label>
+                                        <label for="recoveryEmail" >Email</label>
                                         <div class="input-group">
                                             <span class="input-group-text" style="background: #f8f9fa; border-radius: 8px 0 0 8px;">
                                                 <i class="fas fa-envelope text-muted"></i>
@@ -396,9 +396,9 @@
                                         </div>
                                     </div>
                                     
-                                    <div class="d-grid gap-2">
+                                    <div>
                                         <button type="submit" class="btn btn-primary" style="border-radius: 8px; padding: 12px; font-weight: 600;">
-                                            <i class="fas fa-paper-plane me-2"></i>
+                                            <i class="fas fa-paper-plane mr-2"></i>
                                             Enviar Instruções
                                         </button>
                                     </div>
@@ -416,7 +416,7 @@
                                 <!-- Informações de demonstração -->
                                 <div class="alert alert-info mt-4 mb-0" style="border-radius: 10px; border: none; background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);">
                                     <div class="d-flex align-items-center">
-                                        <i class="fas fa-info-circle me-2 text-info"></i>
+                                        <i class="fas fa-info-circle mr-2 text-info"></i>
                                         <div>
                                             <strong>Acesso de Demonstração</strong><br>
                                             <small>Email: admin@sistema.com | Senha: admin123</small>
@@ -467,7 +467,7 @@
             }
             
             // Mostrar loading
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Enviando...';
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Enviando...';
             submitBtn.disabled = true;
             
             // Enviar requisição real para o backend
@@ -494,7 +494,7 @@
                 }
                 
                 // Restaurar botão
-                submitBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Enviar Instruções';
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Enviar Instruções';
                 submitBtn.disabled = false;
             })
             .catch(error => {
@@ -504,7 +504,7 @@
                 // Fechar modal e restaurar botão
                 const modal = bootstrap.Modal.getInstance(document.getElementById('forgotPasswordModal'));
                 modal.hide();
-                submitBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Enviar Instruções';
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Enviar Instruções';
                 submitBtn.disabled = false;
             });
         }
@@ -527,8 +527,8 @@
                                 <p class="text-muted small mb-4">
                                     Verifique sua caixa de entrada e spam. O email pode levar alguns minutos para chegar.
                                 </p>
-                                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" style="border-radius: 8px; padding: 10px 30px;">
-                                    <i class="fas fa-arrow-left me-2"></i>
+                                <button type="button" class="btn btn-primary" data-dismiss="modal" style="border-radius: 8px; padding: 10px 30px;">
+                                    <i class="fas fa-arrow-left mr-2"></i>
                                     Voltar ao Login
                                 </button>
                             </div>
@@ -553,9 +553,9 @@
         function showAlert(message, type = 'info') {
             const alertHtml = `
                 <div class="alert alert-${type} alert-dismissible fade show" role="alert" style="position: fixed; top: 20px; right: 20px; z-index: 9999; border-radius: 8px;">
-                    <i class="fas fa-${type === 'warning' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
+                    <i class="fas fa-${type === 'warning' ? 'exclamation-triangle' : 'info-circle'} mr-2"></i>
                     ${message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                 </div>
             `;
             

@@ -112,6 +112,7 @@ class BiometricSecurityTest {
             
         } catch (Exception $e) {
             $this->results[] = "❌ ERRO na inicialização do serviço: " . $e->getMessage();
+            $this->failures++;
         }
     }
     

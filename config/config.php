@@ -3,11 +3,19 @@
 // Environment configuration
 $_ENV = array_merge($_ENV, $_SERVER);
 
-// Application configuration
-define('BASE_PATH', dirname(__DIR__));
-define('PUBLIC_PATH', BASE_PATH . '/public');
-define('UPLOAD_PATH', PUBLIC_PATH . '/uploads');
-define('BASE_URL', '/');
+// Application configuration - evitar redefinições
+if (!defined('BASE_PATH')) {
+    define('BASE_PATH', dirname(__DIR__));
+}
+if (!defined('PUBLIC_PATH')) {
+    define('PUBLIC_PATH', BASE_PATH . '/public');
+}
+if (!defined('UPLOAD_PATH')) {
+    define('UPLOAD_PATH', PUBLIC_PATH . '/uploads');
+}
+if (!defined('BASE_URL')) {
+    define('BASE_URL', '/');
+}
 
 // Session configuration with security
 ini_set('session.cookie_lifetime', 86400); // 24 hours

@@ -6,10 +6,15 @@
  * de forma automatizada para CI/CD e verificações manuais.
  */
 
-// Verificar ambiente ANTES de incluir config
+// Configurar ambiente sem output e sem duplicação
 if (!defined('BASE_PATH')) {
     define('BASE_PATH', dirname(__DIR__));
 }
+
+// Incluir config silenciosamente
+ob_start();
+require_once BASE_PATH . '/config/config.php';
+ob_end_clean();
 
 echo "🛡️ SISTEMA DE VERIFICAÇÃO DE SEGURANÇA BIOMÉTRICA\n";
 echo "===================================================\n\n";

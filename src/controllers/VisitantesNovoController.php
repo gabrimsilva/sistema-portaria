@@ -458,7 +458,7 @@ class VisitantesNovoController {
                     }
                     
                     if (!empty($placa_veiculo) && $placa_veiculo !== 'APE') {
-                        $placaValidation = $this->duplicityService->validatePlacaNotOpen($placa_veiculo, $id, 'visitantes_novo');
+                        $placaValidation = $this->duplicityService->validatePlacaUnique($placa_veiculo, $id, 'visitantes_novo');
                         if (!$placaValidation['isValid']) {
                             header('Location: ' . $this->getBaseRoute() . '?error=' . urlencode($placaValidation['message']));
                             exit;

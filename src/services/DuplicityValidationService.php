@@ -96,7 +96,92 @@ class DuplicityValidationService {
     }
     
     /**
+     * Valida se uma placa já está em uso em TODO o sistema
+     * Profissionais Renner têm placas únicas sempre
+     * Visitantes/Prestadores não podem usar placas já cadastradas
+     * 
+     * @param string $placa Placa a verificar
+     * @param int|null $excludeId ID do registro a excluir da verificação
+     * @param string|null $excludeTable Tabela do registro sendo editado
+     * @return array ['isValid' => bool, 'message' => string, 'entry' => array|null]
+     */
+    public function validatePlacaUnique($placa, $excludeId = null, $excludeTable = null) {
+        if (empty($placa) || $placa === 'APE') {
+            return ['isValid' => true, 'message' => '', 'entry' => null];
+        }
+        
+        // Normalizar placa (apenas letras e números, maiúscula)
+        $placa = preg_replace('/[^A-Z0-9]/', '', strtoupper(trim($placa)));
+        
+        // 1. PRIORIDADE: Verificar Profissionais Renner (placas sempre únicas)
+        $sql = "SELECT nome, cpf, placa_veiculo, 'Profissional Renner' as tipo 
+                FROM profissionais_renner 
+                WHERE placa_veiculo = ?";
+        $params = [$placa];
+        
+        // Permitir edição do próprio registro
+        if ($excludeId && $excludeTable === 'profissionais_renner') {
+            $sql .= " AND id != ?";
+            $params[] = $excludeId;
+        }
+        
+        $profissional = $this->db->fetch($sql, $params);
+        if ($profissional) {
+            return [
+                'isValid' => false,
+                'message' => "Esta placa já pertence ao funcionário {$profissional['nome']} (Profissional Renner). Placas de funcionários são únicas no sistema.",
+                'entry' => $profissional
+            ];
+        }
+        
+        // 2. Verificar visitantes com placa ativa (acesso aberto)
+        $sql = "SELECT nome, cpf, empresa, placa_veiculo, hora_entrada, 'Visitante' as tipo 
+                FROM visitantes_novo 
+                WHERE placa_veiculo = ? AND hora_entrada IS NOT NULL AND hora_saida IS NULL";
+        $params = [$placa];
+        
+        if ($excludeId && $excludeTable === 'visitantes_novo') {
+            $sql .= " AND id != ?";
+            $params[] = $excludeId;
+        }
+        
+        $visitanteAtivo = $this->db->fetch($sql, $params);
+        if ($visitanteAtivo) {
+            $horarioFormatado = date('H:i', strtotime($visitanteAtivo['hora_entrada']));
+            return [
+                'isValid' => false,
+                'message' => "Placa já está em uso em um acesso aberto às {$horarioFormatado} (Visitante: {$visitanteAtivo['nome']}).",
+                'entry' => $visitanteAtivo
+            ];
+        }
+        
+        // 3. Verificar prestadores com placa ativa (acesso aberto)
+        $sql = "SELECT nome, cpf, empresa, placa_veiculo, entrada, 'Prestador' as tipo 
+                FROM prestadores_servico 
+                WHERE placa_veiculo = ? AND entrada IS NOT NULL AND saida IS NULL";
+        $params = [$placa];
+        
+        if ($excludeId && $excludeTable === 'prestadores_servico') {
+            $sql .= " AND id != ?";
+            $params[] = $excludeId;
+        }
+        
+        $prestadorAtivo = $this->db->fetch($sql, $params);
+        if ($prestadorAtivo) {
+            $horarioFormatado = date('H:i', strtotime($prestadorAtivo['entrada']));
+            return [
+                'isValid' => false,
+                'message' => "Placa já está em uso em um acesso aberto às {$horarioFormatado} (Prestador: {$prestadorAtivo['nome']}).",
+                'entry' => $prestadorAtivo
+            ];
+        }
+        
+        return ['isValid' => true, 'message' => '', 'entry' => null];
+    }
+    
+    /**
      * Verifica se placa já está em uso em uma entrada em aberto
+     * @deprecated Use validatePlacaUnique para validação completa
      * 
      * @param string $placa Placa a verificar
      * @param int|null $excludeId ID do registro a excluir da verificação
@@ -343,7 +428,7 @@ class DuplicityValidationService {
         
         // Validar placa não está em uso (se informada e não for "APE")
         if (!empty($placa) && $placa !== 'APE') {
-            $placaValidation = $this->validatePlacaNotOpen($placa);
+            $placaValidation = $this->validatePlacaUnique($placa);
             if (!$placaValidation['isValid']) {
                 $errors[] = $placaValidation['message'];
             }
@@ -385,7 +470,7 @@ class DuplicityValidationService {
         
         // Validar placa não está em uso (se informada e não for "APE", excluindo o próprio registro da mesma tabela)
         if (!empty($placa) && $placa !== 'APE') {
-            $placaValidation = $this->validatePlacaNotOpen($placa, $id, $tabela);
+            $placaValidation = $this->validatePlacaUnique($placa, $id, $tabela);
             if (!$placaValidation['isValid']) {
                 $errors[] = $placaValidation['message'];
             }

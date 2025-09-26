@@ -169,7 +169,7 @@ class ProfissionaisRennerController {
                 
                 // Validar placa se não for "APE" (a pé)
                 if (!empty($placa_veiculo) && $placa_veiculo !== 'APE') {
-                    $placaValidation = $this->duplicityService->validatePlacaNotOpen($placa_veiculo, null, 'profissionais_renner');
+                    $placaValidation = $this->duplicityService->validatePlacaUnique($placa_veiculo, null, 'profissionais_renner');
                     if (!$placaValidation['isValid']) {
                         throw new Exception($placaValidation['message']);
                     }
@@ -278,7 +278,7 @@ class ProfissionaisRennerController {
                 
                 // Validar placa se não for "APE" (a pé)
                 if (!empty($placa_veiculo) && $placa_veiculo !== 'APE') {
-                    $placaValidation = $this->duplicityService->validatePlacaNotOpen($placa_veiculo, $id, 'profissionais_renner');
+                    $placaValidation = $this->duplicityService->validatePlacaUnique($placa_veiculo, $id, 'profissionais_renner');
                     if (!$placaValidation['isValid']) {
                         throw new Exception($placaValidation['message']);
                     }
@@ -409,7 +409,7 @@ class ProfissionaisRennerController {
                 
                 // Validar placa se não for "APE" (a pé)
                 if (!empty($placa_veiculo) && $placa_veiculo !== 'APE') {
-                    $placaValidation = $this->duplicityService->validatePlacaNotOpen($placa_veiculo, null, 'profissionais_renner');
+                    $placaValidation = $this->duplicityService->validatePlacaUnique($placa_veiculo, null, 'profissionais_renner');
                     if (!$placaValidation['isValid']) {
                         echo json_encode(['success' => false, 'message' => $placaValidation['message']]);
                         return;
@@ -495,7 +495,7 @@ class ProfissionaisRennerController {
                 
                 // Validar placa se não for "APE" (a pé)
                 if (!empty($placa_veiculo) && $placa_veiculo !== 'APE') {
-                    $placaValidation = $this->duplicityService->validatePlacaNotOpen($placa_veiculo, $id, 'profissionais_renner');
+                    $placaValidation = $this->duplicityService->validatePlacaUnique($placa_veiculo, $id, 'profissionais_renner');
                     if (!$placaValidation['isValid']) {
                         echo json_encode(['success' => false, 'message' => $placaValidation['message']]);
                         return;

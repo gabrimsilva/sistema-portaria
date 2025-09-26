@@ -28,6 +28,10 @@ class FormService
         
         $config = array_merge($defaults, $config);
         
+        // Separar atributos especiais dos atributos HTML padrão
+        $specialAttrs = ['id', 'name', 'label', 'help', 'type', 'class', 'value', 'required', 'placeholder', 'maxlength', 'style'];
+        $htmlAttrs = array_diff_key($config, array_flip($specialAttrs));
+        
         $html = '<div class="form-group">';
         
         // Label
@@ -59,6 +63,13 @@ class FormService
         
         if ($config['required']) {
             $html .= ' required';
+        }
+        
+        // Adicionar atributos arbitrários (data-*, aria-*, etc.)
+        foreach ($htmlAttrs as $attr => $value) {
+            if ($value !== null && $value !== '') {
+                $html .= ' ' . htmlspecialchars($attr) . '="' . htmlspecialchars($value) . '"';
+            }
         }
         
         $html .= '>';
@@ -107,15 +118,17 @@ class FormService
      */
     public static function renderPlacaInput($id, $name, $value = '')
     {
+        $checkboxId = $id . '_ape_checkbox';
+        
         $html = '<div class="form-group">';
         $html .= '<label for="' . htmlspecialchars($id) . '">Placa de Veículo <span class="text-danger">*</span></label>';
         $html .= '<div class="input-group">';
-        $html .= '<input type="text" class="form-control" id="' . htmlspecialchars($id) . '" name="' . htmlspecialchars($name) . '"';
+        $html .= '<input type="text" class="form-control placa-input" id="' . htmlspecialchars($id) . '" name="' . htmlspecialchars($name) . '"';
         $html .= ' value="' . htmlspecialchars($value) . '" placeholder="ABC-1234"';
         $html .= ' style="text-transform: uppercase;" required>';
         $html .= '<span class="input-group-text">';
-        $html .= '<input type="checkbox" id="ape_checkbox" ' . ($value === 'APE' ? 'checked' : '') . '>';
-        $html .= '<label for="ape_checkbox" class="ml-1 mb-0">A pé</label>';
+        $html .= '<input type="checkbox" class="ape-checkbox" id="' . htmlspecialchars($checkboxId) . '" ' . ($value === 'APE' ? 'checked' : '') . '>';
+        $html .= '<label for="' . htmlspecialchars($checkboxId) . '" class="ml-1 mb-0">A pé</label>';
         $html .= '</span>';
         $html .= '</div>';
         $html .= '<small class="form-text text-muted">Marque "A pé" se não houver veículo</small>';
@@ -226,43 +239,70 @@ class FormService
      * Renderiza JavaScript para máscaras e validações
      * 
      * @param array $features Recursos a incluir ('cpf', 'placa', 'phone', etc.)
+     * @param array $config Configurações personalizadas (IDs, seletores)
      * @return string JavaScript para validações
      */
-    public static function renderFormScripts($features = [])
+    public static function renderFormScripts($features = [], $config = [])
     {
-        $html = '<script>';
-        $html .= '$(document).ready(function() {';
+        // Configurações padrão
+        $defaults = [
+            'cpf_selector' => '.cpf-input',
+            'placa_selector' => '.placa-input',
+            'placa_checkbox_selector' => '.ape-checkbox'
+        ];
+        $config = array_merge($defaults, $config);
         
-        // Script para checkbox "A pé"
+        $html = '<script>';
+        
+        // Verificar se jQuery está disponível
+        $html .= 'if (typeof $ === "undefined") { console.warn("FormService: jQuery não carregado. Algumas funcionalidades podem não funcionar."); }';
+        
+        $html .= 'document.addEventListener("DOMContentLoaded", function() {';
+        
+        // Script para checkbox "A pé" - usando class selectors para maior flexibilidade
         if (in_array('placa', $features)) {
-            $html .= 'let previousPlacaValue = "";';
-            $html .= '$("#ape_checkbox").change(function() {';
-            $html .= 'if ($(this).is(":checked")) {';
-            $html .= 'previousPlacaValue = $("#placa_veiculo").val() !== "APE" ? $("#placa_veiculo").val() : "";';
-            $html .= '$("#placa_veiculo").val("APE").prop("readonly", true);';
-            $html .= '} else {';
-            $html .= '$("#placa_veiculo").val(previousPlacaValue).prop("readonly", false);';
-            $html .= '}';
-            $html .= '});';
-            
-            // Verificar estado inicial
-            $html .= 'if ($("#placa_veiculo").val() === "APE") {';
-            $html .= '$("#ape_checkbox").prop("checked", true);';
-            $html .= '$("#placa_veiculo").prop("readonly", true);';
-            $html .= '}';
+            $html .= '
+            document.querySelectorAll("' . $config['placa_checkbox_selector'] . '").forEach(function(checkbox) {
+                const placaContainer = checkbox.closest(".form-group");
+                const placaInput = placaContainer ? placaContainer.querySelector("' . $config['placa_selector'] . '") : null;
+                
+                if (!placaInput) return;
+                
+                let previousValue = "";
+                
+                checkbox.addEventListener("change", function() {
+                    if (this.checked) {
+                        previousValue = placaInput.value !== "APE" ? placaInput.value : "";
+                        placaInput.value = "APE";
+                        placaInput.readOnly = true;
+                    } else {
+                        placaInput.value = previousValue;
+                        placaInput.readOnly = false;
+                    }
+                });
+                
+                // Verificar estado inicial
+                if (placaInput.value === "APE") {
+                    checkbox.checked = true;
+                    placaInput.readOnly = true;
+                }
+            });';
         }
         
         $html .= '});';
         
-        // Máscara CPF
+        // Máscara CPF - usando class selector e verificação de existência
         if (in_array('cpf', $features)) {
-            $html .= 'document.getElementById("cpf").addEventListener("input", function (e) {';
-            $html .= 'var value = e.target.value.replace(/\\D/g, "");';
-            $html .= 'value = value.replace(/(\\d{3})(\\d)/, "$1.$2");';
-            $html .= 'value = value.replace(/(\\d{3})(\\d)/, "$1.$2");';
-            $html .= 'value = value.replace(/(\\d{3})(\\d{1,2})$/, "$1-$2");';
-            $html .= 'e.target.value = value;';
-            $html .= '});';
+            $html .= '
+            document.querySelectorAll("' . $config['cpf_selector'] . '").forEach(function(cpfInput) {
+                cpfInput.addEventListener("input", function(e) {
+                    var value = e.target.value.replace(/\\D/g, "");
+                    value = value.replace(/(\\d{3})(\\d)/, "$1.$2");
+                    value = value.replace(/(\\d{3})(\\d)/, "$1.$2");
+                    value = value.replace(/(\\d{3})(\\d{1,2})$/, "$1-$2");
+                    e.target.value = value;
+                });
+            });';
         }
         
         $html .= '</script>';

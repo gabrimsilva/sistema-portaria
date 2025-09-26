@@ -8,96 +8,44 @@
  */
 ?>
 
-<div id="cookie-banner" class="cookie-banner" style="display: none;">
-    <div class="cookie-banner-content">
-        <div class="container-fluid">
-            <div class="row align-items-center">
-                <!-- Ícone e Título -->
-                <div class="col-auto">
-                    <i class="fas fa-cookie-bite cookie-icon"></i>
-                </div>
-                
-                <!-- Conteúdo Principal -->
-                <div class="col">
-                    <div class="cookie-text">
-                        <h5 class="mb-2">
-                            <i class="fas fa-shield-alt mr-2"></i>
-                            Política de Cookies e Privacidade
-                        </h5>
-                        <p class="mb-0">
-                            Este sistema utiliza cookies essenciais para seu funcionamento e cookies opcionais 
-                            para melhorar sua experiência. Respeitamos sua privacidade conforme a 
-                            <strong>Lei Geral de Proteção de Dados (LGPD)</strong>.
-                        </p>
-                        <div class="cookie-details mt-2">
-                            <small class="text-muted">
-                                <i class="fas fa-info-circle mr-1"></i>
-                                Cookies essenciais são necessários para segurança e funcionamento básico.
-                            </small>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Botões de Ação -->
-                <div class="col-auto">
-                    <div class="cookie-actions">
-                        <div class="btn-group-vertical btn-group-sm d-none d-md-flex">
-                            <button type="button" class="btn btn-outline-light btn-sm mb-1" 
-                                    onclick="CookieConsent.showPreferences()">
-                                <i class="fas fa-cog mr-1"></i>
-                                Gerenciar Cookies
-                            </button>
-                            <div class="btn-group btn-group-sm">
-                                <button type="button" class="btn btn-secondary" 
-                                        onclick="CookieConsent.rejectOptional()">
-                                    <i class="fas fa-times mr-1"></i>
-                                    Apenas Essenciais
-                                </button>
-                                <button type="button" class="btn btn-success" 
-                                        onclick="CookieConsent.acceptAll()">
-                                    <i class="fas fa-check mr-1"></i>
-                                    Aceitar Todos
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <!-- Versão Mobile -->
-                        <div class="d-md-none">
-                            <button type="button" class="btn btn-outline-light btn-sm mb-2 btn-block" 
-                                    onclick="CookieConsent.showPreferences()">
-                                <i class="fas fa-cog mr-1"></i>
-                                Configurar
-                            </button>
-                            <div class="btn-group btn-group-sm btn-block">
-                                <button type="button" class="btn btn-secondary" 
-                                        onclick="CookieConsent.rejectOptional()">
-                                    Essenciais
-                                </button>
-                                <button type="button" class="btn btn-success" 
-                                        onclick="CookieConsent.acceptAll()">
-                                    Aceitar Todos
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+<div id="cookie-banner" class="cookie-banner-compact" style="display: none;">
+    <div class="container-fluid">
+        <div class="row align-items-center py-2">
+            <!-- Ícone -->
+            <div class="col-auto">
+                <i class="fas fa-cookie-bite text-warning mr-2"></i>
             </div>
-        </div>
-        
-        <!-- Link para Política Completa -->
-        <div class="cookie-footer mt-3">
-            <div class="container-fluid">
-                <div class="row">
-                    <div class="col-12">
-                        <small class="text-muted">
-                            <i class="fas fa-external-link-alt mr-1"></i>
-                            Leia nossa 
-                            <a href="/privacy" target="_blank" class="text-light">
-                                <u>Política de Privacidade completa</u>
-                            </a>
-                            para mais informações sobre tratamento de dados.
-                        </small>
-                    </div>
+            
+            <!-- Texto Compacto -->
+            <div class="col">
+                <span class="cookie-text-compact">
+                    Este sistema utiliza cookies essenciais para seu funcionamento e cookies opcionais para melhorar sua experiência. 
+                    Respeitamos sua privacidade conforme a <strong>Lei Geral de Proteção de Dados (LGPD)</strong>.
+                    <a href="/privacy" target="_blank" class="text-info ml-1">Política de Privacidade completa</a>
+                </span>
+            </div>
+            
+            <!-- Botões Compactos -->
+            <div class="col-auto">
+                <div class="btn-group btn-group-sm">
+                    <button type="button" class="btn btn-outline-info btn-sm" 
+                            onclick="CookieConsent.showPreferences()" 
+                            title="Gerenciar Cookies">
+                        <i class="fas fa-cog"></i>
+                        <span class="d-none d-sm-inline ml-1">Gerenciar</span>
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" 
+                            onclick="CookieConsent.rejectOptional()" 
+                            title="Apenas Essenciais">
+                        <i class="fas fa-times"></i>
+                        <span class="d-none d-md-inline ml-1">Essenciais</span>
+                    </button>
+                    <button type="button" class="btn btn-success btn-sm" 
+                            onclick="CookieConsent.acceptAll()" 
+                            title="Aceitar Todos">
+                        <i class="fas fa-check"></i>
+                        <span class="d-none d-md-inline ml-1">Aceitar</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -222,23 +170,23 @@
 </div>
 
 <style>
-/* Estilos do Banner de Cookies */
-.cookie-banner {
+/* Estilos do Banner de Cookies Compacto */
+.cookie-banner-compact {
     position: fixed;
-    bottom: 0;
+    top: 0;
     left: 0;
     right: 0;
-    background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+    background-color: #4a90e2;
     color: white;
     z-index: 9999;
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
-    padding: 20px 0;
-    animation: slideUp 0.5s ease-out;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    font-size: 0.85rem;
+    animation: slideDown 0.3s ease-out;
 }
 
-@keyframes slideUp {
+@keyframes slideDown {
     from {
-        transform: translateY(100%);
+        transform: translateY(-100%);
         opacity: 0;
     }
     to {
@@ -247,73 +195,94 @@
     }
 }
 
-.cookie-banner-content {
-    max-width: 100%;
+.cookie-text-compact {
+    line-height: 1.4;
+    color: rgba(255, 255, 255, 0.95);
 }
 
-.cookie-icon {
-    font-size: 2.5rem;
-    color: #f39c12;
-    margin-right: 15px;
-}
-
-.cookie-text h5 {
+.cookie-text-compact strong {
     color: white;
-    font-weight: 600;
 }
 
-.cookie-text p {
-    line-height: 1.5;
-    margin-bottom: 0;
+.cookie-text-compact a {
+    color: #b3d9ff !important;
+    text-decoration: underline;
 }
 
-.cookie-actions .btn {
-    min-width: 120px;
+.cookie-text-compact a:hover {
+    color: white !important;
+    text-decoration: none;
+}
+
+.cookie-banner-compact .btn-group .btn {
+    border-radius: 4px;
+    font-size: 0.8rem;
+    padding: 0.25rem 0.5rem;
     font-weight: 500;
 }
 
-.cookie-actions .btn-outline-light {
+.cookie-banner-compact .btn-outline-info {
     border-color: rgba(255, 255, 255, 0.3);
     color: rgba(255, 255, 255, 0.9);
 }
 
-.cookie-actions .btn-outline-light:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+.cookie-banner-compact .btn-outline-info:hover {
+    background-color: rgba(255, 255, 255, 0.15);
     border-color: rgba(255, 255, 255, 0.5);
+    color: white;
 }
 
-.cookie-footer {
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    padding-top: 10px;
+.cookie-banner-compact .btn-secondary {
+    background-color: #6c757d;
+    border-color: #6c757d;
 }
 
-.cookie-footer a {
-    color: #f8f9fa !important;
-    transition: all 0.3s ease;
+.cookie-banner-compact .btn-secondary:hover {
+    background-color: #545b62;
+    border-color: #4e555b;
 }
 
-.cookie-footer a:hover {
-    color: #f39c12 !important;
-    text-decoration: none !important;
+.cookie-banner-compact .btn-success {
+    background-color: #28a745;
+    border-color: #28a745;
 }
 
-/* Responsividade */
+.cookie-banner-compact .btn-success:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+}
+
+/* Responsividade para banner compacto */
 @media (max-width: 768px) {
-    .cookie-banner {
-        padding: 15px 0;
+    .cookie-banner-compact {
+        font-size: 0.8rem;
+        position: relative;
+        top: auto;
     }
     
-    .cookie-icon {
-        font-size: 2rem;
-        margin-right: 10px;
+    .cookie-text-compact {
+        margin-bottom: 0.5rem;
+        display: block;
     }
     
-    .cookie-text h5 {
-        font-size: 1.1rem;
+    .cookie-banner-compact .btn-group {
+        width: 100%;
+        justify-content: center;
     }
     
-    .cookie-text p {
-        font-size: 0.9rem;
+    .cookie-banner-compact .btn-group .btn {
+        flex: 1;
+        min-width: auto;
+    }
+}
+
+@media (max-width: 576px) {
+    .cookie-banner-compact .btn-group .btn span {
+        display: none !important;
+    }
+    
+    .cookie-banner-compact .btn-group .btn {
+        padding: 0.25rem 0.4rem;
     }
 }
 

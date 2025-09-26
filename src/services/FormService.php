@@ -289,9 +289,7 @@ class FormService
             });';
         }
         
-        $html .= '});';
-        
-        // Máscara CPF - usando class selector e verificação de existência
+        // Máscara CPF - dentro do DOMContentLoaded para máxima robustez
         if (in_array('cpf', $features)) {
             $html .= '
             document.querySelectorAll("' . $config['cpf_selector'] . '").forEach(function(cpfInput) {
@@ -304,6 +302,8 @@ class FormService
                 });
             });';
         }
+        
+        $html .= '});';
         
         $html .= '</script>';
         

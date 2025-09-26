@@ -92,7 +92,8 @@ class FormService
             'placeholder' => '000.000.000-00',
             'maxlength' => 14,
             'required' => $required,
-            'data-mask' => 'cpf'
+            'data-mask' => 'cpf',
+            'class' => 'form-control cpf-input'
         ]);
     }
     

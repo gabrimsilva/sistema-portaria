@@ -1,3 +1,7 @@
+<?php
+// Incluir FormService para componentes padronizados
+require_once '../../src/services/FormService.php';
+?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -69,9 +73,7 @@
                                     
                                     <div class="card-body">
                                         <?php if (isset($error)): ?>
-                                            <div class="alert alert-danger">
-                                                <?= htmlspecialchars($error) ?>
-                                            </div>
+                                            <?= FormService::renderAlert($error, 'danger') ?>
                                         <?php endif; ?>
                                         
                                         <div class="row">

@@ -26,7 +26,7 @@ if (empty($path)) {
 
 // Check if user is authenticated
 $isAuthenticated = isset($_SESSION['user_id']);
-$publicRoutes = ['login', 'assets', 'reset-password', 'forgot-password', 'api'];
+$publicRoutes = ['login', 'assets', 'reset-password', 'forgot-password', 'api', 'privacy'];
 
 // Handle authentication for non-public routes
 if (!$isAuthenticated && !in_array(explode('/', $path)[0], $publicRoutes)) {
@@ -106,6 +106,35 @@ try {
             require_once '../src/controllers/PasswordResetController.php';
             $controller = new PasswordResetController();
             $controller->requestReset();
+            break;
+            
+        case 'privacy':
+            // Página principal de privacidade
+            require_once '../src/controllers/PrivacyController.php';
+            $controller = new PrivacyController();
+            $controller->index();
+            break;
+            
+        case 'privacy/portal':
+            // Portal do titular de dados LGPD
+            require_once '../src/controllers/PrivacyController.php';
+            $controller = new PrivacyController();
+            if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+                $controller->portal();
+            } else {
+                $controller->processRequest();
+            }
+            break;
+            
+        case 'privacy/cookies':
+            // Gestão de cookies
+            require_once '../src/controllers/PrivacyController.php';
+            $controller = new PrivacyController();
+            if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+                $controller->cookies();
+            } else {
+                $controller->updateCookiePreferences();
+            }
             break;
             
         case 'dashboard':

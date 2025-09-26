@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
             min-height: 100vh;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
@@ -25,47 +25,40 @@
         .login-card {
             background: white;
             border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
             overflow: hidden;
             width: 100%;
-            max-width: 450px;
+            max-width: 500px;
             border: none;
         }
         
         .login-header {
-            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-            color: white;
-            padding: 40px 30px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            color: #333;
+            padding: 50px 30px 30px;
             text-align: center;
             position: relative;
-        }
-        
-        .login-header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #28a745, #20c997, #17a2b8, #007bff);
+            border-bottom: 3px solid #e9ecef;
         }
         
         .company-logo {
-            width: 80px;
-            height: 80px;
+            width: 280px;
+            height: 100px;
             background: white;
-            border-radius: 50%;
-            margin: 0 auto 20px;
+            border-radius: 12px;
+            margin: 0 auto 25px;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
             overflow: hidden;
+            border: 2px solid #f0f0f0;
         }
         
         .company-logo img {
-            width: 70px;
-            height: 70px;
+            width: 260px;
+            height: auto;
+            max-height: 80px;
             object-fit: contain;
         }
         
@@ -224,7 +217,7 @@
             }
             
             .login-header {
-                padding: 30px 20px;
+                padding: 30px 15px 25px;
             }
             
             .login-body {
@@ -236,13 +229,30 @@
             }
             
             .company-logo {
-                width: 70px;
+                width: 240px;
+                height: 80px;
+                margin-bottom: 20px;
+            }
+            
+            .company-logo img {
+                width: 220px;
+                max-height: 60px;
+            }
+            
+            .login-card {
+                max-width: 95%;
+            }
+        }
+        
+        @media (max-width: 400px) {
+            .company-logo {
+                width: 200px;
                 height: 70px;
             }
             
             .company-logo img {
-                width: 60px;
-                height: 60px;
+                width: 180px;
+                max-height: 50px;
             }
         }
         
@@ -275,8 +285,8 @@
             <!-- Header com logo e título -->
             <div class="login-header">
                 <div class="company-logo">
-                    <img src="/logo-empresa.png" alt="Logo da Empresa" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                    <i class="fas fa-building" style="font-size: 35px; color: #007bff; display: none;"></i>
+                    <img src="/logo-renner.png" alt="Renner Coatings" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <i class="fas fa-building" style="font-size: 35px; color: #dc3545; display: none;"></i>
                 </div>
                 <h1 class="system-title">Sistema de Controle</h1>
                 <p class="system-subtitle">de Acesso</p>
@@ -287,7 +297,9 @@
                 <p class="login-description">Faça login para iniciar sua sessão</p>
                 
                 <!-- Mensagem de erro -->
-                <?php if (isset($error) && !empty($error)): ?>
+                <?php 
+                $error = $error ?? null;
+                if (isset($error) && !empty($error)): ?>
                     <div class="alert alert-danger" role="alert">
                         <i class="fas fa-exclamation-triangle me-2"></i>
                         <?= htmlspecialchars($error) ?>

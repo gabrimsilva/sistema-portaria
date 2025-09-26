@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../utils/replitmail.php';
 
 class PasswordResetService {
@@ -8,7 +8,8 @@ class PasswordResetService {
     private $tokenExpiry = 3600; // 1 hora
     
     public function __construct() {
-        $this->pdo = getConnection();
+        $database = new Database();
+        $this->pdo = $database->connect();
     }
     
     /**

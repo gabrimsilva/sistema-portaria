@@ -18,7 +18,7 @@ if (empty($path)) {
 
 // Check if user is authenticated
 $isAuthenticated = isset($_SESSION['user_id']);
-$publicRoutes = ['login', 'assets', 'reset-password', 'api'];
+$publicRoutes = ['login', 'assets', 'reset-password', 'forgot-password', 'api'];
 
 // Handle authentication for non-public routes
 if (!$isAuthenticated && !in_array(explode('/', $path)[0], $publicRoutes)) {

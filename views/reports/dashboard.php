@@ -346,5 +346,11 @@
         }
     });
     </script>
+    
+    <?php
+    // 🛡️ SISTEMA LGPD UNIVERSAL
+    require_once BASE_PATH . '/src/services/LayoutService.php';
+    LayoutService::includeUniversalComponents(['page' => 'reports_dashboard']);
+    ?>
 </body>
 </html>

@@ -2885,5 +2885,11 @@
         });
     }
     </script>
+    
+    <?php
+    // 🛡️ SISTEMA LGPD UNIVERSAL
+    require_once BASE_PATH . '/src/services/LayoutService.php';
+    LayoutService::includeUniversalComponents(['page' => 'config_index']);
+    ?>
 </body>
 </html>

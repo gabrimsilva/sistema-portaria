@@ -76,7 +76,7 @@ $selectedEmployee = $selectedEmployee ?? null;
         <!-- Main Sidebar -->
         <aside class="main-sidebar sidebar-dark-primary elevation-4">
             <a href="/dashboard" class="brand-link">
-                <img src="https://via.placeholder.com/33x33" alt="Logo" class="brand-image img-circle elevation-3">
+                <?= LogoService::renderSimpleLogo('renner', 'sidebar'); ?>
                 <span class="brand-text font-weight-light">Controle Acesso</span>
             </a>
             

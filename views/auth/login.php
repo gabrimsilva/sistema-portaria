@@ -467,19 +467,43 @@
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Enviando...';
             submitBtn.disabled = true;
             
-            // Simular envio de email (implementar backend real posteriormente)
-            setTimeout(() => {
+            // Enviar requisição real para o backend
+            fetch('/forgot-password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: email
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
                 // Fechar modal
                 const modal = bootstrap.Modal.getInstance(document.getElementById('forgotPasswordModal'));
                 modal.hide();
                 
-                // Mostrar mensagem de sucesso
-                showSuccessMessage(email);
+                if (data.success) {
+                    // Mostrar mensagem de sucesso
+                    showSuccessMessage(email);
+                } else {
+                    showAlert(data.message || 'Erro ao enviar email de recuperação', 'warning');
+                }
                 
                 // Restaurar botão
                 submitBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Enviar Instruções';
                 submitBtn.disabled = false;
-            }, 2000);
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                showAlert('Erro de comunicação com o servidor', 'warning');
+                
+                // Fechar modal e restaurar botão
+                const modal = bootstrap.Modal.getInstance(document.getElementById('forgotPasswordModal'));
+                modal.hide();
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Enviar Instruções';
+                submitBtn.disabled = false;
+            });
         }
         
         // Função para mostrar mensagem de sucesso

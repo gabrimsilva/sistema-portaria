@@ -18,7 +18,7 @@ if (empty($path)) {
 
 // Check if user is authenticated
 $isAuthenticated = isset($_SESSION['user_id']);
-$publicRoutes = ['login', 'assets'];
+$publicRoutes = ['login', 'assets', 'reset-password', 'api'];
 
 // Handle authentication for non-public routes
 if (!$isAuthenticated && !in_array(explode('/', $path)[0], $publicRoutes)) {
@@ -80,6 +80,24 @@ try {
             require_once '../src/controllers/AuthController.php';
             $controller = new AuthController();
             $controller->logout();
+            break;
+            
+        case 'reset-password':
+            // Página/API de redefinição de senha
+            require_once '../src/controllers/PasswordResetController.php';
+            $controller = new PasswordResetController();
+            if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+                $controller->showResetForm();
+            } else {
+                $controller->executeReset();
+            }
+            break;
+            
+        case 'forgot-password':
+            // API para solicitar reset de senha
+            require_once '../src/controllers/PasswordResetController.php';
+            $controller = new PasswordResetController();
+            $controller->requestReset();
             break;
             
         case 'dashboard':

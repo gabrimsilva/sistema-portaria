@@ -35,18 +35,19 @@
         .login-header {
             background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
             color: #333;
-            padding: 50px 30px 30px;
+            padding: 40px 30px;
             text-align: center;
             position: relative;
             border-bottom: 3px solid #e9ecef;
         }
         
         .company-logo {
-            width: 280px;
-            height: 100px;
+            width: 100%;
+            max-width: 350px;
+            height: 120px;
             background: white;
             border-radius: 12px;
-            margin: 0 auto 25px;
+            margin: 0 auto 30px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -56,9 +57,9 @@
         }
         
         .company-logo img {
-            width: 260px;
+            width: 320px;
             height: auto;
-            max-height: 80px;
+            max-height: 100px;
             object-fit: contain;
         }
         
@@ -178,26 +179,6 @@
             text-decoration: underline;
         }
         
-        .default-credentials {
-            background: #f8f9fa;
-            border-radius: 12px;
-            padding: 20px;
-            text-align: center;
-            border-left: 4px solid #28a745;
-        }
-        
-        .default-credentials .title {
-            color: #495057;
-            font-weight: 600;
-            margin-bottom: 10px;
-            display: block;
-        }
-        
-        .default-credentials .credential {
-            color: #6c757d;
-            font-size: 14px;
-            margin: 5px 0;
-        }
         
         .alert {
             border-radius: 12px;
@@ -229,14 +210,14 @@
             }
             
             .company-logo {
-                width: 240px;
-                height: 80px;
+                width: 280px;
+                height: 90px;
                 margin-bottom: 20px;
             }
             
             .company-logo img {
-                width: 220px;
-                max-height: 60px;
+                width: 260px;
+                max-height: 70px;
             }
             
             .login-card {
@@ -246,13 +227,13 @@
         
         @media (max-width: 400px) {
             .company-logo {
-                width: 200px;
-                height: 70px;
+                width: 240px;
+                height: 80px;
             }
             
             .company-logo img {
-                width: 180px;
-                max-height: 50px;
+                width: 220px;
+                max-height: 60px;
             }
         }
         
@@ -288,8 +269,6 @@
                     <img src="/logo-renner.png" alt="Renner Coatings" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
                     <i class="fas fa-building" style="font-size: 35px; color: #dc3545; display: none;"></i>
                 </div>
-                <h1 class="system-title">Sistema de Controle</h1>
-                <p class="system-subtitle">de Acesso</p>
             </div>
             
             <!-- Formulário de login -->
@@ -360,19 +339,6 @@
                     </a>
                 </div>
                 
-                <!-- Credenciais padrão -->
-                <div class="default-credentials">
-                    <span class="title">
-                        <i class="fas fa-info-circle me-2"></i>
-                        Acesso de Demonstração
-                    </span>
-                    <div class="credential">
-                        <strong>Usuário:</strong> admin@sistema.com
-                    </div>
-                    <div class="credential">
-                        <strong>Senha:</strong> admin123
-                    </div>
-                </div>
             </div>
         </div>
     </div>

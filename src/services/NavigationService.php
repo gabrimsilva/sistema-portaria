@@ -22,38 +22,6 @@ class NavigationService
             'children' => []
         ],
         [
-            'id' => 'visitors',
-            'label' => 'Visitantes',
-            'url' => '/visitors',
-            'icon' => 'fas fa-users',
-            'permission' => 'all',
-            'children' => []
-        ],
-        [
-            'id' => 'employees',
-            'label' => 'Funcionários',
-            'url' => '/employees',
-            'icon' => 'fas fa-id-badge',
-            'permission' => 'all',
-            'children' => []
-        ],
-        [
-            'id' => 'prestadores',
-            'label' => 'Prestador de Serviços',
-            'url' => '/prestadores-servico',
-            'icon' => 'fas fa-tools',
-            'permission' => 'all',
-            'children' => []
-        ],
-        [
-            'id' => 'access',
-            'label' => 'Controle de Acesso',
-            'url' => '/access',
-            'icon' => 'fas fa-door-open',
-            'permission' => 'all',
-            'children' => []
-        ],
-        [
             'id' => 'reports',
             'label' => 'Relatórios',
             'url' => '#',

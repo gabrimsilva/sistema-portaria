@@ -210,7 +210,7 @@
     
     <?php
     require_once '../src/services/ErrorHandlerService.php';
-    echo ErrorHandlerService::renderComplete(['enableConsoleLog' => true]);
+    echo ErrorHandlerService::renderComplete();
     ?>
     
     <script>

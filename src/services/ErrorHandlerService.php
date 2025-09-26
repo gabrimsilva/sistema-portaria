@@ -23,23 +23,18 @@ class ErrorHandlerService
         $enableConsoleLog = $options['enableConsoleLog'] ?? $isDevelopment;
         $enableAlerts = $options['enableAlerts'] ?? false;
         
-        $consoleLogEnabled = $enableConsoleLog ? 'true' : 'false';
-        $alertsEnabled = $enableAlerts ? 'true' : 'false';
+        // JSON-encode config para evitar problemas de sintaxe
+        $config = json_encode([
+            'enableConsoleLog' => $enableConsoleLog,
+            'enableAlerts' => $enableAlerts,
+            'isDevelopment' => $isDevelopment,
+            'errorCount' => 0,
+            'maxErrors' => 5
+        ]);
 
-        return <<<HTML
-<script>
-/**
- * 🛡️ Sistema de Tratamento de Erros Global
- * Versão: 1.6.0
- */
+        return "<script>
 window.ErrorHandler = {
-    config: {
-        enableConsoleLog: $consoleLogEnabled,
-        enableAlerts: $alertsEnabled,
-        isDevelopment: $isDevelopment,
-        errorCount: 0,
-        maxErrors: 5 // Prevenir spam de erros
-    },
+    config: {$config},
     
     /**
      * Trata erros de forma padronizada
@@ -207,6 +202,24 @@ window.ErrorHandler = {
             ErrorHandler.handle(error, 'fetch');
             throw error;
         }
+    },
+    
+    /**
+     * Safe stringify que nunca falha
+     */
+    safeStringify: function(value) {
+        try {
+            // Tentar JSON.stringify primeiro
+            return JSON.stringify(value);
+        } catch (error) {
+            try {
+                // Fallback para String() com detalhes de tipo
+                return \`[Type: \${typeof value}] \${String(value)}\`;
+            } catch (error2) {
+                // Último recurso - apenas o tipo
+                return \`[Unserializable \${typeof value}]\`;
+            }
+        }
     }
 };
 
@@ -216,8 +229,10 @@ window.addEventListener('error', function(event) {
     
     // Tratar especificamente o caso de non-Error objects
     if (!(errorToHandle instanceof Error)) {
-        console.warn('🚨 Non-Error object detected:', typeof errorToHandle, errorToHandle);
-        errorToHandle = new Error(`Non-Error thrown: ${JSON.stringify(errorToHandle)}`);
+        if (ErrorHandler.config.enableConsoleLog) {
+            console.warn('🚨 Non-Error object detected:', typeof errorToHandle);
+        }
+        errorToHandle = new Error('Non-Error thrown: ' + ErrorHandler.safeStringify(errorToHandle));
     }
     
     ErrorHandler.handle(errorToHandle, 'global');
@@ -229,34 +244,16 @@ window.addEventListener('unhandledrejection', function(event) {
     
     // Normalizar non-Error objects em promises
     if (!(reason instanceof Error)) {
-        console.warn('🚨 Promise rejected with non-Error:', typeof reason, reason);
-        reason = new Error(`Promise rejection (non-Error): ${JSON.stringify(reason)}`);
+        if (ErrorHandler.config.enableConsoleLog) {
+            console.warn('🚨 Promise rejected with non-Error:', typeof reason);
+        }
+        reason = new Error('Promise rejection (non-Error): ' + ErrorHandler.safeStringify(reason));
     }
     
     ErrorHandler.handle(reason, 'promise');
     event.preventDefault(); // Prevenir o log padrão
 });
 
-// Handler específico para capturar o erro "uncaught exception occured but the error was not an error object"
-if (typeof window.onerror !== 'undefined') {
-    const originalOnerror = window.onerror;
-    window.onerror = function(message, source, lineno, colno, error) {
-        
-        // Detectar especificamente nossa mensagem problema
-        if (message && message.includes('uncaught exception occured but the error was not an error object')) {
-            console.warn('🎯 ERRO ESPECÍFICO DETECTADO: Non-Error object thrown somewhere in the code');
-            ErrorHandler.handle(new Error('Non-Error object thrown in application code'), 'non-error-object');
-            return true; // Prevenir o erro de aparecer no console
-        }
-        
-        // Chamar handler original se existir
-        if (originalOnerror) {
-            return originalOnerror.call(this, message, source, lineno, colno, error);
-        }
-        
-        return false;
-    };
-}
 
 // Inicialização
 if (ErrorHandler.config.enableConsoleLog) {
@@ -277,7 +274,7 @@ HTML;
             return '';
         }
         
-        return <<<HTML
+        return <<<'HTML'
 <script>
 // 🚫 Limpeza de Console para Produção
 (function() {

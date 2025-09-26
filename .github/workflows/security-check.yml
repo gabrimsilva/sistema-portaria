@@ -1,0 +1,133 @@
+# 🛡️ CI/CD: Verificação Automática de Segurança Biométrica
+# 
+# Este workflow executa automaticamente testes de segurança
+# em cada commit para prevenir regressões de vulnerabilidades.
+
+name: 🔒 Segurança Biométrica
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  security-scan:
+    name: 🔍 Scanner de Segurança
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout código
+      uses: actions/checkout@v4
+      
+    - name: 🐘 Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2'
+        extensions: pdo, pdo_pgsql, gd, curl
+        
+    - name: 🗄️ Setup PostgreSQL
+      uses: harmon758/postgresql-action@v1
+      with:
+        postgresql version: '16'
+        postgresql db: 'access_control_test'
+        postgresql user: 'test_user'
+        postgresql password: 'test_password'
+        
+    - name: 📦 Install dependencies
+      run: |
+        composer install --no-dev --optimize-autoloader
+        
+    - name: ⚙️ Setup test environment
+      run: |
+        export BIOMETRIC_ENCRYPTION_KEY="ci-test-key-$(openssl rand -hex 32)"
+        export ENVIRONMENT="development"
+        mkdir -p storage/secure/biometrics
+        chmod 700 storage/secure/biometrics
+        
+    - name: 🚀 Start test server with router
+      run: |
+        php -S localhost:5000 -t public public/router.php &
+        sleep 3
+        
+    - name: 🔍 Executar scanner de código
+      run: |
+        php tests/security/CodeScannerGuard.php
+        
+    - name: 🛡️ Executar testes de segurança
+      run: |
+        php tests/run-security-tests.php
+        
+    - name: 📊 Upload resultados
+      uses: actions/upload-artifact@v3
+      if: failure()
+      with:
+        name: security-test-results
+        path: tests/results/
+        
+  vulnerability-check:
+    name: 🔎 Verificação de Vulnerabilidades
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout código
+      uses: actions/checkout@v4
+      
+    - name: 🔍 Executar verificação de dependências
+      run: |
+        # Verificar composer.json para dependências vulneráveis
+        if [ -f composer.json ]; then
+          echo "Verificando dependências PHP..."
+          # Adicionar verificações específicas aqui
+        fi
+        
+    - name: 🚫 Verificar arquivos sensíveis
+      run: |
+        echo "Verificando arquivos sensíveis..."
+        
+        # Verificar se há arquivos de upload no repositório
+        if find public/uploads -name "*.jpg" -o -name "*.png" -o -name "*.gif" 2>/dev/null | grep -q .; then
+          echo "❌ ERRO: Arquivos de upload encontrados no repositório!"
+          exit 1
+        fi
+        
+        # Verificar chaves hardcoded
+        if grep -r "BIOMETRIC_ENCRYPTION_KEY.*=" --include="*.php" --exclude-dir=tests .; then
+          echo "❌ ERRO: Chave de criptografia hardcoded encontrada!"
+          exit 1
+        fi
+        
+        echo "✅ Verificação de arquivos sensíveis passou"
+        
+  deploy-readiness:
+    name: 🚀 Verificação de Deploy
+    runs-on: ubuntu-latest
+    needs: [security-scan, vulnerability-check]
+    
+    steps:
+    - name: 📥 Checkout código
+      uses: actions/checkout@v4
+      
+    - name: ✅ Verificar pré-requisitos de produção
+      run: |
+        echo "Verificando pré-requisitos para produção..."
+        
+        # Verificar .htaccess
+        if [ ! -f public/.htaccess ]; then
+          echo "❌ ERRO: .htaccess não encontrado"
+          exit 1
+        fi
+        
+        # Verificar se .htaccess bloqueia uploads
+        if ! grep -q "uploads/" public/.htaccess; then
+          echo "❌ ERRO: .htaccess não bloqueia uploads/"
+          exit 1
+        fi
+        
+        # Verificar estrutura de segurança
+        if [ ! -d storage/secure ]; then
+          echo "❌ ERRO: Diretório de armazenamento seguro não existe"
+          exit 1
+        fi
+        
+        echo "✅ Sistema pronto para produção!"

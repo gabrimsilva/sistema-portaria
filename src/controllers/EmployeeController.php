@@ -200,11 +200,6 @@ class EmployeeController {
         return $biometricId;
     }
     
-    /**
-     * ⚠️ DEPRECATED: Legacy photo upload - DO NOT USE FOR NEW UPLOADS
-     * Kept for backward compatibility during migration period
-     */
-    private function uploadPhoto($file) {
-        throw new Exception("🚀 DEPRECATED: Use uploadSecureBiometricPhoto() for secure LGPD-compliant storage");
-    }
+    // ✖️ REMOVED: Legacy uploadPhoto method eliminated for security
+    // All uploads now use uploadSecureBiometricPhoto() for LGPD compliance
 }

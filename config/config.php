@@ -55,6 +55,18 @@ spl_autoload_register(function ($className) {
     }
 });
 
+// 🔐 Security configuration for biometric data
+$encryptionKey = getenv('BIOMETRIC_ENCRYPTION_KEY');
+if (!$encryptionKey) {
+    // 🚨 PRODUÇÃO: Chave obrigatória
+    if (getenv('ENVIRONMENT') === 'production' || (isset($_SERVER['SERVER_NAME']) && $_SERVER['SERVER_NAME'] !== 'localhost')) {
+        throw new Exception('BIOMETRIC_ENCRYPTION_KEY obrigatória em produção');
+    }
+    // 🧪 Ambiente de desenvolvimento/teste: Chave segura temporária
+    $encryptionKey = 'dev-test-key-' . hash('sha256', 'biometric-development-' . (__DIR__));
+}
+define('BIOMETRIC_ENCRYPTION_KEY', $encryptionKey);
+
 // Include database and CSRF configuration
 require_once BASE_PATH . '/config/database.php';
 require_once BASE_PATH . '/config/csrf.php';

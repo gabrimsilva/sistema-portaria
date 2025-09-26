@@ -346,6 +346,9 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
     
+    <!-- Cookie Consent -->
+    <script src="/assets/js/cookie-consent.js?v=<?= time() ?>"></script>
+    
     <script>
         $(document).ready(function() {
             // Handle rights card selection
@@ -358,7 +361,7 @@
             $('#cpf').on('input', function() {
                 let value = this.value.replace(/\D/g, '');
                 if (value.length <= 11) {
-                    value = value.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+                    value = value.replace(/(\d{3})(\d{3})(\d{3})(\d{3})/, '$1.$2.$3-$4');
                 }
                 this.value = value;
             });
@@ -409,5 +412,10 @@
             $('#lgpd-form')[0].reset();
         }
     </script>
+
+    <?php
+    // Incluir banner de cookies
+    require_once __DIR__ . '/../components/cookie-banner.php';
+    ?>
 </body>
 </html>

@@ -288,6 +288,9 @@
                 
                 <!-- Formulário -->
                 <form method="post" id="loginForm">
+                    <?php require_once __DIR__ . '/../../config/csrf.php'; ?>
+                    <?= CSRFProtection::getHiddenInput() ?>
+                    
                     <!-- Campo Email -->
                     <div class="form-group">
                         <i class="fas fa-envelope input-icon"></i>

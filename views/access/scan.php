@@ -317,5 +317,11 @@
         }
     }
     </script>
+    
+    <?php
+    // Banner de Cookies LGPD
+    require_once BASE_PATH . '/src/services/CookieService.php';
+    CookieService::includeBanner();
+    ?>
 </body>
 </html>

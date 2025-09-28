@@ -447,8 +447,14 @@ try {
             break;
             
         default:
+            // 🎨 Páginas de demonstração
+            if ($path === 'demo/components') {
+                require_once '../src/services/LayoutService.php';
+                require_once '../src/services/ComponentService.php';
+                require_once '../views/demo/components.php';
+            }
             // Handle new API endpoints
-            if (preg_match('/^entradas$/', $path)) {
+            else if (preg_match('/^entradas$/', $path)) {
                 require_once '../src/controllers/RegistroAcessoController.php';
                 $controller = new RegistroAcessoController();
                 $controller->checkIn();

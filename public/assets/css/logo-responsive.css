@@ -1,0 +1,64 @@
+/* 🎨 LogoService 3.0 - CSS Responsivo */
+.logo-container {
+    display: inline-block;
+    position: relative;
+}
+
+.logo-responsive {
+    transition: all 0.3s ease;
+}
+
+.logo-sidebar {
+    object-fit: contain;
+    transition: transform 0.2s ease;
+}
+
+.logo-sidebar:hover {
+    transform: scale(1.1);
+}
+
+.logo-header {
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+}
+
+.logo-card {
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.logo-footer {
+    opacity: 0.8;
+    transition: opacity 0.3s ease;
+}
+
+.logo-footer:hover {
+    opacity: 1;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .logo-container img {
+        max-width: 100%;
+        height: auto;
+    }
+}
+
+@media (max-width: 576px) {
+    .logo-responsive {
+        max-width: 80%;
+    }
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+    .logo-header, .logo-card {
+        filter: brightness(0.9);
+    }
+}
+
+/* Print */
+@media print {
+    .logo-container {
+        filter: grayscale(100%);
+    }
+}

@@ -1,62 +1,150 @@
 <?php
 
 /**
- * Serviço centralizado para gerenciamento de logos do sistema
+ * 🎨 LogoService 3.0 - Gestão Avançada de Assets
  * 
- * Fornece URLs e configurações consistentes para todos os logos
- * usados no sistema, incluindo fallbacks e diferentes contextos.
+ * Sistema completo de gerenciamento de logos com:
+ * - Responsividade automática
+ * - Fallbacks inteligentes 
+ * - Lazy loading
+ * - Dark/Light mode
+ * - CDN ready
  */
 class LogoService
 {
     /**
-     * Configurações de logos disponíveis
+     * Configurações avançadas de logos
      */
     private static $logos = [
         'renner' => [
             'primary' => '/assets/logos/logo-renner.png',
-            'fallback' => '/assets/logos/logo-renner-fallback.png',
-            'icon' => 'fas fa-building'
+            'webp' => '/assets/logos/logo-renner.webp',
+            'dark' => '/assets/logos/logo-renner-dark.png',
+            'fallback' => '/assets/logos/logo-empresa.png',
+            'icon' => 'fas fa-building',
+            'alt' => 'Renner Logo',
+            'brand' => 'Renner Coatings'
         ],
         'sistema' => [
             'primary' => '/assets/logos/logo-sistema.png',
-            'fallback' => '/assets/logos/logo-sistema-fallback.png', 
-            'icon' => 'fas fa-shield-alt'
+            'webp' => '/assets/logos/logo-sistema.webp',
+            'dark' => '/assets/logos/logo-sistema-dark.png',
+            'fallback' => '/assets/logos/logo-renner.png',
+            'icon' => 'fas fa-shield-alt',
+            'alt' => 'Sistema Logo',
+            'brand' => 'Sistema de Controle'
+        ],
+        'empresa' => [
+            'primary' => '/assets/logos/logo-empresa.png',
+            'webp' => '/assets/logos/logo-empresa.webp',
+            'dark' => '/assets/logos/logo-empresa-dark.png',
+            'fallback' => '/assets/logos/logo-renner.png',
+            'icon' => 'fas fa-industry',
+            'alt' => 'Empresa Logo',
+            'brand' => 'Empresa'
         ]
     ];
 
     /**
-     * Configurações padrão para diferentes contextos
+     * Configurações para diferentes contextos (compatível com métodos legados)
      */
     private static $contexts = [
         'login' => [
             'width' => '150px',
             'height' => 'auto',
-            'classes' => 'img-fluid',
-            'style' => 'max-height: 80px;'
+            'classes' => 'img-fluid logo-responsive',
+            'style' => 'max-height: 80px;',
+            'loading' => 'lazy',
+            'responsive' => [
+                'desktop' => ['width' => '180px', 'maxHeight' => '100px'],
+                'tablet' => ['width' => '150px', 'maxHeight' => '80px'],
+                'mobile' => ['width' => '120px', 'maxHeight' => '60px']
+            ]
         ],
         'sidebar' => [
             'width' => '33px',
             'height' => '33px',
-            'classes' => 'brand-image img-circle elevation-3',
-            'style' => 'object-fit: contain;'
+            'classes' => 'brand-image img-circle elevation-3 logo-sidebar',
+            'style' => 'object-fit: contain;',
+            'loading' => 'eager',
+            'responsive' => [
+                'desktop' => ['width' => '33px', 'height' => '33px'],
+                'tablet' => ['width' => '30px', 'height' => '30px'],
+                'mobile' => ['width' => '28px', 'height' => '28px']
+            ]
         ],
         'header' => [
             'width' => '40px',
             'height' => '40px',
-            'classes' => 'img-fluid',
-            'style' => 'object-fit: contain;'
+            'classes' => 'img-fluid logo-header',
+            'style' => 'object-fit: contain;',
+            'loading' => 'eager',
+            'responsive' => [
+                'desktop' => ['width' => '45px', 'height' => '45px'],
+                'tablet' => ['width' => '40px', 'height' => '40px'],
+                'mobile' => ['width' => '35px', 'height' => '35px']
+            ]
+        ],
+        'card' => [
+            'width' => '60px',
+            'height' => '60px',
+            'classes' => 'img-fluid logo-card',
+            'style' => 'object-fit: contain;',
+            'loading' => 'lazy',
+            'responsive' => [
+                'desktop' => ['width' => '60px', 'height' => '60px'],
+                'tablet' => ['width' => '50px', 'height' => '50px'],
+                'mobile' => ['width' => '40px', 'height' => '40px']
+            ]
+        ],
+        'footer' => [
+            'width' => '120px',
+            'height' => 'auto',
+            'classes' => 'img-fluid logo-footer',
+            'style' => 'max-height: 60px;',
+            'loading' => 'lazy',
+            'responsive' => [
+                'desktop' => ['width' => '120px', 'maxHeight' => '60px'],
+                'tablet' => ['width' => '100px', 'maxHeight' => '50px'],
+                'mobile' => ['width' => '80px', 'maxHeight' => '40px']
+            ]
         ]
     ];
 
     /**
-     * Obtém a URL do logo principal
+     * Obtém a URL do logo otimizada (WebP se suportado)
      * 
-     * @param string $type Tipo do logo ('renner', 'sistema')
-     * @return string URL do logo
+     * @param string $type Tipo do logo ('renner', 'sistema', 'empresa')
+     * @param string $theme Tema ('light', 'dark', 'auto')
+     * @param bool $preferWebP Usar WebP se disponível
+     * @return string URL do logo otimizada
      */
-    public static function getLogoUrl($type = 'renner')
+    public static function getLogoUrl($type = 'renner', $theme = 'light', $preferWebP = true)
     {
-        return self::$logos[$type]['primary'] ?? self::$logos['renner']['primary'];
+        $logo = self::$logos[$type] ?? self::$logos['renner'];
+        
+        // Dark mode
+        if ($theme === 'dark' && isset($logo['dark']) && self::fileExists($logo['dark'])) {
+            return $logo['dark'];
+        }
+        
+        // WebP se suportado e disponível
+        if ($preferWebP && isset($logo['webp']) && self::fileExists($logo['webp'])) {
+            return $logo['webp'];
+        }
+        
+        // Logo principal
+        if (self::fileExists($logo['primary'])) {
+            return $logo['primary'];
+        }
+        
+        // Fallback
+        if (isset($logo['fallback']) && self::fileExists($logo['fallback'])) {
+            return $logo['fallback'];
+        }
+        
+        // Ultimate fallback
+        return self::$logos['renner']['primary'];
     }
 
     /**
@@ -161,16 +249,283 @@ class LogoService
     }
 
     /**
-     * Verifica se um logo existe fisicamente
+     * Renderiza logo responsivo avançado com fallbacks inteligentes
      * 
-     * @param string $type Tipo do logo ('renner', 'sistema')
-     * @return bool True se o arquivo existe
+     * @param string $type Tipo do logo
+     * @param string $context Contexto de uso
+     * @param array $options Opções customizadas
+     * @return string HTML do logo responsivo
      */
-    public static function logoExists($type = 'renner')
+    public static function renderAdvancedLogo($type = 'renner', $context = 'sidebar', $options = [])
     {
-        $logoUrl = self::getLogoUrl($type);
-        $filePath = $_SERVER['DOCUMENT_ROOT'] . $logoUrl;
-        return file_exists($filePath);
+        $defaults = [
+            'theme' => 'auto',
+            'lazy' => true,
+            'responsive' => true,
+            'fallbackIcon' => true,
+            'cdnPrefix' => '',
+            'srcset' => true
+        ];
+        
+        $config = array_merge($defaults, $options);
+        $logo = self::$logos[$type] ?? self::$logos['renner'];
+        $contextConfig = self::$contexts[$context] ?? self::$contexts['sidebar'];
+        
+        $uniqueId = 'logo_' . $type . '_' . $context . '_' . uniqid();
+        
+        // URLs para diferentes formatos
+        $primaryUrl = self::getLogoUrl($type, 'light', false);
+        $webpUrl = self::getLogoUrl($type, 'light', true);
+        $darkUrl = self::getLogoUrl($type, 'dark', false);
+        
+        $html = '<div class="logo-container ' . htmlspecialchars($contextConfig['classes']) . '">';
+        
+        // Picture element com order correta: Dark primeiro, depois WebP
+        $html .= '<picture id="' . $uniqueId . '">';
+        
+        // Dark mode sources (primeiro - mais específico)
+        if (self::fileExists($darkUrl)) {
+            $html .= '<source srcset="' . htmlspecialchars($darkUrl) . '" media="(prefers-color-scheme: dark)">';
+            
+            // Dark WebP se existir
+            $darkWebpUrl = str_replace('.png', '-dark.webp', $webpUrl);
+            if (self::fileExists($darkWebpUrl)) {
+                $html .= '<source srcset="' . htmlspecialchars($darkWebpUrl) . '" media="(prefers-color-scheme: dark)" type="image/webp">';
+            }
+        }
+        
+        // Light WebP sources
+        if ($config['srcset'] && self::fileExists($webpUrl)) {
+            $html .= '<source srcset="' . htmlspecialchars($webpUrl) . '" type="image/webp">';
+        }
+        
+        // Main image
+        $html .= '<img ';
+        $html .= 'src="' . htmlspecialchars($primaryUrl) . '" ';
+        $html .= 'alt="' . htmlspecialchars($logo['alt']) . '" ';
+        $html .= 'title="' . htmlspecialchars($logo['brand']) . '" ';
+        $html .= 'class="' . htmlspecialchars($contextConfig['classes']) . '" ';
+        
+        // Responsividade
+        if ($config['responsive']) {
+            $html .= 'style="' . self::generateResponsiveStyles($contextConfig) . '" ';
+        }
+        
+        // Loading
+        if ($config['lazy'] && $contextConfig['loading'] === 'lazy') {
+            $html .= 'loading="lazy" ';
+        }
+        
+        // Eventos de erro para fallback
+        if ($config['fallbackIcon']) {
+            $fallbackIcon = $logo['icon'];
+            $html .= 'onerror="this.style.display=\'none\'; ';
+            $html .= 'document.getElementById(\'' . $uniqueId . '_fallback\').style.display=\'inline-block\';" ';
+        }
+        
+        $html .= '>';
+        $html .= '</picture>';
+        
+        // Fallback icon
+        if ($config['fallbackIcon']) {
+            $html .= '<i id="' . $uniqueId . '_fallback" ';
+            $html .= 'class="' . htmlspecialchars($logo['icon']) . '" ';
+            $html .= 'style="display: none; font-size: ' . self::getIconSize($context) . '; color: #6c757d;" ';
+            $html .= 'title="' . htmlspecialchars($logo['brand']) . '"></i>';
+        }
+        
+        $html .= '</div>';
+        
+        return $html;
+    }
+    
+    /**
+     * Gera estilos CSS responsivos melhorados
+     * 
+     * @param array $contextConfig Configuração do contexto
+     * @return string CSS inline
+     */
+    private static function generateResponsiveStyles($contextConfig)
+    {
+        $styles = [];
+        
+        // Estilos base do contexto (compatibilidade)
+        if (isset($contextConfig['width'])) {
+            $styles[] = 'width: ' . $contextConfig['width'];
+        }
+        if (isset($contextConfig['height'])) {
+            $styles[] = 'height: ' . $contextConfig['height'];
+        }
+        if (isset($contextConfig['style'])) {
+            $styles[] = trim($contextConfig['style'], ';');
+        }
+        
+        // Responsive adicional para desktop (padrão)
+        if (isset($contextConfig['responsive']['desktop'])) {
+            foreach ($contextConfig['responsive']['desktop'] as $prop => $value) {
+                $cssProp = self::camelToKebab($prop);
+                $styles[] = $cssProp . ': ' . $value;
+            }
+        }
+        
+        return implode('; ', $styles);
+    }
+    
+    /**
+     * Converte camelCase para kebab-case
+     */
+    private static function camelToKebab($string)
+    {
+        $kebab = [
+            'maxHeight' => 'max-height',
+            'maxWidth' => 'max-width',
+            'minHeight' => 'min-height',
+            'minWidth' => 'min-width'
+        ];
+        
+        return $kebab[$string] ?? strtolower(preg_replace('/([A-Z])/', '-$1', $string));
+    }
+    
+    /**
+     * Determina tamanho do ícone de fallback
+     */
+    private static function getIconSize($context)
+    {
+        $sizes = [
+            'login' => '48px',
+            'header' => '24px',
+            'sidebar' => '20px',
+            'card' => '30px',
+            'footer' => '24px'
+        ];
+        
+        return $sizes[$context] ?? '20px';
+    }
+    
+    /**
+     * Verifica se arquivo existe fisicamente
+     * 
+     * @param string $url URL do arquivo
+     * @return bool True se existe
+     */
+    private static function fileExists($url)
+    {
+        if (!$url) return false;
+        
+        $filePath = $_SERVER['DOCUMENT_ROOT'] . $url;
+        return file_exists($filePath) && is_file($filePath);
+    }
+    
+    /**
+     * Detecta automaticamente logos disponíveis na pasta
+     * 
+     * @return array Lista de logos encontrados
+     */
+    public static function scanAvailableLogos()
+    {
+        $logoPath = $_SERVER['DOCUMENT_ROOT'] . '/assets/logos/';
+        $found = [];
+        
+        if (!is_dir($logoPath)) {
+            return $found;
+        }
+        
+        $files = glob($logoPath . '*.{png,jpg,jpeg,webp,svg}', GLOB_BRACE);
+        
+        foreach ($files as $file) {
+            $filename = basename($file);
+            $name = pathinfo($filename, PATHINFO_FILENAME);
+            
+            // Detectar tipo baseado no nome
+            if (strpos($name, 'renner') !== false) {
+                $found['renner'][] = '/assets/logos/' . $filename;
+            } elseif (strpos($name, 'sistema') !== false) {
+                $found['sistema'][] = '/assets/logos/' . $filename;
+            } elseif (strpos($name, 'empresa') !== false) {
+                $found['empresa'][] = '/assets/logos/' . $filename;
+            } else {
+                $found['outros'][] = '/assets/logos/' . $filename;
+            }
+        }
+        
+        return $found;
+    }
+    
+    /**
+     * Gera CSS responsivo para logos
+     * 
+     * @return string CSS completo
+     */
+    public static function generateLogoCSS()
+    {
+        $css = "
+/* 🎨 LogoService 3.0 - CSS Responsivo */
+.logo-container {
+    display: inline-block;
+    position: relative;
+}
+
+.logo-responsive {
+    transition: all 0.3s ease;
+}
+
+.logo-sidebar {
+    object-fit: contain;
+    transition: transform 0.2s ease;
+}
+
+.logo-sidebar:hover {
+    transform: scale(1.1);
+}
+
+.logo-header {
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+}
+
+.logo-card {
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.logo-footer {
+    opacity: 0.8;
+    transition: opacity 0.3s ease;
+}
+
+.logo-footer:hover {
+    opacity: 1;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .logo-container img {
+        max-width: 100%;
+        height: auto;
+    }
+}
+
+@media (max-width: 576px) {
+    .logo-responsive {
+        max-width: 80%;
+    }
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+    .logo-header, .logo-card {
+        filter: brightness(0.9);
+    }
+}
+
+/* Print */
+@media print {
+    .logo-container {
+        filter: grayscale(100%);
+    }
+}
+";
+        
+        return $css;
     }
 
     /**

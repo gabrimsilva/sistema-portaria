@@ -162,10 +162,8 @@ class NavigationService
     {
         $activePages = self::detectActivePage();
         
-        // Add FontAwesome and auto-hide support CSS
-        $html = '<!-- FontAwesome Icons -->';
-        $html .= '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">';
-        $html .= '<!-- Sidebar Auto-Hide CSS -->';
+        // Add auto-hide support CSS and data attributes
+        $html = '<!-- Sidebar Auto-Hide CSS -->';
         $html .= '<link rel="stylesheet" href="/assets/css/sidebar-autohide.css">';
         $html .= '<aside class="main-sidebar sidebar-dark-primary elevation-4" data-autohide="enabled" role="navigation" aria-label="Menu principal">';
         

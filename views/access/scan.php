@@ -1,327 +1,243 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scanner QR Code - Sistema de Controle de Acesso</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="https://unpkg.com/@zxing/library@latest"></script>
-    <style>
-        #video {
-            width: 100%;
-            max-width: 500px;
-            height: auto;
-            border: 3px solid #007bff;
-            border-radius: 10px;
-        }
-        .scanner-container {
-            position: relative;
-            display: inline-block;
-        }
-        .scanner-overlay {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 200px;
-            height: 200px;
-            border: 2px solid #ff0000;
-            border-radius: 10px;
-            pointer-events: none;
-        }
-        .result-card {
-            display: none;
-        }
-    </style>
-</head>
-<body class="hold-transition sidebar-mini layout-fixed">
-    <div class="wrapper">
-        <!-- Navbar -->
-        <nav class="main-header navbar navbar-expand navbar-white navbar-light">
-            <ul class="navbar-nav">
-                <li class="nav-item">
-                    <a class="nav-link" data-widget="pushmenu" href="#" role="button">
-                        <i class="fas fa-bars"></i>
-                    </a>
-                </li>
-            </ul>
-            
-            <ul class="navbar-nav ml-auto">
-                <li class="nav-item dropdown">
-                    <a class="nav-link" data-toggle="dropdown" href="#">
-                        <i class="far fa-user"></i>
-                        <span class="d-none d-md-inline"><?= htmlspecialchars($_SESSION['user_name']) ?></span>
-                    </a>
-                    <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
-                        <span class="dropdown-item-text"><?= htmlspecialchars($_SESSION['user_profile']) ?></span>
-                        <div class="dropdown-divider"></div>
-                        <a href="/logout" class="dropdown-item">
-                            <i class="fas fa-sign-out-alt mr-2"></i>Sair
-                        </a>
-                    </div>
-                </li>
-            </ul>
-        </nav>
-        
-        <!-- Main Sidebar -->
-        <aside class="main-sidebar sidebar-dark-primary elevation-4">
-            <a href="/dashboard" class="brand-link">
-                <?= LogoService::renderSimpleLogo('renner', 'sidebar'); ?>
-                <span class="brand-text font-weight-light">Controle Acesso</span>
-            </a>
-            
-            <div class="sidebar">
-                <nav class="mt-2">
-                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
-                        <li class="nav-item">
-                            <a href="/dashboard" class="nav-link">
-                                <i class="nav-icon fas fa-tachometer-alt"></i>
-                                <p>Dashboard</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="/visitors" class="nav-link">
-                                <i class="nav-icon fas fa-users"></i>
-                                <p>Visitantes</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="/employees" class="nav-link">
-                                <i class="nav-icon fas fa-id-badge"></i>
-                                <p>Funcionários</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="/access" class="nav-link active">
-                                <i class="nav-icon fas fa-door-open"></i>
-                                <p>Controle de Acesso</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="/reports" class="nav-link">
-                                <i class="nav-icon fas fa-chart-bar"></i>
-                                <p>Relatórios</p>
-                            </a>
-                        </li>
-                    </ul>
-                </nav>
-            </div>
-        </aside>
-        
-        <!-- Content Wrapper -->
-        <div class="content-wrapper">
-            <div class="content-header">
-                <div class="container-fluid">
-                    <div class="row mb-2">
-                        <div class="col-sm-6">
-                            <h1 class="m-0">Scanner QR Code</h1>
-                        </div>
-                        <div class="col-sm-6">
-                            <ol class="breadcrumb float-sm-right">
-                                <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
-                                <li class="breadcrumb-item"><a href="/access">Controle de Acesso</a></li>
-                                <li class="breadcrumb-item active">Scanner QR</li>
-                            </ol>
-                        </div>
-                    </div>
+<?php
+/**
+ * 🎯 SCANNER QR - REFATORADO COM LAYOUTSERVICE
+ * 
+ * Página refatorada para usar o sistema unificado de layout,
+ * eliminando duplicação de código de navegação.
+ */
+
+// Configuração da página
+$pageConfig = [
+    'title' => 'Scanner QR - Sistema de Controle de Acesso',
+    'context' => 'access',
+    'pageTitle' => 'Scanner QR',
+    'breadcrumbs' => [
+        ['name' => 'Início', 'url' => '/dashboard'],
+        ['name' => 'Controle de Acesso', 'url' => '/access'],
+        ['name' => 'Scanner', 'active' => true]
+    ],
+    'activeMenu' => 'access',
+    'additionalCSS' => ['/assets/css/scanner.css']
+];
+
+// Renderizar layout start
+$layout = LayoutService::renderPageSkeleton($pageConfig);
+echo $layout['start'];
+?>
+
+<style>
+#video {
+    width: 100%;
+    max-width: 500px;
+    height: auto;
+    border: 3px solid #007bff;
+    border-radius: 10px;
+}
+.scanner-container {
+    position: relative;
+    display: inline-block;
+}
+.scanner-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 200px;
+    height: 200px;
+    border: 2px solid #ff0000;
+    border-radius: 10px;
+    pointer-events: none;
+}
+.result-card {
+    display: none;
+}
+</style>
+
+<!-- 🎯 CONTEÚDO ESPECÍFICO DA PÁGINA -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-qrcode"></i> Scanner QR Code
+                    </h3>
+                </div>
+                <div class="card-body text-center">
+                    <div id="qr-reader" style="width: 100%; max-width: 500px; margin: 0 auto;"></div>
+                    <br>
+                    <button id="startScan" class="btn btn-primary">
+                        <i class="fas fa-play"></i> Iniciar Scanner
+                    </button>
+                    <button id="stopScan" class="btn btn-danger" style="display: none;">
+                        <i class="fas fa-stop"></i> Parar Scanner
+                    </button>
                 </div>
             </div>
-            
-            <section class="content">
-                <div class="container-fluid">
-                    <div class="row justify-content-center">
-                        <div class="col-md-8">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h3 class="card-title">Scanner de QR Code</h3>
-                                </div>
-                                
-                                <div class="card-body text-center">
-                                    <div id="scanner-section">
-                                        <p class="text-muted mb-4">Posicione o QR Code do visitante na área demarcada para leitura automática</p>
-                                        
-                                        <div class="scanner-container mb-3">
-                                            <video id="video" autoplay muted></video>
-                                            <div class="scanner-overlay"></div>
-                                        </div>
-                                        
-                                        <div class="mt-3">
-                                            <button type="button" class="btn btn-success" id="start-scanner">
-                                                <i class="fas fa-qrcode"></i> Iniciar Scanner
-                                            </button>
-                                            <button type="button" class="btn btn-danger" id="stop-scanner" style="display: none;">
-                                                <i class="fas fa-stop"></i> Parar Scanner
-                                            </button>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="result-card card bg-light mt-4" id="result-section">
-                                        <div class="card-body">
-                                            <h5 class="card-title">QR Code Detectado!</h5>
-                                            <p class="card-text" id="qr-result"></p>
-                                            
-                                            <div class="visitor-info" id="visitor-info" style="display: none;">
-                                                <div class="row align-items-center">
-                                                    <div class="col-md-3">
-                                                        <img id="visitor-photo" src="" alt="Foto" class="img-fluid rounded">
-                                                    </div>
-                                                    <div class="col-md-9">
-                                                        <h6 id="visitor-name"></h6>
-                                                        <p class="mb-1"><strong>Empresa:</strong> <span id="visitor-company"></span></p>
-                                                        <p class="mb-1"><strong>Visitando:</strong> <span id="visitor-host"></span></p>
-                                                        <p class="mb-0"><strong>Status:</strong> <span id="visitor-status" class="badge"></span></p>
-                                                    </div>
-                                                </div>
-                                                
-                                                <div class="mt-3">
-                                                    <a href="#" id="register-entry" class="btn btn-success">
-                                                        <i class="fas fa-sign-in-alt"></i> Registrar Entrada
-                                                    </a>
-                                                    <a href="#" id="register-exit" class="btn btn-warning">
-                                                        <i class="fas fa-sign-out-alt"></i> Registrar Saída
-                                                    </a>
-                                                </div>
-                                            </div>
-                                            
-                                            <div class="mt-3">
-                                                <button type="button" class="btn btn-secondary" id="scan-again">
-                                                    <i class="fas fa-redo"></i> Escanear Novamente
-                                                </button>
-                                                <a href="/access" class="btn btn-primary">
-                                                    <i class="fas fa-keyboard"></i> Registro Manual
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
         </div>
-    </div>
-    
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
-    
-    <?php
-    require_once '../src/services/ErrorHandlerService.php';
-    echo ErrorHandlerService::renderComplete();
-    ?>
-    
-    <script>
-    let codeReader = null;
-    let stream = null;
-    
-    document.getElementById('start-scanner').addEventListener('click', async function() {
-        try {
-            codeReader = new ZXing.BrowserQRCodeReader();
+        
+        <div class="col-md-6">
+            <div class="card result-card" id="resultCard">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-user-check"></i> Resultado
+                    </h3>
+                </div>
+                <div class="card-body" id="resultContent">
+                    <!-- Resultado do scan aparecerá aqui -->
+                </div>
+            </div>
             
-            const videoElement = document.getElementById('video');
-            
-            // Get camera stream
-            stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { 
-                    facingMode: 'environment' // Use back camera if available
-                } 
-            });
-            
-            videoElement.srcObject = stream;
-            
-            // Start scanning
-            codeReader.decodeFromVideoDevice(undefined, videoElement, (result, err) => {
-                if (result) {
-                    handleQRResult(result.text);
-                }
-            });
-            
-            document.getElementById('start-scanner').style.display = 'none';
-            document.getElementById('stop-scanner').style.display = 'inline-block';
-            
-        } catch (err) {
-            if (typeof ErrorHandler !== 'undefined') {
-                ErrorHandler.handle(err, 'camera', true);
-            } else {
-                alert('Erro ao acessar a câmera: ' + err.message);
-            }
-        }
-    });
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-info-circle"></i> Instruções
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <ol>
+                        <li>Clique em "Iniciar Scanner"</li>
+                        <li>Permita acesso à câmera quando solicitado</li>
+                        <li>Posicione o QR Code dentro do quadrado vermelho</li>
+                        <li>O sistema identificará automaticamente a pessoa</li>
+                        <li>Confirme o registro de entrada/saída</li>
+                    </ol>
+                    
+                    <div class="alert alert-info mt-3">
+                        <strong>Dica:</strong> Certifique-se de que há boa iluminação para melhor leitura do QR Code.
+                    </div>
+                </div>
+            </div>
+        </div>
+<?php
+// Renderizar layout end
+echo $layout['end'];
+?>
+
+<script src="https://unpkg.com/html5-qrcode@2.3.4/html5-qrcode.min.js"></script>
+<script>
+let html5QrcodeScanner;
+let scanning = false;
+
+document.addEventListener('DOMContentLoaded', function() {
+    const startBtn = document.getElementById('startScan');
+    const stopBtn = document.getElementById('stopScan');
+    const resultCard = document.getElementById('resultCard');
+    const resultContent = document.getElementById('resultContent');
     
-    document.getElementById('stop-scanner').addEventListener('click', function() {
-        stopScanner();
-    });
+    startBtn.addEventListener('click', startScanning);
+    stopBtn.addEventListener('click', stopScanning);
     
-    document.getElementById('scan-again').addEventListener('click', function() {
-        document.getElementById('result-section').style.display = 'none';
-        document.getElementById('scanner-section').style.display = 'block';
-        document.getElementById('start-scanner').click();
-    });
-    
-    function stopScanner() {
-        if (codeReader) {
-            codeReader.reset();
-        }
-        if (stream) {
-            stream.getTracks().forEach(track => track.stop());
+    function startScanning() {
+        if (scanning) return;
+        
+        const qrReaderDiv = document.getElementById('qr-reader');
+        if (!qrReaderDiv) {
+            console.error('Element #qr-reader not found');
+            return;
         }
         
-        document.getElementById('start-scanner').style.display = 'inline-block';
-        document.getElementById('stop-scanner').style.display = 'none';
+        html5QrcodeScanner = new Html5QrcodeScanner(
+            "qr-reader",
+            { 
+                fps: 10, 
+                qrbox: {width: 250, height: 250},
+                aspectRatio: 1.0
+            },
+            false
+        );
+        
+        html5QrcodeScanner.render(onScanSuccess, onScanError);
+        
+        scanning = true;
+        startBtn.style.display = 'none';
+        stopBtn.style.display = 'inline-block';
     }
     
-    async function handleQRResult(qrCode) {
-        stopScanner();
+    function stopScanning() {
+        if (!scanning) return;
         
-        document.getElementById('qr-result').textContent = 'Código: ' + qrCode;
-        document.getElementById('scanner-section').style.display = 'none';
-        document.getElementById('result-section').style.display = 'block';
-        
-        // Try to find visitor by QR code
-        try {
-            const response = await fetch('/api/visitor-by-qr.php?qr=' + encodeURIComponent(qrCode));
-            const visitor = await response.json();
-            
-            if (visitor.success) {
-                const info = visitor.data;
-                document.getElementById('visitor-name').textContent = info.nome;
-                document.getElementById('visitor-company').textContent = info.empresa || 'Não informado';
-                document.getElementById('visitor-host').textContent = info.pessoa_visitada || 'Não informado';
-                
-                const statusBadge = document.getElementById('visitor-status');
-                statusBadge.textContent = info.status;
-                statusBadge.className = 'badge badge-' + (info.status === 'ativo' ? 'success' : 'warning');
-                
-                if (info.foto) {
-                    document.getElementById('visitor-photo').src = '/' + info.foto;
-                } else {
-                    document.getElementById('visitor-photo').style.display = 'none';
-                }
-                
-                // Set up registration links
-                document.getElementById('register-entry').href = '/access?visitor_id=' + info.id + '&action=register';
-                document.getElementById('register-exit').href = '/access?visitor_id=' + info.id + '&action=register';
-                
-                document.getElementById('visitor-info').style.display = 'block';
-            } else {
-                document.getElementById('qr-result').innerHTML += '<br><span class="text-danger">Visitante não encontrado para este QR Code</span>';
-            }
-        } catch (error) {
-            if (typeof ErrorHandler !== 'undefined') {
-                ErrorHandler.handle(error, 'fetch');
-            }
-            document.getElementById('qr-result').innerHTML += '<br><span class="text-warning">Erro ao buscar informações do visitante</span>';
-        }
+        html5QrcodeScanner.clear();
+        scanning = false;
+        startBtn.style.display = 'inline-block';
+        stopBtn.style.display = 'none';
     }
-    </script>
     
-    <?php
-    // Banner de Cookies LGPD
-    require_once BASE_PATH . '/src/services/CookieService.php';
-    CookieService::includeBanner();
-    ?>
-</body>
-</html>
+    function onScanSuccess(decodedText, decodedResult) {
+        console.log(`QR Code detectado: ${decodedText}`);
+        
+        // Processar resultado do QR Code
+        processQRCode(decodedText);
+        
+        // Parar o scanner após sucesso
+        stopScanning();
+    }
+    
+    function onScanError(error) {
+        // Ignorar erros comuns durante o scanning
+        console.warn(`QR Code scan error: ${error}`);
+    }
+    
+    function processQRCode(qrData) {
+        resultCard.style.display = 'block';
+        resultContent.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Processando...</div>';
+        
+        // Fazer request para processar o QR Code
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        
+        fetch('/access?action=process_qr', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': csrfToken
+            },
+            body: JSON.stringify({qr_data: qrData})
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showPersonResult(data.person, data.access_type);
+            } else {
+                showError(data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            showError('Erro ao processar QR Code');
+        });
+    }
+    
+    function showPersonResult(person, accessType) {
+        const html = `
+            <div class="text-center">
+                ${person.foto ? `<img src="${person.foto}" class="img-circle mb-3" style="width: 80px; height: 80px; object-fit: cover;">` : ''}
+                <h5>${person.nome}</h5>
+                <p class="text-muted">${person.tipo} - ${person.identificacao}</p>
+                <div class="alert alert-${accessType === 'entrada' ? 'success' : 'warning'}">
+                    <strong>${accessType === 'entrada' ? 'ENTRADA' : 'SAÍDA'}</strong> registrada com sucesso
+                </div>
+                <button onclick="resetScanner()" class="btn btn-primary">
+                    <i class="fas fa-qrcode"></i> Escanear Novamente
+                </button>
+            </div>
+        `;
+        resultContent.innerHTML = html;
+    }
+    
+    function showError(message) {
+        const html = `
+            <div class="alert alert-danger">
+                <strong>Erro:</strong> ${message}
+            </div>
+            <button onclick="resetScanner()" class="btn btn-primary">
+                <i class="fas fa-redo"></i> Tentar Novamente
+            </button>
+        `;
+        resultContent.innerHTML = html;
+    }
+    
+    window.resetScanner = function() {
+        resultCard.style.display = 'none';
+        startScanning();
+    };
+});
+</script>

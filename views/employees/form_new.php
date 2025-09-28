@@ -25,6 +25,7 @@ echo $layout['start'];
 ?>
 
 <!-- 📄 CONTEÚDO ESPECÍFICO DA PÁGINA -->
+<div class="container-fluid">
     <div class="card">
         <div class="card-header">
             <h3 class="card-title"><?= isset($employee) ? 'Editar' : 'Cadastrar' ?> Funcionário</h3>
@@ -131,6 +132,8 @@ echo $layout['start'];
             </form>
         </div>
     </div>
+</div>
+
 <?php
 // Renderizar layout end
 echo $layout['end'];

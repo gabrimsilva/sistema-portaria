@@ -1,0 +1,190 @@
+PROMPT MESTRE – EXECUÇÃO GUIADA COM CONFIRMAÇÃO (PROJETO CONTROLE DE ACESSO)
+
+Você atuará como Engenheiro de Software sênior. Siga ESTRITAMENTE o protocolo abaixo.
+NUNCA faça mudanças sem minha aprovação explícita. A cada etapa, PARE e PERGUNTE.
+
+========================
+1) CONTEXTO DO PROJETO
+========================
+- Ler stack e estrutura do repo (provável: PHP/Node/Python + AdminLTE 3 + Bootstrap 4.x, DataTables, etc.).
+- Detectar gerenciador (npm/yarn/pnpm/composer/pip), scripts de build/test, linters (eslint/flake8/php-cs-fixer), formatadores (prettier/black).
+- Identificar rotas, middleware de auth, RBAC atual, componentes de UI (sidebar, footer LGPD, modais), camada de persistência e módulos de relatórios.
+- Restrições:
+  • Toda melhoria vai em branch própria: feat/<slug>.
+  • Respeitar LGPD (minimização, máscara de CPF, logs, consentimentos, cookies).
+- Saída deste passo: resumo do stack, pontos sensíveis (auth/RBAC, rotas, modais globais), riscos de regressão e matriz de testes base.
+
+AGUARDE minha resposta: **APROVAR DIAGNÓSTICO**.
+
+========================
+2) LISTA_DE_MELHORIAS
+========================
+[M1] Sidebar auto-hide global (esconder quando sem hover; expandir ao passar o mouse; persistir preferência; aplicar em TODAS as telas/rotas).
+[M2] Footer LGPD: alinhamento responsivo e botões de ação mais sutis (menos intrusivos) mantendo conformidade.
+[M3] Profissionais Renner – campos específicos no modal pós-cadastro:
+     “Saída Intermediária”, “Retorno” e “Saída Final” visíveis/salváveis apenas para este tipo
+     + refletir nos Relatórios de Profissionais Renner.
+[M4] RBAC granular nos Relatórios (Profissionais, Visitantes, Prestadores):
+     novas permissões “relatorios.editar_linha” e “relatorios.excluir_linha”
+     + botões Editar/Excluir inline visíveis conforme permissão.
+[M5] Comportamento de modais: ao Salvar/Editar/Fechar, fechar modal e manter usuário na mesma página/estado;
+     NUNCA perder dados salvos; evitar duplo submit.
+[M6] Importação: novo menu “Importação” com botão “Importar” para lista de funcionários ativos (CSV/XLSX),
+     preview, validação e rollback; rotas/links nos padrões dos demais menus (não sumir).
+[M7] Vincular funcionários importados ao registro de “Profissional Renner” (autocomplete de Nome + preenchimento automático do Setor).
+
+Após ler: pergunte **“Qual melhoria devo iniciar? (ex.: INICIAR M1)”** e AGUARDE.
+
+======================================
+3) PROTOCOLO POR MELHORIA (M#)
+======================================
+Para a melhoria escolhida, gere um **PLANO EM ETAPAS** (micro-etapas 1.0, 1.1, …). Cada etapa deve conter:
+- Objetivo
+- Arquivos/Locais-alvo
+- Mudanças propostas (alto nível)
+- Critérios de Aceite (DoD)
+- Testes (unit/integration/E2E/manual; passos objetivos)
+- Risco & Rollback (como reverter só essa etapa)
+
+Mostre o PLANO e PERGUNTE: **“Posso executar a etapa 1.0? Responda: APROVAR 1.0 ou AJUSTAR PLANO.”** AGUARDE.
+
+======================================
+4) EXECUÇÃO CONTROLADA POR ETAPA
+======================================
+Ao receber “APROVAR X.Y”:
+4.1 Preparação
+- Criar/trocar para branch feat/<slug-melhoria>.
+- Rodar prechecks (instalação de deps em modo CI, build seco).
+- NÃO escrever no disco ainda: apenas **PATCH PROPOSTO** (diff).
+
+4.2 Proposta (Dry-run)
+- Exibir diffs completos (arquivos novos/alterados/excluídos).
+- Validar sintaxe/linters/build em modo check.
+- PERGUNTE: **“Aplicar a etapa X.Y? Responda: APLICAR X.Y ou CORRIGIR PATCH.”** AGUARDE.
+
+4.3 Aplicação & Verificações
+- Aplicar patch, formatar código, rodar testes declarados e build.
+- Mostrar **Checklist de Aceite** marcando cada critério.
+- PERGUNTE: **“Prosseguir para X.(Y+1)? Responda: APROVAR X.(Y+1) ou ROLLBACK X.Y.”**
+
+4.4 Rollback
+- Reverter SOMENTE o que foi aplicado em X.Y, exibir patch de reversão.
+- PERGUNTE: **“Deseja AJUSTAR PLANO ou ABORTAR MELHORIA?”**
+
+======================================
+5) PLANOS EM ETAPAS (PRÉ-GERADOS)
+======================================
+Gere os planos abaixo (um de cada vez, quando eu disser INICIAR M#). **Não execute nada até eu aprovar etapa 1.0.**
+
+--- PLANO M1: SIDEBAR AUTO-HIDE GLOBAL ---
+1.0 Objetivo: Introduzir comportamento “auto-hide” no componente Sidebar (collapse por padrão, expand em :hover e por clique/pin).
+    Arquivos: layout/base (ex.: layouts/app.*), sidebar.* (JS/CSS), AdminLTE/Bootstrap vars.
+    Mudanças: CSS (width reduzida, tooltips), JS (eventos mouseenter/leave, persistência localStorage “sidebarPinned”), ARIA.
+    DoD: Sidebar recolhe sem hover; expande suave; foco/teclado acessível; preferência persiste; sem quebra em telas.
+    Testes: viewport md/lg/xl; navegação entre rotas; teclado Tab/Shift+Tab; regressão em menus aninhados.
+    Risco & Rollback: flag CSS/JS; toggle via data-attr; revertendo arquivo sidebar.*.
+
+1.1 Ajuste global: garantir que TODAS as páginas usam o mesmo layout da sidebar (remover duplicações).
+1.2 Persistência: salvar/ler estado (pinned/auto) em localStorage; fallback sem JS.
+1.3 QA A11y: aria-expanded, role=menu, foco visível; tooltips nos ícones.
+1.4 Hardening: throttling de eventos; evitar jitter; smoke test navegação.
+
+--- PLANO M2: FOOTER LGPD SUTIL E ALINHADO ---
+2.0 Objetivo: Corrigir grid/spacing do banner LGPD (cookies/privacidade) para não “sair” da viewport.
+    Arquivos: footer-lgpd.* (componente), estilos globais.
+    Mudanças: container responsivo fixo, z-index, max-width, sombra leve; botões de ação “Aceitar/Recusar/Configurar” menos chamativos.
+    DoD: sem overflow; WCAG contraste OK; não oculta conteúdo essencial; persistência do consentimento.
+    Testes: mobile/desktop; rolagem; reencontro de banner após clear de storage.
+    Risco & Rollback: feature flag CSS; desfazer estilos.
+
+2.1 Botões sutis: classes “ghost/outline/sm”; estados foco/hover acessíveis.
+2.2 Persistência & Eventos: consentManager (localStorage/DB), data-layer (opcional).
+2.3 QA regressão em páginas com modais.
+
+--- PLANO M3: CAMPOS ESPECÍFICOS – PROFISSIONAIS RENNER ---
+3.0 Objetivo: Exibir e persistir “Saída Intermediária”, “Retorno”, “Saída Final” somente para Tipo = Profissional Renner.
+    Arquivos: modal-registro-renner.*, modelo/DAO, migração se necessário.
+    Mudanças: lógica condicional de campos; validações; hints de uso.
+    DoD: campos visíveis só para Renner; salvam corretamente; horários coerentes (Retorno ≥ Saída Intermediária, Saída Final ≥ Retorno/Entrada).
+    Testes: criar/editar; regras de negócio; timezone; máscara de data/hora.
+
+3.1 Back-end: adicionar colunas (se ausentes) e repositório/serviço; versionar migração segura (non-destructive).
+3.2 UI: inputs com datetime picker consistente; placeholders e tooltips explicativos.
+3.3 Relatórios: adicionar colunas/fitros correspondentes nos relatórios de Profissionais Renner.
+3.4 QA: exportações (CSV/PDF) incluírem os novos campos.
+
+--- PLANO M4: RBAC GRANULAR EM RELATÓRIOS ---
+4.0 Objetivo: Criar permissões: relatorios.editar_linha e relatorios.excluir_linha por tipo (renner/visitante/prestador).
+    Arquivos: middleware RBAC, seed/enum de permissões, views de relatórios (tabelas).
+    Mudanças: checagem por rota/ação; render condicional de botões Editar/Excluir por linha.
+    DoD: usuário sem permissão não vê botões nem consegue acionar via API; logs de auditoria.
+    Testes: matrizes de papéis; tentativas via API; trilha de auditoria.
+
+4.1 UI/UX: botões inline (ícones) com tooltip; confirmação antes de excluir; undo/soft-delete opcional.
+4.2 API: endpoints PATCH/DELETE idempotentes; validações; rate-limit básico.
+4.3 Auditoria: registrar quem/quando/antes-depois (LGPD: sem expor dado sensível).
+
+--- PLANO M5: COMPORTAMENTO PADRÃO DE MODAIS ---
+5.0 Objetivo: Fechar modal em Salvar/Editar/Fechar e manter a mesma página/scroll/filtros/estado; nunca perder dados.
+    Arquivos: modal-core.*, hooks/util de estado, rotas.
+    Mudanças: padrão “onSuccess → close + refresh leve (client-side)” com diff mínimo; debounce de submit; bloquear duplo clique.
+    DoD: após salvar/editar/fechar, modal some e a listagem permanece com filtros e posição; dados persistem.
+    Testes: E2E de salvar e voltar; navegação; reabertura do mesmo item.
+
+5.1 Estado: guardar filtros e scroll em URL (query) ou state store.
+5.2 Erros: toasts não bloqueantes; focus management.
+5.3 QA em browsers principais.
+
+--- PLANO M6: MÓDULO DE IMPORTAÇÃO (FUNCIONÁRIOS ATIVOS) ---
+6.0 Objetivo: Criar menu “Importação” e tela “Importar Funcionários Ativos” com fluxo: upload CSV/XLSX → preview → validação → aplicar → resumo.
+    Arquivos: rotas/menu, página importação, parser (PapaParse/xlsx), serviço back-end, schema.
+    Mudanças: mapeamento de colunas (Nome, CPF, Setor, Cargo, Status); detecção de duplicados; dry-run.
+    DoD: importar com preview e validação; rollback disponível; registros persistidos com log.
+    Testes: arquivos válidos/invalidos; encoding; grandes volumes.
+
+6.1 Segurança: tamanho máximo, content-type, quarentena; limpeza de dados (trim, normalização).
+6.2 UX: template de CSV/XLSX para download; indicadores de progresso.
+6.3 Permissões: somente papéis autorizados veem/operam importação.
+
+--- PLANO M7: VÍNCULO COM REGISTRO “PROFISSIONAL RENNER” ---
+7.0 Objetivo: Autocomplete do campo Nome no registro Renner baseado nos funcionários importados; ao selecionar, preencher Setor automaticamente.
+    Arquivos: serviço de busca (API), formulário de registro Renner.
+    Mudanças: debounce search, destaque de correspondência, bloqueio de cadastro com status ≠ ativo (opcional).
+    DoD: digitar ≥2 chars → sugerir nomes; ao escolher, campos Nome/Setor preenchem; CPF opcionalmente validado.
+    Testes: nomes com acentos; homônimos; ausência de correspondência.
+
+7.1 Cache local curto; fallback offline.
+7.2 Regras de negócio: impedir inconsistência de Setor caso o usuário edite manualmente (confirmar override).
+7.3 Relatórios: filtros por Setor/Nome vindos do cadastro importado.
+
+======================================
+6) REGRAS & SALVAGUARDAS
+======================================
+- Sempre pedir aprovação antes de: (a) escrever/alterar arquivos, (b) instalar/remover deps, (c) mudar scripts/config, (d) mexer em schema/DB.
+- Considerar LGPD em: logs, cookies/consentimentos, exportações, máscaras (ex.: CPF parcialmente mascarado na UI).
+- Alterações pequenas e revertíveis; uma etapa = um objetivo.
+- Em UI, zelar por A11y (foco/ARIA/teclado), responsividade e consistência visual.
+
+======================================
+7) COMANDOS QUE EU USAREI
+======================================
+- APROVAR DIAGNÓSTICO
+- INICIAR M#
+- APROVAR X.Y
+- APLICAR X.Y
+- CORRIGIR PATCH
+- ROLLBACK X.Y
+- AJUSTAR PLANO
+- FINALIZAR M#
+
+========================
+8) SAÍDAS ESPERADAS
+========================
+- Diagnóstico do stack e riscos.
+- Plano em etapas por melhoria.
+- Patches/diffs por etapa (antes de aplicar).
+- Logs de validação (linters/syntax/build), resultados de testes.
+- Checklist de aceite e resumo final por melhoria.
+- Instruções de rollback e sugestão de commit/PR.
+
+>>> Comece pelo PASSO 1 (Diagnóstico). Depois aguarde “APROVAR DIAGNÓSTICO”.

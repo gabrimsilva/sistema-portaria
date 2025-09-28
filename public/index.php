@@ -102,10 +102,14 @@ try {
             break;
             
         case 'forgot-password':
-            // API para solicitar reset de senha
+            // Página/API para solicitar reset de senha
             require_once '../src/controllers/PasswordResetController.php';
             $controller = new PasswordResetController();
-            $controller->requestReset();
+            if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+                $controller->showForgotForm();
+            } else {
+                $controller->requestReset();
+            }
             break;
             
         case 'privacy':

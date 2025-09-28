@@ -14,6 +14,13 @@ class PasswordResetController {
     }
     
     /**
+     * Exibe formulário de solicitação de reset
+     */
+    public function showForgotForm() {
+        require_once '../views/auth/forgot-password.php';
+    }
+    
+    /**
      * Processa solicitação de reset de senha
      */
     public function requestReset() {

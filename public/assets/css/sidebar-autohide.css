@@ -38,6 +38,16 @@
 .sidebar-collapsed .nav-sidebar .nav-item .nav-link .nav-icon {
     margin: 0 auto;
     font-size: 1.2rem;
+    display: block;
+    width: 1.2rem;
+    text-align: center;
+}
+
+/* Reset icon alignment when hover expanded */
+.sidebar-collapsed .main-sidebar:hover .nav-sidebar .nav-item .nav-link .nav-icon {
+    margin: 0;
+    display: inline;
+    width: auto;
 }
 
 .sidebar-collapsed .nav-sidebar .nav-item .nav-link .right {
@@ -60,8 +70,14 @@
     display: inline;
 }
 
+.sidebar-collapsed .main-sidebar:hover .nav-sidebar .nav-item .nav-link {
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+}
+
 .sidebar-collapsed .main-sidebar:hover .nav-sidebar .nav-item .nav-link p {
     display: inline;
+    margin-left: 0.5rem;
 }
 
 .sidebar-collapsed .main-sidebar:hover .nav-sidebar .nav-item .nav-link .right {

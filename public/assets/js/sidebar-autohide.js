@@ -87,28 +87,28 @@ class SidebarAutoHide {
             }
         });
         
-        // Auto-collapse/expand on hover
+        // Hover events for tooltips and accessibility
         this.sidebar.addEventListener('mouseenter', () => {
             if (!this.isPinned) {
-                // Clear any pending collapse
+                // Clear any pending tooltip hide
                 if (this.hoverTimeout) {
                     clearTimeout(this.hoverTimeout);
                     this.hoverTimeout = null;
                 }
-                // Expand sidebar
-                this.body.classList.remove('sidebar-collapsed');
+                // CSS handles visual expansion, JS manages tooltips
+                this.sidebar.setAttribute('data-hover-expanded', 'true');
                 this.showTooltips();
             }
         });
         
         this.sidebar.addEventListener('mouseleave', () => {
             if (!this.isPinned) {
-                // Delay collapse to avoid flickering
+                // Delay to prevent flicker when moving between elements
                 this.hoverTimeout = setTimeout(() => {
-                    this.body.classList.add('sidebar-collapsed');
+                    this.sidebar.setAttribute('data-hover-expanded', 'false');
                     this.hideTooltips();
                     this.hoverTimeout = null;
-                }, 100); // 100ms delay
+                }, 200); // Increased delay for better UX
             }
         });
         

@@ -35,10 +35,11 @@ class SidebarAutoHide {
     getStoredState() {
         try {
             const stored = localStorage.getItem('sidebarPinned');
+            // Default to collapsed (false) for auto-hover behavior
             return stored === 'true';
         } catch (e) {
             console.warn('localStorage not available, using default state');
-            return false; // Default to collapsed
+            return false; // Default to collapsed for auto-hover
         }
     }
     
@@ -86,16 +87,28 @@ class SidebarAutoHide {
             }
         });
         
-        // Hover events (only when collapsed)
+        // Auto-collapse/expand on hover
         this.sidebar.addEventListener('mouseenter', () => {
             if (!this.isPinned) {
+                // Clear any pending collapse
+                if (this.hoverTimeout) {
+                    clearTimeout(this.hoverTimeout);
+                    this.hoverTimeout = null;
+                }
+                // Expand sidebar
+                this.body.classList.remove('sidebar-collapsed');
                 this.showTooltips();
             }
         });
         
         this.sidebar.addEventListener('mouseleave', () => {
             if (!this.isPinned) {
-                this.hideTooltips();
+                // Delay collapse to avoid flickering
+                this.hoverTimeout = setTimeout(() => {
+                    this.body.classList.add('sidebar-collapsed');
+                    this.hideTooltips();
+                    this.hoverTimeout = null;
+                }, 100); // 100ms delay
             }
         });
         

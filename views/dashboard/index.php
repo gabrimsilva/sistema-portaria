@@ -1312,8 +1312,8 @@
                     if (response.success) {
                         showToast('Registro atualizado com sucesso!');
                         $('#modalEditar').modal('hide');
-                        // Atualizar apenas a linha na tabela sem recarregar
-                        atualizarLinhaNaTabela(response.data);
+                        // Recarregar página para atualizar o dashboard
+                        setTimeout(() => window.location.reload(), 500);
                     } else {
                         // Tratamento melhorado para erros de duplicidade
                         if (response.errors && Array.isArray(response.errors)) {

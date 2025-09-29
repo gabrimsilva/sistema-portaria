@@ -1458,6 +1458,7 @@
             
             $('#profissional_nome').autocomplete({
                 source: function(request, response) {
+                    console.log('🔍 Buscando profissionais para:', request.term);
                     $.ajax({
                         url: '/profissionais-renner?action=search',
                         dataType: 'json',
@@ -1465,26 +1466,32 @@
                             q: request.term
                         },
                         success: function(data) {
+                            console.log('✅ Resposta recebida:', data);
                             if (data.success && data.data) {
-                                response($.map(data.data, function(item) {
+                                const items = $.map(data.data, function(item) {
                                     return {
                                         label: item.nome + ' - ' + item.setor,
                                         value: item.nome,
                                         setor: item.setor,
                                         fre: item.fre
                                     };
-                                }));
+                                });
+                                console.log('📋 Items mapeados:', items);
+                                response(items);
                             } else {
+                                console.log('⚠️ Nenhum resultado encontrado');
                                 response([]);
                             }
                         },
-                        error: function() {
+                        error: function(xhr, status, error) {
+                            console.error('❌ Erro na requisição:', error, xhr.responseText);
                             response([]);
                         }
                     });
                 },
                 minLength: 2,
                 select: function(event, ui) {
+                    console.log('✨ Item selecionado:', ui.item);
                     $('#profissional_nome').val(ui.item.value);
                     $('#profissional_setor').val(ui.item.setor);
                     return false;

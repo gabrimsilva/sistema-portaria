@@ -162,13 +162,10 @@ class NavigationService
     {
         $activePages = self::detectActivePage();
         
-        // Add auto-hide support CSS and data attributes
-        $html = '<!-- Sidebar Auto-Hide CSS -->';
-        $html .= '<link rel="stylesheet" href="/assets/css/sidebar-autohide.css">';
-        $html .= '<aside class="main-sidebar sidebar-dark-primary elevation-4" data-autohide="enabled" role="navigation" aria-label="Menu principal">';
+        $html = '<aside class="main-sidebar sidebar-dark-primary elevation-4">';
         
         // Brand Link
-        $html .= '<a href="/dashboard" class="brand-link" aria-label="Ir para Dashboard">';
+        $html .= '<a href="/dashboard" class="brand-link">';
         $html .= LogoService::renderSimpleLogo('renner', 'sidebar');
         $html .= '<span class="brand-text font-weight-light">Controle Acesso</span>';
         $html .= '</a>';
@@ -190,9 +187,6 @@ class NavigationService
         $html .= '</nav>';
         $html .= '</div>';
         $html .= '</aside>';
-        
-        // Add auto-hide JavaScript
-        $html .= '<script src="/assets/js/sidebar-autohide.js"></script>';
         
         return $html;
     }

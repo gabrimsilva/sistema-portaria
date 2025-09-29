@@ -26,9 +26,13 @@ class HeaderService
         
         $html = '<nav class="main-header navbar navbar-expand ' . htmlspecialchars($config['customClasses']) . '">';
         
-        // Left side - No toggle button (hover-only sidebar)
+        // Left side - Menu toggle
         $html .= '<ul class="navbar-nav">';
-        // Toggle button completely removed for hover-only behavior
+        $html .= '<li class="nav-item">';
+        $html .= '<a class="nav-link" data-widget="pushmenu" href="#" role="button">';
+        $html .= '<i class="fas fa-bars"></i>';
+        $html .= '</a>';
+        $html .= '</li>';
         $html .= '</ul>';
         
         // Right side - User menu + additional buttons

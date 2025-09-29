@@ -6,14 +6,18 @@
     <title>Relatório de Acessos - Sistema de Controle de Acesso</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body class="hold-transition sidebar-mini layout-fixed">
     <div class="wrapper">
         <!-- Navigation -->
         <nav class="main-header navbar navbar-expand navbar-white navbar-light">
             <ul class="navbar-nav">
-                <!-- Toggle button removed for hover-only sidebar -->
+                <li class="nav-item">
+                    <a class="nav-link" data-widget="pushmenu" href="#" role="button">
+                        <i class="fas fa-bars"></i>
+                    </a>
+                </li>
             </ul>
             <ul class="navbar-nav ml-auto">
                 <li class="nav-item dropdown">
@@ -32,8 +36,48 @@
             </ul>
         </nav>
         
-        <!-- 🎯 NavigationService: Navegação Unificada -->
-        <?= NavigationService::renderSidebar() ?>
+        <aside class="main-sidebar sidebar-dark-primary elevation-4">
+            <a href="/dashboard" class="brand-link">
+                <?= LogoService::renderSimpleLogo('renner', 'sidebar'); ?>
+                <span class="brand-text font-weight-light">Controle Acesso</span>
+            </a>
+            <div class="sidebar">
+                <nav class="mt-2">
+                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
+                        <li class="nav-item">
+                            <a href="/dashboard" class="nav-link">
+                                <i class="nav-icon fas fa-tachometer-alt"></i>
+                                <p>Dashboard</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/visitors" class="nav-link">
+                                <i class="nav-icon fas fa-users"></i>
+                                <p>Visitantes</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/employees" class="nav-link">
+                                <i class="nav-icon fas fa-id-badge"></i>
+                                <p>Funcionários</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/access" class="nav-link">
+                                <i class="nav-icon fas fa-door-open"></i>
+                                <p>Controle de Acesso</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/reports" class="nav-link active">
+                                <i class="nav-icon fas fa-chart-bar"></i>
+                                <p>Relatórios</p>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </aside>
         
         <div class="content-wrapper">
             <div class="content-header">

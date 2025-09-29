@@ -6,14 +6,18 @@
     <title><?= isset($prestador) ? 'Editar' : 'Novo' ?> Prestador de Serviço - Sistema de Controle de Acesso</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body class="hold-transition sidebar-mini layout-fixed">
     <div class="wrapper">
         <!-- Navbar -->
         <nav class="main-header navbar navbar-expand navbar-white navbar-light">
             <ul class="navbar-nav">
-                <!-- Toggle button removed for hover-only sidebar -->
+                <li class="nav-item">
+                    <a class="nav-link" data-widget="pushmenu" href="#" role="button">
+                        <i class="fas fa-bars"></i>
+                    </a>
+                </li>
             </ul>
             
             <ul class="navbar-nav ml-auto">
@@ -33,8 +37,61 @@
             </ul>
         </nav>
         
-        <!-- 🎯 NavigationService: Navegação Unificada -->
-        <?= NavigationService::renderSidebar() ?>
+        <!-- Main Sidebar -->
+        <aside class="main-sidebar sidebar-dark-primary elevation-4">
+            <a href="/dashboard" class="brand-link">
+                <?= LogoService::renderSimpleLogo('renner', 'sidebar'); ?>
+                <span class="brand-text font-weight-light">Controle Acesso</span>
+            </a>
+            
+            <div class="sidebar">
+                <nav class="mt-2">
+                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
+                        <li class="nav-item">
+                            <a href="/dashboard" class="nav-link">
+                                <i class="nav-icon fas fa-tachometer-alt"></i>
+                                <p>Dashboard</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/prestadores-servico" class="nav-link active">
+                                <i class="nav-icon fas fa-tools"></i>
+                                <p>Prestador de Serviços</p>
+                            </a>
+                        </li>
+                        <li class="nav-item has-treeview">
+                            <a href="#" class="nav-link">
+                                <i class="nav-icon fas fa-chart-bar"></i>
+                                <p>
+                                    Relatórios
+                                    <i class="fas fa-angle-left right"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="/reports/profissionais-renner" class="nav-link">
+                                        <i class="nav-icon fas fa-user-tie"></i>
+                                        <p>Profissionais Renner</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="/reports/visitantes" class="nav-link">
+                                        <i class="nav-icon fas fa-users"></i>
+                                        <p>Visitantes</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="/reports/prestadores-servico" class="nav-link">
+                                        <i class="nav-icon fas fa-tools"></i>
+                                        <p>Prestador de Serviços</p>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </aside>
         
         <!-- Content Wrapper -->
         <div class="content-wrapper">

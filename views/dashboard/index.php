@@ -861,7 +861,7 @@
                         showToast('Visitante cadastrado com sucesso!');
                         $('#modalVisitante').modal('hide');
                         limparFormulario('formVisitante');
-                        adicionarPessoaNaLista(response.data);
+                        setTimeout(() => window.location.reload(), 500);
                     } else {
                         // Tratamento melhorado para erros de duplicidade
                         if (response.errors && Array.isArray(response.errors)) {
@@ -910,7 +910,7 @@
                         showToast('Profissional cadastrado com sucesso!');
                         $('#modalProfissional').modal('hide');
                         limparFormulario('formProfissional');
-                        adicionarPessoaNaLista(response.data);
+                        setTimeout(() => window.location.reload(), 500);
                     } else {
                         showToast(response.message || 'Erro ao cadastrar profissional', 'error');
                     }
@@ -959,7 +959,7 @@
                         showToast('Prestador cadastrado com sucesso!');
                         $('#modalPrestador').modal('hide');
                         limparFormulario('formPrestador');
-                        adicionarPessoaNaLista(response.data);
+                        setTimeout(() => window.location.reload(), 500);
                     } else {
                         // Tratamento melhorado para erros de duplicidade
                         if (response.errors && Array.isArray(response.errors)) {

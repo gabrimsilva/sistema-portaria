@@ -137,19 +137,20 @@ $visitantes = $visitantes ?? [];
                                 <table class="table table-bordered table-hover table-sm">
                                     <thead class="table-dark">
                                         <tr>
-                                            <th width="25%">Nome</th>
-                                            <th width="12%">CPF</th>
-                                            <th width="18%">Empresa</th>
-                                            <th width="15%">Funcionário Responsável</th>
-                                            <th width="12%">Setor</th>
+                                            <th width="22%">Nome</th>
+                                            <th width="10%">CPF</th>
+                                            <th width="16%">Empresa</th>
+                                            <th width="14%">Funcionário Responsável</th>
+                                            <th width="10%">Setor</th>
                                             <th width="10%">Placa/Veículo</th>
-                                            <th width="8%">Data/Hora Entrada</th>
+                                            <th width="9%">Data/Hora Entrada</th>
+                                            <th width="9%">Hora de Saída</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <?php if (empty($visitantes)): ?>
                                             <tr>
-                                                <td colspan="7" class="text-center py-4">
+                                                <td colspan="8" class="text-center py-4">
                                                     <i class="fas fa-info-circle text-muted"></i>
                                                     Nenhum registro encontrado
                                                 </td>
@@ -184,6 +185,13 @@ $visitantes = $visitantes ?? [];
                                                         <small class="text-muted"><?= $visitante['hora_entrada_formatted'] ?></small>
                                                     <?php else: ?>
                                                         -
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td>
+                                                    <?php if (!empty($visitante['hora_saida_formatted'])): ?>
+                                                        <span class="text-danger font-weight-bold"><?= $visitante['hora_saida_formatted'] ?></span>
+                                                    <?php else: ?>
+                                                        <span class="text-muted">-</span>
                                                     <?php endif; ?>
                                                 </td>
                                             </tr>

@@ -148,19 +148,20 @@ $prestadores = $prestadores ?? [];
                                 <table class="table table-bordered table-hover table-sm">
                                     <thead class="table-dark">
                                         <tr>
-                                            <th width="25%">Nome</th>
-                                            <th width="12%">Setor</th>
-                                            <th width="12%">Placa/Veículo</th>
-                                            <th width="15%">Empresa</th>
-                                            <th width="15%">Funcionário Responsável</th>
-                                            <th width="11%">CPF</th>
+                                            <th width="22%">Nome</th>
+                                            <th width="10%">Setor</th>
+                                            <th width="10%">Placa/Veículo</th>
+                                            <th width="14%">Empresa</th>
+                                            <th width="14%">Funcionário Responsável</th>
+                                            <th width="10%">CPF</th>
                                             <th width="10%">Data/Hora Entrada</th>
+                                            <th width="10%">Hora de Saída</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <?php if (empty($prestadores)): ?>
                                             <tr>
-                                                <td colspan="7" class="text-center py-4">
+                                                <td colspan="8" class="text-center py-4">
                                                     <i class="fas fa-info-circle text-muted"></i>
                                                     Nenhum registro encontrado para esta data
                                                 </td>
@@ -197,6 +198,13 @@ $prestadores = $prestadores ?? [];
                                                     <span class="text-muted"><?= htmlspecialchars($p['cpf']) ?></span>
                                                 </td>
                                                 <td><?= $p['entrada_at'] ? date('d/m/Y H:i', strtotime($p['entrada_at'])) : '-' ?></td>
+                                                <td>
+                                                    <?php if (!empty($p['saida'])): ?>
+                                                        <span class="text-danger font-weight-bold"><?= date('d/m/Y H:i', strtotime($p['saida'])) ?></span>
+                                                    <?php else: ?>
+                                                        <span class="text-muted">-</span>
+                                                    <?php endif; ?>
+                                                </td>
                                             </tr>
                                             <?php endforeach; ?>
                                         <?php endif; ?>

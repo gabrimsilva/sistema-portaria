@@ -256,6 +256,12 @@ try {
                 case 'delete':
                     $controller->delete();
                     break;
+                case 'edit_inline_ajax':
+                    $controller->editInlineAjax();
+                    break;
+                case 'delete_inline_ajax':
+                    $controller->deleteInlineAjax();
+                    break;
                 default:
                     $controller->index();
                     break;
@@ -300,6 +306,12 @@ try {
                 case 'delete':
                     $controller->delete();
                     break;
+                case 'edit_inline_ajax':
+                    $controller->editInlineAjax();
+                    break;
+                case 'delete_inline_ajax':
+                    $controller->deleteInlineAjax();
+                    break;
                 default:
                     $controller->index();
                     break;
@@ -340,6 +352,12 @@ try {
                     break;
                 case 'delete':
                     $controller->delete();
+                    break;
+                case 'edit_inline_ajax':
+                    $controller->editInlineAjax();
+                    break;
+                case 'delete_inline_ajax':
+                    $controller->deleteInlineAjax();
                     break;
                 default:
                     $controller->index();

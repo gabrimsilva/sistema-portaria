@@ -666,4 +666,180 @@ class ProfissionaisRennerController {
         }
         exit;
     }
+    
+    /**
+     * Editar registro inline (usado nos relatórios)
+     * Requer permissão: relatorios.editar_linha
+     */
+    public function editInlineAjax() {
+        header('Content-Type: application/json');
+        
+        // Verificar autenticação
+        if (!isset($_SESSION['user_id'])) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'message' => 'Não autenticado']);
+            exit;
+        }
+        
+        // Verificar permissão
+        require_once __DIR__ . '/../services/AuthorizationService.php';
+        $authService = new AuthorizationService();
+        
+        if (!$authService->hasPermission('relatorios.editar_linha')) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Você não tem permissão para editar registros inline']);
+            exit;
+        }
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método não permitido']);
+            exit;
+        }
+        
+        try {
+            CSRFProtection::verifyRequest();
+            
+            $id = $_POST['id'] ?? null;
+            
+            if (!$id) {
+                throw new Exception('ID é obrigatório');
+            }
+            
+            // Buscar registro atual
+            $profissional = $this->db->fetch("SELECT * FROM profissionais_renner WHERE id = ?", [$id]);
+            if (!$profissional) {
+                throw new Exception('Registro não encontrado');
+            }
+            
+            // Preparar dados para atualização (apenas campos fornecidos)
+            $updateFields = [];
+            $updateParams = [];
+            
+            if (isset($_POST['nome'])) {
+                $updateFields[] = 'nome = ?';
+                $updateParams[] = trim($_POST['nome']);
+            }
+            
+            if (isset($_POST['setor'])) {
+                $updateFields[] = 'setor = ?';
+                $updateParams[] = trim($_POST['setor']);
+            }
+            
+            if (isset($_POST['placa_veiculo'])) {
+                $placa = strtoupper(preg_replace('/[^A-Z0-9]/', '', $_POST['placa_veiculo']));
+                $updateFields[] = 'placa_veiculo = ?';
+                $updateParams[] = $placa;
+            }
+            
+            if (isset($_POST['data_entrada'])) {
+                $updateFields[] = 'data_entrada = ?';
+                $updateParams[] = $_POST['data_entrada'] ?: null;
+            }
+            
+            if (isset($_POST['saida'])) {
+                $updateFields[] = 'saida = ?';
+                $updateParams[] = $_POST['saida'] ?: null;
+            }
+            
+            if (isset($_POST['retorno'])) {
+                $updateFields[] = 'retorno = ?';
+                $updateParams[] = $_POST['retorno'] ?: null;
+            }
+            
+            if (isset($_POST['saida_final'])) {
+                $updateFields[] = 'saida_final = ?';
+                $updateParams[] = $_POST['saida_final'] ?: null;
+            }
+            
+            if (empty($updateFields)) {
+                throw new Exception('Nenhum campo para atualizar');
+            }
+            
+            // Adicionar updated_at
+            $updateFields[] = 'updated_at = CURRENT_TIMESTAMP';
+            
+            // Adicionar ID ao final dos parâmetros
+            $updateParams[] = $id;
+            
+            // Executar atualização
+            $query = "UPDATE profissionais_renner SET " . implode(', ', $updateFields) . " WHERE id = ?";
+            $this->db->query($query, $updateParams);
+            
+            // Buscar registro atualizado
+            $profissionalAtualizado = $this->db->fetch("SELECT * FROM profissionais_renner WHERE id = ?", [$id]);
+            
+            echo json_encode([
+                'success' => true,
+                'message' => 'Registro atualizado com sucesso',
+                'data' => $profissionalAtualizado
+            ]);
+            
+        } catch (Exception $e) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+        exit;
+    }
+    
+    /**
+     * Excluir registro inline (usado nos relatórios)
+     * Requer permissão: relatorios.excluir_linha
+     */
+    public function deleteInlineAjax() {
+        header('Content-Type: application/json');
+        
+        // Verificar autenticação
+        if (!isset($_SESSION['user_id'])) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'message' => 'Não autenticado']);
+            exit;
+        }
+        
+        // Verificar permissão
+        require_once __DIR__ . '/../services/AuthorizationService.php';
+        $authService = new AuthorizationService();
+        
+        if (!$authService->hasPermission('relatorios.excluir_linha')) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Você não tem permissão para excluir registros inline']);
+            exit;
+        }
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método não permitido']);
+            exit;
+        }
+        
+        try {
+            CSRFProtection::verifyRequest();
+            
+            $id = $_POST['id'] ?? null;
+            
+            if (!$id) {
+                throw new Exception('ID é obrigatório');
+            }
+            
+            // Verificar se o registro existe
+            $profissional = $this->db->fetch("SELECT nome FROM profissionais_renner WHERE id = ?", [$id]);
+            if (!$profissional) {
+                throw new Exception('Registro não encontrado');
+            }
+            
+            // Excluir registro
+            $this->db->query("DELETE FROM profissionais_renner WHERE id = ?", [$id]);
+            
+            echo json_encode([
+                'success' => true,
+                'message' => 'Registro excluído com sucesso',
+                'data' => ['id' => $id, 'nome' => $profissional['nome']]
+            ]);
+            
+        } catch (Exception $e) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+        exit;
+    }
 }

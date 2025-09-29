@@ -1,3 +1,10 @@
+<?php
+// Verificar permissões para botões inline
+require_once __DIR__ . '/../../../src/services/AuthorizationService.php';
+$authService = new AuthorizationService();
+$canEditInline = $authService->hasPermission('relatorios.editar_linha');
+$canDeleteInline = $authService->hasPermission('relatorios.excluir_linha');
+?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -143,19 +150,22 @@
                                 <table class="table table-bordered table-hover table-sm">
                                     <thead class="table-dark">
                                         <tr>
-                                            <th width="20%">Nome</th>
-                                            <th width="12%">Setor</th>
-                                            <th width="12%">Placa/Veículo</th>
-                                            <th width="14%">Data/Hora Entrada</th>
-                                            <th width="14%">Saída Intermediária</th>
-                                            <th width="14%">Retorno</th>
-                                            <th width="14%">Hora de Saída</th>
+                                            <th width="18%">Nome</th>
+                                            <th width="10%">Setor</th>
+                                            <th width="10%">Placa/Veículo</th>
+                                            <th width="12%">Data/Hora Entrada</th>
+                                            <th width="12%">Saída Intermediária</th>
+                                            <th width="12%">Retorno</th>
+                                            <th width="12%">Hora de Saída</th>
+                                            <?php if ($canEditInline || $canDeleteInline): ?>
+                                            <th width="14%">Ações</th>
+                                            <?php endif; ?>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <?php if (empty($profissionais)): ?>
                                             <tr>
-                                                <td colspan="7" class="text-center py-4">
+                                                <td colspan="<?= ($canEditInline || $canDeleteInline) ? '8' : '7' ?>" class="text-center py-4">
                                                     <i class="fas fa-info-circle text-muted"></i>
                                                     Nenhum registro encontrado para esta data
                                                 </td>
@@ -198,6 +208,20 @@
                                                         <span class="text-muted">-</span>
                                                     <?php endif; ?>
                                                 </td>
+                                                <?php if ($canEditInline || $canDeleteInline): ?>
+                                                <td class="text-center">
+                                                    <?php if ($canEditInline): ?>
+                                                    <button class="btn btn-sm btn-warning btn-edit-inline" data-id="<?= $prof['id'] ?>" title="Editar">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    <?php endif; ?>
+                                                    <?php if ($canDeleteInline): ?>
+                                                    <button class="btn btn-sm btn-danger btn-delete-inline" data-id="<?= $prof['id'] ?>" data-nome="<?= htmlspecialchars($prof['nome']) ?>" title="Excluir">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                    <?php endif; ?>
+                                                </td>
+                                                <?php endif; ?>
                                             </tr>
                                             <?php endforeach; ?>
                                         <?php endif; ?>
@@ -298,5 +322,79 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+    
+    <script>
+    $(document).ready(function() {
+        const csrfToken = $('meta[name="csrf-token"]').attr('content');
+        
+        // Editar registro inline
+        $('.btn-edit-inline').on('click', function() {
+            const id = $(this).data('id');
+            
+            // Por enquanto, redirecionar para a página de edição
+            // No futuro, pode abrir um modal inline
+            window.location.href = '/reports/profissionais-renner?action=edit&id=' + id;
+        });
+        
+        // Excluir registro inline
+        $('.btn-delete-inline').on('click', function() {
+            const id = $(this).data('id');
+            const nome = $(this).data('nome');
+            
+            if (!confirm('Tem certeza que deseja excluir o registro de "' + nome + '"?\\nEsta ação não pode ser desfeita.')) {
+                return;
+            }
+            
+            // Desabilitar botão durante a requisição
+            const $btn = $(this);
+            $btn.prop('disabled', true);
+            
+            $.ajax({
+                url: '/reports/profissionais-renner?action=delete_inline_ajax',
+                method: 'POST',
+                data: {
+                    id: id,
+                    csrf_token: csrfToken
+                },
+                success: function(response) {
+                    if (response.success) {
+                        // Remover linha da tabela
+                        $btn.closest('tr').fadeOut(300, function() {
+                            $(this).remove();
+                            
+                            // Verificar se a tabela ficou vazia
+                            if ($('tbody tr').length === 0) {
+                                location.reload();
+                            }
+                        });
+                        
+                        // Mostrar mensagem de sucesso
+                        const alert = $('<div class="alert alert-success alert-dismissible">' +
+                            '<button type="button" class="close" data-dismiss="alert">&times;</button>' +
+                            response.message +
+                            '</div>');
+                        $('.content-fluid .container-fluid').prepend(alert);
+                        
+                        // Auto-remover alerta após 5 segundos
+                        setTimeout(function() {
+                            alert.fadeOut(300, function() { $(this).remove(); });
+                        }, 5000);
+                    } else {
+                        alert('Erro ao excluir: ' + response.message);
+                        $btn.prop('disabled', false);
+                    }
+                },
+                error: function(xhr) {
+                    let message = 'Erro ao excluir o registro.';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        message = xhr.responseJSON.message;
+                    }
+                    alert(message);
+                    $btn.prop('disabled', false);
+                }
+            });
+        });
+    });
+    </script>
 </body>
 </html>

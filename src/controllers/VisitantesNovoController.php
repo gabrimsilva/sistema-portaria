@@ -788,6 +788,173 @@ class VisitantesNovoController {
         exit;
     }
     
+    /**
+     * Editar registro inline (usado nos relatórios)
+     * Requer permissão: relatorios.editar_linha
+     */
+    public function editInlineAjax() {
+        header('Content-Type: application/json');
+        
+        if (!isset($_SESSION['user_id'])) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'message' => 'Não autenticado']);
+            exit;
+        }
+        
+        require_once __DIR__ . '/../services/AuthorizationService.php';
+        $authService = new AuthorizationService();
+        
+        if (!$authService->hasPermission('relatorios.editar_linha')) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Você não tem permissão para editar registros inline']);
+            exit;
+        }
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método não permitido']);
+            exit;
+        }
+        
+        try {
+            CSRFProtection::verifyRequest();
+            
+            $id = $_POST['id'] ?? null;
+            if (!$id) {
+                throw new Exception('ID é obrigatório');
+            }
+            
+            $visitante = $this->db->fetch("SELECT * FROM visitantes_novo WHERE id = ?", [$id]);
+            if (!$visitante) {
+                throw new Exception('Registro não encontrado');
+            }
+            
+            $updateFields = [];
+            $updateParams = [];
+            
+            if (isset($_POST['nome'])) {
+                $updateFields[] = 'nome = ?';
+                $updateParams[] = trim($_POST['nome']);
+            }
+            
+            if (isset($_POST['cpf'])) {
+                $cpf = preg_replace('/\D/', '', $_POST['cpf']);
+                $updateFields[] = 'cpf = ?';
+                $updateParams[] = $cpf;
+            }
+            
+            if (isset($_POST['empresa'])) {
+                $updateFields[] = 'empresa = ?';
+                $updateParams[] = trim($_POST['empresa']);
+            }
+            
+            if (isset($_POST['funcionario_responsavel'])) {
+                $updateFields[] = 'funcionario_responsavel = ?';
+                $updateParams[] = trim($_POST['funcionario_responsavel']);
+            }
+            
+            if (isset($_POST['setor'])) {
+                $updateFields[] = 'setor = ?';
+                $updateParams[] = trim($_POST['setor']);
+            }
+            
+            if (isset($_POST['placa_veiculo'])) {
+                $placa = strtoupper(preg_replace('/[^A-Z0-9]/', '', $_POST['placa_veiculo']));
+                $updateFields[] = 'placa_veiculo = ?';
+                $updateParams[] = $placa;
+            }
+            
+            if (isset($_POST['hora_entrada'])) {
+                $updateFields[] = 'hora_entrada = ?';
+                $updateParams[] = $_POST['hora_entrada'] ?: null;
+            }
+            
+            if (isset($_POST['hora_saida'])) {
+                $updateFields[] = 'hora_saida = ?';
+                $updateParams[] = $_POST['hora_saida'] ?: null;
+            }
+            
+            if (empty($updateFields)) {
+                throw new Exception('Nenhum campo para atualizar');
+            }
+            
+            $updateFields[] = 'updated_at = CURRENT_TIMESTAMP';
+            $updateParams[] = $id;
+            
+            $query = "UPDATE visitantes_novo SET " . implode(', ', $updateFields) . " WHERE id = ?";
+            $this->db->query($query, $updateParams);
+            
+            $visitanteAtualizado = $this->db->fetch("SELECT * FROM visitantes_novo WHERE id = ?", [$id]);
+            
+            echo json_encode([
+                'success' => true,
+                'message' => 'Registro atualizado com sucesso',
+                'data' => $visitanteAtualizado
+            ]);
+            
+        } catch (Exception $e) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+        exit;
+    }
+    
+    /**
+     * Excluir registro inline (usado nos relatórios)
+     * Requer permissão: relatorios.excluir_linha
+     */
+    public function deleteInlineAjax() {
+        header('Content-Type: application/json');
+        
+        if (!isset($_SESSION['user_id'])) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'message' => 'Não autenticado']);
+            exit;
+        }
+        
+        require_once __DIR__ . '/../services/AuthorizationService.php';
+        $authService = new AuthorizationService();
+        
+        if (!$authService->hasPermission('relatorios.excluir_linha')) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Você não tem permissão para excluir registros inline']);
+            exit;
+        }
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método não permitido']);
+            exit;
+        }
+        
+        try {
+            CSRFProtection::verifyRequest();
+            
+            $id = $_POST['id'] ?? null;
+            if (!$id) {
+                throw new Exception('ID é obrigatório');
+            }
+            
+            $visitante = $this->db->fetch("SELECT nome FROM visitantes_novo WHERE id = ?", [$id]);
+            if (!$visitante) {
+                throw new Exception('Registro não encontrado');
+            }
+            
+            $this->db->query("DELETE FROM visitantes_novo WHERE id = ?", [$id]);
+            
+            echo json_encode([
+                'success' => true,
+                'message' => 'Registro excluído com sucesso',
+                'data' => ['id' => $id, 'nome' => $visitante['nome']]
+            ]);
+            
+        } catch (Exception $e) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+        exit;
+    }
+    
     private function canViewFullCpf() {
         // LGPD: Mascarar CPF na seção de relatórios
         $currentUri = $_SERVER['REQUEST_URI'] ?? '';

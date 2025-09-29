@@ -6,11 +6,13 @@ require_once __DIR__ . '/../utils/DateTimeValidator.php';
 class ProfissionaisRennerController {
     private $db;
     private $duplicityService;
+    private $auditService;
     
     public function __construct() {
         $this->checkAuthentication();
         $this->db = new Database();
         $this->duplicityService = new DuplicityValidationService();
+        $this->auditService = new AuditService();
     }
     
     private function checkAuthentication() {
@@ -239,6 +241,22 @@ class ProfissionaisRennerController {
                 
                 $this->db->commit();
                 
+                // Registrar auditoria
+                $registro_id = $this->db->lastInsertId();
+                $this->auditService->log(
+                    'create',
+                    'registro_acesso',
+                    $registro_id,
+                    null,
+                    [
+                        'tipo' => 'profissional_renner',
+                        'nome' => $nome,
+                        'setor' => $setor,
+                        'placa_veiculo' => $placa_veiculo,
+                        'profissional_renner_id' => $profissional_id
+                    ]
+                );
+                
                 header('Location: ' . $this->getBaseRoute() . '?success=1');
                 exit;
             } catch (Exception $e) {
@@ -419,7 +437,20 @@ class ProfissionaisRennerController {
                     if ($hasHistory && $hasHistory['count'] > 0) {
                         $_SESSION['error'] = 'Não é possível excluir este profissional pois existem ' . $hasHistory['count'] . ' registro(s) de acesso associados. Para preservar o histórico de auditoria, a exclusão foi bloqueada.';
                     } else {
+                        // Capturar dados antes da exclusão
+                        $profissionalAntes = $this->db->fetch("SELECT * FROM profissionais_renner WHERE id = ?", [$id]);
+                        
                         $this->db->query("DELETE FROM profissionais_renner WHERE id = ?", [$id]);
+                        
+                        // Registrar auditoria
+                        $this->auditService->log(
+                            'delete',
+                            'profissionais_renner',
+                            $id,
+                            $profissionalAntes,
+                            null
+                        );
+                        
                         $_SESSION['success'] = 'Profissional excluído com sucesso';
                     }
                 } catch (Exception $e) {
@@ -508,6 +539,21 @@ class ProfissionaisRennerController {
                 $registro_id = $this->db->lastInsertId();
                 
                 $this->db->commit();
+                
+                // Registrar auditoria
+                $this->auditService->log(
+                    'create',
+                    'registro_acesso',
+                    $registro_id,
+                    null,
+                    [
+                        'tipo' => 'profissional_renner',
+                        'nome' => $nome,
+                        'setor' => $setor,
+                        'placa_veiculo' => $placa_veiculo,
+                        'profissional_renner_id' => $profissional_id
+                    ]
+                );
                 
                 echo json_encode([
                     'success' => true, 

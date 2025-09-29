@@ -9,12 +9,14 @@ use PhpOffice\PhpSpreadsheet\Shared\Date;
 class ImportacaoController {
     private $db;
     private $authService;
+    private $auditService;
     
     public function __construct() {
         $this->checkAuthentication();
         $this->checkPermission();
         $this->db = new Database();
         $this->authService = new AuthorizationService();
+        $this->auditService = new AuditService();
     }
     
     private function checkAuthentication() {
@@ -233,6 +235,23 @@ class ImportacaoController {
                 } catch (Exception $e) {
                     $errors++;
                 }
+            }
+            
+            // Registrar auditoria da importação
+            if ($imported > 0 || $skipped > 0) {
+                $this->auditService->log(
+                    'import',
+                    'profissionais_renner',
+                    null,
+                    null,
+                    [
+                        'arquivo' => $_POST['temp_file'] ?? 'unknown',
+                        'total_linhas' => count($rows) - 1,
+                        'importados' => $imported,
+                        'duplicados_ignorados' => $skipped,
+                        'erros' => $errors
+                    ]
+                );
             }
             
             echo json_encode([

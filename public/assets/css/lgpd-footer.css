@@ -18,13 +18,16 @@
     padding-right: 15px;
 }
 
-.lgpd-footer-links .card {
-    /* 🔧 NOVO: Card ultra-sutil - praticamente transparente */
-    border: 1px solid rgba(0,0,0,0.05);
-    border-radius: 8px;
-    box-shadow: none;
-    background-color: rgba(255,255,255,0.3);
-    backdrop-filter: blur(10px);
+.lgpd-footer-links .card,
+.lgpd-footer-links .card.border-0,
+div.lgpd-footer-links .card {
+    /* 🔧 NOVO: Card ultra-sutil - praticamente transparente com !important */
+    border: 1px solid rgba(0,0,0,0.05) !important;
+    border-radius: 8px !important;
+    box-shadow: none !important;
+    background-color: rgba(255,255,255,0.2) !important;
+    background: rgba(255,255,255,0.2) !important;
+    backdrop-filter: blur(10px) !important;
 }
 
 .lgpd-footer-links .btn {

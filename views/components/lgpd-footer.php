@@ -7,8 +7,8 @@
  */
 ?>
 
-<!-- 🛡️ CSS Dedicado LGPD Footer -->
-<link rel="stylesheet" href="<?= BASE_URL ?>assets/css/lgpd-footer.css?v=<?= time() ?>">
+<!-- 🛡️ CSS Dedicado LGPD Footer - Force Reload -->
+<link rel="stylesheet" href="<?= BASE_URL ?>assets/css/lgpd-footer.css?v=20250929<?= microtime(true) ?>">
 
 <!-- Rodapé LGPD -->
 <div class="lgpd-footer-links">

@@ -146,6 +146,8 @@ class ProfissionaisRennerController {
             CSRFProtection::verifyRequest();
             try {
                 $nome = trim($_POST['nome'] ?? '');
+                $cpf = trim($_POST['cpf'] ?? '');
+                $empresa = trim($_POST['empresa'] ?? '');
                 $setor = trim($_POST['setor'] ?? '');
                 $placa_veiculo = trim($_POST['placa_veiculo'] ?? '');
                 $data_entrada = $_POST['data_entrada'] ?? null;
@@ -212,10 +214,12 @@ class ProfissionaisRennerController {
                 // ==========================================
                 
                 $this->db->query("
-                    INSERT INTO profissionais_renner (nome, data_entrada, saida, retorno, saida_final, setor, placa_veiculo)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO profissionais_renner (nome, cpf, empresa, data_entrada, saida, retorno, saida_final, setor, placa_veiculo)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ", [
                     $nome,
+                    $cpf ?: null,
+                    $empresa ?: null,
                     $data_entrada,
                     $saida ?: null,
                     $retorno ?: null,
@@ -255,6 +259,8 @@ class ProfissionaisRennerController {
             try {
                 $id = $_POST['id'] ?? null;
                 $nome = trim($_POST['nome'] ?? '');
+                $cpf = trim($_POST['cpf'] ?? '');
+                $empresa = trim($_POST['empresa'] ?? '');
                 $setor = trim($_POST['setor'] ?? '');
                 $placa_veiculo = trim($_POST['placa_veiculo'] ?? '');
                 $data_entrada = $_POST['data_entrada'] ?? null;
@@ -337,10 +343,12 @@ class ProfissionaisRennerController {
                 
                 $this->db->query("
                     UPDATE profissionais_renner 
-                    SET nome = ?, data_entrada = ?, saida = ?, retorno = ?, saida_final = ?, setor = ?, placa_veiculo = ?, updated_at = CURRENT_TIMESTAMP
+                    SET nome = ?, cpf = ?, empresa = ?, data_entrada = ?, saida = ?, retorno = ?, saida_final = ?, setor = ?, placa_veiculo = ?, updated_at = CURRENT_TIMESTAMP
                     WHERE id = ?
                 ", [
                     $nome,
+                    $cpf ?: null,
+                    $empresa ?: null,
                     $data_entrada ?: null,
                     $saida ?: null,
                     $retorno ?: null,

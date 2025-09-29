@@ -471,6 +471,12 @@ try {
             }
             break;
             
+        case 'importacao':
+            require_once '../src/controllers/ImportacaoController.php';
+            $controller = new ImportacaoController();
+            $controller->index();
+            break;
+            
         default:
             // 🎨 Páginas de demonstração
             if ($path === 'demo/components') {

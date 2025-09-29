@@ -9,6 +9,30 @@
     <link href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+    <style>
+        /* Garantir que o dropdown do autocomplete apareça por cima do modal */
+        .ui-autocomplete {
+            z-index: 1060 !important;
+            max-height: 300px;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+        
+        /* Estilizar os itens do autocomplete para combinar com o tema */
+        .ui-menu-item {
+            font-size: 14px;
+        }
+        
+        .ui-menu-item-wrapper {
+            padding: 8px 12px;
+        }
+        
+        .ui-state-active {
+            background-color: #007bff !important;
+            border-color: #007bff !important;
+            color: white !important;
+        }
+    </style>
 </head>
 <body class="hold-transition sidebar-mini layout-fixed">
     <div class="wrapper">

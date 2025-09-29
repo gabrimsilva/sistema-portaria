@@ -73,7 +73,11 @@ class ImportacaoController {
             
             $file = $_FILES['file'];
             
-            // Validar arquivo
+            $maxFileSize = 10 * 1024 * 1024;
+            if ($file['size'] > $maxFileSize) {
+                throw new Exception('Arquivo muito grande. Tamanho máximo: 10 MB');
+            }
+            
             $allowedExtensions = ['csv', 'xlsx', 'xls'];
             $fileExtension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
             
@@ -83,6 +87,23 @@ class ImportacaoController {
             
             if ($file['error'] !== UPLOAD_ERR_OK) {
                 throw new Exception('Erro no upload do arquivo');
+            }
+            
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $mimeType = finfo_file($finfo, $file['tmp_name']);
+            finfo_close($finfo);
+            
+            $allowedMimeTypes = [
+                'text/plain',
+                'text/csv',
+                'application/csv',
+                'application/vnd.ms-excel',
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'application/octet-stream'
+            ];
+            
+            if (!in_array($mimeType, $allowedMimeTypes)) {
+                throw new Exception('Tipo de arquivo inválido');
             }
             
             // Processar arquivo temporariamente
@@ -120,6 +141,8 @@ class ImportacaoController {
     private function processImport() {
         header('Content-Type: application/json');
         
+        $filePath = null;
+        
         try {
             CSRFProtection::verifyRequest();
             
@@ -144,18 +167,30 @@ class ImportacaoController {
                 throw new Exception('Arquivo vazio ou sem dados');
             }
             
-            $header = array_map('strtolower', array_map('trim', $rows[0]));
+            $header = array_map(function($col) {
+                $col = trim($col);
+                $col = preg_replace('/^\xEF\xBB\xBF/', '', $col);
+                $col = strtolower($col);
+                $col = $this->normalizeString($col);
+                return $col;
+            }, $rows[0]);
             
-            $requiredColumns = ['nome', 'setor', 'data de admissão', 'fre'];
+            $requiredColumns = ['nome', 'setor', 'data de admissao', 'fre'];
+            $missingColumns = [];
+            
             foreach ($requiredColumns as $col) {
                 if (!in_array($col, $header)) {
-                    throw new Exception("Coluna obrigatória '$col' não encontrada no arquivo");
+                    $missingColumns[] = $col;
                 }
+            }
+            
+            if (!empty($missingColumns)) {
+                throw new Exception("Colunas obrigatórias não encontradas: " . implode(', ', $missingColumns) . ". Esperado: Nome, Setor, Data de Admissão, FRE");
             }
             
             $nomeIndex = array_search('nome', $header);
             $setorIndex = array_search('setor', $header);
-            $dataAdmissaoIndex = array_search('data de admissão', $header);
+            $dataAdmissaoIndex = array_search('data de admissao', $header);
             $freIndex = array_search('fre', $header);
             
             $imported = 0;
@@ -200,8 +235,6 @@ class ImportacaoController {
                 }
             }
             
-            unlink($filePath);
-            
             echo json_encode([
                 'success' => true,
                 'message' => 'Importação concluída',
@@ -217,7 +250,23 @@ class ImportacaoController {
                 'success' => false,
                 'message' => $e->getMessage()
             ]);
+        } finally {
+            if ($filePath && file_exists($filePath)) {
+                @unlink($filePath);
+            }
         }
+    }
+    
+    private function normalizeString($str) {
+        $unwanted = [
+            'á' => 'a', 'à' => 'a', 'ã' => 'a', 'â' => 'a', 'ä' => 'a',
+            'é' => 'e', 'è' => 'e', 'ê' => 'e', 'ë' => 'e',
+            'í' => 'i', 'ì' => 'i', 'î' => 'i', 'ï' => 'i',
+            'ó' => 'o', 'ò' => 'o', 'õ' => 'o', 'ô' => 'o', 'ö' => 'o',
+            'ú' => 'u', 'ù' => 'u', 'û' => 'u', 'ü' => 'u',
+            'ç' => 'c', 'ñ' => 'n'
+        ];
+        return strtr($str, $unwanted);
     }
     
     private function parseDate($value) {

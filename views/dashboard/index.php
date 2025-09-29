@@ -603,26 +603,6 @@
                         </div>
                         
 
-                        <!-- Botão geral para outros tipos -->
-                        <div id="botao_saida_geral" class="form-group" style="display: none;">
-                            <div class="card bg-danger text-white">
-                                <div class="card-header">
-                                    <h6 class="card-title mb-0">
-                                        <i class="fas fa-sign-out-alt"></i> Registrar Saída
-                                    </h6>
-                                </div>
-                                <div class="card-body text-center">
-                                    <p class="mb-3">
-                                        <i class="fas fa-exclamation-triangle"></i> 
-                                        Esta ação registrará a saída da pessoa da empresa.
-                                    </p>
-                                    <button type="button" class="btn btn-light btn-lg" id="btnRegistrarSaida">
-                                        <i class="fas fa-sign-out-alt text-danger"></i> 
-                                        <span id="texto_saida">Registrar Saída</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -1133,7 +1113,7 @@
             }
             
             // Mostrar/ocultar campos específicos baseado no tipo
-            $('#campo_funcionario_responsavel, #campo_hora_saida, #campo_observacao, #campos_profissional_renner, #botao_saida_geral').hide();
+            $('#campo_funcionario_responsavel, #campo_hora_saida, #campo_observacao, #campos_profissional_renner').hide();
             
             // Mostrar campo de hora de saída para todos os tipos
             $('#campo_hora_saida').show();
@@ -1146,16 +1126,12 @@
                 $('#campo_placa_veiculo').show();
                 // Mostrar campos específicos M2: saida e retorno
                 $('#campos_profissional_renner').show();
-                // Usar botão geral para todos os tipos agora
-                $('#botao_saida_geral').show();
                 // Alterar cor do header do modal para Profissional Renner
                 $('.modal-header').removeClass('bg-info').addClass('bg-primary');
             } else {
                 $('#campo_empresa').show();
                 $('#campo_cpf').show();
                 $('#campo_placa_veiculo').show();
-                // Mostrar botão geral para todos os tipos
-                $('#botao_saida_geral').show();
                 // Manter cor padrão do header para outros tipos
                 $('.modal-header').removeClass('bg-primary').addClass('bg-info');
             }
@@ -1364,88 +1340,12 @@
             });
         });
 
-        // Handler do botão de registrar saída (apenas para Visitante e Prestador)
-        $('#btnRegistrarSaida').on('click', function() {
-            const tipoOriginal = $('#edit_tipo_original').val();
-            const id = $('#edit_id').val();
-            const nome = $('#edit_nome').val();
-            
-            // Verificar se não é Profissional Renner
-            if (tipoOriginal === 'Profissional Renner') {
-                showToast('Use os botões específicos para Profissional Renner', 'warning');
-                return;
-            }
-            
-            $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Processando...');
-            
-            let endpointSaida = '';
-            let mensagemSucesso = '';
-            
-            switch (tipoOriginal) {
-                case 'Visitante':
-                    endpointSaida = `/visitantes?action=registrar_saida&id=${id}`;
-                    mensagemSucesso = 'Saída do visitante registrada com sucesso!';
-                    break;
-                case 'Prestador':
-                    endpointSaida = `/prestadores-servico?action=saida&id=${id}`;
-                    mensagemSucesso = 'Saída do prestador registrada com sucesso!';
-                    break;
-                default:
-                    showToast('Tipo de registro inválido', 'error');
-                    $(this).prop('disabled', false).html('<i class="fas fa-sign-out-alt text-danger"></i> <span id="texto_saida">Registrar Saída</span>');
-                    return;
-            }
-            
-            $.ajax({
-                url: endpointSaida,
-                method: 'POST',
-                data: {
-                    csrf_token: $('meta[name="csrf-token"]').attr('content') || '<?= CSRFProtection::generateToken() ?>'
-                },
-                dataType: 'json',
-                success: function(response) {
-                    if (response.success) {
-                        showToast(mensagemSucesso);
-                        $('#modalEditar').modal('hide');
-                        // Remover a linha da tabela quando pessoa sai da empresa
-                        $(`.btn-editar[data-id="${id}"]`).closest('tr').fadeOut(300, function() {
-                            $(this).remove();
-                            // Atualizar contador de pessoas na empresa
-                            const badge = $('.card-title .badge');
-                            const contadorAtual = parseInt(badge.text()) || 0;
-                            if (contadorAtual > 0) {
-                                badge.text(contadorAtual - 1);
-                            }
-                            // Atualizar contador de saídas hoje
-                            const saidasCard = $('.small-box').eq(3).find('.inner h3');
-                            const saidasAtual = parseInt(saidasCard.text()) || 0;
-                            saidasCard.text(saidasAtual + 1);
-                        });
-                    } else {
-                        showToast(response.message || 'Erro ao registrar saída', 'error');
-                    }
-                },
-                error: function(xhr, status, error) {
-                    if (xhr.status === 401) {
-                        showToast('Sessão expirada. Você será redirecionado para o login.', 'error');
-                        setTimeout(() => {
-                            window.location.href = '/login';
-                        }, 2000);
-                    } else {
-                        showToast('Erro na comunicação com o servidor', 'error');
-                    }
-                },
-                complete: function() {
-                    $('#btnRegistrarSaida').prop('disabled', false).html('<i class="fas fa-sign-out-alt text-danger"></i> <span id="texto_saida">Registrar Saída</span>');
-                }
-            });
-        });
 
 
         // Limpar formulário de edição ao fechar modal
         $('#modalEditar').on('hidden.bs.modal', function() {
             $('#formEditar')[0].reset();
-            $('#campo_funcionario_responsavel, #campo_hora_saida, #campo_observacao, #campos_profissional_renner, #botao_saida_geral').hide();
+            $('#campo_funcionario_responsavel, #campo_hora_saida, #campo_observacao, #campos_profissional_renner').hide();
         });
 
         // ==================== MÁSCARAS DE ENTRADA - BOOTSTRAP 4.6.2 COMPATÍVEL ====================

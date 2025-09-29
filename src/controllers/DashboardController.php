@@ -39,15 +39,15 @@ class DashboardController {
             // Profissionais que saíram hoje e ainda não retornaram
             $profissionaisForaHoje = $this->db->fetch("
                 SELECT COUNT(*) as total 
-                FROM profissionais_renner 
-                WHERE DATE(saida) = CURRENT_DATE AND retorno IS NULL
+                FROM registro_acesso 
+                WHERE tipo = 'profissional_renner' AND DATE(saida_at) = CURRENT_DATE AND retorno IS NULL
             ")['total'] ?? 0;
             
             // Profissionais Renner ativos (funcionários reais da empresa)
             $profissionaisAtivos = $this->db->fetch("
                 SELECT COUNT(*) as total 
-                FROM profissionais_renner 
-                WHERE (data_entrada IS NOT NULL OR retorno IS NOT NULL) AND saida_final IS NULL
+                FROM registro_acesso 
+                WHERE tipo = 'profissional_renner' AND (entrada_at IS NOT NULL OR retorno IS NOT NULL) AND saida_final IS NULL
             ")['total'] ?? 0;
             
             // Entradas de hoje (de todos os tipos)
@@ -126,13 +126,14 @@ class DashboardController {
             error_log("Erro ao contar prestadores hoje: " . $e->getMessage());
         }
         
-        // Entradas de profissionais hoje (data_entrada OU retorno)
+        // Entradas de profissionais hoje (entrada_at OU retorno)
         try {
             $profissionaisHoje = $this->db->fetch("
                 SELECT COUNT(*) as total 
-                FROM profissionais_renner 
-                WHERE (data_entrada >= CURRENT_DATE AND data_entrada < CURRENT_DATE + INTERVAL '1 day')
-                   OR (retorno >= CURRENT_DATE AND retorno < CURRENT_DATE + INTERVAL '1 day')
+                FROM registro_acesso 
+                WHERE tipo = 'profissional_renner' 
+                  AND ((entrada_at >= CURRENT_DATE AND entrada_at < CURRENT_DATE + INTERVAL '1 day')
+                   OR (retorno >= CURRENT_DATE AND retorno < CURRENT_DATE + INTERVAL '1 day'))
             ")['total'] ?? 0;
             $result['profissionais'] = $profissionaisHoje;
         } catch (Exception $e) {
@@ -173,8 +174,8 @@ class DashboardController {
         try {
             $profissionaisSaidas = $this->db->fetch("
                 SELECT COUNT(*) as total 
-                FROM profissionais_renner 
-                WHERE saida_final >= CURRENT_DATE AND saida_final < CURRENT_DATE + INTERVAL '1 day'
+                FROM registro_acesso 
+                WHERE tipo = 'profissional_renner' AND saida_final >= CURRENT_DATE AND saida_final < CURRENT_DATE + INTERVAL '1 day'
             ")['total'] ?? 0;
             $totalSaidas += $profissionaisSaidas;
         } catch (Exception $e) {
@@ -200,10 +201,11 @@ class DashboardController {
                      WHERE setor IS NOT NULL AND entrada >= CURRENT_DATE - INTERVAL '7 days'
                      GROUP BY setor)
                     UNION ALL
-                    (SELECT setor, COUNT(*) as total
-                     FROM profissionais_renner 
-                     WHERE setor IS NOT NULL AND data_entrada >= CURRENT_DATE - INTERVAL '7 days'
-                     GROUP BY setor)
+                    (SELECT p.setor, COUNT(*) as total
+                     FROM registro_acesso r
+                     JOIN profissionais_renner p ON p.id = r.profissional_renner_id
+                     WHERE r.tipo = 'profissional_renner' AND p.setor IS NOT NULL AND r.entrada_at >= CURRENT_DATE - INTERVAL '7 days'
+                     GROUP BY p.setor)
                 ) AS movimentacao
                 GROUP BY setor
                 ORDER BY total_movimentacao DESC 
@@ -236,15 +238,17 @@ class DashboardController {
                 ORDER BY entrada DESC
             ") ?? [];
             
-            // Profissionais que estão na empresa (têm data_entrada ou retorno, mas não saída_final)
+            // Profissionais que estão na empresa (têm entrada_at ou retorno, mas não saída_final)
             $profissionaisAtivos = $this->db->fetchAll("
-                SELECT nome, cpf, empresa, setor, 
-                       COALESCE(retorno, data_entrada) as hora_entrada, 
-                       'Profissional Renner' as tipo, id, placa_veiculo
-                FROM profissionais_renner 
-                WHERE (data_entrada IS NOT NULL OR retorno IS NOT NULL) 
-                  AND saida_final IS NULL
-                ORDER BY COALESCE(retorno, data_entrada) DESC
+                SELECT p.nome, r.cpf, r.empresa, p.setor, 
+                       COALESCE(r.retorno, r.entrada_at) as hora_entrada, 
+                       'Profissional Renner' as tipo, r.id, r.placa_veiculo
+                FROM registro_acesso r
+                JOIN profissionais_renner p ON p.id = r.profissional_renner_id
+                WHERE r.tipo = 'profissional_renner' 
+                  AND (r.entrada_at IS NOT NULL OR r.retorno IS NOT NULL) 
+                  AND r.saida_final IS NULL
+                ORDER BY COALESCE(r.retorno, r.entrada_at) DESC
             ") ?? [];
             
             // Combinar todos os tipos

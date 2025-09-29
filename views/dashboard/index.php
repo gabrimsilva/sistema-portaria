@@ -713,10 +713,12 @@
                 // Verificar cada tipo de saída possível nos dados retornados pelo controller
                 if (data.hora_saida && data.hora_saida !== null && data.hora_saida !== '') {
                     temSaida = true; // Visitante com saída
-                } else if (data.saida && data.saida !== null && data.saida !== '') {
-                    temSaida = true; // Prestador com saída  
                 } else if (data.saida_final && data.saida_final !== null && data.saida_final !== '') {
-                    temSaida = true; // Profissional com saída final
+                    temSaida = true; // Profissional Renner com saída final
+                } else if (data.saida && data.saida !== null && data.saida !== '' && !data.hasOwnProperty('setor')) {
+                    // Prestador com saída (só remove se NÃO for Profissional Renner)
+                    // Profissionais Renner têm campo 'setor', Prestadores não têm
+                    temSaida = true; 
                 }
                 
                 // Se a pessoa saiu, remover da tabela e atualizar contadores

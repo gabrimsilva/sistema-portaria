@@ -161,6 +161,9 @@ try {
                 case 'get_data':
                     $controller->getData();
                     break;
+                case 'search':
+                    $controller->searchProfissionais();
+                    break;
                 default:
                     // Outras ações redirecionam para relatório
                     header('Location: /reports/profissionais-renner');
@@ -476,7 +479,7 @@ try {
             $controller = new ImportacaoController();
             $controller->index();
             break;
-            
+        
         default:
             // 🎨 Páginas de demonstração
             if ($path === 'demo/components') {

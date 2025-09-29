@@ -7,6 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
 </head>
 <body class="hold-transition sidebar-mini layout-fixed">
     <div class="wrapper">
@@ -207,12 +208,51 @@
     </div>
     
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
     
     <script>
     $(document).ready(function() {
         let previousValue = '';
+        
+        // Autocomplete para o campo Nome
+        <?php if (!isset($profissional)): ?>
+        $('#nome').autocomplete({
+            source: function(request, response) {
+                $.ajax({
+                    url: '/profissionais-renner?action=search',
+                    dataType: 'json',
+                    data: {
+                        q: request.term
+                    },
+                    success: function(data) {
+                        if (data.success && data.data) {
+                            response($.map(data.data, function(item) {
+                                return {
+                                    label: item.nome + ' - ' + item.setor,
+                                    value: item.nome,
+                                    setor: item.setor,
+                                    fre: item.fre
+                                };
+                            }));
+                        } else {
+                            response([]);
+                        }
+                    },
+                    error: function() {
+                        response([]);
+                    }
+                });
+            },
+            minLength: 2,
+            select: function(event, ui) {
+                $('#nome').val(ui.item.value);
+                $('#setor').val(ui.item.setor);
+                return false;
+            }
+        });
+        <?php endif; ?>
         
         // Controlar checkbox "A pé"
         $('#ape_checkbox').change(function() {

@@ -964,4 +964,33 @@ class ProfissionaisRennerController {
         }
         exit;
     }
+    
+    public function searchProfissionais() {
+        header('Content-Type: application/json');
+        
+        try {
+            $query = $_GET['q'] ?? '';
+            
+            if (empty($query) || strlen($query) < 2) {
+                echo json_encode(['success' => true, 'data' => []]);
+                exit;
+            }
+            
+            $sql = "SELECT id, nome, setor, fre 
+                    FROM profissionais_renner 
+                    WHERE nome ILIKE ? OR setor ILIKE ?
+                    ORDER BY nome ASC
+                    LIMIT 20";
+            
+            $searchTerm = "%{$query}%";
+            $results = $this->db->fetchAll($sql, [$searchTerm, $searchTerm]);
+            
+            echo json_encode(['success' => true, 'data' => $results]);
+            
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Erro ao buscar profissionais']);
+        }
+        exit;
+    }
 }

@@ -18,6 +18,16 @@
                 <div class="card">
                     <div class="card-body py-3">
                         <div class="row align-items-center">
+                            <!-- Botão Fechar -->
+                            <div class="col-auto ml-auto order-last order-md-first">
+                                <button type="button" class="btn btn-link text-muted p-1" 
+                                        onclick="document.querySelector('.lgpd-footer-links').style.display='none'"
+                                        title="Fechar footer LGPD"
+                                        aria-label="Fechar footer LGPD">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            
                             <!-- Informação Principal -->
                             <div class="col-md-6 mb-2 mb-md-0">
                                 <div class="d-flex align-items-center">

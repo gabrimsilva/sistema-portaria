@@ -30,6 +30,20 @@ div.lgpd-footer-links .card {
     backdrop-filter: blur(10px) !important;
 }
 
+/* 🔧 NOVO: Botão fechar footer */
+.lgpd-footer-links .btn-link {
+    color: #6c757d !important;
+    font-size: 1.1rem !important;
+    transition: color 0.3s ease !important;
+    text-decoration: none !important;
+}
+
+.lgpd-footer-links .btn-link:hover {
+    color: #dc3545 !important;
+    text-decoration: none !important;
+    transform: scale(1.1) !important;
+}
+
 .lgpd-footer-links .btn {
     /* 🔧 MELHORADO: Botões menos chamativos */
     border-radius: 20px;

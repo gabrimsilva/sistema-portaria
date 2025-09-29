@@ -1,6 +1,10 @@
 <?php
 
+require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/../services/AuthorizationService.php';
+
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Shared\Date;
 
 class ImportacaoController {
     private $db;
@@ -132,16 +136,79 @@ class ImportacaoController {
                 throw new Exception('Arquivo não encontrado');
             }
             
-            // TODO: Implementar parser CSV/XLSX e inserção de dados
-            // Por enquanto, retornar sucesso simulado
+            $spreadsheet = IOFactory::load($filePath);
+            $worksheet = $spreadsheet->getActiveSheet();
+            $rows = $worksheet->toArray();
+            
+            if (count($rows) < 2) {
+                throw new Exception('Arquivo vazio ou sem dados');
+            }
+            
+            $header = array_map('strtolower', array_map('trim', $rows[0]));
+            
+            $requiredColumns = ['nome', 'setor', 'data de admissão', 'fre'];
+            foreach ($requiredColumns as $col) {
+                if (!in_array($col, $header)) {
+                    throw new Exception("Coluna obrigatória '$col' não encontrada no arquivo");
+                }
+            }
+            
+            $nomeIndex = array_search('nome', $header);
+            $setorIndex = array_search('setor', $header);
+            $dataAdmissaoIndex = array_search('data de admissão', $header);
+            $freIndex = array_search('fre', $header);
+            
+            $imported = 0;
+            $skipped = 0;
+            $errors = 0;
+            
+            for ($i = 1; $i < count($rows); $i++) {
+                $row = $rows[$i];
+                
+                if (empty($row[$nomeIndex])) {
+                    $errors++;
+                    continue;
+                }
+                
+                $nome = trim($row[$nomeIndex]);
+                $setor = trim($row[$setorIndex] ?? '');
+                $fre = trim($row[$freIndex] ?? '');
+                
+                $dataAdmissao = null;
+                if (!empty($row[$dataAdmissaoIndex])) {
+                    $dataAdmissao = $this->parseDate($row[$dataAdmissaoIndex]);
+                }
+                
+                $exists = $this->db->fetch(
+                    "SELECT id FROM profissionais_renner WHERE LOWER(nome) = LOWER(?)",
+                    [$nome]
+                );
+                
+                if ($exists) {
+                    $skipped++;
+                    continue;
+                }
+                
+                try {
+                    $this->db->execute(
+                        "INSERT INTO profissionais_renner (nome, setor, fre, data_admissao, data_entrada) VALUES (?, ?, ?, ?, NOW())",
+                        [$nome, $setor, $fre, $dataAdmissao]
+                    );
+                    $imported++;
+                } catch (Exception $e) {
+                    $errors++;
+                }
+            }
+            
+            unlink($filePath);
             
             echo json_encode([
                 'success' => true,
                 'message' => 'Importação concluída',
                 'data' => [
-                    'imported' => 0,
-                    'skipped' => 0,
-                    'errors' => 0
+                    'imported' => $imported,
+                    'skipped' => $skipped,
+                    'errors' => $errors
                 ]
             ]);
             
@@ -151,5 +218,30 @@ class ImportacaoController {
                 'message' => $e->getMessage()
             ]);
         }
+    }
+    
+    private function parseDate($value) {
+        if (empty($value)) {
+            return null;
+        }
+        
+        if (is_numeric($value)) {
+            try {
+                $date = Date::excelToDateTimeObject($value);
+                return $date->format('Y-m-d');
+            } catch (Exception $e) {
+                return null;
+            }
+        }
+        
+        $formats = ['d/m/Y', 'Y-m-d', 'd-m-Y'];
+        foreach ($formats as $format) {
+            $date = \DateTime::createFromFormat($format, $value);
+            if ($date !== false) {
+                return $date->format('Y-m-d');
+            }
+        }
+        
+        return null;
     }
 }

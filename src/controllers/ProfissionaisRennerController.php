@@ -40,31 +40,31 @@ class ProfissionaisRennerController {
         $search = $_GET['search'] ?? '';
         $setor = $_GET['setor'] ?? '';
         $status = $_GET['status'] ?? '';
-        $data = $_GET['data'] ?? date('Y-m-d'); // Padrão: hoje
+        $data = $_GET['data'] ?? date('Y-m-d');
         $page = max(1, intval($_GET['page'] ?? 1));
         $pageSize = max(1, min(100, intval($_GET['pageSize'] ?? 20)));
         $offset = ($page - 1) * $pageSize;
         
-        // Verificar se é contexto de relatório
         $isReport = strpos($_SERVER['REQUEST_URI'] ?? '', '/reports/') !== false;
         
-        // Query otimizada: campos específicos para relatórios, todos para módulo normal
         if ($isReport) {
-            $query = "SELECT id, nome, setor, placa_veiculo, data_entrada, saida, retorno, saida_final FROM profissionais_renner WHERE 1=1";
+            $query = "SELECT r.id, p.nome, p.setor, r.placa_veiculo, r.entrada_at as data_entrada, r.saida_at as saida, r.retorno, r.saida_final 
+                      FROM registro_acesso r 
+                      JOIN profissionais_renner p ON p.id = r.profissional_renner_id 
+                      WHERE r.tipo = 'profissional_renner'";
         } else {
-            $query = "SELECT * FROM profissionais_renner WHERE 1=1";
+            $query = "SELECT p.* FROM profissionais_renner p WHERE 1=1";
         }
         $params = [];
         
-        // Filtro por data (apenas para relatórios)
         if ($isReport && !empty($data)) {
-            $query .= " AND DATE(data_entrada) = ?";
+            $query .= " AND DATE(r.entrada_at) = ?";
             $params[] = $data;
         }
         
         if (!empty($search)) {
             if ($isReport) {
-                $query .= " AND nome ILIKE ?";
+                $query .= " AND p.nome ILIKE ?";
                 $params[] = "%$search%";
             } else {
                 $query .= " AND (nome ILIKE ? OR setor ILIKE ?)";
@@ -74,33 +74,52 @@ class ProfissionaisRennerController {
         }
         
         if (!empty($setor)) {
-            $query .= " AND setor = ?";
+            if ($isReport) {
+                $query .= " AND p.setor = ?";
+            } else {
+                $query .= " AND setor = ?";
+            }
             $params[] = $setor;
         }
         
-        // Filtro de status ajustado
         if ($status === 'ativo') {
             if ($isReport) {
-                // Para relatórios: apenas com entrada válida e sem saída final
-                $query .= " AND data_entrada IS NOT NULL AND saida_final IS NULL";
-            } else {
-                // Para módulo normal: lógica original
-                $query .= " AND (data_entrada IS NOT NULL OR retorno IS NOT NULL) AND saida_final IS NULL";
+                $query .= " AND r.saida_final IS NULL";
             }
         } elseif ($status === 'saiu') {
-            $query .= " AND saida_final IS NOT NULL";
+            if ($isReport) {
+                $query .= " AND r.saida_final IS NOT NULL";
+            }
         }
         
-        // Contar total para paginação (apenas para relatórios)
         $total = 0;
         $pagination = null;
         if ($isReport) {
-            $countQuery = str_replace(
-                "SELECT id, nome, setor, placa_veiculo, data_entrada, saida, retorno, saida_final", 
-                "SELECT COUNT(*)", 
-                $query
-            );
-            $totalResult = $this->db->fetch($countQuery, $params);
+            $countQuery = "SELECT COUNT(*) 
+                           FROM registro_acesso r 
+                           JOIN profissionais_renner p ON p.id = r.profissional_renner_id 
+                           WHERE r.tipo = 'profissional_renner'";
+            $countParams = [];
+            
+            if (!empty($data)) {
+                $countQuery .= " AND DATE(r.entrada_at) = ?";
+                $countParams[] = $data;
+            }
+            if (!empty($search)) {
+                $countQuery .= " AND p.nome ILIKE ?";
+                $countParams[] = "%$search%";
+            }
+            if (!empty($setor)) {
+                $countQuery .= " AND p.setor = ?";
+                $countParams[] = $setor;
+            }
+            if ($status === 'ativo') {
+                $countQuery .= " AND r.saida_final IS NULL";
+            } elseif ($status === 'saiu') {
+                $countQuery .= " AND r.saida_final IS NOT NULL";
+            }
+            
+            $totalResult = $this->db->fetch($countQuery, $countParams);
             $total = $totalResult['count'] ?? 0;
             
             $pagination = [
@@ -111,10 +130,8 @@ class ProfissionaisRennerController {
             ];
         }
         
-        // Ordenação e paginação
         if ($isReport) {
-            $query .= " ORDER BY data_entrada DESC";
-            $query .= " LIMIT ? OFFSET ?";
+            $query .= " ORDER BY r.entrada_at DESC LIMIT ? OFFSET ?";
             $params[] = $pageSize;
             $params[] = $offset;
         } else {
@@ -123,7 +140,6 @@ class ProfissionaisRennerController {
         
         $profissionais = $this->db->fetchAll($query, $params);
         
-        // Get unique sectors for filter
         $setores = $this->db->fetchAll("SELECT DISTINCT setor FROM profissionais_renner WHERE setor IS NOT NULL ORDER BY setor");
         
         include $this->getViewPath('list.php');
@@ -145,7 +161,6 @@ class ProfissionaisRennerController {
                 $retorno = $_POST['retorno'] ?? null;
                 $saida_final = $_POST['saida_final'] ?? null;
                 
-                // Validações obrigatórias
                 if (empty($nome)) {
                     throw new Exception("Nome é obrigatório");
                 }
@@ -156,26 +171,21 @@ class ProfissionaisRennerController {
                     throw new Exception("Placa de veículo é obrigatória");
                 }
                 
-                // Normalizar placa de veículo
                 $placa_veiculo = strtoupper(preg_replace('/[^A-Z0-9]/', '', $placa_veiculo));
                 
-                // Validar placa se não for "APE" (a pé)
                 if (!empty($placa_veiculo) && $placa_veiculo !== 'APE') {
-                    $placaValidation = $this->duplicityService->validatePlacaUnique($placa_veiculo, null, 'profissionais_renner');
+                    $placaValidation = $this->duplicityService->validatePlacaNotOpen($placa_veiculo, null, 'registro_acesso');
                     if (!$placaValidation['isValid']) {
                         throw new Exception($placaValidation['message']);
                     }
                 }
                 
-                // ========== VALIDAÇÕES TEMPORAIS ==========
-                // Validar data de entrada
                 $entradaValidation = DateTimeValidator::validateEntryDateTime($data_entrada);
                 if (!$entradaValidation['isValid']) {
                     throw new Exception($entradaValidation['message']);
                 }
                 $data_entrada = $entradaValidation['normalized'];
                 
-                // Validar saída se fornecida
                 if (!empty($saida)) {
                     $saidaValidation = DateTimeValidator::validateExitDateTime($saida, $data_entrada);
                     if (!$saidaValidation['isValid']) {
@@ -184,7 +194,6 @@ class ProfissionaisRennerController {
                     $saida = $saidaValidation['normalized'];
                 }
                 
-                // Validar retorno se fornecido
                 if (!empty($retorno)) {
                     $retornoValidation = DateTimeValidator::validateEntryDateTime($retorno);
                     if (!$retornoValidation['isValid']) {
@@ -193,7 +202,6 @@ class ProfissionaisRennerController {
                     $retorno = $retornoValidation['normalized'];
                 }
                 
-                // Validar saída final se fornecida
                 if (!empty($saida_final)) {
                     $saidaFinalValidation = DateTimeValidator::validateExitDateTime($saida_final, $retorno ?: $data_entrada);
                     if (!$saidaFinalValidation['isValid']) {
@@ -201,24 +209,40 @@ class ProfissionaisRennerController {
                     }
                     $saida_final = $saidaFinalValidation['normalized'];
                 }
-                // ==========================================
+                
+                $this->db->beginTransaction();
+                
+                $profissional = $this->db->fetch("SELECT id FROM profissionais_renner WHERE nome = ? AND setor = ?", [$nome, $setor]);
+                
+                if ($profissional) {
+                    $profissional_id = $profissional['id'];
+                } else {
+                    $this->db->query("INSERT INTO profissionais_renner (nome, setor) VALUES (?, ?)", [$nome, $setor]);
+                    $profissional_id = $this->db->lastInsertId();
+                }
                 
                 $this->db->query("
-                    INSERT INTO profissionais_renner (nome, data_entrada, saida, retorno, saida_final, setor, placa_veiculo)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO registro_acesso (tipo, nome, setor, placa_veiculo, entrada_at, saida_at, retorno, saida_final, profissional_renner_id, created_by)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ", [
+                    'profissional_renner',
                     $nome,
+                    $setor,
+                    $placa_veiculo,
                     $data_entrada,
                     $saida ?: null,
                     $retorno ?: null,
                     $saida_final ?: null,
-                    $setor,
-                    $placa_veiculo
+                    $profissional_id,
+                    $_SESSION['user_id'] ?? null
                 ]);
+                
+                $this->db->commit();
                 
                 header('Location: ' . $this->getBaseRoute() . '?success=1');
                 exit;
             } catch (Exception $e) {
+                $this->db->rollback();
                 $error = $e->getMessage();
                 include $this->getViewPath('form.php');
             }
@@ -232,7 +256,15 @@ class ProfissionaisRennerController {
             exit;
         }
         
-        $profissional = $this->db->fetch("SELECT * FROM profissionais_renner WHERE id = ?", [$id]);
+        $profissional = $this->db->fetch("
+            SELECT p.*, r.placa_veiculo, r.entrada_at as data_entrada, r.saida_at as saida, r.retorno, r.saida_final, r.id as registro_id
+            FROM profissionais_renner p
+            LEFT JOIN registro_acesso r ON r.profissional_renner_id = p.id AND r.tipo = 'profissional_renner'
+            WHERE p.id = ?
+            ORDER BY r.entrada_at DESC
+            LIMIT 1
+        ", [$id]);
+        
         if (!$profissional) {
             header('Location: ' . $this->getBaseRoute());
             exit;
@@ -246,6 +278,7 @@ class ProfissionaisRennerController {
             CSRFProtection::verifyRequest();
             try {
                 $id = $_POST['id'] ?? null;
+                $registro_id = $_POST['registro_id'] ?? null;
                 $nome = trim($_POST['nome'] ?? '');
                 $setor = trim($_POST['setor'] ?? '');
                 $placa_veiculo = trim($_POST['placa_veiculo'] ?? '');
@@ -254,7 +287,6 @@ class ProfissionaisRennerController {
                 $retorno = $_POST['retorno'] ?? null;
                 $saida_final = $_POST['saida_final'] ?? null;
                 
-                // Validações obrigatórias
                 if (empty($nome)) {
                     throw new Exception("Nome é obrigatório");
                 }
@@ -265,25 +297,20 @@ class ProfissionaisRennerController {
                     throw new Exception("Placa de veículo é obrigatória");
                 }
                 
-                // Normalizar placa de veículo
                 $placa_veiculo = strtoupper(preg_replace('/[^A-Z0-9]/', '', $placa_veiculo));
                 
-                // Validar placa se não for "APE" (a pé)
                 if (!empty($placa_veiculo) && $placa_veiculo !== 'APE') {
-                    $placaValidation = $this->duplicityService->validatePlacaUnique($placa_veiculo, $id, 'profissionais_renner');
+                    $placaValidation = $this->duplicityService->validatePlacaNotOpen($placa_veiculo, $registro_id, 'registro_acesso');
                     if (!$placaValidation['isValid']) {
                         throw new Exception($placaValidation['message']);
                     }
                 }
                 
-                // Buscar dados atuais para usar como baseline
-                $profissionalAtual = $this->db->fetch("SELECT * FROM profissionais_renner WHERE id = ?", [$id]);
-                if (!$profissionalAtual) {
-                    throw new Exception("Profissional não encontrado");
+                $registroAtual = null;
+                if ($registro_id) {
+                    $registroAtual = $this->db->fetch("SELECT * FROM registro_acesso WHERE id = ?", [$registro_id]);
                 }
                 
-                // ========== VALIDAÇÕES TEMPORAIS ==========
-                // Validar data de entrada se fornecida
                 if (!empty($data_entrada)) {
                     $entradaValidation = DateTimeValidator::validateEntryDateTime($data_entrada);
                     if (!$entradaValidation['isValid']) {
@@ -292,10 +319,8 @@ class ProfissionaisRennerController {
                     $data_entrada = $entradaValidation['normalized'];
                 }
                 
-                // Validar saída se fornecida
                 if (!empty($saida)) {
-                    // Use data_entrada atual (modificada ou existente) como baseline
-                    $entradaBaseline = $data_entrada ?: $profissionalAtual['data_entrada'];
+                    $entradaBaseline = $data_entrada ?: ($registroAtual['entrada_at'] ?? null);
                     $saidaValidation = DateTimeValidator::validateExitDateTime($saida, $entradaBaseline);
                     if (!$saidaValidation['isValid']) {
                         throw new Exception($saidaValidation['message']);
@@ -303,7 +328,6 @@ class ProfissionaisRennerController {
                     $saida = $saidaValidation['normalized'];
                 }
                 
-                // Validar retorno se fornecido
                 if (!empty($retorno)) {
                     $retornoValidation = DateTimeValidator::validateEntryDateTime($retorno);
                     if (!$retornoValidation['isValid']) {
@@ -312,11 +336,9 @@ class ProfissionaisRennerController {
                     $retorno = $retornoValidation['normalized'];
                 }
                 
-                // Validar saída final se fornecida
                 if (!empty($saida_final)) {
-                    // Use retorno atual (modificado ou existente) ou data_entrada como baseline
-                    $retornoBaseline = $retorno ?: $profissionalAtual['retorno'];
-                    $entradaBaseline = $data_entrada ?: $profissionalAtual['data_entrada'];
+                    $retornoBaseline = $retorno ?: ($registroAtual['retorno'] ?? null);
+                    $entradaBaseline = $data_entrada ?: ($registroAtual['entrada_at'] ?? null);
                     $baselineParaSaidaFinal = $retornoBaseline ?: $entradaBaseline;
                     
                     $saidaFinalValidation = DateTimeValidator::validateExitDateTime($saida_final, $baselineParaSaidaFinal);
@@ -325,28 +347,48 @@ class ProfissionaisRennerController {
                     }
                     $saida_final = $saidaFinalValidation['normalized'];
                 }
-                // ==========================================
+                
+                $this->db->beginTransaction();
                 
                 $this->db->query("
                     UPDATE profissionais_renner 
-                    SET nome = ?, data_entrada = ?, saida = ?, retorno = ?, saida_final = ?, setor = ?, placa_veiculo = ?, updated_at = CURRENT_TIMESTAMP
+                    SET nome = ?, setor = ?, updated_at = CURRENT_TIMESTAMP
                     WHERE id = ?
-                ", [
-                    $nome,
-                    $data_entrada ?: null,
-                    $saida ?: null,
-                    $retorno ?: null,
-                    $saida_final ?: null,
-                    $setor,
-                    $placa_veiculo,
-                    $id
-                ]);
+                ", [$nome, $setor, $id]);
+                
+                if ($registro_id) {
+                    $this->db->query("
+                        UPDATE registro_acesso 
+                        SET nome = ?, setor = ?, placa_veiculo = ?, entrada_at = ?, saida_at = ?, retorno = ?, saida_final = ?, updated_by = ?, updated_at = CURRENT_TIMESTAMP
+                        WHERE id = ?
+                    ", [
+                        $nome,
+                        $setor,
+                        $placa_veiculo,
+                        $data_entrada ?: $registroAtual['entrada_at'],
+                        $saida ?: null,
+                        $retorno ?: null,
+                        $saida_final ?: null,
+                        $_SESSION['user_id'] ?? null,
+                        $registro_id
+                    ]);
+                }
+                
+                $this->db->commit();
                 
                 header('Location: ' . $this->getBaseRoute() . '?updated=1');
                 exit;
             } catch (Exception $e) {
+                $this->db->rollback();
                 $error = $e->getMessage();
-                $profissional = $this->db->fetch("SELECT * FROM profissionais_renner WHERE id = ?", [$_POST['id']]);
+                $profissional = $this->db->fetch("
+                    SELECT p.*, r.placa_veiculo, r.entrada_at as data_entrada, r.saida_at as saida, r.retorno, r.saida_final, r.id as registro_id
+                    FROM profissionais_renner p
+                    LEFT JOIN registro_acesso r ON r.profissional_renner_id = p.id AND r.tipo = 'profissional_renner'
+                    WHERE p.id = ?
+                    ORDER BY r.entrada_at DESC
+                    LIMIT 1
+                ", [$_POST['id']]);
                 include $this->getViewPath('form.php');
             }
         }
@@ -371,7 +413,6 @@ class ProfissionaisRennerController {
             header('Content-Type: application/json');
             
             try {
-                // Verificação CSRF manual para retorno JSON adequado
                 if (!isset($_POST['csrf_token']) || !CSRFProtection::validateToken($_POST['csrf_token'])) {
                     echo json_encode(['success' => false, 'message' => 'Token CSRF inválido']);
                     exit;
@@ -382,7 +423,6 @@ class ProfissionaisRennerController {
                 $placa_veiculo = trim($_POST['placa_veiculo'] ?? '');
                 $data_entrada_input = trim($_POST['data_entrada'] ?? '');
                 
-                // Validações obrigatórias
                 if (empty($nome)) {
                     echo json_encode(['success' => false, 'message' => 'Nome é obrigatório']);
                     return;
@@ -396,19 +436,16 @@ class ProfissionaisRennerController {
                     return;
                 }
                 
-                // Normalizar placa de veículo
                 $placa_veiculo = strtoupper(preg_replace('/[^A-Z0-9]/', '', $placa_veiculo));
                 
-                // Validar placa se não for "APE" (a pé)
                 if (!empty($placa_veiculo) && $placa_veiculo !== 'APE') {
-                    $placaValidation = $this->duplicityService->validatePlacaUnique($placa_veiculo, null, 'profissionais_renner');
+                    $placaValidation = $this->duplicityService->validatePlacaNotOpen($placa_veiculo, null, 'registro_acesso');
                     if (!$placaValidation['isValid']) {
                         echo json_encode(['success' => false, 'message' => $placaValidation['message']]);
                         return;
                     }
                 }
                 
-                // Usar data especificada ou data/hora atual se não fornecida
                 if (!empty($data_entrada_input)) {
                     $timestamp = strtotime($data_entrada_input);
                     if ($timestamp === false) {
@@ -420,32 +457,48 @@ class ProfissionaisRennerController {
                     $data_entrada = date('Y-m-d H:i:s');
                 }
                 
-                // Normalizar placa de veículo
-                $placa_veiculo = strtoupper(preg_replace('/[^A-Z0-9]/', '', $placa_veiculo));
+                $this->db->beginTransaction();
+                
+                $profissional = $this->db->fetch("SELECT id FROM profissionais_renner WHERE nome = ? AND setor = ?", [$nome, $setor]);
+                
+                if ($profissional) {
+                    $profissional_id = $profissional['id'];
+                } else {
+                    $this->db->query("INSERT INTO profissionais_renner (nome, setor) VALUES (?, ?)", [$nome, $setor]);
+                    $profissional_id = $this->db->lastInsertId();
+                }
                 
                 $this->db->query("
-                    INSERT INTO profissionais_renner (nome, data_entrada, setor, placa_veiculo)
-                    VALUES (?, ?, ?, ?)
+                    INSERT INTO registro_acesso (tipo, nome, setor, placa_veiculo, entrada_at, profissional_renner_id, created_by)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
                 ", [
-                    $nome, $data_entrada, $setor, $placa_veiculo
+                    'profissional_renner',
+                    $nome,
+                    $setor,
+                    $placa_veiculo,
+                    $data_entrada,
+                    $profissional_id,
+                    $_SESSION['user_id'] ?? null
                 ]);
                 
-                $id = $this->db->lastInsertId();
+                $registro_id = $this->db->lastInsertId();
+                
+                $this->db->commit();
                 
                 echo json_encode([
                     'success' => true, 
                     'message' => 'Profissional cadastrado com sucesso',
                     'data' => [
-                        'id' => $id,
+                        'id' => $registro_id,
                         'nome' => $nome,
                         'tipo' => 'Profissional Renner',
-
                         'setor' => $setor,
                         'placa_veiculo' => $placa_veiculo,
                         'hora_entrada' => $data_entrada
                     ]
                 ]);
             } catch (Exception $e) {
+                $this->db->rollback();
                 echo json_encode(['success' => false, 'message' => $e->getMessage()]);
             }
         } else {
@@ -459,7 +512,6 @@ class ProfissionaisRennerController {
             header('Content-Type: application/json');
             
             try {
-                // Verificação CSRF manual para retorno JSON adequado
                 if (!isset($_POST['csrf_token']) || !CSRFProtection::validateToken($_POST['csrf_token'])) {
                     echo json_encode(['success' => false, 'message' => 'Token CSRF inválido']);
                     exit;
@@ -473,7 +525,6 @@ class ProfissionaisRennerController {
                 $saida = trim($_POST['saida'] ?? '');
                 $retorno = trim($_POST['retorno'] ?? '');
                 
-                // Validações obrigatórias
                 if (empty($id) || empty($nome)) {
                     echo json_encode(['success' => false, 'message' => 'ID e Nome são obrigatórios']);
                     return;
@@ -487,19 +538,22 @@ class ProfissionaisRennerController {
                     return;
                 }
                 
-                // Normalizar placa de veículo
                 $placa_veiculo = strtoupper(preg_replace('/[^A-Z0-9]/', '', $placa_veiculo));
                 
-                // Validar placa se não for "APE" (a pé)
+                $registro = $this->db->fetch("SELECT * FROM registro_acesso WHERE id = ? AND tipo = 'profissional_renner'", [$id]);
+                if (!$registro) {
+                    echo json_encode(['success' => false, 'message' => 'Registro não encontrado']);
+                    return;
+                }
+                
                 if (!empty($placa_veiculo) && $placa_veiculo !== 'APE') {
-                    $placaValidation = $this->duplicityService->validatePlacaUnique($placa_veiculo, $id, 'profissionais_renner');
+                    $placaValidation = $this->duplicityService->validatePlacaNotOpen($placa_veiculo, $id, 'registro_acesso');
                     if (!$placaValidation['isValid']) {
                         echo json_encode(['success' => false, 'message' => $placaValidation['message']]);
                         return;
                     }
                 }
                 
-                // Parse M2 fields: saida, retorno, saida_final if provided
                 $saida_parsed = null;
                 if (!empty($saida)) {
                     $date = DateTime::createFromFormat('Y-m-d\TH:i:s', $saida);
@@ -542,17 +596,27 @@ class ProfissionaisRennerController {
                     }
                 }
                 
-                // Normalizar placa de veículo
-                $placa_veiculo = strtoupper(preg_replace('/[^A-Z0-9]/', '', $placa_veiculo));
+                $this->db->beginTransaction();
+                
+                $profissional_id = $registro['profissional_renner_id'];
+                
+                if ($profissional_id) {
+                    $this->db->query("
+                        UPDATE profissionais_renner 
+                        SET nome = ?, setor = ?, updated_at = CURRENT_TIMESTAMP
+                        WHERE id = ?
+                    ", [$nome, $setor, $profissional_id]);
+                }
                 
                 $this->db->query("
-                    UPDATE profissionais_renner 
-                    SET nome = ?, setor = ?, placa_veiculo = ?, saida = ?, retorno = ?, saida_final = ?
+                    UPDATE registro_acesso 
+                    SET nome = ?, setor = ?, placa_veiculo = ?, saida_at = ?, retorno = ?, saida_final = ?, updated_by = ?, updated_at = CURRENT_TIMESTAMP
                     WHERE id = ?
-                ", [$nome, $setor, $placa_veiculo, $saida_parsed, $retorno_parsed, $saida_final_parsed, $id]);
+                ", [$nome, $setor, $placa_veiculo, $saida_parsed, $retorno_parsed, $saida_final_parsed, $_SESSION['user_id'] ?? null, $id]);
                 
-                // Buscar dados atualizados para retornar
-                $profissionalAtualizado = $this->db->fetch("SELECT * FROM profissionais_renner WHERE id = ?", [$id]);
+                $this->db->commit();
+                
+                $registroAtualizado = $this->db->fetch("SELECT * FROM registro_acesso WHERE id = ?", [$id]);
                 
                 echo json_encode([
                     'success' => true, 
@@ -566,13 +630,14 @@ class ProfissionaisRennerController {
                         'setor' => $setor,
                         'funcionario_responsavel' => '',
                         'placa_veiculo' => $placa_veiculo,
-                        'hora_entrada' => $profissionalAtualizado['retorno'] ?? $profissionalAtualizado['data_entrada'] ?? null,
-                        'saida' => $profissionalAtualizado['saida'] ?? null,
-                        'retorno' => $profissionalAtualizado['retorno'] ?? null,
-                        'saida_final' => $profissionalAtualizado['saida_final'] ?? null
+                        'hora_entrada' => $registroAtualizado['retorno'] ?? $registroAtualizado['entrada_at'] ?? null,
+                        'saida' => $registroAtualizado['saida_at'] ?? null,
+                        'retorno' => $registroAtualizado['retorno'] ?? null,
+                        'saida_final' => $registroAtualizado['saida_final'] ?? null
                     ]
                 ]);
             } catch (Exception $e) {
+                $this->db->rollback();
                 echo json_encode(['success' => false, 'message' => $e->getMessage()]);
             }
         } else {
@@ -593,24 +658,28 @@ class ProfissionaisRennerController {
                     return;
                 }
                 
-                // Buscar o profissional
-                $profissional = $this->db->fetch("SELECT * FROM profissionais_renner WHERE id = ?", [$id]);
+                $registro = $this->db->fetch("
+                    SELECT r.*, p.nome, p.setor
+                    FROM registro_acesso r
+                    LEFT JOIN profissionais_renner p ON p.id = r.profissional_renner_id
+                    WHERE r.id = ? AND r.tipo = 'profissional_renner'
+                ", [$id]);
                 
-                if (!$profissional) {
-                    echo json_encode(['success' => false, 'message' => 'Profissional não encontrado']);
+                if (!$registro) {
+                    echo json_encode(['success' => false, 'message' => 'Registro não encontrado']);
                     return;
                 }
                 
                 echo json_encode([
                     'success' => true, 
                     'data' => [
-                        'id' => $profissional['id'],
-                        'nome' => $profissional['nome'],
-                        'setor' => $profissional['setor'],
-                        'data_entrada' => $profissional['data_entrada'],
-                        'saida' => $profissional['saida'],
-                        'retorno' => $profissional['retorno'],
-                        'saida_final' => $profissional['saida_final']
+                        'id' => $registro['id'],
+                        'nome' => $registro['nome'],
+                        'setor' => $registro['setor'],
+                        'data_entrada' => $registro['entrada_at'],
+                        'saida' => $registro['saida_at'],
+                        'retorno' => $registro['retorno'],
+                        'saida_final' => $registro['saida_final']
                     ]
                 ]);
             } catch (Exception $e) {
@@ -635,27 +704,28 @@ class ProfissionaisRennerController {
                     return;
                 }
                 
-                // Buscar o profissional
-                $profissional = $this->db->fetch("SELECT * FROM profissionais_renner WHERE id = ?", [$id]);
+                $registro = $this->db->fetch("
+                    SELECT * FROM registro_acesso 
+                    WHERE id = ? AND tipo = 'profissional_renner'
+                ", [$id]);
                 
-                if (!$profissional) {
-                    echo json_encode(['success' => false, 'message' => 'Profissional não encontrado']);
+                if (!$registro) {
+                    echo json_encode(['success' => false, 'message' => 'Registro não encontrado']);
                     return;
                 }
                 
-                // Registrar saída final
                 $this->db->query("
-                    UPDATE profissionais_renner 
-                    SET saida_final = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+                    UPDATE registro_acesso 
+                    SET saida_final = CURRENT_TIMESTAMP, updated_by = ?, updated_at = CURRENT_TIMESTAMP
                     WHERE id = ?
-                ", [$id]);
+                ", [$_SESSION['user_id'] ?? null, $id]);
                 
                 echo json_encode([
                     'success' => true, 
                     'message' => 'Saída registrada com sucesso',
                     'data' => [
                         'id' => $id,
-                        'nome' => $profissional['nome']
+                        'nome' => $registro['nome']
                     ]
                 ]);
             } catch (Exception $e) {
@@ -706,76 +776,102 @@ class ProfissionaisRennerController {
                 throw new Exception('ID é obrigatório');
             }
             
-            // Buscar registro atual
-            $profissional = $this->db->fetch("SELECT * FROM profissionais_renner WHERE id = ?", [$id]);
-            if (!$profissional) {
+            $registro = $this->db->fetch("
+                SELECT r.*, p.id as profissional_id 
+                FROM registro_acesso r
+                LEFT JOIN profissionais_renner p ON p.id = r.profissional_renner_id
+                WHERE r.id = ? AND r.tipo = 'profissional_renner'
+            ", [$id]);
+            
+            if (!$registro) {
                 throw new Exception('Registro não encontrado');
             }
             
-            // Preparar dados para atualização (apenas campos fornecidos)
-            $updateFields = [];
-            $updateParams = [];
+            $this->db->beginTransaction();
+            
+            $updateProfissionalFields = [];
+            $updateProfissionalParams = [];
+            
+            $updateRegistroFields = [];
+            $updateRegistroParams = [];
             
             if (isset($_POST['nome'])) {
-                $updateFields[] = 'nome = ?';
-                $updateParams[] = trim($_POST['nome']);
+                $nome = trim($_POST['nome']);
+                $updateProfissionalFields[] = 'nome = ?';
+                $updateProfissionalParams[] = $nome;
+                $updateRegistroFields[] = 'nome = ?';
+                $updateRegistroParams[] = $nome;
             }
             
             if (isset($_POST['setor'])) {
-                $updateFields[] = 'setor = ?';
-                $updateParams[] = trim($_POST['setor']);
+                $setor = trim($_POST['setor']);
+                $updateProfissionalFields[] = 'setor = ?';
+                $updateProfissionalParams[] = $setor;
+                $updateRegistroFields[] = 'setor = ?';
+                $updateRegistroParams[] = $setor;
             }
             
             if (isset($_POST['placa_veiculo'])) {
                 $placa = strtoupper(preg_replace('/[^A-Z0-9]/', '', $_POST['placa_veiculo']));
-                $updateFields[] = 'placa_veiculo = ?';
-                $updateParams[] = $placa;
+                $updateRegistroFields[] = 'placa_veiculo = ?';
+                $updateRegistroParams[] = $placa;
             }
             
             if (isset($_POST['data_entrada'])) {
-                $updateFields[] = 'data_entrada = ?';
-                $updateParams[] = $_POST['data_entrada'] ?: null;
+                $updateRegistroFields[] = 'entrada_at = ?';
+                $updateRegistroParams[] = $_POST['data_entrada'] ?: null;
             }
             
             if (isset($_POST['saida'])) {
-                $updateFields[] = 'saida = ?';
-                $updateParams[] = $_POST['saida'] ?: null;
+                $updateRegistroFields[] = 'saida_at = ?';
+                $updateRegistroParams[] = $_POST['saida'] ?: null;
             }
             
             if (isset($_POST['retorno'])) {
-                $updateFields[] = 'retorno = ?';
-                $updateParams[] = $_POST['retorno'] ?: null;
+                $updateRegistroFields[] = 'retorno = ?';
+                $updateRegistroParams[] = $_POST['retorno'] ?: null;
             }
             
             if (isset($_POST['saida_final'])) {
-                $updateFields[] = 'saida_final = ?';
-                $updateParams[] = $_POST['saida_final'] ?: null;
+                $updateRegistroFields[] = 'saida_final = ?';
+                $updateRegistroParams[] = $_POST['saida_final'] ?: null;
             }
             
-            if (empty($updateFields)) {
+            if (empty($updateRegistroFields)) {
                 throw new Exception('Nenhum campo para atualizar');
             }
             
-            // Adicionar updated_at
-            $updateFields[] = 'updated_at = CURRENT_TIMESTAMP';
+            if (!empty($updateProfissionalFields) && $registro['profissional_id']) {
+                $updateProfissionalFields[] = 'updated_at = CURRENT_TIMESTAMP';
+                $updateProfissionalParams[] = $registro['profissional_id'];
+                $query = "UPDATE profissionais_renner SET " . implode(', ', $updateProfissionalFields) . " WHERE id = ?";
+                $this->db->query($query, $updateProfissionalParams);
+            }
             
-            // Adicionar ID ao final dos parâmetros
-            $updateParams[] = $id;
+            $updateRegistroFields[] = 'updated_by = ?';
+            $updateRegistroParams[] = $_SESSION['user_id'] ?? null;
+            $updateRegistroFields[] = 'updated_at = CURRENT_TIMESTAMP';
+            $updateRegistroParams[] = $id;
             
-            // Executar atualização
-            $query = "UPDATE profissionais_renner SET " . implode(', ', $updateFields) . " WHERE id = ?";
-            $this->db->query($query, $updateParams);
+            $query = "UPDATE registro_acesso SET " . implode(', ', $updateRegistroFields) . " WHERE id = ?";
+            $this->db->query($query, $updateRegistroParams);
             
-            // Buscar registro atualizado
-            $profissionalAtualizado = $this->db->fetch("SELECT * FROM profissionais_renner WHERE id = ?", [$id]);
+            $this->db->commit();
+            
+            $registroAtualizado = $this->db->fetch("
+                SELECT r.*, r.entrada_at as data_entrada, r.saida_at as saida
+                FROM registro_acesso r
+                WHERE r.id = ?
+            ", [$id]);
             
             echo json_encode([
                 'success' => true,
                 'message' => 'Registro atualizado com sucesso',
-                'data' => $profissionalAtualizado
+                'data' => $registroAtualizado
             ]);
             
         } catch (Exception $e) {
+            $this->db->rollback();
             http_response_code(400);
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
@@ -821,19 +917,21 @@ class ProfissionaisRennerController {
                 throw new Exception('ID é obrigatório');
             }
             
-            // Verificar se o registro existe
-            $profissional = $this->db->fetch("SELECT nome FROM profissionais_renner WHERE id = ?", [$id]);
-            if (!$profissional) {
+            $registro = $this->db->fetch("
+                SELECT r.nome FROM registro_acesso r 
+                WHERE r.id = ? AND r.tipo = 'profissional_renner'
+            ", [$id]);
+            
+            if (!$registro) {
                 throw new Exception('Registro não encontrado');
             }
             
-            // Excluir registro
-            $this->db->query("DELETE FROM profissionais_renner WHERE id = ?", [$id]);
+            $this->db->query("DELETE FROM registro_acesso WHERE id = ?", [$id]);
             
             echo json_encode([
                 'success' => true,
                 'message' => 'Registro excluído com sucesso',
-                'data' => ['id' => $id, 'nome' => $profissional['nome']]
+                'data' => ['id' => $id, 'nome' => $registro['nome']]
             ]);
             
         } catch (Exception $e) {

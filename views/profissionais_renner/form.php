@@ -112,6 +112,9 @@
                                     <?= CSRFProtection::getHiddenInput() ?>
                                     <?php if (isset($profissional)): ?>
                                         <input type="hidden" name="id" value="<?= $profissional['id'] ?>">
+                                        <?php if (isset($profissional['registro_id'])): ?>
+                                            <input type="hidden" name="registro_id" value="<?= $profissional['registro_id'] ?>">
+                                        <?php endif; ?>
                                     <?php endif; ?>
                                     
                                     <div class="card-body">

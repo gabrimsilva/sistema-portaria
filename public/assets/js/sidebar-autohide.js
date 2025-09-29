@@ -1,12 +1,11 @@
 /* ==========================================================================
-   🎯 SIDEBAR AUTO-HIDE SYSTEM
+   🎯 SIDEBAR AUTO-HIDE SYSTEM - APENAS HOVER
    ========================================================================== */
 
 class SidebarAutoHide {
     constructor() {
         this.body = document.body;
         this.sidebar = document.querySelector('.main-sidebar');
-        this.isPinned = this.getStoredState();
         this.hoverTimeout = null;
         this.isInitialized = false;
         
@@ -16,14 +15,11 @@ class SidebarAutoHide {
     init() {
         if (!this.sidebar || this.isInitialized) return;
         
-        // Apply initial state
-        this.applyState();
+        // Força estado sempre colapsado para hover automático
+        this.body.classList.add('sidebar-collapsed');
         
-        // Create pin button
-        this.createPinButton();
-        
-        // Bind events
-        this.bindEvents();
+        // Bind apenas eventos de hover
+        this.bindHoverEvents();
         
         // Set ARIA attributes
         this.updateARIA();
@@ -32,165 +28,41 @@ class SidebarAutoHide {
         console.log('✅ Sidebar auto-hide initialized');
     }
     
-    getStoredState() {
-        try {
-            const stored = localStorage.getItem('sidebarPinned');
-            // Default to collapsed (false) for auto-hover behavior
-            return stored === 'true';
-        } catch (e) {
-            console.warn('localStorage not available, using default state');
-            return false; // Default to collapsed for auto-hover
-        }
-    }
-    
-    saveState() {
-        try {
-            localStorage.setItem('sidebarPinned', this.isPinned.toString());
-        } catch (e) {
-            console.warn('Could not save sidebar state to localStorage');
-        }
-    }
-    
-    applyState() {
-        if (this.isPinned) {
-            this.body.classList.remove('sidebar-collapsed');
-        } else {
-            this.body.classList.add('sidebar-collapsed');
-        }
-        this.updateARIA();
-    }
-    
-    createPinButton() {
-        const pinBtn = document.createElement('button');
-        pinBtn.className = 'sidebar-pin-btn';
-        pinBtn.innerHTML = '<i class="fas fa-thumbtack"></i>';
-        pinBtn.title = this.isPinned ? 'Recolher sidebar' : 'Fixar sidebar';
-        pinBtn.setAttribute('aria-label', pinBtn.title);
-        
-        this.sidebar.appendChild(pinBtn);
-        this.pinBtn = pinBtn;
-    }
-    
-    bindEvents() {
-        // Pin button click
-        this.pinBtn?.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            this.toggle();
-        });
-        
-        // Keyboard support
-        this.pinBtn?.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                this.toggle();
-            }
-        });
-        
-        // Hover events for tooltips and accessibility
+    bindHoverEvents() {
+        // Hover para expandir
         this.sidebar.addEventListener('mouseenter', () => {
-            if (!this.isPinned) {
-                // Clear any pending tooltip hide
-                if (this.hoverTimeout) {
-                    clearTimeout(this.hoverTimeout);
-                    this.hoverTimeout = null;
-                }
-                // CSS handles visual expansion, JS manages tooltips
-                this.sidebar.setAttribute('data-hover-expanded', 'true');
-                this.showTooltips();
+            if (this.hoverTimeout) {
+                clearTimeout(this.hoverTimeout);
+                this.hoverTimeout = null;
             }
+            this.sidebar.setAttribute('data-hover-expanded', 'true');
         });
         
+        // Mouse leave para colapsar
         this.sidebar.addEventListener('mouseleave', () => {
-            if (!this.isPinned) {
-                // Delay to prevent flicker when moving between elements
-                this.hoverTimeout = setTimeout(() => {
-                    this.sidebar.setAttribute('data-hover-expanded', 'false');
-                    this.hideTooltips();
-                    this.hoverTimeout = null;
-                }, 200); // Increased delay for better UX
-            }
+            this.hoverTimeout = setTimeout(() => {
+                this.sidebar.setAttribute('data-hover-expanded', 'false');
+                this.hoverTimeout = null;
+            }, 200);
         });
         
         // Handle window resize
         window.addEventListener('resize', this.throttle(() => {
             this.handleResize();
         }, 250));
-        
-        // Escape key to collapse (accessibility)
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && this.isPinned && document.activeElement?.closest('.main-sidebar')) {
-                this.collapse();
-            }
-        });
-    }
-    
-    toggle() {
-        this.isPinned = !this.isPinned;
-        this.applyState();
-        this.saveState();
-        this.updatePinButton();
-        
-        // Dispatch custom event
-        window.dispatchEvent(new CustomEvent('sidebarToggle', {
-            detail: { isPinned: this.isPinned }
-        }));
-    }
-    
-    expand() {
-        this.isPinned = true;
-        this.applyState();
-        this.saveState();
-        this.updatePinButton();
-    }
-    
-    collapse() {
-        this.isPinned = false;
-        this.applyState();
-        this.saveState();
-        this.updatePinButton();
-    }
-    
-    updatePinButton() {
-        if (!this.pinBtn) return;
-        
-        const title = this.isPinned ? 'Recolher sidebar' : 'Fixar sidebar';
-        this.pinBtn.title = title;
-        this.pinBtn.setAttribute('aria-label', title);
-        
-        const icon = this.pinBtn.querySelector('i');
-        if (icon) {
-            icon.className = this.isPinned ? 'fas fa-thumbtack' : 'fas fa-thumbtack fa-rotate-45';
-        }
     }
     
     updateARIA() {
         if (!this.sidebar) return;
         
-        this.sidebar.setAttribute('aria-expanded', this.isPinned.toString());
-        this.sidebar.setAttribute('data-collapsed', (!this.isPinned).toString());
-    }
-    
-    showTooltips() {
-        // Add tooltip data attributes to nav items
-        const navItems = this.sidebar.querySelectorAll('.nav-item');
-        navItems.forEach(item => {
-            const link = item.querySelector('.nav-link p');
-            if (link && !item.hasAttribute('data-tooltip')) {
-                item.setAttribute('data-tooltip', link.textContent.trim());
-            }
-        });
-    }
-    
-    hideTooltips() {
-        // Tooltips are handled by CSS, no action needed
+        this.sidebar.setAttribute('aria-expanded', 'false');
+        this.sidebar.setAttribute('data-collapsed', 'true');
     }
     
     handleResize() {
-        // Ensure proper behavior on mobile
+        // Mantém sempre colapsado em mobile
         const isMobile = window.innerWidth <= 767.98;
-        if (isMobile && !this.isPinned) {
-            // On mobile, auto-hide behavior is different
+        if (isMobile) {
             this.body.classList.add('sidebar-collapsed');
         }
     }
@@ -212,8 +84,8 @@ class SidebarAutoHide {
     // Public API
     getState() {
         return {
-            isPinned: this.isPinned,
-            isCollapsed: !this.isPinned
+            isPinned: false,
+            isCollapsed: true
         };
     }
 }

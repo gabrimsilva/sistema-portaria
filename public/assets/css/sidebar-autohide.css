@@ -57,10 +57,13 @@
 }
 
 /* Reset icon alignment when hover expanded */
+.sidebar-collapsed .main-sidebar:hover .nav-sidebar .nav-item .nav-link i,
 .sidebar-collapsed .main-sidebar:hover .nav-sidebar .nav-item .nav-link .nav-icon {
-    margin: 0;
-    display: inline;
-    width: auto;
+    margin: 0 0.5rem 0 0 !important;
+    display: inline !important;
+    width: auto !important;
+    text-align: left !important;
+    font-size: 1rem !important;
 }
 
 .sidebar-collapsed .nav-sidebar .nav-item .nav-link .right {
@@ -84,13 +87,17 @@
 }
 
 .sidebar-collapsed .main-sidebar:hover .nav-sidebar .nav-item .nav-link {
-    text-align: left;
-    padding: 0.5rem 0.75rem;
+    text-align: left !important;
+    padding: 0.5rem 0.75rem !important;
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
 }
 
 .sidebar-collapsed .main-sidebar:hover .nav-sidebar .nav-item .nav-link p {
-    display: inline;
-    margin-left: 0.5rem;
+    display: inline !important;
+    margin-left: 0 !important;
+    flex: 1 !important;
 }
 
 .sidebar-collapsed .main-sidebar:hover .nav-sidebar .nav-item .nav-link .right {
@@ -101,35 +108,7 @@
     display: block !important;
 }
 
-/* Pin/unpin button */
-.sidebar-pin-btn {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: rgba(255,255,255,0.1);
-    border: none;
-    color: #c2c7d0;
-    padding: 5px 8px;
-    border-radius: 3px;
-    cursor: pointer;
-    transition: all 0.2s;
-    z-index: 1002;
-}
-
-.sidebar-pin-btn:hover {
-    background: rgba(255,255,255,0.2);
-    color: #fff;
-}
-
-.sidebar-collapsed .sidebar-pin-btn {
-    opacity: 0;
-    pointer-events: none;
-}
-
-.sidebar-collapsed .main-sidebar:hover .sidebar-pin-btn {
-    opacity: 1;
-    pointer-events: auto;
-}
+/* Pin button completely removed - only hover behavior */
 
 /* Tooltips for collapsed icons */
 .sidebar-collapsed .nav-item[data-tooltip] {

@@ -45,6 +45,11 @@ div.lgpd-footer-links .card {
     border-radius: 4px !important;
 }
 
+/* 🔧 CORREÇÃO: Espaço para o botão X - os botões não devem sobrepor */
+.lgpd-footer-links .card-body {
+    padding-right: 50px !important; /* Espaço para o X */
+}
+
 .lgpd-footer-links .lgpd-close-btn:hover {
     color: #dc3545 !important;
     text-decoration: none !important;

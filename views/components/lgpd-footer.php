@@ -39,7 +39,7 @@
                             
                             <!-- Links Rápidos -->
                             <div class="col-md-4">
-                                <div class="d-flex justify-content-md-end justify-content-center flex-wrap">
+                                <div class="d-flex justify-content-md-end justify-content-center flex-wrap" style="margin-right: 10px;">
                                     <a href="/privacy" class="btn btn-outline-secondary btn-sm mx-1 mb-1" 
                                        title="Política de Privacidade Completa"
                                        aria-label="Acessar Política de Privacidade">

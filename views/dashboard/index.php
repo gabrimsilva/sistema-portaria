@@ -8,6 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
 </head>
 <body class="hold-transition sidebar-mini layout-fixed">
     <div class="wrapper">
@@ -617,6 +618,7 @@
     
     
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
     
@@ -1448,6 +1450,48 @@
             // Garantir que o campo de placa esteja habilitado inicialmente
             $('#profissional_placa_veiculo').prop('readonly', false).prop('disabled', false);
             $('#profissional_ape_checkbox').prop('checked', false);
+            
+            // Autocomplete para o campo Nome
+            if ($('#profissional_nome').autocomplete('instance')) {
+                $('#profissional_nome').autocomplete('destroy');
+            }
+            
+            $('#profissional_nome').autocomplete({
+                source: function(request, response) {
+                    $.ajax({
+                        url: '/profissionais-renner?action=search',
+                        dataType: 'json',
+                        data: {
+                            q: request.term
+                        },
+                        success: function(data) {
+                            if (data.success && data.data) {
+                                response($.map(data.data, function(item) {
+                                    return {
+                                        label: item.nome + ' - ' + item.setor,
+                                        value: item.nome,
+                                        setor: item.setor,
+                                        fre: item.fre
+                                    };
+                                }));
+                            } else {
+                                response([]);
+                            }
+                        },
+                        error: function() {
+                            response([]);
+                        }
+                    });
+                },
+                minLength: 2,
+                select: function(event, ui) {
+                    $('#profissional_nome').val(ui.item.value);
+                    $('#profissional_setor').val(ui.item.setor);
+                    return false;
+                }
+            });
+            
+            console.log('✅ Autocomplete inicializado para Profissionais');
             
             // Controle do checkbox "A pé" para Profissional Renner
             let previousValueProfissional = '';

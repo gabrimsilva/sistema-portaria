@@ -58,6 +58,14 @@ class NavigationService
             'children' => []
         ],
         [
+            'id' => 'importacao',
+            'label' => 'Importação',
+            'url' => '/importacao',
+            'icon' => 'fas fa-file-import',
+            'permission' => ['administrador'],
+            'children' => []
+        ],
+        [
             'id' => 'config',
             'label' => 'Configurações',
             'url' => '/config',
@@ -89,6 +97,7 @@ class NavigationService
         '/privacy' => ['privacy'],
         '/privacy/portal' => ['privacy'],
         '/privacy/cookies' => ['privacy'],
+        '/importacao' => ['importacao'],
         '/config' => ['config']
     ];
 

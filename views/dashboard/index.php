@@ -570,18 +570,6 @@
                             <input type="text" class="form-control" id="edit_funcionario_responsavel" name="funcionario_responsavel">
                         </div>
                         
-                        <div id="campo_hora_saida" class="form-group" style="display: none;">
-                            <label for="edit_hora_saida">Hora de Saída</label>
-                            <input type="datetime-local" class="form-control" id="edit_hora_saida" name="hora_saida">
-                            <small class="form-text text-muted">Deixe em branco se a pessoa ainda não saiu da empresa</small>
-                        </div>
-                        
-                        <!-- Campo específico para prestadores -->
-                        <div id="campo_observacao" class="form-group" style="display: none;">
-                            <label for="edit_observacao">Observações</label>
-                            <textarea class="form-control" id="edit_observacao" name="observacao" rows="3"></textarea>
-                        </div>
-                        
                         <!-- Campos específicos para Profissional Renner -->
                         <div id="campos_profissional_renner" style="display: none;">
                             <div class="row">
@@ -600,6 +588,18 @@
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                        
+                        <div id="campo_hora_saida" class="form-group" style="display: none;">
+                            <label for="edit_hora_saida">Hora de Saída</label>
+                            <input type="datetime-local" class="form-control" id="edit_hora_saida" name="hora_saida">
+                            <small class="form-text text-muted">Deixe em branco se a pessoa ainda não saiu da empresa</small>
+                        </div>
+                        
+                        <!-- Campo específico para prestadores -->
+                        <div id="campo_observacao" class="form-group" style="display: none;">
+                            <label for="edit_observacao">Observações</label>
+                            <textarea class="form-control" id="edit_observacao" name="observacao" rows="3"></textarea>
                         </div>
                         
 

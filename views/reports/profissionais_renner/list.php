@@ -143,16 +143,18 @@
                                 <table class="table table-bordered table-hover table-sm">
                                     <thead class="table-dark">
                                         <tr>
-                                            <th width="35%">Nome</th>
-                                            <th width="20%">Setor</th>
-                                            <th width="20%">Placa/Veículo</th>
-                                            <th width="25%">Data/Hora Entrada</th>
+                                            <th width="25%">Nome</th>
+                                            <th width="15%">Setor</th>
+                                            <th width="15%">Placa/Veículo</th>
+                                            <th width="15%">Data/Hora Entrada</th>
+                                            <th width="15%">Saída Intermediária</th>
+                                            <th width="15%">Retorno</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <?php if (empty($profissionais)): ?>
                                             <tr>
-                                                <td colspan="4" class="text-center py-4">
+                                                <td colspan="6" class="text-center py-4">
                                                     <i class="fas fa-info-circle text-muted"></i>
                                                     Nenhum registro encontrado para esta data
                                                 </td>
@@ -181,6 +183,12 @@
                                                 </td>
                                                 <td>
                                                     <?= $prof['data_entrada'] ? date('d/m/Y H:i', strtotime($prof['data_entrada'])) : '-' ?>
+                                                </td>
+                                                <td>
+                                                    <?= $prof['saida'] ? date('d/m/Y H:i', strtotime($prof['saida'])) : '-' ?>
+                                                </td>
+                                                <td>
+                                                    <?= $prof['retorno'] ? date('d/m/Y H:i', strtotime($prof['retorno'])) : '-' ?>
                                                 </td>
                                             </tr>
                                             <?php endforeach; ?>

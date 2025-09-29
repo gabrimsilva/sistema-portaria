@@ -50,7 +50,7 @@ class ProfissionaisRennerController {
         
         // Query otimizada: campos específicos para relatórios, todos para módulo normal
         if ($isReport) {
-            $query = "SELECT id, nome, setor, placa_veiculo, data_entrada, saida_final FROM profissionais_renner WHERE 1=1";
+            $query = "SELECT id, nome, setor, placa_veiculo, data_entrada, saida, retorno, saida_final FROM profissionais_renner WHERE 1=1";
         } else {
             $query = "SELECT * FROM profissionais_renner WHERE 1=1";
         }
@@ -96,7 +96,7 @@ class ProfissionaisRennerController {
         $pagination = null;
         if ($isReport) {
             $countQuery = str_replace(
-                "SELECT id, nome, setor, placa_veiculo, data_entrada, saida_final", 
+                "SELECT id, nome, setor, placa_veiculo, data_entrada, saida, retorno, saida_final", 
                 "SELECT COUNT(*)", 
                 $query
             );

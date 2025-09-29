@@ -8,7 +8,7 @@
 ?>
 
 <!-- 🛡️ CSS Dedicado LGPD Footer -->
-<link rel="stylesheet" href="<?= BASE_URL ?>assets/css/lgpd-footer.css">
+<link rel="stylesheet" href="<?= BASE_URL ?>assets/css/lgpd-footer.css?v=<?= time() ?>">
 
 <!-- Rodapé LGPD -->
 <div class="lgpd-footer-links">

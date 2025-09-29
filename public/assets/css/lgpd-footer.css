@@ -19,11 +19,12 @@
 }
 
 .lgpd-footer-links .card {
-    /* 🔧 NOVO: Card mais sutil com cor mais leve */
-    border: 1px solid #f1f3f4;
+    /* 🔧 NOVO: Card ultra-sutil - praticamente transparente */
+    border: 1px solid rgba(0,0,0,0.05);
     border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    background-color: #fafbfc;
+    box-shadow: none;
+    background-color: rgba(255,255,255,0.3);
+    backdrop-filter: blur(10px);
 }
 
 .lgpd-footer-links .btn {

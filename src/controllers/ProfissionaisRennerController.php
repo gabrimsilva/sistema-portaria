@@ -397,10 +397,34 @@ class ProfissionaisRennerController {
     public function delete() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             CSRFProtection::verifyRequest();
+            
+            require_once __DIR__ . '/../services/AuthorizationService.php';
+            $authService = new AuthorizationService();
+            
+            if (!$authService->hasPermission('profissionais_renner.excluir')) {
+                $_SESSION['error'] = 'Você não tem permissão para excluir profissionais';
+                header('Location: /profissionais-renner');
+                exit;
+            }
+            
             $id = $_POST['id'] ?? null;
             
             if ($id) {
-                $this->db->query("DELETE FROM profissionais_renner WHERE id = ?", [$id]);
+                try {
+                    $hasHistory = $this->db->fetch(
+                        "SELECT COUNT(*) as count FROM registro_acesso WHERE profissional_renner_id = ?", 
+                        [$id]
+                    );
+                    
+                    if ($hasHistory && $hasHistory['count'] > 0) {
+                        $_SESSION['error'] = 'Não é possível excluir este profissional pois existem ' . $hasHistory['count'] . ' registro(s) de acesso associados. Para preservar o histórico de auditoria, a exclusão foi bloqueada.';
+                    } else {
+                        $this->db->query("DELETE FROM profissionais_renner WHERE id = ?", [$id]);
+                        $_SESSION['success'] = 'Profissional excluído com sucesso';
+                    }
+                } catch (Exception $e) {
+                    $_SESSION['error'] = 'Erro ao excluir profissional: ' . $e->getMessage();
+                }
             }
         }
         

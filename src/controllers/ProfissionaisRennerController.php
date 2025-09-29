@@ -123,14 +123,6 @@ class ProfissionaisRennerController {
         
         $profissionais = $this->db->fetchAll($query, $params);
         
-        // Mascarar CPFs se necessário (LGPD)
-        $canViewFullCpf = $this->canViewFullCpf();
-        foreach ($profissionais as &$profissional) {
-            if (!$canViewFullCpf && !empty($profissional['cpf'])) {
-                $profissional['cpf'] = $this->maskCpf($profissional['cpf']);
-            }
-        }
-        
         // Get unique sectors for filter
         $setores = $this->db->fetchAll("SELECT DISTINCT setor FROM profissionais_renner WHERE setor IS NOT NULL ORDER BY setor");
         
@@ -146,8 +138,6 @@ class ProfissionaisRennerController {
             CSRFProtection::verifyRequest();
             try {
                 $nome = trim($_POST['nome'] ?? '');
-                $cpf = trim($_POST['cpf'] ?? '');
-                $empresa = trim($_POST['empresa'] ?? '');
                 $setor = trim($_POST['setor'] ?? '');
                 $placa_veiculo = trim($_POST['placa_veiculo'] ?? '');
                 $data_entrada = $_POST['data_entrada'] ?? null;
@@ -214,12 +204,10 @@ class ProfissionaisRennerController {
                 // ==========================================
                 
                 $this->db->query("
-                    INSERT INTO profissionais_renner (nome, cpf, empresa, data_entrada, saida, retorno, saida_final, setor, placa_veiculo)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO profissionais_renner (nome, data_entrada, saida, retorno, saida_final, setor, placa_veiculo)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
                 ", [
                     $nome,
-                    $cpf ?: null,
-                    $empresa ?: null,
                     $data_entrada,
                     $saida ?: null,
                     $retorno ?: null,
@@ -259,8 +247,6 @@ class ProfissionaisRennerController {
             try {
                 $id = $_POST['id'] ?? null;
                 $nome = trim($_POST['nome'] ?? '');
-                $cpf = trim($_POST['cpf'] ?? '');
-                $empresa = trim($_POST['empresa'] ?? '');
                 $setor = trim($_POST['setor'] ?? '');
                 $placa_veiculo = trim($_POST['placa_veiculo'] ?? '');
                 $data_entrada = $_POST['data_entrada'] ?? null;
@@ -343,12 +329,10 @@ class ProfissionaisRennerController {
                 
                 $this->db->query("
                     UPDATE profissionais_renner 
-                    SET nome = ?, cpf = ?, empresa = ?, data_entrada = ?, saida = ?, retorno = ?, saida_final = ?, setor = ?, placa_veiculo = ?, updated_at = CURRENT_TIMESTAMP
+                    SET nome = ?, data_entrada = ?, saida = ?, retorno = ?, saida_final = ?, setor = ?, placa_veiculo = ?, updated_at = CURRENT_TIMESTAMP
                     WHERE id = ?
                 ", [
                     $nome,
-                    $cpf ?: null,
-                    $empresa ?: null,
                     $data_entrada ?: null,
                     $saida ?: null,
                     $retorno ?: null,
@@ -478,8 +462,6 @@ class ProfissionaisRennerController {
                 CSRFProtection::verifyRequest();
                 $id = trim($_POST['id'] ?? '');
                 $nome = trim($_POST['nome'] ?? '');
-                $cpf = trim($_POST['cpf'] ?? '');
-                $empresa = trim($_POST['empresa'] ?? '');
                 $setor = trim($_POST['setor'] ?? '');
                 $placa_veiculo = trim($_POST['placa_veiculo'] ?? '');
                 $saida_final = trim($_POST['saida_final'] ?? '');
@@ -530,9 +512,9 @@ class ProfissionaisRennerController {
                 
                 $this->db->query("
                     UPDATE profissionais_renner 
-                    SET nome = ?, cpf = ?, empresa = ?, setor = ?, placa_veiculo = ?, saida_final = ?
+                    SET nome = ?, setor = ?, placa_veiculo = ?, saida_final = ?
                     WHERE id = ?
-                ", [$nome, $cpf, $empresa, $setor, $placa_veiculo, $saida_final ?: null, $id]);
+                ", [$nome, $setor, $placa_veiculo, $saida_final ?: null, $id]);
                 
                 // Buscar dados atualizados para retornar
                 $profissionalAtualizado = $this->db->fetch("SELECT * FROM profissionais_renner WHERE id = ?", [$id]);
@@ -646,23 +628,5 @@ class ProfissionaisRennerController {
             echo json_encode(['success' => false, 'message' => 'Método não permitido']);
         }
         exit;
-    }
-    
-    private function canViewFullCpf() {
-        // LGPD: Mascarar CPF na seção de relatórios
-        $currentUri = $_SERVER['REQUEST_URI'] ?? '';
-        if (strpos($currentUri, '/reports/') !== false) {
-            return false; // Mascarar CPF em relatórios
-        }
-        
-        // Em outras seções, permitir visualização completa (RBAC futuro)
-        return true;
-    }
-    
-    private function maskCpf($cpf) {
-        if (empty($cpf)) return '';
-        $cpf = preg_replace('/\D/', '', $cpf);
-        if (strlen($cpf) !== 11) return $cpf;
-        return '***.***.***-' . substr($cpf, -2);
     }
 }

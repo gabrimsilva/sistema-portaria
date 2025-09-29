@@ -131,72 +131,12 @@
                                             </div>
                                             <div class="col-md-6">
                                                 <div class="form-group">
-                                                    <label for="cpf">CPF</label>
-                                                    <input type="text" class="form-control cpf-mask" id="cpf" name="cpf" 
-                                                           value="<?= htmlspecialchars($profissional['cpf'] ?? '') ?>" 
-                                                           placeholder="000.000.000-00">
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="empresa">Empresa/Unidade</label>
-                                                    <input type="text" class="form-control" id="empresa" name="empresa" 
-                                                           value="<?= htmlspecialchars($profissional['empresa'] ?? '') ?>" 
-                                                           placeholder="Ex: Renner Matriz, Renner Shopping, etc.">
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="form-group">
                                                     <label for="setor">Setor *</label>
                                                     <input type="text" class="form-control" id="setor" name="setor" 
                                                            value="<?= htmlspecialchars($profissional['setor'] ?? '') ?>" required>
                                                 </div>
                                             </div>
                                         </div>
-                                        
-                                        <!-- 🆕 NOVOS CAMPOS ESPECÍFICOS RENNER -->
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="matricula">Matrícula/ID Funcional</label>
-                                                    <input type="text" class="form-control" id="matricula" name="matricula" 
-                                                           value="<?= htmlspecialchars($profissional['matricula'] ?? '') ?>" 
-                                                           placeholder="Ex: 123456">
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="cargo">Cargo/Função</label>
-                                                    <input type="text" class="form-control" id="cargo" name="cargo" 
-                                                           value="<?= htmlspecialchars($profissional['cargo'] ?? '') ?>" 
-                                                           placeholder="Ex: Vendedor, Supervisor, etc.">
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="telefone">Telefone</label>
-                                                    <input type="text" class="form-control telefone-mask" id="telefone" name="telefone" 
-                                                           value="<?= htmlspecialchars($profissional['telefone'] ?? '') ?>" 
-                                                           placeholder="(11) 99999-9999">
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="email">E-mail</label>
-                                                    <input type="email" class="form-control" id="email" name="email" 
-                                                           value="<?= htmlspecialchars($profissional['email'] ?? '') ?>" 
-                                                           placeholder="email@renner.com.br">
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <!-- DADOS DE ENTRADA E SAÍDA -->
                                         <div class="row">
                                             <div class="col-md-6">
                                                 <div class="form-group">
@@ -266,14 +206,10 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
     
     <script>
     $(document).ready(function() {
         let previousValue = '';
-        
-        // Aplicar máscara de CPF
-        $('.cpf-mask').mask('000.000.000-00', {reverse: true});
         
         // Controlar checkbox "A pé"
         $('#ape_checkbox').change(function() {

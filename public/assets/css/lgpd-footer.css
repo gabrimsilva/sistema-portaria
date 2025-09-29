@@ -58,13 +58,20 @@ div.lgpd-footer-links .card {
 }
 
 .lgpd-footer-links .btn {
-    /* 🔧 MELHORADO: Botões menos chamativos */
+    /* 🔧 MELHORADO: Botões alinhados horizontalmente */
     border-radius: 20px;
     font-size: 0.85rem;
     font-weight: 500;
     transition: all 0.3s ease;
     margin: 0.25rem;
     white-space: nowrap;
+    height: 36px !important; /* Altura fixa para alinhamento perfeito */
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 16px !important; /* Padding uniforme */
+    line-height: 1 !important;
+    vertical-align: middle !important;
 }
 
 .lgpd-footer-links .btn:hover {

@@ -17,19 +17,17 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-body py-3">
+                        <!-- Botão Fechar - Posicionado Absolutamente -->
+                        <button type="button" class="btn btn-link text-muted p-1 lgpd-close-btn" 
+                                onclick="document.querySelector('.lgpd-footer-links').style.display='none'"
+                                title="Fechar footer LGPD"
+                                aria-label="Fechar footer LGPD">
+                            <i class="fas fa-times"></i>
+                        </button>
+                        
                         <div class="row align-items-center">
-                            <!-- Botão Fechar -->
-                            <div class="col-auto ml-auto order-last order-md-first">
-                                <button type="button" class="btn btn-link text-muted p-1" 
-                                        onclick="document.querySelector('.lgpd-footer-links').style.display='none'"
-                                        title="Fechar footer LGPD"
-                                        aria-label="Fechar footer LGPD">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                            
                             <!-- Informação Principal -->
-                            <div class="col-md-6 mb-2 mb-md-0">
+                            <div class="col-md-8 mb-2 mb-md-0">
                                 <div class="d-flex align-items-center">
                                     <i class="fas fa-shield-alt text-primary mr-2"></i>
                                     <span class="text-muted">
@@ -40,8 +38,8 @@
                             </div>
                             
                             <!-- Links Rápidos -->
-                            <div class="col-md-6">
-                                <div class="d-flex justify-content-md-end flex-wrap">
+                            <div class="col-md-4">
+                                <div class="d-flex justify-content-md-end justify-content-center flex-wrap">
                                     <a href="/privacy" class="btn btn-outline-secondary btn-sm mx-1 mb-1" 
                                        title="Política de Privacidade Completa"
                                        aria-label="Acessar Política de Privacidade">

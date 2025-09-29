@@ -1327,7 +1327,7 @@
                 case 'Profissional Renner':
                     endpoint = '/profissionais-renner?action=update_ajax';
                     if (horaSaida) {
-                        formData.append('saida_final', horaSaida);
+                        formData.append('saida', horaSaida); // CORRIGIDO: usar 'saida' não 'saida_final'
                     }
                     // Adicionar campos M2: saída intermediária e retorno
                     const saidaIntermediaria = $('#edit_saida').val();

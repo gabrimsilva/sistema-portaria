@@ -158,6 +158,9 @@ try {
                 case 'update_ajax':
                     $controller->updateAjax();
                     break;
+                case 'get_data':
+                    $controller->getData();
+                    break;
                 default:
                     // Outras ações redirecionam para relatório
                     header('Location: /reports/profissionais-renner');

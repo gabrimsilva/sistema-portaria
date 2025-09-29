@@ -459,12 +459,19 @@ class ProfissionaisRennerController {
             header('Content-Type: application/json');
             
             try {
-                CSRFProtection::verifyRequest();
+                // Verificação CSRF manual para retorno JSON adequado
+                if (!isset($_POST['csrf_token']) || !CSRFProtection::validateToken($_POST['csrf_token'])) {
+                    echo json_encode(['success' => false, 'message' => 'Token CSRF inválido']);
+                    exit;
+                }
+                
                 $id = trim($_POST['id'] ?? '');
                 $nome = trim($_POST['nome'] ?? '');
                 $setor = trim($_POST['setor'] ?? '');
                 $placa_veiculo = trim($_POST['placa_veiculo'] ?? '');
                 $saida_final = trim($_POST['saida_final'] ?? '');
+                $saida = trim($_POST['saida'] ?? '');
+                $retorno = trim($_POST['retorno'] ?? '');
                 
                 // Validações obrigatórias
                 if (empty($id) || empty($nome)) {
@@ -492,7 +499,35 @@ class ProfissionaisRennerController {
                     }
                 }
                 
-                // Parse saida_final if provided
+                // Parse M2 fields: saida, retorno, saida_final if provided
+                $saida_parsed = null;
+                if (!empty($saida)) {
+                    $date = DateTime::createFromFormat('Y-m-d\TH:i:s', $saida);
+                    if (!$date) {
+                        $date = DateTime::createFromFormat('Y-m-d\TH:i', $saida);
+                    }
+                    if ($date) {
+                        $saida_parsed = $date->format('Y-m-d H:i:s');
+                    } else {
+                        echo json_encode(['success' => false, 'message' => 'Formato de data/hora de saída intermediária inválido']);
+                        return;
+                    }
+                }
+                
+                $retorno_parsed = null;
+                if (!empty($retorno)) {
+                    $date = DateTime::createFromFormat('Y-m-d\TH:i:s', $retorno);
+                    if (!$date) {
+                        $date = DateTime::createFromFormat('Y-m-d\TH:i', $retorno);
+                    }
+                    if ($date) {
+                        $retorno_parsed = $date->format('Y-m-d H:i:s');
+                    } else {
+                        echo json_encode(['success' => false, 'message' => 'Formato de data/hora de retorno inválido']);
+                        return;
+                    }
+                }
+                
                 $saida_final_parsed = null;
                 if (!empty($saida_final)) {
                     $date = DateTime::createFromFormat('Y-m-d\TH:i:s', $saida_final);
@@ -502,7 +537,7 @@ class ProfissionaisRennerController {
                     if ($date) {
                         $saida_final_parsed = $date->format('Y-m-d H:i:s');
                     } else {
-                        echo json_encode(['success' => false, 'message' => 'Formato de data/hora de saída inválido']);
+                        echo json_encode(['success' => false, 'message' => 'Formato de data/hora de saída final inválido']);
                         return;
                     }
                 }
@@ -512,9 +547,9 @@ class ProfissionaisRennerController {
                 
                 $this->db->query("
                     UPDATE profissionais_renner 
-                    SET nome = ?, setor = ?, placa_veiculo = ?, saida_final = ?
+                    SET nome = ?, setor = ?, placa_veiculo = ?, saida = ?, retorno = ?, saida_final = ?
                     WHERE id = ?
-                ", [$nome, $setor, $placa_veiculo, $saida_final ?: null, $id]);
+                ", [$nome, $setor, $placa_veiculo, $saida_parsed, $retorno_parsed, $saida_final_parsed, $id]);
                 
                 // Buscar dados atualizados para retornar
                 $profissionalAtualizado = $this->db->fetch("SELECT * FROM profissionais_renner WHERE id = ?", [$id]);
@@ -526,12 +561,14 @@ class ProfissionaisRennerController {
                         'id' => $id,
                         'nome' => $nome,
                         'tipo' => 'Profissional Renner',
-                        'cpf' => $cpf,
-                        'empresa' => $empresa,
+                        'cpf' => '',
+                        'empresa' => '',
                         'setor' => $setor,
                         'funcionario_responsavel' => '',
                         'placa_veiculo' => $placa_veiculo,
                         'hora_entrada' => $profissionalAtualizado['retorno'] ?? $profissionalAtualizado['data_entrada'] ?? null,
+                        'saida' => $profissionalAtualizado['saida'] ?? null,
+                        'retorno' => $profissionalAtualizado['retorno'] ?? null,
                         'saida_final' => $profissionalAtualizado['saida_final'] ?? null
                     ]
                 ]);

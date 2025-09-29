@@ -582,6 +582,26 @@
                             <textarea class="form-control" id="edit_observacao" name="observacao" rows="3"></textarea>
                         </div>
                         
+                        <!-- Campos específicos para Profissional Renner -->
+                        <div id="campos_profissional_renner" style="display: none;">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="edit_saida">Saída Intermediária</label>
+                                        <input type="datetime-local" class="form-control" id="edit_saida" name="saida">
+                                        <small class="form-text text-muted">Primeira saída durante o expediente</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="edit_retorno">Retorno</label>
+                                        <input type="datetime-local" class="form-control" id="edit_retorno" name="retorno">
+                                        <small class="form-text text-muted">Retorno após saída intermediária</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
                         <!-- Botões de Saída -->
                         <div id="botoes_saida" class="form-group" style="display: none;">
                             <div class="card bg-danger text-white">
@@ -1110,7 +1130,7 @@
             }
             
             // Mostrar/ocultar campos específicos baseado no tipo
-            $('#campo_funcionario_responsavel, #campo_hora_saida, #campo_observacao, #botoes_saida').hide();
+            $('#campo_funcionario_responsavel, #campo_hora_saida, #campo_observacao, #campos_profissional_renner, #botoes_saida').hide();
             
             // Mostrar campo de hora de saída para todos os tipos
             $('#campo_hora_saida').show();
@@ -1121,6 +1141,8 @@
                 $('#campo_cpf').hide();
                 // Manter placa visível para Profissionais Renner
                 $('#campo_placa_veiculo').show();
+                // Mostrar campos específicos M2: saida e retorno
+                $('#campos_profissional_renner').show();
                 // Alterar cor do header do modal para Profissional Renner
                 $('.modal-header').removeClass('bg-info').addClass('bg-primary');
             } else {
@@ -1180,21 +1202,35 @@
                     }
                 });
             } else if (tipo === 'Profissional Renner') {
-                // Buscar dados específicos do profissional para preencher hora de saída final
+                // Buscar dados específicos do profissional para preencher todos os campos M2
                 $.ajax({
                     url: `/profissionais-renner?action=get_data&id=${id}`,
                     method: 'GET',
                     dataType: 'json',
                     success: function(response) {
-                        if (response.success && response.data.saida_final) {
-                            // Formatar data para datetime-local sem conversão de timezone
-                            const saidaFinalFormatada = response.data.saida_final.replace(' ', 'T').slice(0, 16);
-                            $('#edit_hora_saida').val(saidaFinalFormatada);
+                        if (response.success && response.data) {
+                            // Preencher saída final (campo hora_saida)
+                            if (response.data.saida_final) {
+                                const saidaFinalFormatada = response.data.saida_final.replace(' ', 'T').slice(0, 16);
+                                $('#edit_hora_saida').val(saidaFinalFormatada);
+                            }
+                            // Preencher saída intermediária (campo M2)
+                            if (response.data.saida) {
+                                const saidaFormatada = response.data.saida.replace(' ', 'T').slice(0, 16);
+                                $('#edit_saida').val(saidaFormatada);
+                            }
+                            // Preencher retorno (campo M2)
+                            if (response.data.retorno) {
+                                const retornoFormatado = response.data.retorno.replace(' ', 'T').slice(0, 16);
+                                $('#edit_retorno').val(retornoFormatado);
+                            }
                         }
                     },
                     error: function() {
-                        // Em caso de erro, deixa o campo vazio
+                        // Em caso de erro, deixa os campos vazios
                         $('#edit_hora_saida').val('');
+                        $('#edit_saida').val('');
+                        $('#edit_retorno').val('');
                     }
                 });
             }
@@ -1257,6 +1293,15 @@
                     endpoint = '/profissionais-renner?action=update_ajax';
                     if (horaSaida) {
                         formData.append('saida_final', horaSaida);
+                    }
+                    // Adicionar campos M2: saída intermediária e retorno
+                    const saidaIntermediaria = $('#edit_saida').val();
+                    const retorno = $('#edit_retorno').val();
+                    if (saidaIntermediaria) {
+                        formData.append('saida', saidaIntermediaria);
+                    }
+                    if (retorno) {
+                        formData.append('retorno', retorno);
                     }
                     break;
                 case 'Prestador':
@@ -1390,7 +1435,7 @@
         // Limpar formulário de edição ao fechar modal
         $('#modalEditar').on('hidden.bs.modal', function() {
             $('#formEditar')[0].reset();
-            $('#campo_funcionario_responsavel, #campo_hora_saida, #campo_observacao, #botoes_saida').hide();
+            $('#campo_funcionario_responsavel, #campo_hora_saida, #campo_observacao, #campos_profissional_renner, #botoes_saida').hide();
         });
 
         // ==================== MÁSCARAS DE ENTRADA - BOOTSTRAP 4.6.2 COMPATÍVEL ====================

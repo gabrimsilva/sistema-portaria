@@ -148,7 +148,7 @@
                                             </div>
                                             <div class="col-md-6">
                                                 <div class="form-group">
-                                                    <label for="saida">Saída</label>
+                                                    <label for="saida">Saída Intermediária</label>
                                                     <input type="datetime-local" class="form-control" id="saida" name="saida" 
                                                            value="<?= $profissional['saida'] ? date('Y-m-d\TH:i', strtotime($profissional['saida'])) : '' ?>">
                                                 </div>

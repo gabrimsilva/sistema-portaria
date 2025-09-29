@@ -81,11 +81,31 @@ Preferred communication style: Simple, everyday language.
 ### Step 2.1 - Banner de Cookies LGPD (COMPLETED ✅)
 - **Sistema Completo LGPD**: Criado banner de cookies moderno e responsivo em conformidade com a Lei Geral de Proteção de Dados brasileira, integrado com toda a documentação LGPD existente do sistema
 - **Componente Responsivo**: Banner adaptável (views/components/cookie-banner.php) com interface desktop/mobile, modal de preferências detalhado, e controle granular de cookies (essenciais, funcionais, performance)
-- **JavaScript Robusto**: Sistema de consentimento (public/assets/js/cookie-consent.js) com inicialização segura, aguarda jQuery, persiste preferências, e oferece API completa para gerenciamento
+- **JavaScript Robusto**: Sistema de consentamento (public/assets/js/cookie-consent.js) com inicialização segura, aguarda jQuery, persiste preferências, e oferece API completa para gerenciamento
 - **CookieService Integrado**: Serviço PHP centralizado para incluir banner em qualquer página, gerenciar consentimento server-side, e conectar com políticas de privacidade existentes
 - **Integração Funcional**: Banner incluído em páginas críticas (login, dashboard, scan), carregando sem erros PHP/JavaScript conforme validado nos logs do servidor
 - **Conformidade Básica LGPD**: Oferece controle granular de cookies, permite aceitar/rejeitar opcionais, conecta com políticas de privacidade em /privacy, e respeita direitos dos usuários
 - **Melhorias Futuras Sugeridas**: Implementar bloqueio prévio de scripts opcionais, adicionar link persistente "Gerenciar Cookies", expandir para todas as páginas via layout base, e adicionar atributo SameSite nos cookies server-side
+
+## 📅 SEMANA 3: SISTEMA DE IMPORTAÇÃO E REFATORAÇÃO ARQUITETURAL
+
+### M5 - Sistema de Importação CSV/XLSX (COMPLETED ✅)
+- **Import Funcional**: Sistema completo de importação CSV/XLSX com PhpSpreadsheet para dados de profissionais Renner
+- **Interface Drag-and-Drop**: UI moderna com suporte a arrastar/soltar arquivos, validação de tipo, limite de 10MB
+- **Validação de Dados**: Validação de colunas obrigatórias (Nome, Setor, Data de Admissão, FRE), detecção de duplicatas por nome, normalização de acentos e BOM
+- **Segurança**: CSRF protection, MIME validation, limpeza garantida de arquivos temporários, RBAC com permissão `importacao.visualizar`
+- **Processamento Robusto**: Tratamento de erros por linha, relatório detalhado de sucessos/falhas, suporte a múltiplos formatos
+
+### Correção Arquitetural - Separação Cadastro e Controle de Acesso (COMPLETED ✅ - PRODUCTION-READY)
+- **Problema Identificado**: Tabela `profissionais_renner` misturava dados de cadastro (nome, setor) com dados de controle de acesso (entrada, saída, placa)
+- **Solução Implementada**: Separação completa em duas tabelas com relacionamento FK:
+  - `profissionais_renner`: Cadastro permanente (id, nome, setor, fre, data_admissao)
+  - `registro_acesso`: Registros de entrada/saída (id, profissional_renner_id, entrada_at, saida_at, retorno, saida_final, placa_veiculo)
+- **Migração de Dados**: 13 registros migrados com sucesso de profissionais_renner → registro_acesso, backups criados para rollback
+- **Integridade Referencial**: FK `fk_registro_acesso_profissional` com ON DELETE RESTRICT protegendo histórico de auditoria
+- **Controller Refatorado**: ProfissionaisRennerController completamente refatorado usando JOINs para listagens e transações para operações combinadas
+- **Proteção de Auditoria**: Método delete() com RBAC (`profissionais_renner.excluir`), verificação de histórico, bloqueio de exclusão com registros dependentes
+- **Validação Completa**: Architect-reviewed e aprovado como production-ready após correção de problemas críticos de segurança e integridade
 
 ### Potential Future Integrations  
 - **Production Hosting**: Migration path to dedicated servers or cloud platforms

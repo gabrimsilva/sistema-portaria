@@ -225,7 +225,7 @@ class ImportacaoController {
                 }
                 
                 try {
-                    $this->db->execute(
+                    $this->db->query(
                         "INSERT INTO profissionais_renner (nome, setor, fre, data_admissao, data_entrada) VALUES (?, ?, ?, ?, NOW())",
                         [$nome, $setor, $fre, $dataAdmissao]
                     );

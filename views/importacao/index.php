@@ -362,25 +362,68 @@
             }
             
             function showPreview(file) {
-                // TODO: Implementar leitura e preview real do arquivo
-                // Por enquanto, mostrar preview simulado
-                $('#previewCard').fadeIn();
+                const reader = new FileReader();
                 
-                const previewBody = $('#previewBody');
-                previewBody.empty();
+                reader.onload = function(e) {
+                    const content = e.target.result;
+                    const lines = content.split('\n').filter(line => line.trim() !== '');
+                    
+                    if (lines.length < 2) {
+                        alert('Arquivo vazio ou inválido');
+                        resetUpload();
+                        return;
+                    }
+                    
+                    const previewBody = $('#previewBody');
+                    previewBody.empty();
+                    
+                    const header = lines[0].replace(/^\uFEFF/, '').split(',');
+                    
+                    const nomeIndex = header.findIndex(col => col.toLowerCase().includes('nome'));
+                    const setorIndex = header.findIndex(col => col.toLowerCase().includes('setor'));
+                    const dataIndex = header.findIndex(col => col.toLowerCase().includes('admis'));
+                    const freIndex = header.findIndex(col => col.toLowerCase().includes('fre'));
+                    
+                    const maxPreview = Math.min(lines.length - 1, 10);
+                    
+                    for (let i = 1; i <= maxPreview; i++) {
+                        const cols = lines[i].split(',');
+                        
+                        const nome = cols[nomeIndex] || '-';
+                        const setor = cols[setorIndex] || '-';
+                        const data = cols[dataIndex] || '-';
+                        const fre = cols[freIndex] || '-';
+                        
+                        previewBody.append(`
+                            <tr>
+                                <td>${i}</td>
+                                <td>${nome.trim()}</td>
+                                <td>${setor.trim()}</td>
+                                <td>${data.trim()}</td>
+                                <td>${fre.trim()}</td>
+                            </tr>
+                        `);
+                    }
+                    
+                    if (lines.length > 11) {
+                        previewBody.append(`
+                            <tr class="table-info">
+                                <td colspan="5" class="text-center">
+                                    <strong>... e mais ${lines.length - 11} registros</strong>
+                                </td>
+                            </tr>
+                        `);
+                    }
+                    
+                    $('#previewCard').fadeIn();
+                };
                 
-                // Preview simulado (será substituído pela leitura real)
-                for (let i = 1; i <= 5; i++) {
-                    previewBody.append(`
-                        <tr>
-                            <td>${i}</td>
-                            <td>Profissional ${i}</td>
-                            <td>Setor ${i}</td>
-                            <td>${new Date().toLocaleDateString('pt-BR')}</td>
-                            <td>FRE${i.toString().padStart(4, '0')}</td>
-                        </tr>
-                    `);
-                }
+                reader.onerror = function() {
+                    alert('Erro ao ler o arquivo');
+                    resetUpload();
+                };
+                
+                reader.readAsText(file);
             }
             
             function processImport() {

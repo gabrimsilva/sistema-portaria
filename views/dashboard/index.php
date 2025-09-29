@@ -602,34 +602,6 @@
                             </div>
                         </div>
                         
-                        <!-- Botões específicos para Profissional Renner -->
-                        <div id="botoes_saida_profissional" class="form-group" style="display: none;">
-                            <div class="card bg-primary text-white">
-                                <div class="card-header">
-                                    <h6 class="card-title mb-0">
-                                        <i class="fas fa-clock"></i> Opções de Saída - Profissional Renner
-                                    </h6>
-                                </div>
-                                <div class="card-body text-center">
-                                    <p class="mb-3">
-                                        <i class="fas fa-info-circle"></i> 
-                                        Escolha o tipo de saída para registrar corretamente.
-                                    </p>
-                                    <div class="btn-group btn-group-lg" role="group">
-                                        <button type="button" class="btn btn-warning" id="btnSaidaIntermediaria">
-                                            <i class="fas fa-clock"></i> Saída Intermediária
-                                        </button>
-                                        <button type="button" class="btn btn-danger" id="btnSaidaFinal">
-                                            <i class="fas fa-sign-out-alt"></i> Saída Final
-                                        </button>
-                                    </div>
-                                    <small class="form-text text-light mt-2">
-                                        • <strong>Saída Intermediária:</strong> Profissional sai temporariamente mas permanece no sistema<br>
-                                        • <strong>Saída Final:</strong> Profissional sai definitivamente da empresa
-                                    </small>
-                                </div>
-                            </div>
-                        </div>
 
                         <!-- Botão geral para outros tipos -->
                         <div id="botao_saida_geral" class="form-group" style="display: none;">
@@ -1161,7 +1133,7 @@
             }
             
             // Mostrar/ocultar campos específicos baseado no tipo
-            $('#campo_funcionario_responsavel, #campo_hora_saida, #campo_observacao, #campos_profissional_renner, #botoes_saida_profissional, #botao_saida_geral').hide();
+            $('#campo_funcionario_responsavel, #campo_hora_saida, #campo_observacao, #campos_profissional_renner, #botao_saida_geral').hide();
             
             // Mostrar campo de hora de saída para todos os tipos
             $('#campo_hora_saida').show();
@@ -1174,17 +1146,15 @@
                 $('#campo_placa_veiculo').show();
                 // Mostrar campos específicos M2: saida e retorno
                 $('#campos_profissional_renner').show();
-                // Mostrar botões específicos para Profissional Renner
-                $('#botoes_saida_profissional').show();
-                $('#botao_saida_geral').hide();
+                // Usar botão geral para todos os tipos agora
+                $('#botao_saida_geral').show();
                 // Alterar cor do header do modal para Profissional Renner
                 $('.modal-header').removeClass('bg-info').addClass('bg-primary');
             } else {
                 $('#campo_empresa').show();
                 $('#campo_cpf').show();
                 $('#campo_placa_veiculo').show();
-                // Mostrar botão geral para outros tipos
-                $('#botoes_saida_profissional').hide();
+                // Mostrar botão geral para todos os tipos
                 $('#botao_saida_geral').show();
                 // Manter cor padrão do header para outros tipos
                 $('.modal-header').removeClass('bg-primary').addClass('bg-info');
@@ -1329,7 +1299,7 @@
                 case 'Profissional Renner':
                     endpoint = '/profissionais-renner?action=update_ajax';
                     if (horaSaida) {
-                        formData.append('saida', horaSaida); // CORRIGIDO: usar 'saida' não 'saida_final'
+                        formData.append('saida_final', horaSaida); // Para Profissional Renner, hora de saída = saída final
                     }
                     // Adicionar campos M2: saída intermediária e retorno
                     const saidaIntermediaria = $('#edit_saida').val();
@@ -1471,106 +1441,11 @@
             });
         });
 
-        // Handler para Saída Intermediária (registra saída mas mantém profissional na empresa)
-        $('#btnSaidaIntermediaria').on('click', function() {
-            const id = $('#edit_id').val();
-            const nome = $('#edit_nome').val();
-            
-            $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Processando...');
-            
-            // Usar updateAjax para registrar saída intermediária
-            const formData = new FormData();
-            formData.append('id', id);
-            formData.append('nome', nome);
-            formData.append('setor', $('#edit_setor').val());
-            formData.append('placa_veiculo', $('#edit_placa_veiculo').val());
-            formData.append('saida', obterDataHoraAtual().replace('T', ' ') + ':00'); // Data atual
-            formData.append('csrf_token', $('meta[name="csrf-token"]').attr('content') || '<?= CSRFProtection::generateToken() ?>');
-            
-            $.ajax({
-                url: '/profissionais-renner?action=update_ajax',
-                method: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                dataType: 'json',
-                success: function(response) {
-                    if (response.success) {
-                        showToast('Saída intermediária registrada! Profissional permanece na empresa.', 'success');
-                        $('#modalEditar').modal('hide');
-                        // NÃO REMOVE DA TABELA - apenas atualiza dados
-                        atualizarLinhaNaTabela(response.data);
-                    } else {
-                        showToast(response.message || 'Erro ao registrar saída intermediária', 'error');
-                    }
-                },
-                error: function(xhr) {
-                    if (xhr.status === 401) {
-                        showToast('Sessão expirada. Redirecionando...', 'error');
-                        setTimeout(() => window.location.href = '/login', 2000);
-                    } else {
-                        showToast('Erro de comunicação', 'error');
-                    }
-                },
-                complete: function() {
-                    $('#btnSaidaIntermediaria').prop('disabled', false).html('<i class="fas fa-clock"></i> Saída Intermediária');
-                }
-            });
-        });
-
-        // Handler para Saída Final (remove profissional da empresa)
-        $('#btnSaidaFinal').on('click', function() {
-            const id = $('#edit_id').val();
-            const nome = $('#edit_nome').val();
-            
-            $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Processando...');
-            
-            $.ajax({
-                url: `/profissionais-renner?action=saida&id=${id}`,
-                method: 'POST',
-                data: {
-                    csrf_token: $('meta[name="csrf-token"]').attr('content') || '<?= CSRFProtection::generateToken() ?>'
-                },
-                dataType: 'json',
-                success: function(response) {
-                    if (response.success) {
-                        showToast('Saída final registrada! Profissional saiu da empresa.', 'success');
-                        $('#modalEditar').modal('hide');
-                        // REMOVE DA TABELA (saída final)
-                        $(`.btn-editar[data-id="${id}"]`).closest('tr').fadeOut(300, function() {
-                            $(this).remove();
-                            // Atualizar contadores
-                            const badge = $('.card-title .badge');
-                            const contadorAtual = parseInt(badge.text()) || 0;
-                            if (contadorAtual > 0) badge.text(contadorAtual - 1);
-                            
-                            // Atualizar contador de saídas hoje
-                            const saidasCard = $('.small-box').eq(3).find('.inner h3');
-                            const saidasAtual = parseInt(saidasCard.text()) || 0;
-                            saidasCard.text(saidasAtual + 1);
-                        });
-                    } else {
-                        showToast(response.message || 'Erro ao registrar saída final', 'error');
-                    }
-                },
-                error: function(xhr) {
-                    if (xhr.status === 401) {
-                        showToast('Sessão expirada. Redirecionando...', 'error');
-                        setTimeout(() => window.location.href = '/login', 2000);
-                    } else {
-                        showToast('Erro de comunicação', 'error');
-                    }
-                },
-                complete: function() {
-                    $('#btnSaidaFinal').prop('disabled', false).html('<i class="fas fa-sign-out-alt"></i> Saída Final');
-                }
-            });
-        });
 
         // Limpar formulário de edição ao fechar modal
         $('#modalEditar').on('hidden.bs.modal', function() {
             $('#formEditar')[0].reset();
-            $('#campo_funcionario_responsavel, #campo_hora_saida, #campo_observacao, #campos_profissional_renner, #botoes_saida_profissional, #botao_saida_geral').hide();
+            $('#campo_funcionario_responsavel, #campo_hora_saida, #campo_observacao, #campos_profissional_renner, #botao_saida_geral').hide();
         });
 
         // ==================== MÁSCARAS DE ENTRADA - BOOTSTRAP 4.6.2 COMPATÍVEL ====================

@@ -401,15 +401,18 @@ class ConfigService {
                 continue;
             }
             
+            // Converter closed para boolean PostgreSQL (t/f)
+            $closed = isset($hour['closed']) && $hour['closed'] ? 't' : 'f';
+            
             $this->db->query(
                 "INSERT INTO business_hours (site_id, weekday, open_at, close_at, closed) 
-                 VALUES (?, ?, ?, ?, ?)",
+                 VALUES (?, ?, ?, ?, ?::boolean)",
                 [
                     $siteId,
                     $hour['weekday'],
                     $hour['open_at'] ?? null,
                     $hour['close_at'] ?? null,
-                    $hour['closed'] ?? false
+                    $closed
                 ]
             );
         }

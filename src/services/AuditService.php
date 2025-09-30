@@ -213,21 +213,14 @@ class AuditService {
         $auditEssentialFields = ['id', 'ativo', 'status', 'role_id', 'perfil', 'permissoes'];
         
         // Campos importantes para identificação em auditoria (mantidos para rastreabilidade)
-        $auditIdentificationFields = ['nome', 'setor', 'placa_veiculo', 'tipo', 'empresa', 'company_name', 'observacao', 'entrada_at', 'saida_at', 'retorno', 'saida_final', 'entrada', 'saida'];
+        $auditIdentificationFields = ['nome', 'setor', 'placa_veiculo', 'tipo', 'empresa', 'company_name', 'observacao', 'entrada_at', 'saida_at', 'retorno', 'saida_final'];
         
         $allEssentialFields = array_merge($auditEssentialFields, $auditIdentificationFields);
         
-        // Filtrar apenas campos que existem + campos que terminam com _id
-        $filteredData = array_intersect_key($anonymized, array_flip($allEssentialFields));
-        
-        // Adicionar campos que terminam com _id ou contém 'acao'
-        foreach ($anonymized as $key => $value) {
-            if (strpos($key, '_id') !== false || strpos($key, 'acao') !== false) {
-                $filteredData[$key] = $value;
-            }
-        }
-        
-        return $filteredData;
+        return array_intersect_key($anonymized, array_flip($allEssentialFields)) + 
+               array_filter($anonymized, function($key) {
+                   return strpos($key, '_id') !== false || strpos($key, 'acao') !== false;
+               }, ARRAY_FILTER_USE_KEY);
     }
     
     /**

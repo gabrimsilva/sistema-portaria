@@ -988,7 +988,7 @@ class ProfissionaisRennerController {
             }
             
             $registro = $this->db->fetch("
-                SELECT r.nome FROM registro_acesso r 
+                SELECT r.* FROM registro_acesso r 
                 WHERE r.id = ? AND r.tipo = 'profissional_renner'
             ", [$id]);
             
@@ -996,7 +996,17 @@ class ProfissionaisRennerController {
                 throw new Exception('Registro não encontrado');
             }
             
+            // Excluir registro
             $this->db->query("DELETE FROM registro_acesso WHERE id = ?", [$id]);
+            
+            // Registrar auditoria
+            $this->auditService->log(
+                'delete',
+                'registro_acesso',
+                $id,
+                $registro,
+                null
+            );
             
             echo json_encode([
                 'success' => true,

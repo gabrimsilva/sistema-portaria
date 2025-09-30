@@ -9,11 +9,24 @@ class AuditService {
     
     /**
      * Registra uma ação de auditoria com anonimização LGPD
+     * 
+     * @param string $acao - Ação realizada (create, update, delete, import, etc)
+     * @param string $entidade - Tipo de entidade afetada
+     * @param int|null $entidade_id - ID da entidade
+     * @param array|null $dados_antes - Estado anterior (para updates/deletes)
+     * @param array|null $dados_depois - Estado novo (para creates/updates)
+     * @param string|null $severidade - Nível do log (DEBUG, INFO, WARN, ERROR, AUDIT) - auto-inferido se null
+     * @param string|null $modulo - Módulo origem (sistema, api, import, autenticacao) - auto-inferido se null
+     * @param string $resultado - Resultado da operação (success, failure, partial)
      */
-    public function log($acao, $entidade, $entidade_id, $dados_antes = null, $dados_depois = null) {
+    public function log($acao, $entidade, $entidade_id, $dados_antes = null, $dados_depois = null, $severidade = null, $modulo = null, $resultado = 'success') {
         $user_id = $_SESSION['user_id'] ?? null;
         $ip_address = $this->anonymizeIP($this->getClientIP());
         $user_agent = $this->anonymizeUserAgent($_SERVER['HTTP_USER_AGENT'] ?? null);
+        
+        // Inferir severidade e módulo se não fornecidos
+        $severidade = $severidade ?? $this->inferSeveridade($acao);
+        $modulo = $modulo ?? $this->inferModulo($entidade, $acao);
         
         // Anonimizar dados pessoais antes de salvar
         $dados_antes_anonimizados = $dados_antes ? $this->anonymizeData($dados_antes, $entidade) : null;
@@ -21,8 +34,8 @@ class AuditService {
         
         try {
             $this->db->query(
-                "INSERT INTO audit_log (user_id, acao, entidade, entidade_id, dados_antes, dados_depois, ip_address, user_agent) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                "INSERT INTO audit_log (user_id, acao, entidade, entidade_id, dados_antes, dados_depois, ip_address, user_agent, severidade, modulo, resultado) 
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 [
                     $user_id,
                     $acao,
@@ -31,12 +44,63 @@ class AuditService {
                     $dados_antes_anonimizados ? json_encode($dados_antes_anonimizados) : null,
                     $dados_depois_anonimizados ? json_encode($dados_depois_anonimizados) : null,
                     $ip_address,
-                    $user_agent
+                    $user_agent,
+                    $severidade,
+                    $modulo,
+                    $resultado
                 ]
             );
         } catch (Exception $e) {
             error_log("Erro ao registrar auditoria: " . $e->getMessage());
         }
+    }
+    
+    /**
+     * Infere severidade baseado na ação
+     */
+    private function inferSeveridade($acao) {
+        $severidadeMap = [
+            'create' => 'AUDIT',
+            'update' => 'AUDIT',
+            'delete' => 'WARN',
+            'import' => 'AUDIT',
+            'export' => 'INFO',
+            'login' => 'INFO',
+            'logout' => 'INFO',
+            'error' => 'ERROR',
+            'access_denied' => 'WARN',
+            'config_change' => 'WARN'
+        ];
+        
+        return $severidadeMap[$acao] ?? 'INFO';
+    }
+    
+    /**
+     * Infere módulo baseado na entidade e ação
+     */
+    private function inferModulo($entidade, $acao) {
+        // Prioridade para ações específicas
+        if ($acao === 'import') return 'import';
+        if ($acao === 'export') return 'export';
+        if (in_array($acao, ['login', 'logout', 'access_denied'])) return 'autenticacao';
+        
+        // Mapeamento por entidade
+        $moduloMap = [
+            'usuarios' => 'autenticacao',
+            'role_permissions' => 'autenticacao',
+            'roles' => 'autenticacao',
+            'profissionais_renner' => 'sistema',
+            'registro_acesso' => 'sistema',
+            'visitantes' => 'sistema',
+            'visitantes_novo' => 'sistema',
+            'prestadores_servico' => 'sistema',
+            'organization_settings' => 'configuracao',
+            'sites' => 'configuracao',
+            'sectors' => 'configuracao',
+            'data_retention_policies' => 'configuracao'
+        ];
+        
+        return $moduloMap[$entidade] ?? 'sistema';
     }
     
     /**
@@ -62,7 +126,7 @@ class AuditService {
      * Busca logs de auditoria com filtros
      */
     public function getLogs($filtros = []) {
-        $sql = "SELECT al.*, u.nome as usuario_nome 
+        $sql = "SELECT al.*, u.nome as usuario_nome, al.severidade, al.modulo, al.resultado
                 FROM audit_log al 
                 LEFT JOIN usuarios u ON al.user_id = u.id 
                 WHERE 1=1";
@@ -97,7 +161,7 @@ class AuditService {
         
         if (!empty($filtros['limit'])) {
             $sql .= " LIMIT ?";
-            $params[] = $filtros['limit'];
+            $params[] = (int)$filtros['limit'];
         }
         
         return $this->db->fetchAll($sql, $params);

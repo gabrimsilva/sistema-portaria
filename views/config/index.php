@@ -518,6 +518,25 @@
                                                 </tbody>
                                             </table>
                                         </div>
+                                        
+                                        <!-- Paginação -->
+                                        <div class="row mt-3">
+                                            <div class="col-md-6">
+                                                <p class="text-muted mb-0" id="auditPaginationInfo">
+                                                    <i class="fas fa-info-circle mr-1"></i>Carregando...
+                                                </p>
+                                            </div>
+                                            <div class="col-md-6 text-right">
+                                                <div class="btn-group">
+                                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="auditPrevPage" onclick="changeAuditPage(-1)" disabled>
+                                                        <i class="fas fa-chevron-left mr-1"></i>Anterior
+                                                    </button>
+                                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="auditNextPage" onclick="changeAuditPage(1)" disabled>
+                                                        Próxima<i class="fas fa-chevron-right ml-1"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1157,13 +1176,21 @@
         });
     }
     
-    function loadAuditLogs() {
+    // Variáveis globais de paginação de auditoria
+    let currentAuditPage = 1;
+    let auditPagination = null;
+    
+    function loadAuditLogs(page = 1) {
+        currentAuditPage = page;
+        
         const filters = {
             user_id: document.getElementById('filterUser').value,
             entity: document.getElementById('filterEntity').value,
             action: document.getElementById('filterAction').value,
             date_start: document.getElementById('filterDateStart').value,
-            date_end: document.getElementById('filterDateEnd').value
+            date_end: document.getElementById('filterDateEnd').value,
+            page: page,
+            pageSize: 20
         };
         
         // Construir query string
@@ -1183,6 +1210,8 @@
             .then(data => {
                 if (data.success) {
                     const logs = data.data.logs || [];
+                    auditPagination = data.data.pagination;
+                    
                     // Armazenar logs globalmente para acesso no modal de detalhes
                     window.currentAuditLogs = logs;
                     let html = '';
@@ -1203,7 +1232,7 @@
                                     <td>
                                         <div class="audit-details" style="max-width: 300px;">
                                             ${details.summary}
-                                            ${details.hasMore ? `<br><button class="btn btn-link btn-sm p-0" onclick="showAuditDetails(${index}, '${log.id}')" title="Ver detalhes completos"><i class="fas fa-eye"></i> Ver mais</button>` : ''}
+                                            ${details.hasMore ? `<br><button class="btn btn-link btn-sm p-0" onclick="showAuditDetails(${index})" title="Ver detalhes completos"><i class="fas fa-eye"></i> Ver mais</button>` : ''}
                                         </div>
                                     </td>
                                     <td>${log.ip_address || ''}</td>
@@ -1213,6 +1242,9 @@
                     }
                     
                     tableBody.innerHTML = html;
+                    
+                    // Atualizar informações de paginação
+                    updateAuditPagination();
                 } else {
                     tableBody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Erro ao carregar logs: ' + data.message + '</td></tr>';
                 }
@@ -1221,6 +1253,30 @@
                 console.error('Erro:', error);
                 tableBody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Erro ao carregar logs de auditoria</td></tr>';
             });
+    }
+    
+    function updateAuditPagination() {
+        if (!auditPagination) return;
+        
+        const info = document.getElementById('auditPaginationInfo');
+        const prevBtn = document.getElementById('auditPrevPage');
+        const nextBtn = document.getElementById('auditNextPage');
+        
+        // Atualizar texto informativo
+        const start = (auditPagination.current - 1) * auditPagination.pageSize + 1;
+        const end = Math.min(start + auditPagination.pageSize - 1, auditPagination.totalItems);
+        info.innerHTML = `<i class="fas fa-info-circle mr-1"></i>Mostrando ${start}-${end} de ${auditPagination.totalItems} registros (Página ${auditPagination.current} de ${auditPagination.total})`;
+        
+        // Atualizar botões
+        prevBtn.disabled = auditPagination.current <= 1;
+        nextBtn.disabled = auditPagination.current >= auditPagination.total;
+    }
+    
+    function changeAuditPage(direction) {
+        const newPage = currentAuditPage + direction;
+        if (newPage >= 1 && newPage <= auditPagination.total) {
+            loadAuditLogs(newPage);
+        }
     }
     
     function getActionBadgeClass(action) {

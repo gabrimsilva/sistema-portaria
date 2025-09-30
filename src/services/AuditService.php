@@ -212,7 +212,12 @@ class AuditService {
         // Manter apenas campos essenciais para auditoria
         $auditEssentialFields = ['id', 'ativo', 'status', 'role_id', 'perfil', 'permissoes'];
         
-        return array_intersect_key($anonymized, array_flip($auditEssentialFields)) + 
+        // Campos importantes para identificação em auditoria (mantidos para rastreabilidade)
+        $auditIdentificationFields = ['nome', 'setor', 'placa_veiculo', 'tipo', 'empresa', 'company_name', 'observacao', 'entrada_at', 'saida_at', 'retorno', 'saida_final'];
+        
+        $allEssentialFields = array_merge($auditEssentialFields, $auditIdentificationFields);
+        
+        return array_intersect_key($anonymized, array_flip($allEssentialFields)) + 
                array_filter($anonymized, function($key) {
                    return strpos($key, '_id') !== false || strpos($key, 'acao') !== false;
                }, ARRAY_FILTER_USE_KEY);

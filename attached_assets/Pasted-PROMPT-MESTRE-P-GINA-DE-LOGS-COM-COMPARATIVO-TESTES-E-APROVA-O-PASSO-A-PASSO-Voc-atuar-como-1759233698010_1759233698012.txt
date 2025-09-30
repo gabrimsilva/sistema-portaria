@@ -1,0 +1,145 @@
+PROMPT MESTRE — PÁGINA DE LOGS COM COMPARATIVO, TESTES E APROVAÇÃO PASSO A PASSO
+
+Você atuará como Engenheiro de Software sênior neste repositório. 
+NUNCA escreva em arquivos sem minha aprovação explícita. 
+Sempre mostre PATCH PROPOSTO (diff) e testes antes de aplicar.
+
+================================
+1) OBJETIVO E ESCOPO DA TAREFA
+================================
+Construir/ajustar a PÁGINA DE LOGS do sistema, garantindo:
+- Auditoria completa (quem/quando/o quê) com antes/depois quando aplicável.
+- Filtros avançados (intervalo de datas, severidade, módulo/origem, usuário/IP, busca livre).
+- Tabela paginada com colunas recomendadas.
+- Modal/detalhe com JSON bruto do log.
+- Exportações (CSV/JSON) com máscaras e salvaguardas LGPD.
+- Permissões RBAC por papel (Admin/Auditoria/Operacional).
+- Performance (paginação server-side) e acessibilidade (ARIA/foco).
+
+==========================================
+2) DIAGNÓSTICO + COMPARATIVO (AUTO-GAP)
+==========================================
+Antes de mudar qualquer arquivo, faça um DIAGNÓSTICO do que JÁ EXISTE no projeto:
+- Onde e como os logs são gravados? (arquivo, DB, tabela `logs`, ORM?) 
+- Existem endpoints/rotas/menus de logs? Existe página de listagem?
+- Quais colunas atuais? (timestamp, user, ação, módulo, ip, resultado, payload…)
+- Há filtros? Paginação? Exportações? RBAC aplicado? Máscaras LGPD?
+- Qual timezone e formatação estão sendo usados? (America/Sao_Paulo)
+- Existe auditoria “antes/depois” nas alterações de registros?
+
+Com base nisso, gere um **COMPARATIVO (GAP ANALYSIS)** entre:
+A) **Situação atual do sistema**
+B) **Requisitos-alvo (Boas Práticas)**:
+   - Filtros: data-inicial/final, severidade (INFO/WARN/ERROR/DEBUG/AUDITORIA), módulo/origem, usuário/IP, busca texto.
+   - Tabela: Data/Hora, Usuário, Ação, Módulo, Resultado, IP/Device, Detalhes.
+   - Detalhes (modal): JSON bruto + antes/depois + ID/hash do log.
+   - Exportação: CSV/JSON; PDF opcional. Sempre mascarar sensíveis (CPF, e-mail).
+   - RBAC: Admin (tudo), Auditoria (ver/exportar), Operacional (escopo restrito).
+   - Retenção: config (ex.: 6–12 meses) e limpeza/arquivo.
+   - A11y: foco/ARIA; responsividade.
+   - Paginação server-side e índices no DB para data/módulo/usuário/severidade.
+
+>> SAÍDA ESPERADA NESTA FASE:
+- Resumo do stack/arquitetura de logs.
+- Tabela “Atual vs Recomendado” destacando lacunas.
+- Riscos de regressão e pontos sensíveis.
+PERGUNTE: **“APROVAR DIAGNÓSTICO?”** 
+AGUARDE MINHA RESPOSTA.
+
+=====================================
+3) PLANO EM ETAPAS (MICRO-ENTREGAS)
+=====================================
+Após “APROVAR DIAGNÓSTICO”, proponha um PLANO com micro-etapas (1.0, 1.1, 1.2…).
+Cada etapa deve conter:
+- Objetivo
+- Arquivos/locais-alvo
+- Mudanças propostas (alto nível)
+- Critérios de Aceite (DoD)
+- Testes (unit/integration/E2E/manual)
+- Risco & Rollback (como reverter só essa etapa)
+
+SUGESTÃO DE ETAPAS (ajuste ao contexto real encontrado):
+
+### 1.0 Modelagem e Persistência
+- Confirmar/ajustar a estrutura de logs (tabela/índices ou arquivo + ingestor).
+- Colunas mínimas: id, ts, user_id/email, ação, módulo, severidade, ip, result, diff_before, diff_after, payload_raw.
+- Índices: (ts DESC), (módulo), (severidade), (user_id/email).
+
+### 1.1 API/Serviço de Consulta Paginada
+- Endpoint GET /logs com filtros: data_ini, data_fim, severidade[], módulo[], usuário, ip, q (texto), page, pageSize.
+- Sanitização e rate limit básico. Ordenação por ts DESC.
+
+### 1.2 Página de Logs (UI)
+- Filtros avançados (com validações), paginação server-side.
+- Tabela com colunas: Data/Hora (America/Sao_Paulo), Usuário, Ação, Módulo, Resultado, IP, Detalhes(🔍).
+- Cabeçalho fixo, responsivo, atalhos de teclado.
+
+### 1.3 Modal de Detalhes
+- Exibir JSON bruto (colapsável), antes/depois (diff) quando houver.
+- Botões: Copiar JSON, Baixar JSON.
+
+### 1.4 Exportações + Máscaras LGPD
+- Exportar CSV/JSON do resultado filtrado (limitado).
+- Máscaras por padrão (ex.: CPF ***.***.***-**; e-mail parcial).
+- Logar quem exportou (auditoria).
+
+### 1.5 RBAC e Auditoria
+- Aplicar RBAC por papel: Admin/Auditoria/Operacional.
+- Testar rotas e UI ocultando ações para perfis sem permissão.
+- Garantir trilha “quem/quando” em visualização e exportação.
+
+### 1.6 Retenção e Tarefas Periódicas
+- Configurar política de retenção (ex.: 180/365 dias) e job de limpeza/arquivamento.
+- Página de configurações aponta essa política.
+
+### 1.7 Testes e Observabilidade
+- Testes unitários/integração para filtros, paginação e RBAC.
+- Smoke test E2E da UI (abrir, filtrar, exportar, abrir modal).
+- Métricas/contadores básicos (total de logs, por severidade/módulo).
+
+A cada etapa, você DEVE:
+- Mostrar **PATCH PROPOSTO** (diff completo).
+- Rodar linters/syntax/build em modo check.
+- Exibir plano de testes e comandos.
+- Perguntar: **“APLICAR etapa X.Y?”**
+
+================================
+4) EXECUÇÃO CONTROLADA (GATE)
+================================
+Fluxo por etapa:
+- Eu digo **APROVAR X.Y** → você gera PATCH PROPOSTO (não aplica).
+- Eu digo **APLICAR X.Y** → você aplica, formata, roda testes e mostra Checklist de Aceite.
+- Se eu disser **ROLLBACK X.Y**, reverter apenas essa etapa e mostrar diff de reversão.
+
+========================
+5) CRITÉRIOS DE ACEITE GERAIS
+========================
+- Filtros operam corretamente e combinam entre si.
+- Paginação server-side estável e rápida.
+- Data/Hora no fuso America/Sao_Paulo.
+- RBAC bloqueia visualização/exportação indevidas.
+- Dados sensíveis sempre mascarados nas exportações/UI.
+- Modal mostra JSON bruto + diffs quando houver.
+- Logs de acesso à página e exportação são registrados.
+- Acessibilidade básica (foco/ARIA), responsivo.
+
+========================
+6) SALVAGUARDAS & LGPD
+========================
+- Minimização: registrar apenas o necessário para auditoria.
+- Máscaras por padrão; exibição completa só com permissão explícita.
+- Retenção configurável e documentada.
+- Toda mudança deve ser pequena e revertível.
+
+========================
+7) COMANDOS QUE USAREI
+========================
+- APROVAR DIAGNÓSTICO
+- INICIAR 1.0 (ou etapa seguinte)
+- APROVAR X.Y
+- APLICAR X.Y
+- CORRIGIR PATCH
+- ROLLBACK X.Y
+- FINALIZAR LOGS
+
+>>> Agora, execute apenas o DIAGNÓSTICO + COMPARATIVO (Seção 2) e AGUARDE “APROVAR DIAGNÓSTICO”.

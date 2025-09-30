@@ -6,6 +6,29 @@ This project is an access control system for companies, developed with PHP 8+ an
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
+## Project Progress (Updated: Sep 30, 2025)
+
+### Configuration Module Stages
+- **ETAPA 1 - Organização**: ████████████ 100% ✅ CONCLUÍDA
+  - Formulário completo com validações em tempo real
+  - Upload de logo (2MB max, PNG/JPG) com preview
+  - Validação CNPJ com formatação automática
+  - CSRF protection ativada
+- **ETAPA 2 - Sites/Locais**: ████████████ 100% ✅ CONCLUÍDA
+  - CRUD completo de sites e setores
+  - Horários de funcionamento (7 dias)
+  - Gestão de feriados (globais/específicos)
+- **ETAPA 3 - RBAC**: ████████████ 100% ✅ CONCLUÍDA
+  - Matriz interativa de permissões (5 roles × 7 módulos)
+  - Proteções de segurança (Admin mantém config.* e CPF não mascarado)
+  - Modal de usuários por perfil
+- **ETAPA 4 - Autenticação**: ████░░░░░░░░ 30% (backend pronto, frontend pendente)
+- **ETAPA 5 - Auditoria**: ██████░░░░░░ 50% (básica implementada, filtros avançados pendentes)
+- **ETAPA 6 - Higiene UX**: ░░░░░░░░░░░░ 0% (pendente)
+- **ETAPA 7 - Segurança Extra**: ████░░░░░░░░ 30% (básica implementada)
+
+**Total concluído: ~60% do plano original**
+
 ## System Architecture
 
 ### UI/UX Decisions

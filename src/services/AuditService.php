@@ -190,7 +190,10 @@ class AuditService {
             'usuarios' => ['nome', 'email'],
             'funcionarios' => ['nome', 'email', 'cargo', 'setor'],
             'visitantes' => ['nome', 'email', 'empresa', 'telefone'],
-            'prestadores' => ['nome', 'email', 'empresa', 'cnpj']
+            'prestadores' => ['nome', 'email', 'empresa', 'cnpj'],
+            'prestadores_servico' => ['nome', 'email', 'empresa', 'cnpj'],
+            'profissionais_renner' => ['nome', 'email'],
+            'registro_acesso' => ['nome']
         ];
         
         // Aplicar anonimização geral

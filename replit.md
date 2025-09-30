@@ -22,12 +22,16 @@ Preferred communication style: Simple, everyday language.
   - Matriz interativa de permissões (5 roles × 7 módulos)
   - Proteções de segurança (Admin mantém config.* e CPF não mascarado)
   - Modal de usuários por perfil
-- **ETAPA 4 - Autenticação**: ████░░░░░░░░ 30% (backend pronto, frontend pendente)
+- **ETAPA 4 - Autenticação**: ████████████ 100% ✅ CONCLUÍDA
+  - Formulário completo de políticas de autenticação
+  - Validações em tempo real (senha mínima, expiração, timeout)
+  - Toggles 2FA/SSO (placeholder UI preparado)
+  - APIs GET/PUT funcionais com CSRF protection
 - **ETAPA 5 - Auditoria**: ██████░░░░░░ 50% (básica implementada, filtros avançados pendentes)
 - **ETAPA 6 - Higiene UX**: ░░░░░░░░░░░░ 0% (pendente)
 - **ETAPA 7 - Segurança Extra**: ████░░░░░░░░ 30% (básica implementada)
 
-**Total concluído: ~60% do plano original**
+**Total concluído: ~70% do plano original (4 de 7 etapas completas)**
 
 ## System Architecture
 

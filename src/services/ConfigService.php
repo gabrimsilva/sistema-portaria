@@ -625,6 +625,10 @@ class ConfigService {
             throw new Exception('Timeout de sessão deve ser maior que zero');
         }
         
+        // Normalizar valores boolean (garantir que sejam boolean, não string)
+        $data['require_2fa'] = isset($data['require_2fa']) ? filter_var($data['require_2fa'], FILTER_VALIDATE_BOOLEAN) : false;
+        $data['enable_sso'] = isset($data['enable_sso']) ? filter_var($data['enable_sso'], FILTER_VALIDATE_BOOLEAN) : false;
+        
         // Se não existe configuração, criar
         if (!isset($current['id'])) {
             $result = $this->db->fetch(

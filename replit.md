@@ -27,11 +27,16 @@ Preferred communication style: Simple, everyday language.
   - Validações em tempo real (senha mínima, expiração, timeout)
   - Toggles 2FA/SSO (placeholder UI preparado)
   - APIs GET/PUT funcionais com CSRF protection
-- **ETAPA 5 - Auditoria**: ██████░░░░░░ 50% (básica implementada, filtros avançados pendentes)
+- **ETAPA 5 - Auditoria**: ████████████ 100% ✅ CONCLUÍDA
+  - Filtros avançados (usuário, entidade, ação, datas)
+  - Paginação eficiente com prev/next e contador de registros
+  - Carregamento dinâmico de usuários no filtro
+  - Export CSV funcional com filtros aplicados
+  - Modal de detalhes com visualização diff antes/depois
 - **ETAPA 6 - Higiene UX**: ░░░░░░░░░░░░ 0% (pendente)
 - **ETAPA 7 - Segurança Extra**: ████░░░░░░░░ 30% (básica implementada)
 
-**Total concluído: ~70% do plano original (4 de 7 etapas completas)**
+**Total concluído: ~75% do plano original (5 de 7 etapas completas)**
 
 ## System Architecture
 

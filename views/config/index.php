@@ -1354,9 +1354,29 @@
                     }
                 });
             } else if (log.acao === 'delete') {
-                // Para exclusão, mostrar identificador principal
-                const identifier = antes.nome || antes.name || antes.email || antes.id;
+                // Para exclusão, mostrar informações identificadoras
+                let identifier = '';
+                
+                // Construir identificador baseado na entidade
+                if (log.entidade === 'registro_acesso') {
+                    identifier = antes.nome || 'Registro';
+                    if (antes.setor) identifier += ` (${antes.setor})`;
+                    if (antes.placa_veiculo) identifier += ` - ${antes.placa_veiculo}`;
+                } else if (log.entidade === 'profissionais_renner') {
+                    identifier = antes.nome || 'Profissional';
+                    if (antes.setor) identifier += ` - ${antes.setor}`;
+                } else if (log.entidade === 'users' || log.entidade === 'usuarios') {
+                    identifier = antes.nome || antes.name || antes.email || 'Usuário';
+                } else {
+                    identifier = antes.nome || antes.name || antes.email || antes.company_name || antes.empresa || `ID ${antes.id}`;
+                }
+                
                 changes.push(`<strong>Removido:</strong> ${identifier}`);
+                
+                // Indicar que há mais detalhes disponíveis
+                if (Object.keys(antes).length > 3) {
+                    hasMore = true;
+                }
             }
             
             const summary = changes.length > 0 

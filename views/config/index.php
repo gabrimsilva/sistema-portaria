@@ -1240,8 +1240,8 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    const logs = data.data.logs || [];
-                    auditPagination = data.data.pagination;
+                    const logs = data.data || [];
+                    auditPagination = data.pagination;
                     
                     // Armazenar logs globalmente para acesso no modal de detalhes
                     window.currentAuditLogs = logs;

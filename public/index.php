@@ -375,6 +375,8 @@ try {
         case 'config/auth-policies':
         case 'config/audit':
         case 'config/users':
+        case 'config/business-hours':
+        case 'config/holidays':
             require_once '../src/controllers/ConfigController.php';
             $controller = new ConfigController();
             

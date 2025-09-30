@@ -1461,6 +1461,7 @@
         // Enviar requisição para remover logo
         const formData = new FormData();
         formData.append('action', 'remove_logo');
+        formData.append('csrf_token', document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '');
         
         fetch('/config', {
             method: 'POST',

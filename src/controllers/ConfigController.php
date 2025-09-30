@@ -1385,6 +1385,15 @@ class ConfigController {
         
         header('Content-Type: application/json');
         
+        // Verificar CSRF para segurança
+        try {
+            CSRFProtection::verifyRequest();
+        } catch (Exception $e) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'error' => 'Token CSRF inválido']);
+            return;
+        }
+        
         try {
             if (!isset($_FILES['logo']) || $_FILES['logo']['error'] !== UPLOAD_ERR_OK) {
                 throw new Exception('Erro no upload do arquivo');
@@ -1465,6 +1474,15 @@ class ConfigController {
         }
         
         header('Content-Type: application/json');
+        
+        // Verificar CSRF para segurança
+        try {
+            CSRFProtection::verifyRequest();
+        } catch (Exception $e) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'error' => 'Token CSRF inválido']);
+            return;
+        }
         
         try {
             // Obter configuração atual

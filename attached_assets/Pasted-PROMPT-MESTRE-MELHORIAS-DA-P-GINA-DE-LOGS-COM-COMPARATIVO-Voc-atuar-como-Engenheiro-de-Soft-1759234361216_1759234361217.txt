@@ -1,0 +1,109 @@
+PROMPT MESTRE — MELHORIAS DA PÁGINA DE LOGS (COM COMPARATIVO)
+
+Você atuará como Engenheiro de Software sênior. 
+NUNCA aplique mudanças sem minha aprovação explícita. 
+Sempre mostre PATCH PROPOSTO (diff) e testes antes de aplicar.
+
+=========================================
+1) DIAGNÓSTICO ATUAL (CONCLUÍDO)
+=========================================
+Situação encontrada:
+- Persistência: tabela audit_log em PostgreSQL, com dados_antes/dados_depois (jsonb).
+- LGPD: anonimização aplicada (IP, email, telefone).
+- RBAC: permissões básicas (read/export).
+- UI: filtros simples (usuário, entidade, ação, data).
+- Exportação: CSV básico implementado.
+
+Pontos fortes:
+✅ Estrutura robusta (JSONB antes/depois).  
+✅ LGPD respeitado.  
+✅ RBAC inicial.  
+✅ Retenção configurável (serviço).  
+
+Gaps críticos:
+🔴 Timestamp sem timezone (bug fuso horário).  
+🔴 Paginação client-side (não escala).  
+🔴 Falta severidade/módulo para logs.  
+🔴 Modal incompleto (não mostra JSON/diff).  
+🔴 Exportação sem auditoria/limite.  
+
+Melhorias médias:
+🟡 Busca livre (full-text).  
+🟡 Filtro por IP.  
+🟡 Export JSON.  
+🟡 RBAC granular.  
+🟡 Job automático de retenção.  
+
+Melhorias futuras:
+🟢 Export PDF.  
+🟢 Arquivamento externo.  
+🟢 Dashboards/alertas.  
+
+=========================================
+2) PLANO EM ETAPAS (MICRO-ENTREGAS)
+=========================================
+1.0 – Modelagem & Migrações  
+- Converter timestamp para timestamptz.  
+- Adicionar colunas severidade, módulo, resultado.  
+- Criar índices em acao, severidade, módulo; opcional full-text search.  
+
+1.1 – API GET /logs (server-side)  
+- Paginação e filtros avançados (data, severidade, módulo, usuário, ip, busca livre).  
+- Rate-limit básico, segurança de parâmetros.  
+
+1.2 – UI: Filtros avançados + tabela paginada  
+- Badge por severidade.  
+- Ordenação clicável.  
+- Estado nos query params.  
+
+1.3 – Modal de detalhes  
+- Mostrar JSON formatado + syntax highlight.  
+- Diff side-by-side entre dados_antes/dados_depois.  
+- Botões copiar/baixar JSON.  
+
+1.4 – Exportações seguras  
+- Export CSV/JSON limitado a 10k linhas.  
+- Máscaras aplicadas sempre.  
+- Logar quem exportou, quando e com quais filtros.  
+
+1.5 – RBAC granular  
+- Permissões: audit_log.read.all, audit_log.read.own, audit_log.export, audit_log.config.retention.  
+- Operacional vê apenas seus próprios logs.  
+
+1.6 – Retenção automática + UI  
+- Cron diário para limpeza (180/365 dias).  
+- Tela de configuração com política e histórico de execuções.  
+
+1.7 – Busca livre (FTS) + filtro por IP  
+- Index GIN para payload_raw.  
+- Campo de busca por texto e filtro IP direto.  
+
+1.8 – Acessibilidade & métricas  
+- ARIA roles/labels, navegação por teclado.  
+- Atalhos (F filtrar, E exportar).  
+- Contadores por severidade/módulo.  
+
+=========================================
+3) EXECUÇÃO CONTROLADA
+=========================================
+Fluxo de cada etapa:
+- Eu digo **APROVAR X.Y** → você mostra PATCH PROPOSTO + comandos de teste.  
+- Eu digo **APLICAR X.Y** → você aplica e roda testes.  
+- Se eu disser **ROLLBACK X.Y** → você reverte só essa etapa.  
+
+=========================================
+4) COMANDOS DISPONÍVEIS
+=========================================
+- APROVAR DIAGNÓSTICO  
+- INICIAR 1.0  
+- APROVAR X.Y  
+- APLICAR X.Y  
+- ROLLBACK X.Y  
+- FINALIZAR LOGS  
+
+=========================================
+5) PRÓXIMO PASSO
+=========================================
+Execute apenas a etapa **1.0 (Modelagem & Migrações)** em modo **PATCH PROPOSTO** 
+— não aplique nada ainda.  
+Depois aguarde minha aprovação.

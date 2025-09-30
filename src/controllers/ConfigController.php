@@ -430,6 +430,205 @@ class ConfigController {
         }
     }
     
+    // ========== HOR\u00c1RIOS DE FUNCIONAMENTO ==========
+    
+    /**
+     * GET /config/business-hours/{site_id}
+     */
+    public function getBusinessHours() {
+        if (!$this->authService->hasPermission('registro_acesso.update')) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acesso negado']);
+            return;
+        }
+        
+        header('Content-Type: application/json');
+        
+        try {
+            $siteId = $_GET['site_id'] ?? null;
+            if (!$siteId) {
+                throw new Exception('ID do site é obrigatório');
+            }
+            
+            $hours = $this->configService->getBusinessHours($siteId);
+            echo json_encode(['success' => true, 'data' => $hours]);
+            
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+    
+    /**
+     * POST /config/business-hours
+     */
+    public function saveBusinessHours() {
+        if (!$this->authService->hasPermission('registro_acesso.update')) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acesso negado']);
+            return;
+        }
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método não permitido']);
+            return;
+        }
+        
+        header('Content-Type: application/json');
+        CSRFProtection::verifyRequest();
+        
+        try {
+            $input = json_decode(file_get_contents('php://input'), true);
+            
+            if (!isset($input['site_id'])) {
+                throw new Exception('ID do site é obrigatório');
+            }
+            
+            if (!isset($input['hours']) || !is_array($input['hours'])) {
+                throw new Exception('Horários inválidos');
+            }
+            
+            $this->configService->saveBusinessHours($input['site_id'], $input['hours']);
+            echo json_encode(['success' => true, 'message' => 'Horários salvos com sucesso']);
+            
+        } catch (Exception $e) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+    
+    // ========== EXCE\u00c7\u00d5ES E FERIADOS ==========
+    
+    /**
+     * GET /config/holidays
+     */
+    public function getHolidays() {
+        if (!$this->authService->hasPermission('registro_acesso.update')) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acesso negado']);
+            return;
+        }
+        
+        header('Content-Type: application/json');
+        
+        try {
+            $siteId = $_GET['site_id'] ?? null;
+            $holidays = $this->configService->getHolidays($siteId);
+            echo json_encode(['success' => true, 'data' => $holidays]);
+            
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+    
+    /**
+     * POST /config/holidays
+     */
+    public function createHoliday() {
+        if (!$this->authService->hasPermission('registro_acesso.update')) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acesso negado']);
+            return;
+        }
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método não permitido']);
+            return;
+        }
+        
+        header('Content-Type: application/json');
+        CSRFProtection::verifyRequest();
+        
+        try {
+            $input = json_decode(file_get_contents('php://input'), true);
+            
+            if (empty($input['name'])) {
+                throw new Exception('Nome do feriado é obrigatório');
+            }
+            
+            if (empty($input['date'])) {
+                throw new Exception('Data do feriado é obrigatória');
+            }
+            
+            $holidayId = $this->configService->createHoliday($input);
+            echo json_encode(['success' => true, 'data' => ['id' => $holidayId]]);
+            
+        } catch (Exception $e) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+    
+    /**
+     * PUT /config/holidays/{id}
+     */
+    public function updateHoliday() {
+        if (!$this->authService->hasPermission('registro_acesso.update')) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acesso negado']);
+            return;
+        }
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'PUT') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método não permitido']);
+            return;
+        }
+        
+        header('Content-Type: application/json');
+        CSRFProtection::verifyRequest();
+        
+        try {
+            $holidayId = $_GET['id'] ?? null;
+            if (!$holidayId) {
+                throw new Exception('ID do feriado é obrigatório');
+            }
+            
+            $input = json_decode(file_get_contents('php://input'), true);
+            $this->configService->updateHoliday($holidayId, $input);
+            echo json_encode(['success' => true, 'message' => 'Feriado atualizado com sucesso']);
+            
+        } catch (Exception $e) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+    
+    /**
+     * DELETE /config/holidays/{id}
+     */
+    public function deleteHoliday() {
+        if (!$this->authService->hasPermission('registro_acesso.update')) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acesso negado']);
+            return;
+        }
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'DELETE') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método não permitido']);
+            return;
+        }
+        
+        header('Content-Type: application/json');
+        CSRFProtection::verifyRequest();
+        
+        try {
+            $holidayId = $_GET['id'] ?? null;
+            if (!$holidayId) {
+                throw new Exception('ID do feriado é obrigatório');
+            }
+            
+            $this->configService->deleteHoliday($holidayId);
+            echo json_encode(['success' => true]);
+            
+        } catch (Exception $e) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+    
     // ========== RBAC ==========
     
     /**

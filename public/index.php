@@ -419,6 +419,24 @@ try {
                         $controller->deleteSector();
                     }
                     break;
+                case 'business-hours':
+                    if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+                        $controller->getBusinessHours();
+                    } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                        $controller->saveBusinessHours();
+                    }
+                    break;
+                case 'holidays':
+                    if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+                        $controller->getHolidays();
+                    } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                        $controller->createHoliday();
+                    } elseif ($_SERVER['REQUEST_METHOD'] === 'PUT') {
+                        $controller->updateHoliday();
+                    } elseif ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
+                        $controller->deleteHoliday();
+                    }
+                    break;
                 case 'rbac-matrix':
                     $controller->getRbacMatrix();
                     break;

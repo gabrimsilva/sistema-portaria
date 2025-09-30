@@ -349,6 +349,202 @@ class ConfigService {
         return true;
     }
     
+    // ========== HOR\u00c1RIOS DE FUNCIONAMENTO ==========
+    
+    /**
+     * Buscar horários de funcionamento de um site
+     */
+    public function getBusinessHours($siteId) {
+        $hours = $this->db->fetchAll(
+            "SELECT * FROM business_hours WHERE site_id = ? ORDER BY weekday",
+            [$siteId]
+        );
+        
+        // Garantir que temos 7 dias (0-6)
+        $result = [];
+        for ($i = 0; $i < 7; $i++) {
+            $existing = array_filter($hours, function($h) use ($i) {
+                return $h['weekday'] == $i;
+            });
+            
+            if (!empty($existing)) {
+                $result[] = reset($existing);
+            } else {
+                $result[] = [
+                    'weekday' => $i,
+                    'open_at' => '08:00',
+                    'close_at' => '18:00',
+                    'closed' => false
+                ];
+            }
+        }
+        
+        return $result;
+    }
+    
+    /**
+     * Salvar horários de funcionamento em lote
+     */
+    public function saveBusinessHours($siteId, $hours) {
+        // Verificar se site existe
+        $site = $this->db->fetch("SELECT id FROM sites WHERE id = ?", [$siteId]);
+        if (!$site) {
+            throw new Exception('Site não encontrado');
+        }
+        
+        // Deletar horários antigos
+        $this->db->query("DELETE FROM business_hours WHERE site_id = ?", [$siteId]);
+        
+        // Inserir novos horários
+        foreach ($hours as $hour) {
+            if (!isset($hour['weekday']) || $hour['weekday'] < 0 || $hour['weekday'] > 6) {
+                continue;
+            }
+            
+            $this->db->query(
+                "INSERT INTO business_hours (site_id, weekday, open_at, close_at, closed) 
+                 VALUES (?, ?, ?, ?, ?)",
+                [
+                    $siteId,
+                    $hour['weekday'],
+                    $hour['open_at'] ?? null,
+                    $hour['close_at'] ?? null,
+                    $hour['closed'] ?? false
+                ]
+            );
+        }
+        
+        $this->auditService->log(
+            'update',
+            'business_hours',
+            $siteId,
+            null,
+            ['hours_count' => count($hours)]
+        );
+        
+        return true;
+    }
+    
+    // ========== FERIADOS ==========
+    
+    /**
+     * Buscar feriados
+     * @param int|null $siteId - null para feriados globais, ID para feriados de site específico
+     */
+    public function getHolidays($siteId = null) {
+        if ($siteId === null) {
+            // Buscar todos os feriados (globais e de sites)
+            return $this->db->fetchAll(
+                "SELECT h.*, s.name as site_name 
+                 FROM holidays h 
+                 LEFT JOIN sites s ON h.site_id = s.id 
+                 WHERE h.active = TRUE 
+                 ORDER BY h.date DESC"
+            );
+        } else {
+            // Buscar feriados do site específico + globais
+            return $this->db->fetchAll(
+                "SELECT h.*, s.name as site_name 
+                 FROM holidays h 
+                 LEFT JOIN sites s ON h.site_id = s.id 
+                 WHERE h.active = TRUE 
+                   AND (h.site_id = ? OR h.scope = 'global')
+                 ORDER BY h.date DESC",
+                [$siteId]
+            );
+        }
+    }
+    
+    /**
+     * Criar feriado
+     */
+    public function createHoliday($data) {
+        if (empty($data['name'])) {
+            throw new Exception('Nome do feriado é obrigatório');
+        }
+        
+        if (empty($data['date'])) {
+            throw new Exception('Data do feriado é obrigatória');
+        }
+        
+        $result = $this->db->fetch(
+            "INSERT INTO holidays (date, name, scope, site_id, active) 
+             VALUES (?, ?, ?, ?, TRUE) RETURNING id",
+            [
+                $data['date'],
+                $data['name'],
+                $data['scope'] ?? 'global',
+                $data['site_id'] ?? null
+            ]
+        );
+        
+        $this->auditService->log(
+            'create',
+            'holidays',
+            $result['id'],
+            null,
+            $data
+        );
+        
+        return $result['id'];
+    }
+    
+    /**
+     * Atualizar feriado
+     */
+    public function updateHoliday($holidayId, $data) {
+        $current = $this->db->fetch("SELECT * FROM holidays WHERE id = ?", [$holidayId]);
+        if (!$current) {
+            throw new Exception('Feriado não encontrado');
+        }
+        
+        $this->db->query(
+            "UPDATE holidays SET date = ?, name = ?, scope = ?, site_id = ? WHERE id = ?",
+            [
+                $data['date'] ?? $current['date'],
+                $data['name'] ?? $current['name'],
+                $data['scope'] ?? $current['scope'],
+                $data['site_id'] ?? $current['site_id'],
+                $holidayId
+            ]
+        );
+        
+        $this->auditService->log(
+            'update',
+            'holidays',
+            $holidayId,
+            $current,
+            array_merge($current, $data)
+        );
+        
+        return true;
+    }
+    
+    /**
+     * Deletar feriado (soft delete)
+     */
+    public function deleteHoliday($holidayId) {
+        $current = $this->db->fetch("SELECT * FROM holidays WHERE id = ?", [$holidayId]);
+        if (!$current) {
+            throw new Exception('Feriado não encontrado');
+        }
+        
+        $this->db->query(
+            "UPDATE holidays SET active = FALSE WHERE id = ?",
+            [$holidayId]
+        );
+        
+        $this->auditService->log(
+            'delete',
+            'holidays',
+            $holidayId,
+            $current,
+            ['active' => false]
+        );
+        
+        return true;
+    }
+    
     // ========== RBAC ==========
     
     /**

@@ -1018,7 +1018,8 @@
             'access': 'fas fa-sign-in-alt',
             'audit': 'fas fa-history',
             'users': 'fas fa-users',
-            'privacy': 'fas fa-shield-alt'
+            'privacy': 'fas fa-shield-alt',
+            'importacao': 'fas fa-file-import'
         };
         return icons[module] || 'fas fa-circle';
     }
@@ -1031,7 +1032,8 @@
             'access': 'CONTROLE DE ACESSO',
             'audit': 'AUDITORIA',
             'users': 'GESTÃO DE USUÁRIOS', 
-            'privacy': 'PRIVACIDADE (LGPD)'
+            'privacy': 'PRIVACIDADE (LGPD)',
+            'importacao': 'IMPORTAÇÃO'
         };
         return names[module] || module.toUpperCase();
     }

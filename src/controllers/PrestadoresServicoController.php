@@ -736,6 +736,17 @@ class PrestadoresServicoController {
                 // Buscar dados atualizados para retornar
                 $prestadorAtualizado = $this->db->fetch("SELECT * FROM prestadores_servico WHERE id = ?", [$id]);
                 
+                // Registrar no log de auditoria
+                require_once __DIR__ . '/../services/AuditService.php';
+                $auditService = new AuditService();
+                $auditService->log(
+                    'update',
+                    'prestadores_servico',
+                    $id,
+                    $prestadorAtual,
+                    $prestadorAtualizado
+                );
+                
                 echo json_encode([
                     'success' => true, 
                     'message' => 'Prestador atualizado com sucesso',

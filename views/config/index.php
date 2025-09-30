@@ -1961,12 +1961,18 @@
                     </span>
                 </td>
                 <td>
-                    <div class="btn-group btn-group-sm">
+                    <div class="btn-group btn-group-sm" role="group">
                         <button class="btn btn-outline-primary" onclick="editSite(${site.id})" title="Editar">
                             <i class="fas fa-edit"></i>
                         </button>
                         <button class="btn btn-outline-info" onclick="manageSectors(${site.id})" title="Setores">
                             <i class="fas fa-list"></i>
+                        </button>
+                        <button class="btn btn-outline-warning" onclick="manageBusinessHours(${site.id})" title="Horários">
+                            <i class="fas fa-clock"></i>
+                        </button>
+                        <button class="btn btn-outline-success" onclick="manageHolidays(${site.id})" title="Feriados">
+                            <i class="fas fa-calendar"></i>
                         </button>
                         <button class="btn btn-outline-danger" onclick="deleteSite(${site.id})" title="Excluir">
                             <i class="fas fa-trash"></i>
@@ -2274,6 +2280,315 @@
             .catch(error => {
                 console.error('Erro:', error);
                 showAlert('Erro ao excluir setor', 'danger');
+            });
+        }
+    }
+    
+    // ========== HOR\u00c1RIOS DE FUNCIONAMENTO ==========
+    
+    let managingBusinessHoursSiteId = null;
+    const weekdayNames = ['Domingo', 'Segunda-feira', 'Ter\u00e7a-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'S\u00e1bado'];
+    
+    function manageBusinessHours(siteId) {
+        managingBusinessHoursSiteId = siteId;
+        const site = currentSites.find(s => s.id == siteId);
+        
+        document.getElementById('businessHoursModalTitle').textContent = `Hor\u00e1rios de Funcionamento - ${site.name}`;
+        
+        loadBusinessHours(siteId);
+        $('#businessHoursModal').modal('show');
+    }
+    
+    function loadBusinessHours(siteId) {
+        fetch(`/config/business-hours?site_id=${siteId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                renderBusinessHoursTable(data.data);
+            } else {
+                showAlert('Erro ao carregar hor\u00e1rios: ' + data.message, 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            showAlert('Erro ao carregar hor\u00e1rios', 'danger');
+        });
+    }
+    
+    function renderBusinessHoursTable(hours) {
+        const tbody = document.getElementById('businessHoursBody');
+        
+        tbody.innerHTML = hours.map((hour, index) => `
+            <tr>
+                <td><strong>${weekdayNames[hour.weekday]}</strong></td>
+                <td>
+                    <input type="time" class="form-control form-control-sm" 
+                           id="open_${hour.weekday}" value="${hour.open_at || '08:00'}"
+                           ${hour.closed ? 'disabled' : ''}>
+                </td>
+                <td>
+                    <input type="time" class="form-control form-control-sm" 
+                           id="close_${hour.weekday}" value="${hour.close_at || '18:00'}"
+                           ${hour.closed ? 'disabled' : ''}>
+                </td>
+                <td class="text-center">
+                    <input type="checkbox" class="form-check-input" 
+                           id="closed_${hour.weekday}" ${hour.closed ? 'checked' : ''}
+                           onchange="toggleHoursClosed(${hour.weekday})">
+                </td>
+            </tr>
+        `).join('');
+    }
+    
+    function toggleHoursClosed(weekday) {
+        const closed = document.getElementById(`closed_${weekday}`).checked;
+        document.getElementById(`open_${weekday}`).disabled = closed;
+        document.getElementById(`close_${weekday}`).disabled = closed;
+    }
+    
+    function saveBusinessHours() {
+        const submitBtn = document.getElementById('saveBusinessHoursBtn');
+        const originalText = submitBtn.innerHTML;
+        
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Salvando...';
+        submitBtn.disabled = true;
+        
+        // Coletar dados de todos os dias
+        const hours = [];
+        for (let i = 0; i < 7; i++) {
+            const closed = document.getElementById(`closed_${i}`).checked;
+            hours.push({
+                weekday: i,
+                open_at: closed ? null : document.getElementById(`open_${i}`).value,
+                close_at: closed ? null : document.getElementById(`close_${i}`).value,
+                closed: closed
+            });
+        }
+        
+        fetchWithCSRF('/config/business-hours', {
+            method: 'POST',
+            body: JSON.stringify({
+                site_id: managingBusinessHoursSiteId,
+                hours: hours
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+            
+            if (data.success) {
+                showAlert('Hor\u00e1rios salvos com sucesso!', 'success');
+                $('#businessHoursModal').modal('hide');
+            } else {
+                showAlert(data.message || 'Erro ao salvar hor\u00e1rios', 'danger');
+            }
+        })
+        .catch(error => {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+            console.error('Erro:', error);
+            showAlert('Erro ao salvar hor\u00e1rios', 'danger');
+        });
+    }
+    
+    // ========== FERIADOS ==========
+    
+    let managingHolidaysSiteId = null;
+    let editingHolidayId = null;
+    let currentHolidays = [];
+    
+    function manageHolidays(siteId = null) {
+        managingHolidaysSiteId = siteId;
+        const site = siteId ? currentSites.find(s => s.id == siteId) : null;
+        
+        document.getElementById('holidaysModalTitle').textContent = site 
+            ? `Gest\u00e3o de Feriados - ${site.name}` 
+            : 'Gest\u00e3o de Feriados';
+        
+        loadHolidays(siteId);
+        $('#holidaysModal').modal('show');
+    }
+    
+    function loadHolidays(siteId = null) {
+        const url = siteId ? `/config/holidays?site_id=${siteId}` : '/config/holidays';
+        
+        fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                currentHolidays = data.data;
+                renderHolidaysTable(data.data);
+            } else {
+                showAlert('Erro ao carregar feriados: ' + data.message, 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            showAlert('Erro ao carregar feriados', 'danger');
+        });
+    }
+    
+    function renderHolidaysTable(holidays) {
+        const tbody = document.getElementById('holidaysTableBody');
+        
+        if (holidays.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="text-center text-muted">
+                        <i class="fas fa-calendar fa-2x mb-2"></i><br>
+                        Nenhum feriado cadastrado. Clique em "Novo Feriado" para come\u00e7ar.
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        tbody.innerHTML = holidays.map(holiday => `
+            <tr>
+                <td>${new Date(holiday.date + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
+                <td><strong>${holiday.name}</strong></td>
+                <td>
+                    <span class="badge badge-${holiday.scope === 'global' ? 'primary' : 'info'}">
+                        ${holiday.scope === 'global' ? 'Global' : 'Local'}
+                    </span>
+                </td>
+                <td>${holiday.site_name || '-'}</td>
+                <td>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-primary" onclick="editHoliday(${holiday.id})" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-outline-danger" onclick="deleteHoliday(${holiday.id})" title="Excluir">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
+    
+    function showHolidayModal(holidayId = null) {
+        editingHolidayId = holidayId;
+        const modalTitle = holidayId ? 'Editar Feriado' : 'Novo Feriado';
+        const holiday = holidayId ? currentHolidays.find(h => h.id == holidayId) : {};
+        
+        document.getElementById('holidayModalTitle').textContent = modalTitle;
+        document.getElementById('holidayDate').value = holiday.date || '';
+        document.getElementById('holidayName').value = holiday.name || '';
+        document.getElementById('holidayScope').value = holiday.scope || 'global';
+        
+        // Preencher select de sites
+        const siteSelect = document.getElementById('holidaySiteId');
+        siteSelect.innerHTML = '<option value="">Selecione um local...</option>' +
+            currentSites.map(site => `<option value="${site.id}">${site.name}</option>`).join('');
+        
+        if (holiday.site_id) {
+            siteSelect.value = holiday.site_id;
+        }
+        
+        toggleHolidaySite();
+        $('#holidayModal').modal('show');
+    }
+    
+    function editHoliday(holidayId) {
+        showHolidayModal(holidayId);
+    }
+    
+    function toggleHolidaySite() {
+        const scope = document.getElementById('holidayScope').value;
+        const siteGroup = document.getElementById('holidaySiteGroup');
+        const siteSelect = document.getElementById('holidaySiteId');
+        
+        if (scope === 'site') {
+            siteGroup.style.display = 'block';
+            siteSelect.required = true;
+        } else {
+            siteGroup.style.display = 'none';
+            siteSelect.required = false;
+            siteSelect.value = '';
+        }
+    }
+    
+    function saveHoliday() {
+        const submitBtn = document.getElementById('saveHolidayBtn');
+        const originalText = submitBtn.innerHTML;
+        
+        // Valida\u00e7\u00e3o
+        const date = document.getElementById('holidayDate').value;
+        const name = document.getElementById('holidayName').value.trim();
+        const scope = document.getElementById('holidayScope').value;
+        
+        if (!date || !name) {
+            showAlert('Data e nome do feriado s\u00e3o obrigat\u00f3rios', 'warning');
+            return;
+        }
+        
+        const holidayData = {
+            date: date,
+            name: name,
+            scope: scope,
+            site_id: scope === 'site' ? document.getElementById('holidaySiteId').value : null
+        };
+        
+        if (scope === 'site' && !holidayData.site_id) {
+            showAlert('Por favor, selecione um local', 'warning');
+            return;
+        }
+        
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Salvando...';
+        submitBtn.disabled = true;
+        
+        const url = editingHolidayId 
+            ? `/config/holidays?id=${editingHolidayId}` 
+            : '/config/holidays';
+        const method = editingHolidayId ? 'PUT' : 'POST';
+        
+        fetchWithCSRF(url, {
+            method: method,
+            body: JSON.stringify(holidayData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+            
+            if (data.success) {
+                showAlert(editingHolidayId ? 'Feriado atualizado!' : 'Feriado criado com sucesso!', 'success');
+                $('#holidayModal').modal('hide');
+                loadHolidays(managingHolidaysSiteId);
+            } else {
+                showAlert(data.message || 'Erro ao salvar feriado', 'danger');
+            }
+        })
+        .catch(error => {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+            console.error('Erro:', error);
+            showAlert('Erro ao salvar feriado', 'danger');
+        });
+    }
+    
+    function deleteHoliday(holidayId) {
+        const holiday = currentHolidays.find(h => h.id == holidayId);
+        if (!holiday) return;
+        
+        if (confirm(`Tem certeza que deseja excluir o feriado "${holiday.name}"?`)) {
+            fetchWithCSRF(`/config/holidays?id=${holidayId}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('Feriado exclu\u00eddo com sucesso!', 'success');
+                    loadHolidays(managingHolidaysSiteId);
+                } else {
+                    showAlert(data.message || 'Erro ao excluir feriado', 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                showAlert('Erro ao excluir feriado', 'danger');
             });
         }
     }
@@ -2600,6 +2915,144 @@
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
                         <button type="submit" class="btn btn-primary" id="saveSectorBtn">
                             <i class="fas fa-save mr-1"></i>Salvar Setor
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Horários de Funcionamento -->
+    <div class="modal fade" id="businessHoursModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="businessHoursModalTitle">Horários de Funcionamento</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form id="businessHoursForm" onsubmit="event.preventDefault(); saveBusinessHours();">
+                    <div class="modal-body">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            Configure os horários de abertura e fechamento para cada dia da semana.
+                        </div>
+                        
+                        <table class="table table-sm table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Dia da Semana</th>
+                                    <th width="120">Abertura</th>
+                                    <th width="120">Fechamento</th>
+                                    <th width="80">Fechado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="businessHoursBody">
+                                <!-- Será preenchido via JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary" id="saveBusinessHoursBtn">
+                            <i class="fas fa-save mr-1"></i>Salvar Horários
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Feriados -->
+    <div class="modal fade" id="holidaysModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="holidaysModalTitle">Gestão de Feriados</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0">Lista de Feriados</h6>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="showHolidayModal()">
+                            <i class="fas fa-plus mr-1"></i>Novo Feriado
+                        </button>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Nome</th>
+                                    <th>Escopo</th>
+                                    <th>Local</th>
+                                    <th width="100">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="holidaysTableBody">
+                                <tr>
+                                    <td colspan="5" class="text-center">
+                                        <i class="fas fa-spinner fa-spin mr-2"></i>Carregando feriados...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Feriado Individual -->
+    <div class="modal fade" id="holidayModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="holidayModalTitle">Novo Feriado</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form id="holidayForm" onsubmit="event.preventDefault(); saveHoliday();">
+                    <div class="modal-body">
+                        <div class="form-group mb-3">
+                            <label for="holidayDate">Data *</label>
+                            <input type="date" class="form-control" id="holidayDate" required>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="holidayName">Nome do Feriado *</label>
+                            <input type="text" class="form-control" id="holidayName" required maxlength="100"
+                                   placeholder="Ex: Natal, Ano Novo, etc.">
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="holidayScope">Escopo *</label>
+                            <select class="form-control" id="holidayScope" required onchange="toggleHolidaySite()">
+                                <option value="global">Global (todos os locais)</option>
+                                <option value="site">Local específico</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group mb-3" id="holidaySiteGroup" style="display:none;">
+                            <label for="holidaySiteId">Local</label>
+                            <select class="form-control" id="holidaySiteId">
+                                <option value="">Selecione um local...</option>
+                                <!-- Será preenchido via JavaScript -->
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary" id="saveHolidayBtn">
+                            <i class="fas fa-save mr-1"></i>Salvar Feriado
                         </button>
                     </div>
                 </form>

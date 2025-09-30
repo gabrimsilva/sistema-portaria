@@ -843,6 +843,7 @@
         loadRbacMatrix();
         loadUsers();
         loadAuthSettings();
+        loadAuditFilterUsers(); // Carregar usuários no filtro de auditoria
         loadAuditLogs();
         loadLGPDRequests();
     });
@@ -1179,6 +1180,36 @@
     // Variáveis globais de paginação de auditoria
     let currentAuditPage = 1;
     let auditPagination = null;
+    
+    function loadAuditFilterUsers() {
+        fetch('/config/users')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const select = document.getElementById('filterUser');
+                    const currentValue = select.value;
+                    
+                    // Limpar e adicionar opção "Todos"
+                    select.innerHTML = '<option value="">Todos</option>';
+                    
+                    // Adicionar usuários
+                    data.data.users.forEach(user => {
+                        const option = document.createElement('option');
+                        option.value = user.id;
+                        option.textContent = user.nome + ' (' + user.email + ')';
+                        select.appendChild(option);
+                    });
+                    
+                    // Restaurar valor selecionado
+                    if (currentValue) {
+                        select.value = currentValue;
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao carregar usuários:', error);
+            });
+    }
     
     function loadAuditLogs(page = 1) {
         currentAuditPage = page;

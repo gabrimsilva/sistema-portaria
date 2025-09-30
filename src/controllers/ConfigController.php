@@ -1047,6 +1047,8 @@ class ConfigController {
             'user_id' => $_GET['user_id'] ?? null,
             'entity' => $_GET['entity'] ?? null,
             'action' => $_GET['action'] ?? null,
+            'severidade' => $_GET['severidade'] ?? null,
+            'modulo' => $_GET['modulo'] ?? null,
             'date_start' => $_GET['date_start'] ?? null,
             'date_end' => $_GET['date_end'] ?? null,
             'page' => max(1, intval($_GET['page'] ?? 1)),
@@ -1057,8 +1059,14 @@ class ConfigController {
         
         try {
             $result = $this->configService->getAuditLogs($filters);
-            echo json_encode(['success' => true, 'data' => $result]);
+            echo json_encode([
+                'success' => true, 
+                'data' => $result['logs'],
+                'pagination' => $result['pagination'],
+                'filters' => array_filter($filters, function($v) { return !is_null($v) && $v !== ''; })
+            ]);
         } catch (Exception $e) {
+            http_response_code(500);
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
     }

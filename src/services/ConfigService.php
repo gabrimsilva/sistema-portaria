@@ -489,7 +489,7 @@ class ConfigService {
      * Buscar logs de auditoria com filtros e paginação
      */
     public function getAuditLogs($filters) {
-        $sql = "SELECT al.*, u.nome as usuario_nome 
+        $sql = "SELECT al.*, u.nome as usuario_nome, al.severidade, al.modulo, al.resultado
                 FROM audit_log al 
                 LEFT JOIN usuarios u ON al.user_id = u.id 
                 WHERE 1=1";
@@ -508,6 +508,16 @@ class ConfigService {
         if (!empty($filters['action'])) {
             $sql .= " AND al.acao = ?";
             $params[] = $filters['action'];
+        }
+        
+        if (!empty($filters['severidade'])) {
+            $sql .= " AND al.severidade = ?";
+            $params[] = $filters['severidade'];
+        }
+        
+        if (!empty($filters['modulo'])) {
+            $sql .= " AND al.modulo = ?";
+            $params[] = $filters['modulo'];
         }
         
         if (!empty($filters['date_start'])) {

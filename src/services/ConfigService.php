@@ -489,58 +489,60 @@ class ConfigService {
      * Buscar logs de auditoria com filtros e paginação
      */
     public function getAuditLogs($filters) {
-        $sql = "SELECT al.*, u.nome as usuario_nome, al.severidade, al.modulo, al.resultado
-                FROM audit_log al 
-                LEFT JOIN usuarios u ON al.user_id = u.id 
-                WHERE 1=1";
+        // Construir query base (FROM + WHERE) uma única vez
+        $baseQuery = "FROM audit_log al 
+                      LEFT JOIN usuarios u ON al.user_id = u.id 
+                      WHERE 1=1";
         $params = [];
         
         if (!empty($filters['user_id'])) {
-            $sql .= " AND al.user_id = ?";
+            $baseQuery .= " AND al.user_id = ?";
             $params[] = $filters['user_id'];
         }
         
         if (!empty($filters['entity'])) {
-            $sql .= " AND al.entidade = ?";
+            $baseQuery .= " AND al.entidade = ?";
             $params[] = $filters['entity'];
         }
         
         if (!empty($filters['action'])) {
-            $sql .= " AND al.acao = ?";
+            $baseQuery .= " AND al.acao = ?";
             $params[] = $filters['action'];
         }
         
         if (!empty($filters['severidade'])) {
-            $sql .= " AND al.severidade = ?";
+            $baseQuery .= " AND al.severidade = ?";
             $params[] = $filters['severidade'];
         }
         
         if (!empty($filters['modulo'])) {
-            $sql .= " AND al.modulo = ?";
+            $baseQuery .= " AND al.modulo = ?";
             $params[] = $filters['modulo'];
         }
         
         if (!empty($filters['date_start'])) {
-            $sql .= " AND DATE(al.timestamp) >= ?";
+            $baseQuery .= " AND DATE(al.timestamp) >= ?";
             $params[] = $filters['date_start'];
         }
         
         if (!empty($filters['date_end'])) {
-            $sql .= " AND DATE(al.timestamp) <= ?";
+            $baseQuery .= " AND DATE(al.timestamp) <= ?";
             $params[] = $filters['date_end'];
         }
         
-        // Contar total
-        $countSql = str_replace("SELECT al.*, u.nome as usuario_nome", "SELECT COUNT(*)", $sql);
-        $total = $this->db->fetch($countSql, $params)['count'];
+        // Contar total (usando base query)
+        $countSql = "SELECT COUNT(*) AS total " . $baseQuery;
+        $totalResult = $this->db->fetch($countSql, $params);
+        $total = (int)($totalResult['total'] ?? 0);
         
-        // Paginação
+        // Buscar dados (usando base query + ordenação + paginação)
         $offset = ($filters['page'] - 1) * $filters['pageSize'];
-        $sql .= " ORDER BY al.timestamp DESC LIMIT ? OFFSET ?";
-        $params[] = $filters['pageSize'];
-        $params[] = $offset;
+        $dataSql = "SELECT al.*, u.nome as usuario_nome " 
+                 . $baseQuery 
+                 . " ORDER BY al.timestamp DESC LIMIT ? OFFSET ?";
+        $dataParams = array_merge($params, [$filters['pageSize'], $offset]);
         
-        $logs = $this->db->fetchAll($sql, $params);
+        $logs = $this->db->fetchAll($dataSql, $dataParams);
         
         // Processar dados JSON
         foreach ($logs as &$log) {

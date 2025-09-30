@@ -1043,6 +1043,23 @@ class ConfigController {
             return;
         }
         
+        // Validar e sanitizar parâmetros de paginação
+        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+        $pageSize = isset($_GET['pageSize']) ? (int)$_GET['pageSize'] : 20;
+        
+        // Validação de limites
+        if ($page < 1) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Parâmetro "page" deve ser maior que 0']);
+            return;
+        }
+        
+        if ($pageSize < 1 || $pageSize > 100) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Parâmetro "pageSize" deve estar entre 1 e 100']);
+            return;
+        }
+        
         $filters = [
             'user_id' => $_GET['user_id'] ?? null,
             'entity' => $_GET['entity'] ?? null,
@@ -1051,8 +1068,8 @@ class ConfigController {
             'modulo' => $_GET['modulo'] ?? null,
             'date_start' => $_GET['date_start'] ?? null,
             'date_end' => $_GET['date_end'] ?? null,
-            'page' => max(1, intval($_GET['page'] ?? 1)),
-            'pageSize' => min(100, max(10, intval($_GET['pageSize'] ?? 20)))
+            'page' => $page,
+            'pageSize' => $pageSize
         ];
         
         header('Content-Type: application/json');

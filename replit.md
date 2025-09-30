@@ -147,7 +147,17 @@ Preferred communication style: Simple, everyday language.
 - **Segurança Aprimorada**: Adicionado casting `(int)` no parâmetro `limit` do método `getLogs()` para prevenir SQL injection via LIMIT
 - **Distribuição de Logs Atual**: AUDIT/autenticacao (5), AUDIT/import (1), AUDIT/sistema (16), WARN/sistema (4)
 - **Architect Review**: PASS status - código production-ready com implementação correta, compatibilidade retroativa perfeita, e segurança mantida
-- **Próximos Passos**: Etapa 1.1 implementará API GET /logs com server-side pagination e filtros avançados (severidade, modulo, período)
+
+### Etapa 1.1 - API REST para Logs com Filtros Avançados (COMPLETED ✅ - PRODUCTION-READY)
+- **Endpoint Melhorado**: GET /config/audit com filtros avançados e paginação server-side robusta
+- **Filtros Implementados**: user_id, entity, action, **severidade**, **modulo**, date_start, date_end (7 filtros total)
+- **Paginação Validada**: Parâmetros page (>=1) e pageSize (1-100) com validação e HTTP 400 para valores inválidos
+- **Arquitetura Refatorada**: Base query única para count + data queries eliminando bugs de contagem e duplicação
+- **Resposta JSON Padronizada**: Estrutura `{success, data, pagination: {current, total, totalItems, pageSize}, filters}` com metadados completos
+- **Segurança**: SQL injection prevenido via prepared statements, DoS mitigado com limite pageSize=100, RBAC enforced (audit_log.read)
+- **Performance**: Queries otimizadas com índices, COUNT(*) correto, LIMIT/OFFSET funcionais
+- **Testes SQL Validados**: 26 logs (AUDIT: 22, WARN: 4), filtros combinados funcionando (severidade + modulo), paginação operacional
+- **Architect Review**: Production-ready após correção de bugs críticos de contagem e validação de entrada
 
 ### Potential Future Integrations  
 - **Production Hosting**: Migration path to dedicated servers or cloud platforms

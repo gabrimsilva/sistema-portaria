@@ -9,9 +9,52 @@
  * - Lazy loading
  * - Dark/Light mode
  * - CDN ready
+ * - Integração com configurações da organização
  */
 class LogoService
 {
+    /**
+     * @var ConfigService|null
+     */
+    private static $configService = null;
+    
+    /**
+     * Inicializa o ConfigService (lazy loading)
+     */
+    private static function initConfigService()
+    {
+        if (self::$configService === null) {
+            require_once __DIR__ . '/../utils/CnpjValidator.php';
+            require_once __DIR__ . '/ConfigService.php';
+            self::$configService = new ConfigService();
+        }
+    }
+    
+    /**
+     * Obtém a logo configurada da organização
+     * 
+     * @return string|null URL da logo ou null se não configurada
+     */
+    private static function getOrganizationLogo()
+    {
+        try {
+            self::initConfigService();
+            $settings = self::$configService->getOrganizationSettings();
+            
+            if (!empty($settings['logo_url'])) {
+                // Verificar se arquivo existe
+                $logoPath = $_SERVER['DOCUMENT_ROOT'] . $settings['logo_url'];
+                if (file_exists($logoPath) && is_file($logoPath)) {
+                    return $settings['logo_url'];
+                }
+            }
+        } catch (Exception $e) {
+            // Em caso de erro, continuar com fallback
+            error_log('LogoService: Erro ao buscar logo da organização: ' . $e->getMessage());
+        }
+        
+        return null;
+    }
     /**
      * Configurações avançadas de logos
      */
@@ -121,6 +164,13 @@ class LogoService
      */
     public static function getLogoUrl($type = 'renner', $theme = 'light', $preferWebP = true)
     {
+        // PRIORIDADE 1: Logo configurada da organização (do banco de dados)
+        $organizationLogo = self::getOrganizationLogo();
+        if ($organizationLogo !== null) {
+            return $organizationLogo;
+        }
+        
+        // PRIORIDADE 2: Logos hardcoded (fallback)
         $logo = self::$logos[$type] ?? self::$logos['renner'];
         
         // Dark mode
@@ -143,7 +193,7 @@ class LogoService
             return $logo['fallback'];
         }
         
-        // Ultimate fallback
+        // Ultimate fallback (ícone FontAwesome)
         return self::$logos['renner']['primary'];
     }
 

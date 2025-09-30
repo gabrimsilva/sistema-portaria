@@ -104,7 +104,7 @@ class RbacService {
             }
         }
         
-        // 🛡️ PROTEÇÃO CRÍTICA: Admin SEMPRE mantém TODAS as permissões config.*
+        // 🛡️ PROTEÇÃO CRÍTICA: Admin SEMPRE mantém TODAS as permissões config.* e person.cpf.view_unmasked
         if ($role['name'] === 'administrador') {
             $configPermissions = $this->db->fetchAll(
                 "SELECT key FROM permissions WHERE key LIKE 'config.%'"
@@ -116,6 +116,12 @@ class RbacService {
                 if (!in_array($configKey, $permissionKeys)) {
                     $permissionKeys[] = $configKey;
                 }
+            }
+            
+            // Garantir que Admin sempre tenha acesso a CPF não mascarado (LGPD compliance)
+            $cpfPermission = 'person.cpf.view_unmasked';
+            if (!in_array($cpfPermission, $permissionKeys)) {
+                $permissionKeys[] = $cpfPermission;
             }
         }
         

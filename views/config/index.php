@@ -963,7 +963,12 @@
                         </td>
                         ${data.roles.map(role => {
                             const hasPermission = data.matrix[role.id] && data.matrix[role.id].includes(permission.key);
-                            const isAdminProtected = role.name === 'administrador' && permission.key.startsWith('config.');
+                            const isAdminProtected = role.name === 'administrador' && 
+                                (permission.key.startsWith('config.') || permission.key === 'person.cpf.view_unmasked');
+                            
+                            const protectionTitle = permission.key.startsWith('config.') 
+                                ? 'Admin sempre mantém permissões de config' 
+                                : 'Admin sempre mantém acesso a CPF não mascarado';
                             
                             return `
                                 <td class="text-center">
@@ -974,7 +979,7 @@
                                                data-role-id="${role.id}"
                                                data-permission-key="${permission.key}"
                                                ${hasPermission ? 'checked' : ''}
-                                               ${isAdminProtected ? 'disabled title="Admin sempre mantém permissões de config"' : ''}
+                                               ${isAdminProtected ? 'disabled title="' + protectionTitle + '"' : ''}
                                                onchange="onRbacChange(${role.id}, '${permission.key}', this.checked)">
                                         <label class="custom-control-label" for="rbac_${role.id}_${permission.id}"></label>
                                     </div>

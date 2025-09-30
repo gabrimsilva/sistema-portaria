@@ -1506,8 +1506,15 @@ class ConfigController {
         }
         
         header('Content-Type: application/json');
-        // Verificar CSRF (comentado temporariamente para testes)
-        // CSRFProtection::verifyRequest();
+        
+        // Verificar CSRF para segurança
+        try {
+            CSRFProtection::verifyRequest();
+        } catch (Exception $e) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Token CSRF inválido']);
+            return;
+        }
         
         try {
             $data = [

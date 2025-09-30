@@ -1588,7 +1588,8 @@
             company_name: companyName,
             cnpj: document.getElementById('cnpj').value.trim(),
             timezone: document.getElementById('timezone').value,
-            locale: document.getElementById('locale').value
+            locale: document.getElementById('locale').value,
+            csrf_token: document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
         };
         
         // Indicador de carregamento

@@ -42,10 +42,45 @@ class LogoService
             $settings = self::$configService->getOrganizationSettings();
             
             if (!empty($settings['logo_url'])) {
-                // Verificar se arquivo existe
-                $logoPath = $_SERVER['DOCUMENT_ROOT'] . $settings['logo_url'];
-                if (file_exists($logoPath) && is_file($logoPath)) {
-                    return $settings['logo_url'];
+                $logoUrl = $settings['logo_url'];
+                
+                // SEGURANÇA: Validar que a URL da logo está em diretório permitido
+                // Remove tentativas de path traversal
+                $logoUrl = str_replace(['../', '..\\'], '', $logoUrl);
+                
+                // Garante que começa com /
+                if (!str_starts_with($logoUrl, '/')) {
+                    $logoUrl = '/' . $logoUrl;
+                }
+                
+                // Whitelist: apenas /assets/logos/ é permitido
+                if (!str_starts_with($logoUrl, '/assets/logos/')) {
+                    error_log('LogoService: Logo URL fora do diretório permitido: ' . $logoUrl);
+                    return null;
+                }
+                
+                // SEGURANÇA: Validar extensão (apenas imagens permitidas)
+                $allowedExtensions = ['png', 'jpg', 'jpeg', 'webp', 'svg'];
+                $extension = strtolower(pathinfo($logoUrl, PATHINFO_EXTENSION));
+                if (!in_array($extension, $allowedExtensions)) {
+                    error_log('LogoService: Extensão não permitida: ' . $extension);
+                    return null;
+                }
+                
+                // Verificar se arquivo existe fisicamente
+                $logoPath = $_SERVER['DOCUMENT_ROOT'] . $logoUrl;
+                $realPath = realpath($logoPath);
+                $allowedDir = realpath($_SERVER['DOCUMENT_ROOT'] . '/assets/logos/');
+                
+                // SEGURANÇA: Validação rigorosa de diretório com DIRECTORY_SEPARATOR
+                if ($realPath && $allowedDir) {
+                    $allowedDirNormalized = rtrim($allowedDir, DIRECTORY_SEPARATOR);
+                    $isInAllowedDir = ($realPath === $allowedDirNormalized) || 
+                                     str_starts_with($realPath, $allowedDirNormalized . DIRECTORY_SEPARATOR);
+                    
+                    if ($isInAllowedDir && is_file($realPath)) {
+                        return $logoUrl;
+                    }
                 }
             }
         } catch (Exception $e) {

@@ -136,7 +136,12 @@
                                                     <div class="form-group">
                                                         <label for="companyName">Nome da Empresa *</label>
                                                         <input type="text" class="form-control" id="companyName" 
-                                                               name="company_name" placeholder="Digite o nome da empresa" required>
+                                                               name="company_name" placeholder="Digite o nome da empresa" 
+                                                               minlength="2" maxlength="120" required>
+                                                        <div class="invalid-feedback" id="companyNameError"></div>
+                                                        <small class="form-text text-muted">
+                                                            <span id="charCount">0</span>/120 caracteres (mínimo 2)
+                                                        </small>
                                                     </div>
                                                 </div>
                                                 <div class="col-md-4">
@@ -800,6 +805,11 @@
         // Validação CNPJ em tempo real
         $('#cnpj').on('blur', function() {
             validateCNPJ(this.value);
+        });
+        
+        // Validação Nome da Empresa em tempo real
+        $('#companyName').on('input', function() {
+            validateCompanyName(this.value);
         });
         
         // Submissão do formulário de organização
@@ -1477,6 +1487,45 @@
             console.error('Erro:', error);
             showAlert('Erro ao remover logo', 'danger');
         });
+    }
+    
+    // Validação Nome da Empresa em tempo real
+    function validateCompanyName(name) {
+        const input = document.getElementById('companyName');
+        const error = document.getElementById('companyNameError');
+        const charCount = document.getElementById('charCount');
+        
+        const length = name.trim().length;
+        charCount.textContent = length;
+        
+        // Resetar estado se vazio
+        if (length === 0) {
+            input.classList.remove('is-invalid', 'is-valid');
+            error.textContent = '';
+            charCount.parentElement.classList.remove('text-success', 'text-danger');
+            return;
+        }
+        
+        // Validar tamanho
+        if (length < 2) {
+            input.classList.remove('is-valid');
+            input.classList.add('is-invalid');
+            error.textContent = 'Nome deve ter pelo menos 2 caracteres';
+            charCount.parentElement.classList.add('text-danger');
+            charCount.parentElement.classList.remove('text-success');
+        } else if (length > 120) {
+            input.classList.remove('is-valid');
+            input.classList.add('is-invalid');
+            error.textContent = 'Nome não pode ter mais que 120 caracteres';
+            charCount.parentElement.classList.add('text-danger');
+            charCount.parentElement.classList.remove('text-success');
+        } else {
+            input.classList.remove('is-invalid');
+            input.classList.add('is-valid');
+            error.textContent = '';
+            charCount.parentElement.classList.add('text-success');
+            charCount.parentElement.classList.remove('text-danger');
+        }
     }
     
     // Validação CNPJ em tempo real

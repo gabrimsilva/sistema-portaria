@@ -15,6 +15,78 @@ class DashboardController {
         }
     }
     
+    private function countAtivosAgora($tipo) {
+        try {
+            switch ($tipo) {
+                case 'visitante':
+                    return $this->db->fetch("
+                        SELECT COUNT(*) as total 
+                        FROM visitantes_novo 
+                        WHERE hora_entrada IS NOT NULL AND hora_saida IS NULL
+                    ")['total'] ?? 0;
+                
+                case 'prestador':
+                    return $this->db->fetch("
+                        SELECT COUNT(*) as total 
+                        FROM prestadores_servico 
+                        WHERE entrada IS NOT NULL AND saida IS NULL
+                    ")['total'] ?? 0;
+                
+                case 'profissional_renner':
+                    return $this->db->fetch("
+                        SELECT COUNT(*) as total 
+                        FROM registro_acesso 
+                        WHERE tipo = 'profissional_renner' 
+                          AND (entrada_at IS NOT NULL OR retorno IS NOT NULL) 
+                          AND saida_final IS NULL
+                    ")['total'] ?? 0;
+                
+                default:
+                    return 0;
+            }
+        } catch (Exception $e) {
+            error_log("Erro countAtivosAgora($tipo): " . $e->getMessage());
+            return 0;
+        }
+    }
+    
+    private function countRegistradosHoje($tipo) {
+        try {
+            switch ($tipo) {
+                case 'visitante':
+                    return $this->db->fetch("
+                        SELECT COUNT(*) as total 
+                        FROM visitantes_novo 
+                        WHERE hora_entrada >= CURRENT_DATE 
+                          AND hora_entrada < CURRENT_DATE + INTERVAL '1 day'
+                    ")['total'] ?? 0;
+                
+                case 'prestador':
+                    return $this->db->fetch("
+                        SELECT COUNT(*) as total 
+                        FROM prestadores_servico 
+                        WHERE entrada >= CURRENT_DATE 
+                          AND entrada < CURRENT_DATE + INTERVAL '1 day'
+                    ")['total'] ?? 0;
+                
+                case 'profissional_renner':
+                    return $this->db->fetch("
+                        SELECT COUNT(*) as total 
+                        FROM registro_acesso 
+                        WHERE tipo = 'profissional_renner' 
+                          AND ((entrada_at >= CURRENT_DATE AND entrada_at < CURRENT_DATE + INTERVAL '1 day')
+                           OR (retorno >= CURRENT_DATE AND retorno < CURRENT_DATE + INTERVAL '1 day'))
+                    ")['total'] ?? 0;
+                
+                default:
+                    return 0;
+            }
+        } catch (Exception $e) {
+            error_log("Erro countRegistradosHoje($tipo): " . $e->getMessage());
+            return 0;
+        }
+    }
+    
     public function index() {
         try {
             // Estatísticas dos novos módulos
@@ -59,11 +131,27 @@ class DashboardController {
             
             // Estatísticas compiladas para a view
             $stats = [
+                // NOVAS métricas padronizadas para os cards
+                'profissional_ativos' => $this->countAtivosAgora('profissional_renner'),
+                'profissional_hoje' => $this->countRegistradosHoje('profissional_renner'),
+                'visitante_ativos' => $this->countAtivosAgora('visitante'),
+                'visitante_hoje' => $this->countRegistradosHoje('visitante'),
+                'prestador_ativos' => $this->countAtivosAgora('prestador'),
+                'prestador_hoje' => $this->countRegistradosHoje('prestador'),
+                // TOTAIS (somas)
+                'total_ativos' => 
+                    $this->countAtivosAgora('profissional_renner') + 
+                    $this->countAtivosAgora('visitante') + 
+                    $this->countAtivosAgora('prestador'),
+                'total_registrados_hoje' => 
+                    $this->countRegistradosHoje('profissional_renner') + 
+                    $this->countRegistradosHoje('visitante') + 
+                    $this->countRegistradosHoje('prestador'),
+                // Manter compatibilidade com código legado
                 'visitors_today' => $movimentacao['visitantes'],
                 'employees_active' => $profissionaisAtivos,
                 'entries_today' => $entradasHoje,
                 'exits_today' => $saidasHoje,
-                // Manter as estatísticas originais também
                 'total_profissionais' => $totalProfissionais,
                 'total_visitantes' => $totalVisitantes,
                 'total_prestadores' => $totalPrestadores,

@@ -82,22 +82,6 @@
                 <div class="container-fluid">
                     <!-- Statistics Cards -->
                     <div class="row">
-                        <!-- Card AZUL: Profissional Renner -->
-                        <div class="col-lg-3 col-6">
-                            <div class="small-box bg-primary">
-                                <div class="inner">
-                                    <h3><?= $stats['profissional_ativos'] ?? 0 ?></h3>
-                                    <p>Profissional Renner - Ativos Agora</p>
-                                    <small class="text-light">
-                                        <i class="fas fa-clock"></i> Registrados Hoje: <?= $stats['profissional_hoje'] ?? 0 ?>
-                                    </small>
-                                </div>
-                                <div class="icon">
-                                    <i class="fas fa-id-badge"></i>
-                                </div>
-                            </div>
-                        </div>
-                        
                         <!-- Card VERDE: Visitante -->
                         <div class="col-lg-3 col-6">
                             <div class="small-box bg-success">
@@ -110,6 +94,22 @@
                                 </div>
                                 <div class="icon">
                                     <i class="fas fa-users"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Card AZUL: Profissional Renner -->
+                        <div class="col-lg-3 col-6">
+                            <div class="small-box bg-primary">
+                                <div class="inner">
+                                    <h3><?= $stats['profissional_ativos'] ?? 0 ?></h3>
+                                    <p>Profissional Renner - Ativos Agora</p>
+                                    <small class="text-light">
+                                        <i class="fas fa-clock"></i> Registrados Hoje: <?= $stats['profissional_hoje'] ?? 0 ?>
+                                    </small>
+                                </div>
+                                <div class="icon">
+                                    <i class="fas fa-id-badge"></i>
                                 </div>
                             </div>
                         </div>

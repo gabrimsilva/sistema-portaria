@@ -82,23 +82,15 @@
                 <div class="container-fluid">
                     <!-- Statistics Cards -->
                     <div class="row">
+                        <!-- Card AZUL: Profissional Renner -->
                         <div class="col-lg-3 col-6">
-                            <div class="small-box bg-info">
+                            <div class="small-box bg-primary">
                                 <div class="inner">
-                                    <h3><?= isset($stats['visitors_today']) ? $stats['visitors_today'] : 0 ?></h3>
-                                    <p>Visitantes Hoje</p>
-                                </div>
-                                <div class="icon">
-                                    <i class="fas fa-users"></i>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="col-lg-3 col-6">
-                            <div class="small-box bg-success">
-                                <div class="inner">
-                                    <h3><?= isset($stats['employees_active']) ? $stats['employees_active'] : 0 ?></h3>
-                                    <p>Funcionários Ativos</p>
+                                    <h3><?= $stats['profissional_ativos'] ?? 0 ?></h3>
+                                    <p>Profissional Renner - Ativos Agora</p>
+                                    <small class="text-light">
+                                        <i class="fas fa-clock"></i> Registrados Hoje: <?= $stats['profissional_hoje'] ?? 0 ?>
+                                    </small>
                                 </div>
                                 <div class="icon">
                                     <i class="fas fa-id-badge"></i>
@@ -106,26 +98,50 @@
                             </div>
                         </div>
                         
+                        <!-- Card VERDE: Visitante -->
                         <div class="col-lg-3 col-6">
-                            <div class="small-box bg-warning">
+                            <div class="small-box bg-success">
                                 <div class="inner">
-                                    <h3><?= isset($stats['entries_today']) ? $stats['entries_today'] : 0 ?></h3>
-                                    <p>Entradas Hoje</p>
+                                    <h3><?= $stats['visitante_ativos'] ?? 0 ?></h3>
+                                    <p>Visitante - Ativos Agora</p>
+                                    <small class="text-light">
+                                        <i class="fas fa-clock"></i> Registrados Hoje: <?= $stats['visitante_hoje'] ?? 0 ?>
+                                    </small>
                                 </div>
                                 <div class="icon">
-                                    <i class="fas fa-sign-in-alt"></i>
+                                    <i class="fas fa-users"></i>
                                 </div>
                             </div>
                         </div>
                         
+                        <!-- Card AMARELO: Prestador de Serviço -->
+                        <div class="col-lg-3 col-6">
+                            <div class="small-box bg-warning">
+                                <div class="inner">
+                                    <h3><?= $stats['prestador_ativos'] ?? 0 ?></h3>
+                                    <p>Prestador de Serviço - Ativos Agora</p>
+                                    <small class="text-white">
+                                        <i class="fas fa-clock"></i> Registrados Hoje: <?= $stats['prestador_hoje'] ?? 0 ?>
+                                    </small>
+                                </div>
+                                <div class="icon">
+                                    <i class="fas fa-tools"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Card VERMELHO: Total -->
                         <div class="col-lg-3 col-6">
                             <div class="small-box bg-danger">
                                 <div class="inner">
-                                    <h3><?= isset($stats['exits_today']) ? $stats['exits_today'] : 0 ?></h3>
-                                    <p>Saídas Hoje</p>
+                                    <h3><?= $stats['total_ativos'] ?? 0 ?></h3>
+                                    <p>Total - Ativos Agora</p>
+                                    <small class="text-light">
+                                        <i class="fas fa-clock"></i> Registrados Hoje: <?= $stats['total_registrados_hoje'] ?? 0 ?>
+                                    </small>
                                 </div>
                                 <div class="icon">
-                                    <i class="fas fa-sign-out-alt"></i>
+                                    <i class="fas fa-building"></i>
                                 </div>
                             </div>
                         </div>

@@ -337,6 +337,9 @@ $canDeleteInline = $authService->hasPermission('relatorios.excluir_linha');
     
     <script>
     $(document).ready(function() {
+        // Token CSRF para requisições AJAX
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        
         // Inicialização de controles para relatórios read-only
         const REPORT_NS = 'prestadores-report';
         

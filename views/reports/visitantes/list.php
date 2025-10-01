@@ -172,9 +172,10 @@ $canDeleteInline = $authService->hasPermission('relatorios.excluir_linha');
                                             </tr>
                                         <?php else: ?>
                                             <?php foreach ($visitantes as $visitante): ?>
-                                            <tr>
+                                            <tr data-id="<?= $visitante['id'] ?>">
                                                 <td>
                                                     <strong><?= htmlspecialchars($visitante['nome']) ?></strong>
+                                                    <small class="text-muted ml-2">(ID: <?= $visitante['id'] ?>)</small>
                                                     <?php if (!empty($visitante['hora_saida_formatted'])): ?>
                                                         <span class="badge bg-secondary ml-2">Saiu</span>
                                                     <?php else: ?>

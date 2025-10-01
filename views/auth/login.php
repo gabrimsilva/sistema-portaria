@@ -64,18 +64,25 @@
             object-fit: contain;
         }
         
-        .system-title {
-            font-size: 24px;
-            font-weight: 700;
-            margin: 0;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        .system-info {
+            text-align: center;
+            margin-top: 15px;
         }
         
-        .system-subtitle {
-            font-size: 16px;
-            opacity: 0.9;
-            margin: 5px 0 0 0;
-            font-weight: 300;
+        .system-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin: 0 0 5px 0;
+            letter-spacing: 0.3px;
+        }
+        
+        .system-version {
+            font-size: 13px;
+            color: #6c757d;
+            font-weight: 400;
+            margin: 0;
+            opacity: 0.85;
         }
         
         .login-body {
@@ -207,13 +214,17 @@
             }
             
             .system-title {
-                font-size: 20px;
+                font-size: 17px;
+            }
+            
+            .system-version {
+                font-size: 12px;
             }
             
             .company-logo {
                 width: 280px;
                 height: 90px;
-                margin-bottom: 20px;
+                margin-bottom: 15px;
             }
             
             .company-logo img {
@@ -268,6 +279,10 @@
             <div class="login-header">
                 <div class="company-logo">
                     <?= LogoService::renderLogo('renner', 'login'); ?>
+                </div>
+                <div class="system-info">
+                    <h1 class="system-title">Sistema de Controle de Acesso</h1>
+                    <p class="system-version">Versão 1.0.0</p>
                 </div>
             </div>
             

@@ -23,9 +23,24 @@ ini_set('session.gc_maxlifetime', 86400);
 ini_set('session.cookie_httponly', 1);
 ini_set('session.cookie_samesite', 'Lax'); // Permite AJAX requests no mesmo domínio
 ini_set('session.use_strict_mode', 1);
-if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
+
+// Detectar HTTPS corretamente (incluindo proxies como Replit)
+$isHttps = (
+    (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ||
+    (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') ||
+    (isset($_SERVER['HTTP_X_FORWARDED_SSL']) && $_SERVER['HTTP_X_FORWARDED_SSL'] === 'on')
+);
+
+if ($isHttps) {
     ini_set('session.cookie_secure', 1);
 }
+
+// Configuração adicional para produção Replit
+if (isset($_SERVER['REPL_SLUG'])) {
+    ini_set('session.cookie_domain', '');
+    ini_set('session.cookie_path', '/');
+}
+
 session_start();
 
 // Error reporting - secure for production

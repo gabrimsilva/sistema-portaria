@@ -34,8 +34,23 @@ class CSRFProtection {
             }
             
             if (!self::validateToken($token)) {
+                // Log para debug em desenvolvimento
+                if (isset($_ENV['ENVIRONMENT']) && $_ENV['ENVIRONMENT'] === 'development') {
+                    error_log('CSRF validation failed. Session ID: ' . (session_id() ?: 'none'));
+                    error_log('Token received: ' . substr($token, 0, 10) . '...');
+                    error_log('Session token: ' . substr($_SESSION['csrf_token'] ?? '', 0, 10) . '...');
+                }
+                
                 http_response_code(403);
-                echo json_encode(['success' => false, 'message' => 'CSRF token validation failed']);
+                echo json_encode([
+                    'success' => false, 
+                    'message' => 'CSRF token validation failed',
+                    'debug' => isset($_ENV['ENVIRONMENT']) && $_ENV['ENVIRONMENT'] === 'development' ? [
+                        'session_active' => session_status() === PHP_SESSION_ACTIVE,
+                        'token_present' => !empty($token),
+                        'session_token_present' => isset($_SESSION['csrf_token'])
+                    ] : null
+                ]);
                 die();
             }
         }

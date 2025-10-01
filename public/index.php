@@ -265,6 +265,9 @@ try {
                 case 'delete_inline_ajax':
                     $controller->deleteInlineAjax();
                     break;
+                case 'export':
+                    $controller->export();
+                    break;
                 default:
                     $controller->index();
                     break;
@@ -315,6 +318,9 @@ try {
                 case 'delete_inline_ajax':
                     $controller->deleteInlineAjax();
                     break;
+                case 'export':
+                    $controller->export();
+                    break;
                 default:
                     $controller->index();
                     break;
@@ -361,6 +367,9 @@ try {
                     break;
                 case 'delete_inline_ajax':
                     $controller->deleteInlineAjax();
+                    break;
+                case 'export':
+                    $controller->export();
                     break;
                 default:
                     $controller->index();

@@ -1043,6 +1043,113 @@ class ProfissionaisRennerController {
         exit;
     }
     
+    private function sanitizeForCsv($value) {
+        // Proteção contra CSV Formula Injection
+        if (empty($value)) return '';
+        $value = (string)$value;
+        
+        // Se começa com caracteres perigosos, adiciona aspas simples no início
+        $firstChar = substr($value, 0, 1);
+        if (in_array($firstChar, ['=', '+', '-', '@', "\t", "\r", "\n"])) {
+            $value = "'" . $value;
+        }
+        
+        return $value;
+    }
+    
+    public function export() {
+        // Pegar os mesmos filtros do relatório
+        $search = $_GET['search'] ?? '';
+        $setor = $_GET['setor'] ?? '';
+        $status = $_GET['status'] ?? '';
+        $data_inicial = $_GET['data_inicial'] ?? '';
+        $data_final = $_GET['data_final'] ?? '';
+        
+        // Query base para exportação
+        $query = "SELECT r.id, p.nome, p.setor, r.placa_veiculo, r.entrada_at, r.saida_at, r.retorno, r.saida_final 
+                  FROM registro_acesso r 
+                  JOIN profissionais_renner p ON p.id = r.profissional_renner_id 
+                  WHERE r.tipo = 'profissional_renner'";
+        
+        $params = [];
+        
+        // Filtro por período (data inicial e/ou final)
+        if (!empty($data_inicial) && !empty($data_final)) {
+            $query .= " AND DATE(r.entrada_at) BETWEEN ? AND ?";
+            $params[] = $data_inicial;
+            $params[] = $data_final;
+        } elseif (!empty($data_inicial)) {
+            $query .= " AND DATE(r.entrada_at) >= ?";
+            $params[] = $data_inicial;
+        } elseif (!empty($data_final)) {
+            $query .= " AND DATE(r.entrada_at) <= ?";
+            $params[] = $data_final;
+        }
+        
+        // Busca geral
+        if (!empty($search)) {
+            $query .= " AND p.nome ILIKE ?";
+            $params[] = "%$search%";
+        }
+        
+        // Filtro por setor
+        if (!empty($setor)) {
+            $query .= " AND p.setor = ?";
+            $params[] = $setor;
+        }
+        
+        // Filtro por status (ativo/saiu)
+        if ($status === 'ativo') {
+            $query .= " AND r.saida_final IS NULL";
+        } elseif ($status === 'saiu') {
+            $query .= " AND r.saida_final IS NOT NULL";
+        }
+        
+        $query .= " ORDER BY r.entrada_at DESC";
+        
+        // Buscar TODOS os dados (sem paginação) para exportação
+        $profissionais = $this->db->fetchAll($query, $params);
+        
+        // Configurar headers para download CSV
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="relatorio_profissionais_renner_' . date('Y-m-d_His') . '.csv"');
+        
+        // Abrir output stream
+        $output = fopen('php://output', 'w');
+        
+        // BOM para UTF-8 (compatibilidade Excel)
+        fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
+        
+        // Cabeçalhos do CSV
+        fputcsv($output, [
+            'ID',
+            'Nome',
+            'Setor',
+            'Placa do Veículo',
+            'Entrada',
+            'Saída',
+            'Retorno',
+            'Saída Final'
+        ], ';');
+        
+        // Dados
+        foreach ($profissionais as $profissional) {
+            fputcsv($output, [
+                $this->sanitizeForCsv($profissional['id']),
+                $this->sanitizeForCsv($profissional['nome']),
+                $this->sanitizeForCsv($profissional['setor'] ?? ''),
+                $this->sanitizeForCsv($profissional['placa_veiculo'] ?? ''),
+                $this->sanitizeForCsv($profissional['entrada_at'] ?? ''),
+                $this->sanitizeForCsv($profissional['saida_at'] ?? ''),
+                $this->sanitizeForCsv($profissional['retorno'] ?? ''),
+                $this->sanitizeForCsv($profissional['saida_final'] ?? '')
+            ], ';');
+        }
+        
+        fclose($output);
+        exit;
+    }
+    
     public function searchProfissionais() {
         header('Content-Type: application/json');
         

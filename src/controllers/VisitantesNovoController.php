@@ -983,4 +983,132 @@ class VisitantesNovoController {
         if (strlen($cpf) !== 11) return $cpf;
         return '***.***.***-' . substr($cpf, -2);
     }
+    
+    private function sanitizeForCsv($value) {
+        // Proteção contra CSV Formula Injection
+        if (empty($value)) return '';
+        $value = (string)$value;
+        
+        // Se começa com caracteres perigosos, adiciona aspas simples no início
+        $firstChar = substr($value, 0, 1);
+        if (in_array($firstChar, ['=', '+', '-', '@', "\t", "\r", "\n"])) {
+            $value = "'" . $value;
+        }
+        
+        return $value;
+    }
+    
+    public function export() {
+        // Pegar os mesmos filtros do relatório
+        $data_inicial = $_GET['data_inicial'] ?? '';
+        $data_final = $_GET['data_final'] ?? '';
+        $empresa = $_GET['empresa'] ?? '';
+        $funcionario_responsavel = $_GET['funcionario_responsavel'] ?? '';
+        $setor = $_GET['setor'] ?? '';
+        $search = $_GET['search'] ?? '';
+        
+        // Query base com filtros
+        $whereConditions = ["hora_entrada IS NOT NULL"];
+        $params = [];
+        
+        // Filtro por período
+        if (!empty($data_inicial) && !empty($data_final)) {
+            $whereConditions[] = "DATE(hora_entrada) BETWEEN ? AND ?";
+            $params[] = $data_inicial;
+            $params[] = $data_final;
+        } elseif (!empty($data_inicial)) {
+            $whereConditions[] = "DATE(hora_entrada) >= ?";
+            $params[] = $data_inicial;
+        } elseif (!empty($data_final)) {
+            $whereConditions[] = "DATE(hora_entrada) <= ?";
+            $params[] = $data_final;
+        }
+        
+        // Filtro por empresa
+        if (!empty($empresa)) {
+            $whereConditions[] = "empresa ILIKE ?";
+            $params[] = "%$empresa%";
+        }
+        
+        // Filtro por funcionário responsável
+        if (!empty($funcionario_responsavel)) {
+            $whereConditions[] = "funcionario_responsavel ILIKE ?";
+            $params[] = "%$funcionario_responsavel%";
+        }
+        
+        // Filtro por setor
+        if (!empty($setor)) {
+            $whereConditions[] = "setor = ?";
+            $params[] = $setor;
+        }
+        
+        // Busca geral
+        if (!empty($search)) {
+            $whereConditions[] = "(nome ILIKE ? OR cpf ILIKE ?)";
+            $params[] = "%$search%";
+            $params[] = "%$search%";
+        }
+        
+        $whereClause = implode(" AND ", $whereConditions);
+        
+        // Buscar TODOS os dados (sem paginação) para exportação
+        $query = "
+            SELECT id, nome, cpf, empresa, funcionario_responsavel, setor, 
+                   placa_veiculo, hora_entrada, hora_saida
+            FROM visitantes_novo 
+            WHERE $whereClause 
+            ORDER BY hora_entrada DESC
+        ";
+        
+        $visitantes = $this->db->fetchAll($query, $params);
+        
+        // Configurar headers para download CSV
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="relatorio_visitantes_' . date('Y-m-d_His') . '.csv"');
+        
+        // Abrir output stream
+        $output = fopen('php://output', 'w');
+        
+        // BOM para UTF-8 (compatibilidade Excel)
+        fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
+        
+        // Cabeçalhos do CSV
+        fputcsv($output, [
+            'ID',
+            'Nome',
+            'CPF',
+            'Empresa',
+            'Funcionário Responsável',
+            'Setor',
+            'Placa do Veículo',
+            'Hora Entrada',
+            'Hora Saída'
+        ], ';');
+        
+        // Dados
+        $canViewFullCpf = $this->canViewFullCpf();
+        foreach ($visitantes as $visitante) {
+            // Mascarar CPF se necessário
+            $cpf_display = !empty($visitante['cpf']) ? 
+                ($canViewFullCpf ? $visitante['cpf'] : $this->maskCpf($visitante['cpf'])) : '';
+            
+            // Lógica "A pé" para placas
+            $placa_display = empty($visitante['placa_veiculo']) ? 'A pé' : $visitante['placa_veiculo'];
+            
+            fputcsv($output, [
+                $this->sanitizeForCsv($visitante['id']),
+                $this->sanitizeForCsv($visitante['nome']),
+                $this->sanitizeForCsv($cpf_display),
+                $this->sanitizeForCsv($visitante['empresa'] ?? ''),
+                $this->sanitizeForCsv($visitante['funcionario_responsavel'] ?? ''),
+                $this->sanitizeForCsv($visitante['setor'] ?? ''),
+                $this->sanitizeForCsv($placa_display),
+                $this->sanitizeForCsv($visitante['hora_entrada'] ?? ''),
+                $this->sanitizeForCsv($visitante['hora_saida'] ?? '')
+            ], ';');
+        }
+        
+        fclose($output);
+        exit;
+    }
 }

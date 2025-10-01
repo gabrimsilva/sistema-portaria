@@ -128,7 +128,7 @@ $canDeleteInline = $authService->hasPermission('relatorios.excluir_linha');
                             
                             <!-- Informações do Relatório -->
                             <?php if (isset($pagination)): ?>
-                            <div class="row mb-3">
+                            <div class="row mb-3 align-items-center">
                                 <div class="col-md-6">
                                     <p class="text-muted mb-0">
                                         <i class="fas fa-list"></i> Total: <?= $pagination['totalItems'] ?> registros
@@ -141,9 +141,12 @@ $canDeleteInline = $authService->hasPermission('relatorios.excluir_linha');
                                     </p>
                                 </div>
                                 <div class="col-md-6 text-right">
-                                    <p class="text-muted mb-0">
+                                    <a href="?action=export<?= !empty($_GET['data_inicial']) ? '&data_inicial=' . urlencode($_GET['data_inicial']) : '' ?><?= !empty($_GET['data_final']) ? '&data_final=' . urlencode($_GET['data_final']) : '' ?><?= !empty($_GET['setor']) ? '&setor=' . urlencode($_GET['setor']) : '' ?><?= !empty($_GET['status']) ? '&status=' . urlencode($_GET['status']) : '' ?><?= !empty($_GET['empresa']) ? '&empresa=' . urlencode($_GET['empresa']) : '' ?><?= !empty($_GET['responsavel']) ? '&responsavel=' . urlencode($_GET['responsavel']) : '' ?>" class="btn btn-success btn-sm">
+                                        <i class="fas fa-file-csv"></i> Exportar CSV
+                                    </a>
+                                    <span class="text-muted ml-3">
                                         Página <?= $pagination['current'] ?> de <?= $pagination['total'] ?>
-                                    </p>
+                                    </span>
                                 </div>
                             </div>
                             <?php endif; ?>

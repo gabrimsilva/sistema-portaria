@@ -1064,4 +1064,137 @@ class PrestadoresServicoController {
         }
         exit;
     }
+    
+    private function sanitizeForCsv($value) {
+        // Proteção contra CSV Formula Injection
+        if (empty($value)) return '';
+        $value = (string)$value;
+        
+        // Se começa com caracteres perigosos, adiciona aspas simples no início
+        $firstChar = substr($value, 0, 1);
+        if (in_array($firstChar, ['=', '+', '-', '@', "\t", "\r", "\n"])) {
+            $value = "'" . $value;
+        }
+        
+        return $value;
+    }
+    
+    public function export() {
+        // Pegar os mesmos filtros do relatório
+        $data_inicial = $_GET['data_inicial'] ?? '';
+        $data_final = $_GET['data_final'] ?? '';
+        $setor = $_GET['setor'] ?? '';
+        $status = $_GET['status'] ?? 'todos';
+        $empresa = $_GET['empresa'] ?? '';
+        $responsavel = $_GET['responsavel'] ?? '';
+        
+        // Query base para exportação
+        $query = "
+            SELECT 
+                id,
+                nome,
+                setor,
+                CASE 
+                    WHEN placa_veiculo IS NULL OR placa_veiculo = '' OR placa_veiculo = 'APE' THEN 'A pé'
+                    ELSE UPPER(placa_veiculo)
+                END as placa_ou_ape,
+                empresa,
+                funcionario_responsavel,
+                cpf,
+                entrada as entrada_at,
+                saida as saida_at
+            FROM prestadores_servico 
+            WHERE entrada IS NOT NULL";
+        
+        $params = [];
+        
+        // Filtro por período (data inicial e/ou final)
+        if (!empty($data_inicial) && !empty($data_final)) {
+            $query .= " AND DATE(entrada) BETWEEN ? AND ?";
+            $params[] = $data_inicial;
+            $params[] = $data_final;
+        } elseif (!empty($data_inicial)) {
+            $query .= " AND DATE(entrada) >= ?";
+            $params[] = $data_inicial;
+        } elseif (!empty($data_final)) {
+            $query .= " AND DATE(entrada) <= ?";
+            $params[] = $data_final;
+        }
+        
+        // Filtro por setor
+        if (!empty($setor)) {
+            $query .= " AND setor = ?";
+            $params[] = $setor;
+        }
+        
+        // Filtro por status (aberto/finalizado)
+        if ($status === 'aberto') {
+            $query .= " AND saida IS NULL";
+        } elseif ($status === 'finalizado') {
+            $query .= " AND saida IS NOT NULL";
+        }
+        
+        // Filtro por empresa
+        if (!empty($empresa)) {
+            $query .= " AND empresa ILIKE ?";
+            $params[] = "%$empresa%";
+        }
+        
+        // Filtro por funcionário responsável
+        if (!empty($responsavel)) {
+            $query .= " AND funcionario_responsavel ILIKE ?";
+            $params[] = "%$responsavel%";
+        }
+        
+        $query .= " ORDER BY entrada DESC";
+        
+        // Buscar TODOS os dados (sem paginação) para exportação
+        $prestadores = $this->db->fetchAll($query, $params);
+        
+        // Configurar headers para download CSV
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="relatorio_prestadores_servico_' . date('Y-m-d_His') . '.csv"');
+        
+        // Abrir output stream
+        $output = fopen('php://output', 'w');
+        
+        // BOM para UTF-8 (compatibilidade Excel)
+        fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
+        
+        // Cabeçalhos do CSV
+        fputcsv($output, [
+            'ID',
+            'Nome',
+            'CPF',
+            'Setor',
+            'Empresa',
+            'Funcionário Responsável',
+            'Placa/Veículo',
+            'Entrada',
+            'Saída'
+        ], ';');
+        
+        // Dados
+        $canViewFullCpf = $this->canViewFullCpf();
+        foreach ($prestadores as $prestador) {
+            // Mascarar CPF se necessário
+            $cpf_display = !empty($prestador['cpf']) ? 
+                ($canViewFullCpf ? $prestador['cpf'] : $this->maskCpf($prestador['cpf'])) : '';
+            
+            fputcsv($output, [
+                $this->sanitizeForCsv($prestador['id']),
+                $this->sanitizeForCsv($prestador['nome']),
+                $this->sanitizeForCsv($cpf_display),
+                $this->sanitizeForCsv($prestador['setor'] ?? ''),
+                $this->sanitizeForCsv($prestador['empresa'] ?? ''),
+                $this->sanitizeForCsv($prestador['funcionario_responsavel'] ?? ''),
+                $this->sanitizeForCsv($prestador['placa_ou_ape']),
+                $this->sanitizeForCsv($prestador['entrada_at'] ?? ''),
+                $this->sanitizeForCsv($prestador['saida_at'] ?? '')
+            ], ';');
+        }
+        
+        fclose($output);
+        exit;
+    }
 }

@@ -122,7 +122,7 @@ $canDeleteInline = $authService->hasPermission('relatorios.excluir_linha');
                             
                             <!-- Informações do Relatório -->
                             <?php if (isset($paginationData)): ?>
-                            <div class="row mb-3">
+                            <div class="row mb-3 align-items-center">
                                 <div class="col-md-6">
                                     <p class="text-muted mb-0">
                                         <i class="fas fa-list"></i> Total: <?= $paginationData['total_records'] ?> registros
@@ -135,9 +135,12 @@ $canDeleteInline = $authService->hasPermission('relatorios.excluir_linha');
                                     </p>
                                 </div>
                                 <div class="col-md-6 text-right">
-                                    <p class="text-muted mb-0">
+                                    <a href="?action=export<?= !empty($_GET['data_inicial']) ? '&data_inicial=' . urlencode($_GET['data_inicial']) : '' ?><?= !empty($_GET['data_final']) ? '&data_final=' . urlencode($_GET['data_final']) : '' ?><?= !empty($_GET['empresa']) ? '&empresa=' . urlencode($_GET['empresa']) : '' ?><?= !empty($_GET['funcionario_responsavel']) ? '&funcionario_responsavel=' . urlencode($_GET['funcionario_responsavel']) : '' ?><?= !empty($_GET['setor']) ? '&setor=' . urlencode($_GET['setor']) : '' ?><?= !empty($_GET['search']) ? '&search=' . urlencode($_GET['search']) : '' ?>" class="btn btn-success btn-sm">
+                                        <i class="fas fa-file-csv"></i> Exportar CSV
+                                    </a>
+                                    <span class="text-muted ml-3">
                                         Página <?= $paginationData['current_page'] ?> de <?= $paginationData['total_pages'] ?>
-                                    </p>
+                                    </span>
                                 </div>
                             </div>
                             <?php endif; ?>

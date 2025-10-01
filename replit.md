@@ -47,6 +47,8 @@ Preferred communication style: Simple, everyday language.
 - **Form Standardization**: Standardized form components with robust validation, masks, and reusability.
 - **LGPD Cookie Banner**: Responsive cookie banner with detailed preferences and granular control.
 - **Autocomplete UI**: jQuery UI-based autocomplete for access registration, enhancing data entry speed and accuracy.
+- **Color-Coded Dashboard**: Dashboard cards use Bootstrap color classes (bg-primary/blue for Profissional Renner, bg-success/green for Visitante, bg-warning/yellow for Prestador, bg-danger/red for Total) matching registration button colors for visual consistency.
+- **Dual-Metric System**: Each dashboard card displays two metrics: "Ativos Agora" (counts all active entries including previous days without final exit) and "Registrados Hoje" (counts only today's new entries, resets daily with São Paulo timezone).
 
 ### Technical Implementations
 - **MVC Pattern**: Simple Model-View-Controller architecture.

@@ -86,7 +86,8 @@ class VisitantesNovoController {
     
     private function handleReportsIndex() {
         // Filtros avançados para relatórios
-        $data_entrada = $_GET['data_entrada'] ?? '';
+        $data_inicial = $_GET['data_inicial'] ?? '';
+        $data_final = $_GET['data_final'] ?? '';
         $empresa = $_GET['empresa'] ?? '';
         $funcionario_responsavel = $_GET['funcionario_responsavel'] ?? '';
         $setor = $_GET['setor'] ?? '';
@@ -101,10 +102,20 @@ class VisitantesNovoController {
         $whereConditions = ["hora_entrada IS NOT NULL"];
         $params = [];
         
-        // Filtro por data
-        if (!empty($data_entrada)) {
-            $whereConditions[] = "DATE(hora_entrada) = ?";
-            $params[] = $data_entrada;
+        // Filtro por período (data inicial e/ou final)
+        if (!empty($data_inicial) && !empty($data_final)) {
+            // Ambas as datas: filtrar entre elas
+            $whereConditions[] = "DATE(hora_entrada) BETWEEN ? AND ?";
+            $params[] = $data_inicial;
+            $params[] = $data_final;
+        } elseif (!empty($data_inicial)) {
+            // Apenas data inicial: a partir dela
+            $whereConditions[] = "DATE(hora_entrada) >= ?";
+            $params[] = $data_inicial;
+        } elseif (!empty($data_final)) {
+            // Apenas data final: até ela
+            $whereConditions[] = "DATE(hora_entrada) <= ?";
+            $params[] = $data_final;
         }
         
         // Filtro por empresa

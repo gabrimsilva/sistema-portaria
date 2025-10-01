@@ -84,16 +84,20 @@ $canDeleteInline = $authService->hasPermission('relatorios.excluir_linha');
                                     <div class="bg-light p-3 rounded">
                                         <form method="GET" class="row align-items-end">
                                             <div class="col-md-2">
-                                                <label >Data de Entrada:</label>
-                                                <input type="date" name="data_entrada" class="form-control" value="<?= htmlspecialchars($_GET['data_entrada'] ?? '') ?>">
+                                                <label>Data Inicial:</label>
+                                                <input type="date" name="data_inicial" class="form-control" value="<?= htmlspecialchars($_GET['data_inicial'] ?? '') ?>" placeholder="Início">
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label>Data Final:</label>
+                                                <input type="date" name="data_final" class="form-control" value="<?= htmlspecialchars($_GET['data_final'] ?? '') ?>" placeholder="Fim">
                                             </div>
                                             <div class="col-md-2">
                                                 <label >Empresa:</label>
                                                 <input type="text" name="empresa" class="form-control" placeholder="Nome da empresa" value="<?= htmlspecialchars($_GET['empresa'] ?? '') ?>">
                                             </div>
                                             <div class="col-md-2">
-                                                <label >Funcionário Responsável:</label>
-                                                <input type="text" name="funcionario_responsavel" class="form-control" placeholder="Nome do responsável" value="<?= htmlspecialchars($_GET['funcionario_responsavel'] ?? '') ?>">
+                                                <label >Responsável:</label>
+                                                <input type="text" name="funcionario_responsavel" class="form-control" placeholder="Nome" value="<?= htmlspecialchars($_GET['funcionario_responsavel'] ?? '') ?>">
                                             </div>
                                             <div class="col-md-2">
                                                 <label >Setor:</label>
@@ -105,10 +109,6 @@ $canDeleteInline = $authService->hasPermission('relatorios.excluir_linha');
                                                         </option>
                                                     <?php endforeach; ?>
                                                 </select>
-                                            </div>
-                                            <div class="col-md-2">
-                                                <label >Buscar:</label>
-                                                <input type="text" name="search" class="form-control" placeholder="Nome ou CPF" value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
                                             </div>
                                             <div class="col-md-2">
                                                 <button type="submit" class="btn btn-primary w-100">
@@ -126,8 +126,11 @@ $canDeleteInline = $authService->hasPermission('relatorios.excluir_linha');
                                 <div class="col-md-6">
                                     <p class="text-muted mb-0">
                                         <i class="fas fa-list"></i> Total: <?= $paginationData['total_records'] ?> registros
-                                        <?php if (!empty($_GET['data_entrada'])): ?>
-                                            | <i class="fas fa-calendar"></i> Data: <?= date('d/m/Y', strtotime($_GET['data_entrada'])) ?>
+                                        <?php if (!empty($_GET['data_inicial']) || !empty($_GET['data_final'])): ?>
+                                            | <i class="fas fa-calendar"></i> Período: 
+                                            <?= !empty($_GET['data_inicial']) ? date('d/m/Y', strtotime($_GET['data_inicial'])) : '...' ?>
+                                            até
+                                            <?= !empty($_GET['data_final']) ? date('d/m/Y', strtotime($_GET['data_final'])) : '...' ?>
                                         <?php endif; ?>
                                     </p>
                                 </div>

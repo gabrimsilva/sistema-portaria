@@ -90,7 +90,8 @@ class PrestadoresServicoController {
         date_default_timezone_set('America/Sao_Paulo');
         
         // Parâmetros de filtro
-        $data = $_GET['data'] ?? date('Y-m-d'); // Padrão: hoje
+        $data_inicial = $_GET['data_inicial'] ?? '';
+        $data_final = $_GET['data_final'] ?? '';
         $setor = $_GET['setor'] ?? '';
         $status = $_GET['status'] ?? 'todos'; // todos|aberto|finalizado
         $empresa = $_GET['empresa'] ?? '';
@@ -120,12 +121,27 @@ class PrestadoresServicoController {
         $params = [];
         $countParams = [];
         
-        // Filtro por data
-        if (!empty($data)) {
-            $query .= " AND DATE(entrada) = ?";
-            $countQuery .= " AND DATE(entrada) = ?";
-            $params[] = $data;
-            $countParams[] = $data;
+        // Filtro por período (data inicial e/ou final)
+        if (!empty($data_inicial) && !empty($data_final)) {
+            // Ambas as datas: filtrar entre elas
+            $query .= " AND DATE(entrada) BETWEEN ? AND ?";
+            $countQuery .= " AND DATE(entrada) BETWEEN ? AND ?";
+            $params[] = $data_inicial;
+            $params[] = $data_final;
+            $countParams[] = $data_inicial;
+            $countParams[] = $data_final;
+        } elseif (!empty($data_inicial)) {
+            // Apenas data inicial: a partir dela
+            $query .= " AND DATE(entrada) >= ?";
+            $countQuery .= " AND DATE(entrada) >= ?";
+            $params[] = $data_inicial;
+            $countParams[] = $data_inicial;
+        } elseif (!empty($data_final)) {
+            // Apenas data final: até ela
+            $query .= " AND DATE(entrada) <= ?";
+            $countQuery .= " AND DATE(entrada) <= ?";
+            $params[] = $data_final;
+            $countParams[] = $data_final;
         }
         
         // Filtro por setor

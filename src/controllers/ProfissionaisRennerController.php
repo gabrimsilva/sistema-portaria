@@ -42,7 +42,8 @@ class ProfissionaisRennerController {
         $search = $_GET['search'] ?? '';
         $setor = $_GET['setor'] ?? '';
         $status = $_GET['status'] ?? '';
-        $data = $_GET['data'] ?? date('Y-m-d');
+        $data_inicial = $_GET['data_inicial'] ?? '';
+        $data_final = $_GET['data_final'] ?? '';
         $page = max(1, intval($_GET['page'] ?? 1));
         $pageSize = max(1, min(100, intval($_GET['pageSize'] ?? 20)));
         $offset = ($page - 1) * $pageSize;
@@ -59,9 +60,22 @@ class ProfissionaisRennerController {
         }
         $params = [];
         
-        if ($isReport && !empty($data)) {
-            $query .= " AND DATE(r.entrada_at) = ?";
-            $params[] = $data;
+        if ($isReport) {
+            // Filtro por período (data inicial e/ou final)
+            if (!empty($data_inicial) && !empty($data_final)) {
+                // Ambas as datas: filtrar entre elas
+                $query .= " AND DATE(r.entrada_at) BETWEEN ? AND ?";
+                $params[] = $data_inicial;
+                $params[] = $data_final;
+            } elseif (!empty($data_inicial)) {
+                // Apenas data inicial: a partir dela
+                $query .= " AND DATE(r.entrada_at) >= ?";
+                $params[] = $data_inicial;
+            } elseif (!empty($data_final)) {
+                // Apenas data final: até ela
+                $query .= " AND DATE(r.entrada_at) <= ?";
+                $params[] = $data_final;
+            }
         }
         
         if (!empty($search)) {
@@ -103,9 +117,17 @@ class ProfissionaisRennerController {
                            WHERE r.tipo = 'profissional_renner'";
             $countParams = [];
             
-            if (!empty($data)) {
-                $countQuery .= " AND DATE(r.entrada_at) = ?";
-                $countParams[] = $data;
+            // Filtro por período no count também
+            if (!empty($data_inicial) && !empty($data_final)) {
+                $countQuery .= " AND DATE(r.entrada_at) BETWEEN ? AND ?";
+                $countParams[] = $data_inicial;
+                $countParams[] = $data_final;
+            } elseif (!empty($data_inicial)) {
+                $countQuery .= " AND DATE(r.entrada_at) >= ?";
+                $countParams[] = $data_inicial;
+            } elseif (!empty($data_final)) {
+                $countQuery .= " AND DATE(r.entrada_at) <= ?";
+                $countParams[] = $data_final;
             }
             if (!empty($search)) {
                 $countQuery .= " AND p.nome ILIKE ?";

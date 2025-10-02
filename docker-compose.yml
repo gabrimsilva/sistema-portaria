@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: controle-portaria-app
+    ports:
+      - "8080:80"
+    environment:
+      - TZ=America/Sao_Paulo
+      - PGHOST=db
+      - PGPORT=5432
+      - PGDATABASE=access_control
+      - PGUSER=postgres
+      - PGPASSWORD=renner@postgres2024
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./uploads:/var/www/html/uploads
+      - ./storage:/var/www/html/storage
+      - ./logs:/var/www/html/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/login"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - renner-network
+    restart: unless-stopped
+
+  db:
+    image: postgres:15-alpine
+    container_name: controle-portaria-db
+    environment:
+      - TZ=America/Sao_Paulo
+      - POSTGRES_DB=access_control
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=renner@postgres2024
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/init.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./docker/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d access_control"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - renner-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  renner-network:
+    driver: bridge

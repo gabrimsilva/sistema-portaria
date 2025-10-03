@@ -1,0 +1,209 @@
+🚀 GUIA COMPLETO DE DEPLOY VIA GITHUB ACTIONS
+==============================================
+
+Este guia configura deploy automático: GitHub push → Build Docker → Deploy Ubuntu
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 PRÉ-REQUISITOS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. ✅ Conta no Docker Hub (https://hub.docker.com)
+2. ✅ Repositório no GitHub
+3. ✅ Servidor Ubuntu 24.04 com acesso SSH
+4. ✅ Docker instalado no servidor
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PARTE 1: CONFIGURAR DOCKER HUB
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Acesse: https://hub.docker.com
+2. Vá em Account Settings → Security → New Access Token
+3. Nome: "GitHub Actions Deploy"
+4. Permissions: Read & Write
+5. Copie o token gerado (só aparece uma vez!)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PARTE 2: CONFIGURAR SERVIDOR UBUNTU
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Conecte no servidor via SSH:
+   ssh root@SEU-IP-SERVIDOR
+
+2. Execute o script de configuração:
+   bash setup-server.sh
+
+3. O script vai:
+   ✅ Instalar Docker
+   ✅ Criar usuário deployuser
+   ✅ Gerar chave SSH
+   ✅ Mostrar chave privada para copiar
+
+4. COPIE A CHAVE PRIVADA exibida no final!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PARTE 3: CONFIGURAR GITHUB SECRETS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Acesse seu repositório no GitHub
+2. Vá em: Settings → Secrets and variables → Actions
+3. Clique em "New repository secret"
+4. Adicione estes 5 secrets:
+
+┌──────────────────┬────────────────────────────────────┐
+│ Nome do Secret   │ Valor                              │
+├──────────────────┼────────────────────────────────────┤
+│ DOCKER_USERNAME  │ Seu usuário do Docker Hub          │
+│ DOCKER_PASSWORD  │ Token gerado na Parte 1            │
+│ SERVER_HOST      │ IP do servidor (ex: 203.0.113.45)  │
+│ SERVER_USER      │ deployuser                         │
+│ SSH_PRIVATE_KEY  │ Chave privada da Parte 2           │
+└──────────────────┴────────────────────────────────────┘
+
+IMPORTANTE: Cole a chave SSH COMPLETA incluindo:
+-----BEGIN OPENSSH PRIVATE KEY-----
+(conteúdo)
+-----END OPENSSH PRIVATE KEY-----
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PARTE 4: CONFIGURAR SERVIDOR PARA PRIMEIRO DEPLOY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Conecte como deployuser:
+   ssh deployuser@SEU-IP-SERVIDOR
+
+2. Criar estrutura:
+   cd ~/controle-portaria
+   mkdir -p storage uploads logs docker
+
+3. Copie os arquivos de configuração:
+   # Na sua máquina local:
+   scp deploy/docker-compose.prod.yml deployuser@SEU-IP:/home/deployuser/controle-portaria/docker-compose.yml
+   scp deploy/.env.example deployuser@SEU-IP:/home/deployuser/controle-portaria/.env
+   scp docker/init.sql deployuser@SEU-IP:/home/deployuser/controle-portaria/docker/
+   scp docker/seed.sql deployuser@SEU-IP:/home/deployuser/controle-portaria/docker/
+
+4. Edite o .env no servidor:
+   nano .env
+   
+   Configure:
+   - DOCKER_USERNAME (seu usuário Docker Hub)
+   - DB_PASSWORD (senha segura)
+   - SESSION_SECRET (chave aleatória)
+
+5. Inicie o banco de dados:
+   docker-compose up -d db
+   
+   Aguarde ~30 segundos e verifique:
+   docker-compose logs db
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PARTE 5: FAZER PRIMEIRO DEPLOY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Na sua máquina local, faça push para GitHub:
+   git add .
+   git commit -m "Setup GitHub Actions deploy"
+   git push origin main
+
+2. Acompanhe o deploy:
+   - Acesse GitHub → seu repositório → Actions
+   - Clique no workflow "Deploy Controle de Portaria"
+   - Veja os logs em tempo real
+
+3. Após ~5 minutos:
+   ✅ Build completo
+   ✅ Push para Docker Hub
+   ✅ Deploy no servidor
+   ✅ Aplicação rodando!
+
+4. Acesse:
+   http://SEU-IP-SERVIDOR:8080
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 WORKFLOW AUTOMÁTICO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Agora toda vez que você fizer push:
+
+1. ✅ GitHub Actions detecta push
+2. ✅ Constrói imagem Docker
+3. ✅ Testa sintaxe PHP
+4. ✅ Envia para Docker Hub
+5. ✅ Conecta no servidor via SSH
+6. ✅ Baixa nova versão
+7. ✅ Reinicia aplicação
+8. ✅ Verifica se está funcionando
+
+Tempo total: ~5 minutos
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔍 COMANDOS ÚTEIS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Ver logs da aplicação
+docker-compose logs -f app
+
+# Ver status dos containers
+docker-compose ps
+
+# Reiniciar aplicação
+docker-compose restart app
+
+# Ver logs de erro
+docker-compose logs app | grep -i error
+
+# Fazer backup do banco
+docker exec controle-portaria-db-1 pg_dump -U postgres controle_portaria > backup.sql
+
+# Forçar novo deploy manual
+cd ~/controle-portaria
+docker-compose pull app
+docker-compose up -d --force-recreate app
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️ TROUBLESHOOTING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Problema: GitHub Actions falha no SSH
+→ Verifique se a chave SSH está correta no secret
+→ Teste SSH manualmente: ssh deployuser@SEU-IP
+
+Problema: Docker pull falha
+→ Verifique DOCKER_USERNAME e DOCKER_PASSWORD
+→ Teste login: docker login
+
+Problema: Container não inicia
+→ Veja logs: docker-compose logs app
+→ Verifique .env está configurado
+→ Verifique DATABASE_URL está correto
+
+Problema: Aplicação não responde
+→ Verifique porta: docker-compose ps
+→ Verifique firewall: sudo ufw status
+→ Libere porta: sudo ufw allow 8080/tcp
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ CHECKLIST FINAL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+□ Token Docker Hub gerado
+□ Servidor Ubuntu configurado (setup-server.sh executado)
+□ 5 secrets configurados no GitHub
+□ docker-compose.yml e .env no servidor
+□ Banco de dados inicializado (docker-compose up -d db)
+□ Primeiro push feito
+□ Aplicação acessível em http://SEU-IP:8080
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎉 PRONTO! Deploy automático configurado!

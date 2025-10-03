@@ -1077,12 +1077,13 @@ class ConfigController {
                 throw new Exception('Usuário não encontrado');
             }
             
-            // Alternar status
-            $newStatus = !$currentUser['ativo'];
+            // Alternar status (converter explicitamente para boolean)
+            $currentStatus = filter_var($currentUser['ativo'], FILTER_VALIDATE_BOOLEAN);
+            $newStatus = !$currentStatus;
             
             $this->db->query(
                 "UPDATE usuarios SET ativo = ? WHERE id = ?",
-                [$newStatus, $userId]
+                [($newStatus ? 'true' : 'false'), $userId]
             );
             
             // Log de auditoria

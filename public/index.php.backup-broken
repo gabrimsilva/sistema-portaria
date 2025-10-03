@@ -395,6 +395,34 @@ try {
             } else {
                 $action = $_GET['action'] ?? 'index';
             }
+            break;
+        
+        // Rotas dinâmicas de usuários (toggle-status, reset-password, update, etc)
+        default:
+            if (preg_match('#^config/users/(\d+)/(toggle-status|reset-password)$#', $path, $matches)) {
+                require_once '../src/controllers/ConfigController.php';
+                $controller = new ConfigController();
+                
+                $userId = $matches[1];
+                $action = 'users/' . $userId . '/' . $matches[2];
+                break;
+            } else if (preg_match('#^config/users/(\d+)$#', $path, $matches)) {
+                require_once '../src/controllers/ConfigController.php';
+                $controller = new ConfigController();
+                
+                $userId = $matches[1];
+                $action = 'users/' . $userId;
+                break;
+            }
+            goto default_route;
+    }
+    
+    // Processar ação do ConfigController se foi inicializado
+    if (isset($controller) && $controller instanceof ConfigController) {
+        switch (true) {
+            case $action === 'index':
+                $controller->index();
+                break;
             switch ($action) {
                 case 'organization':
                     if ($_SERVER['REQUEST_METHOD'] === 'GET') {
@@ -510,24 +538,8 @@ try {
             break;
         
         default:
-            // Verificar se é rota de config dinâmica (usuários)
-            if (preg_match('#^config/users/\d+/(toggle-status|reset-password)$#', $path)) {
-                require_once '../src/controllers/ConfigController.php';
-                $controller = new ConfigController();
-                $action = substr($path, strlen('config/'));
-                
-                // Processar ação
-                if (preg_match('/^users\/(\d+)\/toggle-status$/', $action, $matches)) {
-                    $_GET['id'] = $matches[1];
-                    $controller->toggleUserStatus();
-                } elseif (preg_match('/^users\/(\d+)\/reset-password$/', $action, $matches)) {
-                    $_GET['id'] = $matches[1];
-                    $controller->resetUserPassword();
-                }
-                exit;
-            }
             // 🎨 Páginas de demonstração
-            else if ($path === 'demo/components') {
+            if ($path === 'demo/components') {
                 require_once '../src/services/LayoutService.php';
                 require_once '../src/services/ComponentService.php';
                 require_once '../views/demo/components.php';

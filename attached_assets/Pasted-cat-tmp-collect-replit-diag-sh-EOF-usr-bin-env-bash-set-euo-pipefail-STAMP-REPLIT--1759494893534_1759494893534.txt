@@ -1,0 +1,51 @@
+cat > /tmp/collect_replit_diag.sh << "EOF"
+#!/usr/bin/env bash
+set -euo pipefail
+STAMP="REPLIT_$(date +%Y%m%d-%H%M%S)"
+OUT="/tmp/diag_${STAMP}"
+mkdir -p "$OUT"
+log(){ echo "[$(date +%H:%M:%S)] $*"; }
+
+log "1) Ambiente"
+{ uname -a || true; printenv | sort; } > "$OUT/sys-env.txt" 2>&1 || true
+
+log "2) Web/PHP"
+{
+  php -v || true; echo; php -m || true; echo;
+  php -i 2>/dev/null | sed -n "1,300p" || true; echo;
+  apache2ctl -V 2>/dev/null || true; echo; apache2ctl -M 2>/dev/null || true; echo;
+  nginx -v 2>&1 || true; echo; nginx -T 2>/dev/null | sed -n "1,200p" || true;
+} > "$OUT/web-runtime.txt" 2>&1 || true
+
+log "3) Runtimes/Deps"
+{
+  node -v 2>/dev/null || true; npm -v 2>/dev/null || true; echo;
+  npm ls --depth=0 2>/dev/null | sed -n "1,200p" || true; echo;
+  python3 -V 2>/dev/null || python -V 2>/dev/null || true; pip3 -V 2>/dev/null || pip -V 2>/dev/null || true; echo;
+  pip3 freeze 2>/dev/null | sed -n "1,200p" || pip freeze 2>/dev/null | sed -n "1,200p" || true; echo;
+  composer -V 2>/dev/null || true; echo; composer show 2>/dev/null | sed -n "1,300p" || true;
+} > "$OUT/deps.txt" 2>&1 || true
+
+APPBASE="$(pwd)"
+{
+  echo "APPBASE=$APPBASE"
+  find "$APPBASE" -maxdepth 2 -type f | sed "s|$APPBASE||" | sort | sed -n "1,400p"
+  echo; [ -f "$APPBASE/composer.json" ] && sed -n "1,400p" "$APPBASE/composer.json"
+  echo; [ -f "$APPBASE/package.json" ] && sed -n "1,400p" "$APPBASE/package.json"
+  echo; [ -f "$APPBASE/requirements.txt" ] && sed -n "1,400p" "$APPBASE/requirements.txt"
+  echo; [ -f "$APPBASE/pyproject.toml" ] && sed -n "1,400p" "$APPBASE/pyproject.toml"
+  echo; if [ -f "$APPBASE/.env" ]; then sed -E "s/=.*/=****/g" "$APPBASE/.env" | sed -n "1,400p"; else echo "sem .env"; fi
+} > "$OUT/app-structure.txt" 2>&1 || true
+
+(php -m 2>/dev/null || true) | sort > "$OUT/php-modules.txt" || true
+(apache2ctl -M 2>/dev/null || true) | sed "s/ (shared)//" | awk "{print \$1}" | sort > "$OUT/apache-modules.txt" || true
+(node -v 2>/dev/null && npm ls --depth=0 2>/dev/null | sed -n "1,400p") > "$OUT/node-deps.txt" 2>&1 || true
+(pip3 freeze 2>/dev/null || pip freeze 2>/dev/null) | sort > "$OUT/python-freeze.txt" 2>&1 || true
+(composer show 2>/dev/null) | awk "{print \$1}" | sort > "$OUT/composer-packages.txt" 2>/dev/null || true
+
+tar -C /tmp -czf "/tmp/${STAMP}.tar.gz" "diag_${STAMP}"
+echo "/tmp/${STAMP}.tar.gz"
+EOF
+
+chmod +x /tmp/collect_replit_diag.sh
+bash /tmp/collect_replit_diag.sh

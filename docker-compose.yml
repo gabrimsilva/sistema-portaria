@@ -13,6 +13,8 @@ services:
       - PGDATABASE=access_control
       - PGUSER=postgres
       - PGPASSWORD=renner@postgres2024
+      # DATABASE_URL será gerado automaticamente no entrypoint
+      # SESSION_SECRET será gerado automaticamente se não fornecido
     depends_on:
       db:
         condition: service_healthy

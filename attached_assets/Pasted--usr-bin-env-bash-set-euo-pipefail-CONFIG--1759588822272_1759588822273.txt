@@ -1,0 +1,217 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+###############################################
+# CONFIG — ajuste conforme seu ambiente
+###############################################
+VM_USER="super"                # usuário na VM
+VM_HOST="172.16.11.10"         # IP/FQDN da VM
+SSH_PORT="22"                  # porta SSH
+CONTAINER_APP="controle-portaria-app"
+APP_ROOT_IN_CONTAINER="/var/www/html"
+TEST_USER_ID="36"              # ID de teste para toggle
+APPLY=0                        # 0=apenas comparar, 1=aplicar hotfix
+
+# Passe --apply para aplicar de fato
+if [[ "${1:-}" == "--apply" ]]; then APPLY=1; fi
+
+# Arquivos candidatos (ajuste/adicione se necessário)
+CANDIDATES=(
+  "app/Controllers/UserController.php"
+  "routes/web.php"
+  "public/.htaccess"
+  "resources/views/config/users.blade.php"
+  "resources/views/config/users/index.blade.php"
+  "resources/views/config/users/show.blade.php"
+  "resources/views/config/_partials/users"   # diretório opcional
+)
+
+###############################################
+# PRECHECKS (no Replit/PC)
+###############################################
+need(){ command -v "$1" >/dev/null 2>&1 || { echo "Falta '$1' no host dev."; exit 1; }; }
+need ssh; need scp; need tar; need awk; need sed; need sha256sum || need shasum || true
+SHA="sha256sum"; command -v sha256sum >/dev/null 2>&1 || SHA="shasum -a 256"
+
+echo "[1/8] Testando SSH em ${VM_USER}@${VM_HOST}:${SSH_PORT}..."
+ssh -p "$SSH_PORT" -o BatchMode=yes -o ConnectTimeout=5 "${VM_USER}@${VM_HOST}" "echo ok" >/dev/null
+
+###############################################
+# COLETA LOCAL
+###############################################
+echo "[2/8] Selecionando arquivos locais..."
+LOCAL_LIST=()
+for item in "${CANDIDATES[@]}"; do
+  if [ -d "$item" ]; then
+    while IFS= read -r -d '' f; do LOCAL_LIST+=("$f"); done < <(find "$item" -type f -print0)
+  elif [ -f "$item" ]; then
+    LOCAL_LIST+=("$item")
+  fi
+done
+
+if [ ${#LOCAL_LIST[@]} -eq 0 ]; then
+  echo "Nenhum arquivo alvo encontrado localmente. Ajuste CANDIDATES."
+  exit 1
+fi
+
+printf '  + %s\n' "${LOCAL_LIST[@]}"
+
+STAMP="$(date +%Y%m%d-%H%M%S)"
+WORK="/tmp/hotfix_toggle_$STAMP"
+mkdir -p "$WORK/local" "$WORK/remote"
+MAN_LOCAL="$WORK/local/MANIFEST.local.txt"
+MAN_REMOTE="$WORK/remote/MANIFEST.remote.txt"
+
+# Monta pacote local (estrutura relativa ao APP_ROOT_IN_CONTAINER)
+echo "[3/8] Montando pacote LOCAL..."
+for f in "${LOCAL_LIST[@]}"; do
+  mkdir -p "$WORK/local/$(dirname "$f")"
+  cp -a "$f" "$WORK/local/$f"
+done
+( cd "$WORK/local" && tar -czf "$WORK/hotfix_local.tar.gz" . )
+
+# Manifesto local
+( cd "$WORK/local" && find . -type f -print0 | xargs -0 $SHA | sed 's|  \./|  |' ) > "$MAN_LOCAL" || true
+
+###############################################
+# COLETA REMOTA (VM → versões atuais do CONTAINER)
+###############################################
+echo "[4/8] Coletando versões REMOTAS do container..."
+REMOTE_TMP="/tmp/portaria_hotfix_$STAMP"
+ssh -p "$SSH_PORT" "${VM_USER}@${VM_HOST}" "mkdir -p '$REMOTE_TMP/paths'"
+
+# Cria lista de caminhos alvo no padrão container
+PATHS=()
+for f in "${LOCAL_LIST[@]}"; do
+  PATHS+=("$APP_ROOT_IN_CONTAINER/$f")
+done
+
+# Script remoto: empacota os arquivos atuais do container
+read -r -d '' REMOTE_SCRIPT <<'EOS'
+set -euo pipefail
+REMOTE_TMP="$1"; CONTAINER_APP="$2"; shift 2
+# Monta comando tar dentro do container (somente arquivos que existirem)
+INLIST=("$@")
+# Lista existente
+EXIST=()
+for p in "${INLIST[@]}"; do
+  docker exec -i "$CONTAINER_APP" bash -lc "test -f '$p'" >/dev/null 2>&1 && EXIST+=("$p") || true
+done
+if [ ${#EXIST[@]} -eq 0 ]; then
+  # Nada existe — cria tar vazio
+  mkdir -p "$REMOTE_TMP/remote"
+  tar -czf "$REMOTE_TMP/remote_current.tar.gz" -C "$REMOTE_TMP" . >/dev/null 2>&1 || true
+  exit 0
+fi
+# Tira prefixo raiz e gera tar relativo a $APP_ROOT_IN_CONTAINER
+ROOT="$(dirname "${EXIST[0]}")"  # não é perfeito, mas usaremos -C fixo ao APP_ROOT
+# Como queremos caminhos relativos a /var/www/html:
+# Montamos uma lista relativa
+REL=()
+for p in "${EXIST[@]}"; do
+  REL+=("${p#/var/www/html/}")
+done
+# Gera tar dentro do container e grava no host VM
+docker exec -i "$CONTAINER_APP" bash -lc "tar -czf - -C /var/www/html ${REL[*]@Q}" > "$REMOTE_TMP/remote_current.tar.gz"
+EOS
+
+# Executa o script remoto
+ssh -p "$SSH_PORT" "${VM_USER}@${VM_HOST}" "bash -lc '$(printf "%q" "$REMOTE_SCRIPT")' bash '$REMOTE_TMP' '$CONTAINER_APP' ${PATHS[*]@Q}"
+
+# Baixa o tar remoto para comparar
+scp -P "$SSH_PORT" "${VM_USER}@${VM_HOST}:${REMOTE_TMP}/remote_current.tar.gz" "$WORK/remote_current.tar.gz" >/dev/null 2>&1 || true
+mkdir -p "$WORK/remote"
+tar -xzf "$WORK/remote_current.tar.gz" -C "$WORK/remote" >/dev/null 2>&1 || true
+
+# Manifesto remoto
+if [ -d "$WORK/remote" ]; then
+  ( cd "$WORK/remote" && find . -type f -print0 | xargs -0 $SHA | sed 's|  \./|  |' ) > "$MAN_REMOTE" || true
+else
+  touch "$MAN_REMOTE"
+fi
+
+###############################################
+# COMPARAÇÃO (hash e diff)
+###############################################
+echo "[5/8] Comparando LOCAL x REMOTO..."
+echo "--- Arquivos (LOCAL) ---"
+cat "$MAN_LOCAL" || true
+echo
+echo "--- Arquivos (REMOTO) ---"
+cat "$MAN_REMOTE" || true
+echo
+
+echo "--- DIFF (se existir arquivo igual nos dois lados) ---"
+DIFF_FOUND=0
+while IFS= read -r lf; do
+  rel="${lf#*  }"
+  if [ -f "$WORK/remote/$rel" ] && [ -f "$WORK/local/$rel" ]; then
+    if ! diff -u "$WORK/remote/$rel" "$WORK/local/$rel" >/dev/null; then
+      echo "### diff: $rel"
+      diff -u "$WORK/remote/$rel" "$WORK/local/$rel" || true
+      DIFF_FOUND=1
+    fi
+  fi
+done < <(cut -d' ' -f2- "$MAN_LOCAL")
+[ $DIFF_FOUND -eq 0 ] && echo "(sem diferenças de conteúdo encontradas nos arquivos coletados)"
+
+###############################################
+# APLICAR HOTFIX (opcional)
+###############################################
+if [ "$APPLY" -eq 1 ]; then
+  echo "[6/8] Enviando pacote LOCAL para a VM..."
+  scp -P "$SSH_PORT" "$WORK/hotfix_local.tar.gz" "${VM_USER}@${VM_HOST}:${REMOTE_TMP}/hotfix.tar.gz"
+
+  echo "[7/8] Aplicando no container com BACKUP + reload do Apache..."
+  read -r -d '' REMOTE_APPLY <<'EOS2'
+set -euo pipefail
+REMOTE_TMP="$1"; CONTAINER_APP="$2"; APP_ROOT="$3"
+
+# Descompacta pacote local
+mkdir -p "$REMOTE_TMP/apply"
+tar -xzf "$REMOTE_TMP/hotfix.tar.gz" -C "$REMOTE_TMP/apply"
+
+# Lista de arquivos relativos
+mapfile -t RELS < <(cd "$REMOTE_TMP/apply" && find . -type f | sed "s|^\./||")
+
+# Cria pasta de backup no container
+BKP="${APP_ROOT}/.hotfix_backup/$(date +%Y%m%d-%H%M%S)"
+docker exec -i "$CONTAINER_APP" bash -lc "mkdir -p '$BKP'"
+
+APPLIED=0
+for rel in "${RELS[@]}"; do
+  SRC="$REMOTE_TMP/apply/$rel"
+  DST="${APP_ROOT}/$rel"
+
+  # Backup se existir
+  docker exec -i "$CONTAINER_APP" bash -lc "if [ -f '$DST' ]; then mkdir -p '$(dirname "$BKP/$rel")'; cp -a '$DST' '$BKP/$rel'; fi"
+  # Garante diretório de destino
+  docker exec -i "$CONTAINER_APP" bash -lc "mkdir -p '$(dirname "$DST")'"
+  # Copia novo arquivo
+  docker cp "$SRC" "${CONTAINER_APP}:${DST}"
+  echo " + $rel"
+  APPLIED=$((APPLIED+1))
+done
+echo "Arquivos aplicados: $APPLIED"
+
+# Valida e recarrega Apache
+docker exec -i "$CONTAINER_APP" bash -lc "apachectl -t"
+docker exec -i "$CONTAINER_APP" bash -lc "service apache2 reload"
+
+# Mostra último backup
+echo "Backup em: $BKP"
+EOS2
+
+  ssh -p "$SSH_PORT" "${VM_USER}@${VM_HOST}" "bash -lc '$(printf "%q" "$REMOTE_APPLY")' bash '$REMOTE_TMP' '$CONTAINER_APP' '$APP_ROOT_IN_CONTAINER'"
+
+  echo "[8/8] Testes de rota na VM:"
+  ssh -p "$SSH_PORT" "${VM_USER}@${VM_HOST}" "bash -lc '
+    set -e
+    echo \"[POST] /config/users/${TEST_USER_ID}/toggle-status ->\" \$(curl -s -o /dev/null -w \"%{http_code}\" -X POST http://localhost:8080/config/users/${TEST_USER_ID}/toggle-status)
+    echo \"[POST] /users/${TEST_USER_ID}/toggle-status  ->\" \$(curl -s -o /dev/null -w \"%{http_code}\" -X POST http://localhost:8080/users/${TEST_USER_ID}/toggle-status)
+  '"
+else
+  echo ">> Modo comparação apenas (não aplicado). Rode com:  $0 --apply"
+fi
+
+echo "Artefatos locais em: $WORK"

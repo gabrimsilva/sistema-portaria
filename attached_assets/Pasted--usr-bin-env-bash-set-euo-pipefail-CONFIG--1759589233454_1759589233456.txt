@@ -1,0 +1,185 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+###############################################
+# CONFIG — ajuste se precisar
+###############################################
+VM_USER="super"
+VM_HOST="10.3.1.135"              # <-- seu IP confirmado
+SSH_PORT="22"
+CONTAINER_APP="controle-portaria-app"
+APP_ROOT_IN_CONTAINER="/var/www/html"   # confirme com o ls que citei acima
+TEST_USER_ID="36"
+APPLY=0   # 0 = só comparar; 1 = aplicar (use --apply)
+
+if [[ "${1:-}" == "--apply" ]]; then APPLY=1; fi
+
+# Arquivos/diretórios relevantes para o toggle (PHP puro)
+CANDIDATES=(
+  "src/controllers/UserController.php"
+  "src/controllers/ConfigController.php"
+  "public/index.php"
+  "public/.htaccess"
+  "config/config.php"
+  "config/*.php"
+  "views/config/users.php"
+  "views/config/*.php"
+  "views/partials/*.php"
+  "assets/js/*.js"
+  "assets/css/*.css"
+)
+
+###############################################
+# PRECHECKS
+###############################################
+need(){ command -v "$1" >/dev/null 2>&1 || { echo "Falta '$1' no host dev."; exit 1; }; }
+need ssh; need scp; need tar; need awk; need sed
+if command -v sha256sum >/dev/null 2>&1; then SHA="sha256sum"; else SHA="shasum -a 256"; fi
+
+echo "[1/8] Testando SSH em ${VM_USER}@${VM_HOST}:${SSH_PORT}..."
+ssh -p "$SSH_PORT" -o BatchMode=yes -o ConnectTimeout=5 "${VM_USER}@${VM_HOST}" "echo ok" >/dev/null
+
+###############################################
+# COLETA LOCAL
+###############################################
+echo "[2/8] Selecionando arquivos locais..."
+LOCAL_LIST=()
+for pattern in "${CANDIDATES[@]}"; do
+  matches=( $pattern )
+  for m in "${matches[@]}"; do
+    if [ -d "$m" ]; then
+      while IFS= read -r -d '' f; do LOCAL_LIST+=("$f"); done < <(find "$m" -type f -print0)
+    elif [ -f "$m" ]; then
+      LOCAL_LIST+=("$m")
+    fi
+  done
+done
+mapfile -t LOCAL_LIST < <(printf "%s\n" "${LOCAL_LIST[@]}" | sort -u)
+[ ${#LOCAL_LIST[@]} -eq 0 ] && { echo "Nenhum arquivo alvo encontrado. Ajuste CANDIDATES."; exit 1; }
+printf '  + %s\n' "${LOCAL_LIST[@]}"
+
+STAMP="$(date +%Y%m%d-%H%M%S)"
+WORK="/tmp/hotfix_toggle_php_$STAMP"
+mkdir -p "$WORK/local" "$WORK/remote"
+MAN_LOCAL="$WORK/local/MANIFEST.local.txt"
+MAN_REMOTE="$WORK/remote/MANIFEST.remote.txt"
+
+echo "[3/8] Empacotando LOCAL..."
+for f in "${LOCAL_LIST[@]}"; do
+  mkdir -p "$WORK/local/$(dirname "$f")"
+  cp -a "$f" "$WORK/local/$f"
+done
+( cd "$WORK/local" && tar -czf "$WORK/hotfix_local.tar.gz" . )
+( cd "$WORK/local" && find . -type f -print0 | xargs -0 $SHA | sed 's|  \./|  |' ) > "$MAN_LOCAL" || true
+
+###############################################
+# COLETA REMOTA (pega versões atuais do container)
+###############################################
+echo "[4/8] Coletando REMOTO (container atual)..."
+REMOTE_TMP="/tmp/portaria_hotfix_$STAMP"
+ssh -p "$SSH_PORT" "${VM_USER}@${VM_HOST}" "mkdir -p '$REMOTE_TMP'"
+
+PATHS=()
+for f in "${LOCAL_LIST[@]}"; do
+  PATHS+=("$APP_ROOT_IN_CONTAINER/$f")
+done
+
+read -r -d '' REMOTE_SCRIPT <<'EOS'
+set -euo pipefail
+REMOTE_TMP="$1"; CONTAINER_APP="$2"; APP_ROOT="$3"; shift 3
+INLIST=("$@")
+EXIST=()
+for p in "${INLIST[@]}"; do
+  docker exec -i "$CONTAINER_APP" bash -lc "test -f '$p'" >/dev/null 2>&1 && EXIST+=("$p") || true
+done
+if [ ${#EXIST[@]} -eq 0 ]; then
+  mkdir -p "$REMOTE_TMP/remote"
+  tar -czf "$REMOTE_TMP/remote_current.tar.gz" -C "$REMOTE_TMP" . >/dev/null 2>&1 || true
+  exit 0
+fi
+REL=()
+for p in "${EXIST[@]}"; do
+  REL+=("${p#${APP_ROOT}/}")
+done
+docker exec -i "$CONTAINER_APP" bash -lc "tar -czf - -C '$APP_ROOT' ${REL[*]@Q}" > "$REMOTE_TMP/remote_current.tar.gz"
+EOS
+
+ssh -p "$SSH_PORT" "${VM_USER}@${VM_HOST}" "bash -lc '$(printf "%q" "$REMOTE_SCRIPT")' bash '$REMOTE_TMP' '$CONTAINER_APP' '$APP_ROOT_IN_CONTAINER' ${PATHS[*]@Q}"
+scp -P "$SSH_PORT" "${VM_USER}@${VM_HOST}:${REMOTE_TMP}/remote_current.tar.gz" "$WORK/remote_current.tar.gz" >/dev/null 2>&1 || true
+mkdir -p "$WORK/remote"
+tar -xzf "$WORK/remote_current.tar.gz" -C "$WORK/remote" >/dev/null 2>&1 || true
+( cd "$WORK/remote" && find . -type f -print0 | xargs -0 $SHA | sed 's|  \./|  |' ) > "$MAN_REMOTE" || true
+
+###############################################
+# COMPARAÇÃO (hash e diff)
+###############################################
+echo "[5/8] Comparando LOCAL x REMOTO..."
+echo "--- LOCAL ---";  cat "$MAN_LOCAL"  || true; echo
+echo "--- REMOTO ---"; cat "$MAN_REMOTE" || true; echo
+
+echo "--- DIFF ---"
+DIFF_FOUND=0
+while IFS= read -r lf; do
+  rel="${lf#*  }"
+  if [ -f "$WORK/remote/$rel" ] && [ -f "$WORK/local/$rel" ]; then
+    if ! diff -u "$WORK/remote/$rel" "$WORK/local/$rel" >/dev/null; then
+      echo "### diff: $rel"
+      diff -u "$WORK/remote/$rel" "$WORK/local/$rel" || true
+      DIFF_FOUND=1
+    fi
+  fi
+done < <(cut -d' ' -f2- "$MAN_LOCAL")
+[ $DIFF_FOUND -eq 0 ] && echo "(sem diferenças de conteúdo encontradas nos arquivos coletados)"
+
+###############################################
+# APLICAR (opcional)
+###############################################
+if [ "$APPLY" -eq 1 ]; then
+  echo "[6/8] Enviando pacote LOCAL para a VM..."
+  scp -P "$SSH_PORT" "$WORK/hotfix_local.tar.gz" "${VM_USER}@${VM_HOST}:${REMOTE_TMP}/hotfix.tar.gz"
+
+  echo "[7/8] Aplicando no container com BACKUP + reload do Apache..."
+  read -r -d '' REMOTE_APPLY <<'EOS2'
+set -euo pipefail
+REMOTE_TMP="$1"; CONTAINER_APP="$2"; APP_ROOT="$3"
+
+mkdir -p "$REMOTE_TMP/apply"
+tar -xzf "$REMOTE_TMP/hotfix.tar.gz" -C "$REMOTE_TMP/apply"
+
+mapfile -t RELS < <(cd "$REMOTE_TMP/apply" && find . -type f | sed "s|^\./||")
+
+BKP="${APP_ROOT}/.hotfix_backup/$(date +%Y%m%d-%H%M%S)"
+docker exec -i "$CONTAINER_APP" bash -lc "mkdir -p '$BKP'"
+
+APPLIED=0
+for rel in "${RELS[@]}"; do
+  SRC="$REMOTE_TMP/apply/$rel"
+  DST="${APP_ROOT}/$rel"
+
+  docker exec -i "$CONTAINER_APP" bash -lc "if [ -f '$DST' ]; then mkdir -p '$(dirname "$BKP/$rel")'; cp -a '$DST' '$BKP/$rel'; fi"
+  docker exec -i "$CONTAINER_APP" bash -lc "mkdir -p '$(dirname "$DST")'"
+  docker cp "$SRC" "${CONTAINER_APP}:${DST}"
+  echo " + $rel"
+  APPLIED=$((APPLIED+1))
+done
+echo "Arquivos aplicados: $APPLIED"
+
+docker exec -i "$CONTAINER_APP" bash -lc "apachectl -t"
+docker exec -i "$CONTAINER_APP" bash -lc "service apache2 reload"
+
+echo "Backup em: $BKP"
+EOS2
+
+  ssh -p "$SSH_PORT" "${VM_USER}@${VM_HOST}" "bash -lc '$(printf "%q" "$REMOTE_APPLY")' bash '$REMOTE_TMP' '$CONTAINER_APP' '$APP_ROOT_IN_CONTAINER'"
+
+  echo "[8/8] Testes de rota na VM:"
+  ssh -p "$SSH_PORT" "${VM_USER}@${VM_HOST}" "bash -lc '
+    set -e
+    echo \"[POST] /config/users/${TEST_USER_ID}/toggle-status ->\" \$(curl -s -o /dev/null -w \"%{http_code}\" -X POST http://localhost:8080/config/users/${TEST_USER_ID}/toggle-status)
+    echo \"[POST] /users/${TEST_USER_ID}/toggle-status  ->\" \$(curl -s -o /dev/null -w \"%{http_code}\" -X POST http://localhost:8080/users/${TEST_USER_ID}/toggle-status)
+  '"
+else
+  echo ">> Modo comparação apenas (não aplicado). Rode com:  $0 --apply"
+fi
+
+echo "Artefatos locais em: $WORK"

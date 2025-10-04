@@ -1,0 +1,90 @@
+cat > build_portaria_hotfix.sh <<'SH'
+#!/usr/bin/env bash
+set -euo pipefail
+
+# ===== Config =====
+OUTPUT="${1:-hotfix_local.tar.gz}"   # nome do .tar.gz (pode passar outro na linha de comando)
+AUTO="${AUTO:-0}"                    # AUTO=1 pula perguntas e inclui tudo que existir
+EXTRA="${EXTRA:-}"                   # caminhos extras separados por vírgula (EXTRA="path1,path2")
+
+# Candidatos comuns do projeto
+CANDIDATES=(
+  "src/controllers/ConfigController.php"
+  "src/controllers/AuthController.php"
+  "src/services"
+  "public/index.php"
+  "public/.htaccess"
+  "public/assets/js"
+  "public/assets/css"
+  "config/config.php"
+  "config/database.php"
+  "views/config"
+)
+
+# ===== Aux =====
+need(){ command -v "$1" >/dev/null 2>&1 || { echo "Falta '$1' no ambiente."; exit 1; }; }
+need tar; need awk; need sed; need find
+if command -v sha256sum >/dev/null 2>&1; then SHA="sha256sum"; else SHA="shasum -a 256"; fi
+
+IFS=',' read -r -a EXTRA_ARR <<< "${EXTRA:-}"
+for e in "${EXTRA_ARR[@]}"; do [ -n "${e:-}" ] && CANDIDATES+=("$e"); done
+
+# remove duplicados mantendo ordem
+uniq_list=()
+for p in "${CANDIDATES[@]}"; do
+  skip=0
+  for u in "${uniq_list[@]}"; do [ "$u" = "$p" ] && { skip=1; break; }; done
+  [ $skip -eq 0 ] && uniq_list+=("$p")
+done
+CANDIDATES=("${uniq_list[@]}")
+
+# Montagem da seleção
+SELECTED=()
+echo "Procurando caminhos existentes e perguntando o que incluir:"
+for p in "${CANDIDATES[@]}"; do
+  [ -e "$p" ] || { echo "  - (ignorado; não existe) $p"; continue; }
+  if [ "$AUTO" = "1" ]; then
+    echo "  + (incluído AUTO) $p"
+    SELECTED+=("$p")
+  else
+    read -r -p "Incluir '$p'? [Y/n] " ans
+    ans="${ans:-Y}"
+    case "$ans" in
+      y|Y) echo "  + (incluído) $p"; SELECTED+=("$p") ;;
+      *)   echo "  - (pulado)   $p" ;;
+    esac
+  fi
+done
+
+[ ${#SELECTED[@]} -eq 0 ] && { echo "Nada selecionado. Abortando."; exit 2; }
+
+STAMP="$(date +%Y%m%d-%H%M%S)"
+STAGE="/tmp/portaria_hotfix_$STAMP"
+mkdir -p "$STAGE"
+
+# Copia preservando caminho relativo
+echo "Copiando arquivos para área temporária: $STAGE"
+for p in "${SELECTED[@]}"; do
+  mkdir -p "$STAGE/$(dirname "$p")" 2>/dev/null || true
+  cp -a "$p" "$STAGE/$p"
+done
+
+# Manifesto (hash dos arquivos)
+( cd "$STAGE" && find . -type f -print0 | xargs -0 $SHA | sed 's|  \./|  |' ) > "$STAGE/MANIFEST.sha256.txt" || true
+
+# Empacota
+tar -czf "$OUTPUT" -C "$STAGE" .
+SIZE=$(du -h "$OUTPUT" | awk '{print $1}')
+
+echo
+echo "================ RESULTADO ================"
+echo "Arquivo criado: $OUTPUT  (tamanho: $SIZE)"
+echo "Conteúdo (top 20):"
+tar -tzf "$OUTPUT" | head -n 20
+echo "Manifesto salvo dentro do tar como: MANIFEST.sha256.txt"
+echo "=========================================="
+echo
+echo "Dica: no painel de arquivos do Replit, clique no '$OUTPUT' e faça Download."
+echo "Depois envie para a VM e aplique com seu script de aplicação."
+SH
+chmod +x build_portaria_hotfix.sh

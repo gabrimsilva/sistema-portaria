@@ -291,6 +291,16 @@ class ProfissionaisRennerController {
     
     public function edit() {
         $id = $_GET['id'] ?? null;
+        
+        if (!$id) {
+            $uri = $_SERVER['REQUEST_URI'] ?? '';
+            if (preg_match('/[?&]amp;id=(\d+)/', $uri, $matches)) {
+                $id = $matches[1];
+            } elseif (preg_match('/[?&]id=(\d+)/', $uri, $matches)) {
+                $id = $matches[1];
+            }
+        }
+        
         if (!$id) {
             header('Location: ' . $this->getBaseRoute());
             exit;

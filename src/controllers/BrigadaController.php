@@ -2,7 +2,7 @@
 
 require_once __DIR__ . '/../services/AuthorizationService.php';
 require_once __DIR__ . '/../services/AuditService.php';
-require_once __DIR__ . '/../utils/CSRFProtection.php';
+require_once __DIR__ . '/../../config/csrf.php';
 
 class BrigadaController {
     private $db;

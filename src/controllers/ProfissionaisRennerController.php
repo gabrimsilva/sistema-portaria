@@ -312,19 +312,33 @@ class ProfissionaisRennerController {
         
         error_log("DEBUG edit(): ID final usado: " . $id);
         
-        $profissional = $this->db->fetch("
-            SELECT p.*, r.placa_veiculo, r.entrada_at as data_entrada, r.saida_at as saida, r.retorno, r.saida_final, r.id as registro_id
-            FROM profissionais_renner p
-            LEFT JOIN registro_acesso r ON r.profissional_renner_id = p.id AND r.tipo = 'profissional_renner'
-            WHERE p.id = ?
-            ORDER BY r.entrada_at DESC
-            LIMIT 1
-        ", [$id]);
+        $isReport = strpos($_SERVER['REQUEST_URI'] ?? '', '/reports/') !== false;
+        
+        if ($isReport) {
+            $profissional = $this->db->fetch("
+                SELECT p.*, r.placa_veiculo, r.entrada_at as data_entrada, r.saida_at as saida, r.retorno, r.saida_final, r.id as registro_id
+                FROM registro_acesso r
+                JOIN profissionais_renner p ON p.id = r.profissional_renner_id
+                WHERE r.id = ? AND r.tipo = 'profissional_renner'
+            ", [$id]);
+        } else {
+            $profissional = $this->db->fetch("
+                SELECT p.*, r.placa_veiculo, r.entrada_at as data_entrada, r.saida_at as saida, r.retorno, r.saida_final, r.id as registro_id
+                FROM profissionais_renner p
+                LEFT JOIN registro_acesso r ON r.profissional_renner_id = p.id AND r.tipo = 'profissional_renner'
+                WHERE p.id = ?
+                ORDER BY r.entrada_at DESC
+                LIMIT 1
+            ", [$id]);
+        }
         
         if (!$profissional) {
+            error_log("DEBUG edit(): Profissional não encontrado com ID: " . $id . " (isReport: " . ($isReport ? 'sim' : 'não') . ")");
             header('Location: ' . $this->getBaseRoute());
             exit;
         }
+        
+        error_log("DEBUG edit(): Profissional encontrado: " . json_encode($profissional));
         
         include $this->getViewPath('form.php');
     }

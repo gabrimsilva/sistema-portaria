@@ -294,17 +294,23 @@ class ProfissionaisRennerController {
         
         if (!$id) {
             $uri = $_SERVER['REQUEST_URI'] ?? '';
+            error_log("DEBUG edit(): ID não encontrado em _GET, URI completa: " . $uri);
             if (preg_match('/[?&]amp;id=(\d+)/', $uri, $matches)) {
                 $id = $matches[1];
+                error_log("DEBUG edit(): ID extraído de &amp;: " . $id);
             } elseif (preg_match('/[?&]id=(\d+)/', $uri, $matches)) {
                 $id = $matches[1];
+                error_log("DEBUG edit(): ID extraído de &: " . $id);
             }
         }
         
         if (!$id) {
+            error_log("DEBUG edit(): Nenhum ID encontrado, redirecionando");
             header('Location: ' . $this->getBaseRoute());
             exit;
         }
+        
+        error_log("DEBUG edit(): ID final usado: " . $id);
         
         $profissional = $this->db->fetch("
             SELECT p.*, r.placa_veiculo, r.entrada_at as data_entrada, r.saida_at as saida, r.retorno, r.saida_final, r.id as registro_id

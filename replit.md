@@ -49,6 +49,7 @@ Preferred communication style: Simple, everyday language.
 - **Autocomplete UI**: jQuery UI-based autocomplete for access registration, enhancing data entry speed and accuracy.
 - **Color-Coded Dashboard**: Dashboard cards use Bootstrap color classes (bg-primary/blue for Profissional Renner, bg-success/green for Visitante, bg-warning/yellow for Prestador, bg-danger/red for Total) matching registration button colors for visual consistency.
 - **Dual-Metric System**: Each dashboard card displays two metrics: "Ativos Agora" (counts all active entries including previous days without final exit) and "Registrados Hoje" (counts only today's new entries, resets daily with São Paulo timezone).
+- **Brigadista Visual Identification**: Active fire brigade members (brigadistas) are visually identified in the dashboard with a red badge containing a fire extinguisher icon next to their name in the "Pessoas na Empresa" section.
 
 ### Technical Implementations
 - **MVC Pattern**: Simple Model-View-Controller architecture.
@@ -60,6 +61,7 @@ Preferred communication style: Simple, everyday language.
 - **Access Registration Autocomplete**: API endpoint for searching professionals and dynamic autocomplete for forms, preventing data duplication.
 - **Audit Log System**: Enhanced audit logging with automatic inference of severity and module, and advanced filtering capabilities.
 - **CSV Export System**: Enterprise-grade CSV export for all access reports (Visitantes, Prestadores de Serviço, Profissionais Renner) with full filter preservation, CSV formula injection protection (sanitizeForCsv), LGPD-compliant CPF masking, UTF-8 BOM for Excel compatibility, and semicolon delimiter.
+- **PostgreSQL Boolean Handling**: Robust normalization of PostgreSQL boolean values which can be returned as 't'/'f' strings, true/false booleans, or 1/0 integers depending on PDO driver, ensuring consistent strict boolean comparisons in views.
 
 ### Feature Specifications
 - **User Roles**: Role-based access control (e.g., 'porteiro').

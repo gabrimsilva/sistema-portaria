@@ -261,29 +261,24 @@
     
     searchInput.addEventListener('input', function() {
         const query = this.value.trim();
-        console.log('🔍 Busca iniciada:', query);
         
         clearTimeout(searchTimer);
         
         if (query.length < 2) {
-            console.log('⚠️ Query muito curta (< 2 caracteres)');
             searchResults.style.display = 'none';
             searchResults.innerHTML = '';
             return;
         }
         
         searchTimer = setTimeout(async () => {
-            console.log('📡 Chamando API:', `/api/professionals/search?q=${encodeURIComponent(query)}`);
             try {
                 const response = await fetch(`/api/professionals/search?q=${encodeURIComponent(query)}`);
-                console.log('📥 Resposta recebida:', response.status);
                 
                 if (!response.ok) {
                     throw new Error('Erro ao buscar profissionais');
                 }
                 
                 const data = await response.json();
-                console.log('✅ Dados recebidos:', data);
                 
                 searchResults.innerHTML = '';
                 
@@ -314,7 +309,7 @@
                 searchResults.style.display = 'block';
                 
             } catch (error) {
-                console.error('🚨 Erro na busca:', error);
+                console.error('Erro na busca:', error);
                 searchResults.innerHTML = '<div class="list-group-item text-danger">Erro ao buscar profissionais</div>';
                 searchResults.style.display = 'block';
             }

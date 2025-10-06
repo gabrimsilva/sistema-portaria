@@ -58,6 +58,14 @@ class NavigationService
             'children' => []
         ],
         [
+            'id' => 'brigada',
+            'label' => 'Brigada de Incêndio',
+            'url' => '/brigada',
+            'icon' => 'fas fa-fire-extinguisher',
+            'permission' => ['administrador', 'seguranca', 'rh'],
+            'children' => []
+        ],
+        [
             'id' => 'importacao',
             'label' => 'Importação',
             'url' => '/importacao',
@@ -97,6 +105,7 @@ class NavigationService
         '/privacy' => ['privacy'],
         '/privacy/portal' => ['privacy'],
         '/privacy/cookies' => ['privacy'],
+        '/brigada' => ['brigada'],
         '/importacao' => ['importacao'],
         '/config' => ['config']
     ];

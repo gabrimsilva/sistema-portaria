@@ -294,23 +294,17 @@ class ProfissionaisRennerController {
         
         if (!$id) {
             $uri = $_SERVER['REQUEST_URI'] ?? '';
-            error_log("DEBUG edit(): ID não encontrado em _GET, URI completa: " . $uri);
             if (preg_match('/[?&]amp;id=(\d+)/', $uri, $matches)) {
                 $id = $matches[1];
-                error_log("DEBUG edit(): ID extraído de &amp;: " . $id);
             } elseif (preg_match('/[?&]id=(\d+)/', $uri, $matches)) {
                 $id = $matches[1];
-                error_log("DEBUG edit(): ID extraído de &: " . $id);
             }
         }
         
         if (!$id) {
-            error_log("DEBUG edit(): Nenhum ID encontrado, redirecionando");
             header('Location: ' . $this->getBaseRoute());
             exit;
         }
-        
-        error_log("DEBUG edit(): ID final usado: " . $id);
         
         $isReport = strpos($_SERVER['REQUEST_URI'] ?? '', '/reports/') !== false;
         
@@ -333,12 +327,9 @@ class ProfissionaisRennerController {
         }
         
         if (!$profissional) {
-            error_log("DEBUG edit(): Profissional não encontrado com ID: " . $id . " (isReport: " . ($isReport ? 'sim' : 'não') . ")");
             header('Location: ' . $this->getBaseRoute());
             exit;
         }
-        
-        error_log("DEBUG edit(): Profissional encontrado: " . json_encode($profissional));
         
         include $this->getViewPath('form.php');
     }

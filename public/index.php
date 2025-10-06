@@ -508,6 +508,30 @@ try {
             $controller = new ImportacaoController();
             $controller->index();
             break;
+            
+        case 'brigada':
+            require_once '../src/controllers/BrigadaController.php';
+            $controller = new BrigadaController();
+            $controller->index();
+            break;
+            
+        case 'brigada/add':
+            require_once '../src/controllers/BrigadaController.php';
+            $controller = new BrigadaController();
+            $controller->add();
+            break;
+            
+        case 'brigada/remove':
+            require_once '../src/controllers/BrigadaController.php';
+            $controller = new BrigadaController();
+            $controller->remove();
+            break;
+            
+        case 'api/professionals/search':
+            require_once '../src/controllers/BrigadaController.php';
+            $controller = new BrigadaController();
+            $controller->apiSearchProfessionals();
+            break;
         
         default:
             // Verificar se é rota de config dinâmica (usuários)

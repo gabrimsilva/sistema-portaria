@@ -330,14 +330,24 @@ class DashboardController {
             $profissionaisAtivos = $this->db->fetchAll("
                 SELECT p.nome, r.cpf, r.empresa, p.setor, 
                        COALESCE(r.retorno, r.entrada_at) as hora_entrada, 
-                       'Profissional Renner' as tipo, r.id, r.placa_veiculo
+                       'Profissional Renner' as tipo, r.id, r.placa_veiculo,
+                       CASE WHEN b.id IS NOT NULL AND b.active = TRUE THEN TRUE ELSE FALSE END as is_brigadista
                 FROM registro_acesso r
                 JOIN profissionais_renner p ON p.id = r.profissional_renner_id
+                LEFT JOIN brigadistas b ON b.professional_id = p.id AND b.active = TRUE
                 WHERE r.tipo = 'profissional_renner' 
                   AND (r.entrada_at IS NOT NULL OR r.retorno IS NOT NULL) 
                   AND r.saida_final IS NULL
                 ORDER BY COALESCE(r.retorno, r.entrada_at) DESC
             ") ?? [];
+            
+            // Converter is_brigadista para boolean real (garantir tipo boolean para comparação strict na view)
+            // PostgreSQL pode retornar 't'/'f' (string), true/false (bool), ou 1/0 (int) dependendo do driver
+            foreach ($profissionaisAtivos as &$profissional) {
+                $value = $profissional['is_brigadista'] ?? false;
+                $profissional['is_brigadista'] = ($value === true || $value === 't' || $value === '1' || $value === 1);
+            }
+            unset($profissional);
             
             // Combinar todos os tipos
             $pessoas = array_merge($visitantesAtivos, $prestadoresAtivos, $profissionaisAtivos);

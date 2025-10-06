@@ -238,6 +238,11 @@
                                                 <tr>
                                                     <td>
                                                         <strong><?= htmlspecialchars($pessoa['nome']) ?></strong>
+                                                        <?php if (isset($pessoa['is_brigadista']) && $pessoa['is_brigadista'] === true): ?>
+                                                            <span class="badge badge-danger ml-2" title="Brigadista de Incêndio">
+                                                                <i class="fas fa-fire-extinguisher"></i> Brigadista
+                                                            </span>
+                                                        <?php endif; ?>
                                                     </td>
                                                     <td>
                                                         <?php 

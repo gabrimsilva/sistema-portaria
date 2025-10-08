@@ -103,7 +103,7 @@
         <div id="statusBar" class="text-center mt-4 pb-3">
             <small class="status-online">
                 <i class="fas fa-circle"></i> 
-                Conectado | Última atualização: <span id="lastUpdate">-</span>
+                Online | 0 brigadistas | <span id="lastUpdate">-</span>
             </small>
         </div>
     </div>
@@ -213,8 +213,6 @@
                     </small>
                 `;
             }
-            
-            document.getElementById('lastUpdate').textContent = now;
         }
         
         /**

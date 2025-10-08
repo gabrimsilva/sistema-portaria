@@ -151,6 +151,7 @@ if (preg_match('/\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf)$/i', $path))
 // API: GET /api/brigada/presentes
 if ($uri === '/api/brigada/presentes') {
     requirePanelAuth();
+    require_once __DIR__ . '/../config/config.php';
     require_once __DIR__ . '/../src/controllers/PanelBrigadaController.php';
     $controller = new PanelBrigadaController();
     $controller->presentesApi();
@@ -160,6 +161,7 @@ if ($uri === '/api/brigada/presentes') {
 // VIEW: GET /painel/brigada
 if ($uri === '/painel/brigada') {
     requirePanelAuth();
+    require_once __DIR__ . '/../config/config.php';
     require_once __DIR__ . '/../src/controllers/PanelBrigadaController.php';
     $controller = new PanelBrigadaController();
     $controller->painel();

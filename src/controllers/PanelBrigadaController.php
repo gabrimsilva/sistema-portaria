@@ -84,6 +84,9 @@ class PanelBrigadaController {
             ], JSON_UNESCAPED_UNICODE);
             
         } catch (Exception $e) {
+            // Log de erro para monitoramento
+            error_log('[PanelBrigada] Erro na API presentes: ' . $e->getMessage() . ' | Trace: ' . $e->getTraceAsString());
+            
             http_response_code(500);
             echo json_encode([
                 'success' => false,

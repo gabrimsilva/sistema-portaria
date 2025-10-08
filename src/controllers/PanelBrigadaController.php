@@ -35,6 +35,7 @@ class PanelBrigadaController {
                 SELECT 
                     p.nome,
                     p.setor,
+                    p.foto_url,
                     r.profissional_renner_id as professional_id,
                     COALESCE(r.retorno, r.entrada_at) as desde,
                     b.active
@@ -71,7 +72,8 @@ class PanelBrigadaController {
                     'nome' => $p['nome'],
                     'setor' => $p['setor'] ?? 'N/A',
                     'professional_id' => (int)$p['professional_id'],
-                    'desde' => $desde
+                    'desde' => $desde,
+                    'foto_url' => $p['foto_url'] ?? null
                     // NÃO incluir CPF (LGPD)
                 ];
             }

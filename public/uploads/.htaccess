@@ -2,9 +2,18 @@
 # Este arquivo .htaccess impede qualquer acesso direto a fotos/arquivos biométricos
 # conforme exigido pela LGPD para proteção de dados sensíveis
 
-# ❌ NEGAR ACESSO A TODOS OS ARQUIVOS NESTE DIRETÓRIO
+# ✅ EXCEÇÃO: Permitir acesso a fotos de profissionais (não são dados biométricos sensíveis)
+# 🔒 BLOQUEAR path traversal (.., %2e%2e, %5c, etc) para prevenir bypass de segurança
+SetEnvIf Request_URI "\.\." path_traversal_detected
+SetEnvIf Request_URI "%2[eE]" path_traversal_detected
+SetEnvIf Request_URI "%5[cC]" path_traversal_detected
+SetEnvIf Request_URI "^/uploads/profissionais/[^/]+\.(jpg|jpeg|png|gif|webp)$" allow_profissionais
+
+# ❌ NEGAR ACESSO A TODOS OS ARQUIVOS NESTE DIRETÓRIO (exceto profissionais)
 Order deny,allow
 Deny from all
+Deny from env=path_traversal_detected
+Allow from env=allow_profissionais
 
 # ❌ Bloquear execução de qualquer script
 <FilesMatch "\.(php|phtml|pl|py|jsp|asp|sh|cgi|js|html|htm)$">
@@ -13,9 +22,12 @@ Deny from all
 </FilesMatch>
 
 # ❌ Bloquear acesso a TODAS as imagens (proteção crítica)
+# ✅ Exceto imagens em /profissionais/ (fotos corporativas públicas)
 <FilesMatch "\.(jpg|jpeg|png|gif|webp|svg|bmp|tiff|raw|psd|ico)$">
     Order deny,allow
     Deny from all
+    Deny from env=path_traversal_detected
+    Allow from env=allow_profissionais
 </FilesMatch>
 
 # ❌ Não permitir listagem de diretório

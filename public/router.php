@@ -124,8 +124,26 @@ function requirePanelAuth(): void {
 $uri = $_SERVER['REQUEST_URI'] ?? '';
 $path = parse_url($uri, PHP_URL_PATH) ?? '';
 
-// Verificar se é tentativa de acesso a uploads
-if (strpos($path, '/uploads/') !== false) {
+// ✅ EXCEÇÃO: Permitir acesso a fotos de profissionais (não são dados biométricos sensíveis)
+// 🔒 VALIDAÇÃO CANÔNICA: Prevenir traversal (../, %2e%2e, etc)
+$isProfissionaisPath = false;
+if (strpos($path, '/uploads/profissionais/') !== false) {
+    // Construir path absoluto e resolver canonicamente
+    $requestedFile = __DIR__ . $path;
+    $canonicalPath = realpath($requestedFile);
+    $allowedBase = realpath(__DIR__ . '/uploads/profissionais');
+    
+    // Verificar se arquivo existe E está dentro do diretório permitido
+    if ($canonicalPath !== false && 
+        $allowedBase !== false &&
+        strpos($canonicalPath, $allowedBase . DIRECTORY_SEPARATOR) === 0 &&
+        is_file($canonicalPath)) {
+        $isProfissionaisPath = true;
+    }
+}
+
+// Verificar se é tentativa de acesso a uploads (exceto /profissionais/ validado)
+if (strpos($path, '/uploads/') !== false && !$isProfissionaisPath) {
     http_response_code(403);
     header('Content-Type: application/json');
     die(json_encode([

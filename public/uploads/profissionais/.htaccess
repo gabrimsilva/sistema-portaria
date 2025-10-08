@@ -1,0 +1,26 @@
+# Permitir acesso às fotos de profissionais para o painel de brigada
+# (Fotos corporativas públicas, não dados biométricos sensíveis)
+
+Order allow,deny
+Allow from all
+
+# Bloquear apenas scripts
+<FilesMatch "\.(php|phtml|pl|py|jsp|asp|sh|cgi|js|html|htm)$">
+    Order deny,allow
+    Deny from all
+</FilesMatch>
+
+# Permitir imagens
+<FilesMatch "\.(jpg|jpeg|png|gif|webp)$">
+    Order allow,deny
+    Allow from all
+</FilesMatch>
+
+# Headers de cache para performance
+<IfModule mod_headers.c>
+    Header set Cache-Control "public, max-age=86400"
+    Header set X-Content-Type-Options "nosniff"
+</IfModule>
+
+# Não permitir listagem de diretório
+Options -Indexes

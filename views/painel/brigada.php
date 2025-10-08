@@ -74,6 +74,34 @@
             margin-bottom: 20px;
             opacity: 0.3;
         }
+        
+        .foto-brigadista {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #dc3545;
+            box-shadow: 0 4px 10px rgba(220, 53, 69, 0.3);
+            margin: 0 auto;
+            display: block;
+        }
+        
+        .foto-placeholder {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: rgba(220, 53, 69, 0.1);
+            border: 3px solid rgba(220, 53, 69, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+        }
+        
+        .foto-placeholder i {
+            font-size: 3rem;
+            color: rgba(220, 53, 69, 0.5);
+        }
     </style>
 </head>
 <body>
@@ -169,11 +197,19 @@
             grid.innerHTML = data.map(b => `
                 <div class="col-lg-4 col-md-6 mb-4">
                     <div class="card card-brigadista">
-                        <div class="card-body">
+                        <div class="card-body text-center">
+                            ${b.foto_url ? `
+                                <img src="${escapeHtml(b.foto_url)}" alt="${escapeHtml(b.nome)}" class="foto-brigadista mb-3">
+                            ` : `
+                                <div class="foto-placeholder mb-3">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                            `}
                             <h4 class="mb-3">
                                 <span class="badge badge-danger badge-fire">
                                     <i class="fas fa-fire-extinguisher"></i>
                                 </span>
+                                <br>
                                 ${escapeHtml(b.nome)}
                             </h4>
                             <p class="mb-2">

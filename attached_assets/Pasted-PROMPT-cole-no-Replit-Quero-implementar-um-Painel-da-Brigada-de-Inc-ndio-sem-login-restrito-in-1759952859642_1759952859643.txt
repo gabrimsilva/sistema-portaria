@@ -1,0 +1,174 @@
+PROMPT (cole no Replit)
+
+Quero implementar um Painel da Brigada de Incêndio sem login, restrito à intranet por IP allowlist e exigindo um cabeçalho X-Panel-Key lido de variável de ambiente.
+Não execute nada sem minha autorização.
+Siga etapas M1 → M10, mostrando o plano, os arquivos/diffs e perguntando “Posso aplicar?” antes de qualquer mudança.
+Use o padrão do meu projeto:
+
+Stack: PHP 8 + PostgreSQL + AdminLTE 3 + Bootstrap 4.6
+
+Arquitetura: Controllers em src/controllers/ (sem namespaces), rotas em public/router.php, views em views/, JS público em public/assets/js/, RBAC via AuthorizationService (não será usado aqui, pois será sem login).
+
+Tabelas:
+
+brigadistas(id, professional_id, start_date, end_date, active, notes, created_at, updated_at) (FK → profissionais_renner(id))
+
+profissionais_renner(id, nome, cpf, setor, ...)
+
+registro_acesso(..., profissional_renner_id, tipo, entrada_at/retorno, saida_final, ...)
+
+LGPD: não exibir CPF no painel, apenas nome e setor.
+
+Fuso: America/Sao_Paulo.
+
+Objetivo
+
+Expor uma tela /painel/brigada que lista brigadistas presentes na planta em tempo real, atualizando a cada ~10s.
+“Presente” = brigadista ativo (vigência válida) E com registro de acesso aberto (saida_final IS NULL).
+Se a portaria registrar saída final, a pessoa some do painel no próximo refresh.
+
+Segurança (sem login)
+
+IP allowlist (ex.: 10.3.0.0/16, 127.0.0.1/32).
+
+Cabeçalho X-Panel-Key obrigatório; valor vem de variável de ambiente PANEL_BRG_KEY.
+
+Não expor o segredo no front-end.
+
+Dev mode opcional: se PANEL_BRG_DEV_MODE=1 e IP for 127.0.0.1, permitir acesso sem header somente para desenvolvimento.
+
+Endpoints a criar
+
+GET /painel/brigada → view fullscreen (TV), fonte grande, badge 🧯, sem CPF.
+
+GET /api/brigada/presentes → JSON com nome, setor, desde (ISO) e professional_id. Sem cache (Cache-Control: no-store).
+
+Consulta base (conceito)
+
+Filtrar:
+
+b.active = TRUE (normalizar true/‘t’/‘1’/1 se necessário)
+
+b.start_date <= CURRENT_DATE
+
+b.end_date IS NULL OR b.end_date >= CURRENT_DATE
+
+r.tipo = 'profissional_renner'
+
+r.saida_final IS NULL
+Ordenar por desde (ex.: COALESCE(r.retorno, r.entrada_at)).
+
+Requisitos de implementação
+
+Helpers em public/router.php: getClientIp(), ipInCidr(), ipAllowed(), requirePanelAuth() com allowlist + verificação de X-Panel-Key (de env) e Cache-Control: no-store. Incluir dev mode conforme descrito.
+
+Controller novo: src/controllers/PanelBrigadaController.php com métodos painel() e presentesApi().
+
+View nova: views/painel/brigada.php (AdminLTE, grid de cards, polling 10s via fetch('/api/brigada/presentes', {cache:'no-store'})). Não enviar segredo no JS.
+
+Nomes/colunas: Se houver divergências (entrada_at vs entrada), me mostre a leitura das colunas detectadas e pergunte qual usar.
+
+Índices: sugerir e (opcional) gerar SQL para brigadistas(professional_id, active) e registro_acesso(profissional_renner_id) WHERE saida_final IS NULL.
+
+Timezone: formatar “desde” no back em ISO; a view pode exibir HH:MM em PT-BR.
+
+Resiliência: se fetch falhar, mostrar aviso “Reconectando…” e tentar novamente. Recarregar a página 1x por dia.
+
+ETAPAS (PERGUNTE ANTES DE EXECUTAR CADA UMA)
+
+M1 — Descoberta/validação
+
+Detecte se existem os diretórios/arquivos: public/router.php, src/controllers/, views/.
+
+Verifique as tabelas e as colunas-chave (brigadistas, profissionais_renner, registro_acesso).
+
+Saída: relatório do que encontrou + eventuais dúvidas.
+
+Pergunte: “Posso seguir para M2?”
+
+M2 — Plano detalhado
+
+Liste exatamente quais arquivos serão criados/editados e mostre o plano de diffs.
+
+Pergunte: “Posso gerar os rascunhos (sem aplicar)?”
+
+M3 — Rascunhos (sem aplicar)
+
+Gere arquivos rascunho em feature_painel_brigada/drafts/:
+
+router_helpers.php (helpers + dev mode),
+
+routes_snippet.php (rotas /painel/brigada e /api/brigada/presentes),
+
+PanelBrigadaController.php,
+
+views_painel_brigada.php (view),
+
+indices.sql (sugestões de índices, sem executar).
+
+Mostre o conteúdo (code blocks) e pergunte: “Posso aplicar as mudanças nos arquivos reais?”
+
+M4 — Aplicação dos patches
+
+Aplique os helpers e rotas em public/router.php via patch unified diff.
+
+Crie src/controllers/PanelBrigadaController.php e views/painel/brigada.php.
+
+Não alterar outras rotas/módulos.
+
+Pergunte: “Posso prosseguir para testes (M5)?”
+
+M5 — Testes locais
+
+Testes curl (sem header → 403; com header correto → 200 JSON).
+
+Teste GET /painel/brigada (HTML).
+
+Mostrar comandos e aguardar minha confirmação antes de rodar qualquer teste automatizado.
+
+M6 — Ajustes de colunas
+
+Se a consulta falhar por nome de coluna (ex.: entrada_at vs entrada), sugerir ajuste e perguntar antes de alterar.
+
+M7 — Otimizações
+
+Sugerir aplicação de indices.sql. Perguntar antes de executar.
+
+Confirmar Cache-Control: no-store na API e ausência de CPF na view.
+
+M8 — Observabilidade
+
+Adicionar logs leves de erro no controller (try/catch) e no front (marcar status “Online/Reconectando…”).
+
+Perguntar antes de aplicar.
+
+M9 — Documentação
+
+Gerar docs/painel_brigada.md com: variáveis de ambiente (PANEL_BRG_KEY, PANEL_BRG_DEV_MODE), allowlist, endpoints, testes curl, e instruções para injeção do header pelo Apache (opcional em produção).
+
+Perguntar antes de criar o arquivo.
+
+M10 — Rollback
+
+Gerar revert_painel_brigada.patch que remove as mudanças de router.php e apaga os arquivos criados.
+
+Perguntar antes de gerar.
+
+Critérios de Aceite (checklist)
+
+ /api/brigada/presentes só responde 200 se IP estiver na allowlist e X-Panel-Key correto (ou dev mode permitido).
+
+ JSON sem CPF, com nome, setor, professional_id, desde (ISO).
+
+ /painel/brigada exibe cards com Nome, Setor, badge 🧯 e “desde HH:MM”.
+
+ Atualização automática a cada ~10s, sem travar; página recarrega 1x/dia.
+
+ Cache-Control: no-store na API.
+
+ Índices sugeridos criados (se aprovado).
+
+ Código aplicado apenas após minhas aprovações em cada etapa.
+
+Importante: Sempre pergunte antes de escrever/alterar qualquer arquivo ou executar SQL.
+Nas saídas, traga patches em diff unificado para eu revisar.

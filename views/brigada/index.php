@@ -452,7 +452,13 @@
                             <i class="fas fa-check-circle mr-2"></i>
                             Foto atualizada com sucesso!
                         `;
-                        document.querySelector('.container-fluid').insertBefore(alert, document.querySelector('.card'));
+                        const container = document.querySelector('.container-fluid');
+                        const firstCard = container.querySelector('.card');
+                        if (firstCard) {
+                            container.insertBefore(alert, firstCard);
+                        } else {
+                            container.prepend(alert);
+                        }
                         
                         setTimeout(() => alert.remove(), 3000);
                         

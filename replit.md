@@ -6,7 +6,7 @@ This project is an access control system for companies, developed with PHP 8+ an
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
-## Project Progress (Updated: Oct 01, 2025)
+## Project Progress (Updated: Oct 08, 2025)
 
 ### Configuration Module Stages
 - **ETAPA 1 - Organização**: ████████████ 100% ✅ CONCLUÍDA
@@ -50,6 +50,7 @@ Preferred communication style: Simple, everyday language.
 - **Color-Coded Dashboard**: Dashboard cards use Bootstrap color classes (bg-primary/blue for Profissional Renner, bg-success/green for Visitante, bg-warning/yellow for Prestador, bg-danger/red for Total) matching registration button colors for visual consistency.
 - **Dual-Metric System**: Each dashboard card displays two metrics: "Ativos Agora" (counts all active entries including previous days without final exit) and "Registrados Hoje" (counts only today's new entries, resets daily with São Paulo timezone).
 - **Brigadista Visual Identification**: Active fire brigade members (brigadistas) are visually identified in the dashboard with a red badge containing a fire extinguisher icon next to their name in the "Pessoas na Empresa" section.
+- **Fire Brigade Panel Photos**: The public Fire Brigade Panel (`/painel/brigada`) displays circular photos of active brigade members with LGPD-compliant photo storage in `/public/uploads/profissionais/`, secured with realpath() canonical validation and .htaccess protection against path traversal attacks.
 
 ### Technical Implementations
 - **MVC Pattern**: Simple Model-View-Controller architecture.
@@ -78,6 +79,7 @@ Preferred communication style: Simple, everyday language.
 - **Local File Storage**: For captured photos.
 - **Environment Configuration**: Centralized configuration in `/config` directory.
 - **Audit Log Database Schema**: Migration of `audit_log` table to `timestamptz` with added `severidade`, `modulo`, and `resultado` fields, along with performance-enhancing indices.
+- **Fire Brigade Photo Storage**: Field `foto_url` in `profissionais_renner` table stores corporate photos (non-biometric) for panel display, protected by realpath() validation and .htaccess rules preventing literal and percent-encoded path traversal.
 
 ## External Dependencies
 

@@ -49,7 +49,8 @@ class BrigadaController {
                     b.note,
                     b.created_at,
                     p.nome AS professional_name,
-                    p.setor AS sector
+                    p.setor AS sector,
+                    p.foto_url
                 FROM public.brigadistas b
                 JOIN public.profissionais_renner p ON p.id = b.professional_id
                 WHERE b.active = TRUE
@@ -172,6 +173,119 @@ class BrigadaController {
             $_SESSION['flash_error'] = "Erro ao adicionar brigadista: " . $e->getMessage();
             header('Location: /brigada');
             exit;
+        }
+    }
+    
+    /**
+     * Upload de foto do brigadista
+     */
+    public function uploadFoto() {
+        $this->checkPermission('brigada.write');
+        
+        header('Content-Type: application/json; charset=utf-8');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'error' => 'Método não permitido']);
+            return;
+        }
+        
+        try {
+            CSRFProtection::verifyRequest();
+            
+            $professionalId = (int)($_POST['professional_id'] ?? 0);
+            
+            if ($professionalId <= 0) {
+                throw new Exception("ID do profissional inválido");
+            }
+            
+            // Verificar se o arquivo foi enviado
+            if (!isset($_FILES['photo']) || $_FILES['photo']['error'] !== UPLOAD_ERR_OK) {
+                throw new Exception("Nenhuma foto foi enviada");
+            }
+            
+            $file = $_FILES['photo'];
+            
+            // Validar tamanho (2MB)
+            if ($file['size'] > 2 * 1024 * 1024) {
+                throw new Exception("A foto deve ter no máximo 2MB");
+            }
+            
+            // Validar tipo MIME
+            $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $mimeType = finfo_file($finfo, $file['tmp_name']);
+            finfo_close($finfo);
+            
+            if (!in_array($mimeType, $allowedTypes)) {
+                throw new Exception("Tipo de arquivo não permitido. Use JPG, PNG ou WEBP");
+            }
+            
+            // Gerar nome único para o arquivo
+            $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+            $fileName = 'brigadista_' . $professionalId . '_' . time() . '.' . $extension;
+            
+            // Diretório de destino
+            $uploadDir = __DIR__ . '/../../public/uploads/profissionais/';
+            
+            // Criar diretório se não existir
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0755, true);
+            }
+            
+            $targetPath = $uploadDir . $fileName;
+            
+            // Remover foto anterior se existir
+            $oldPhoto = $this->db->fetch("
+                SELECT foto_url FROM public.profissionais_renner WHERE id = ?
+            ", [$professionalId]);
+            
+            if ($oldPhoto && !empty($oldPhoto['foto_url'])) {
+                $oldPath = __DIR__ . '/../../public/uploads/' . $oldPhoto['foto_url'];
+                if (file_exists($oldPath)) {
+                    unlink($oldPath);
+                }
+            }
+            
+            // Mover arquivo
+            if (!move_uploaded_file($file['tmp_name'], $targetPath)) {
+                throw new Exception("Erro ao salvar a foto");
+            }
+            
+            // Atualizar banco de dados
+            $fotoUrl = 'profissionais/' . $fileName;
+            $this->db->query("
+                UPDATE public.profissionais_renner 
+                SET foto_url = ?, updated_at = NOW()
+                WHERE id = ?
+            ", [$fotoUrl, $professionalId]);
+            
+            // Auditoria
+            $professional = $this->db->fetch("
+                SELECT nome FROM public.profissionais_renner WHERE id = ?
+            ", [$professionalId]);
+            
+            $this->auditService->log(
+                'brigada',
+                'update',
+                $professionalId,
+                ['foto_url' => $fotoUrl],
+                "Atualizou foto do brigadista {$professional['nome']}"
+            );
+            
+            echo json_encode([
+                'success' => true,
+                'foto_url' => $fotoUrl,
+                'message' => 'Foto atualizada com sucesso'
+            ]);
+            
+        } catch (Exception $e) {
+            error_log("Erro ao fazer upload de foto: " . $e->getMessage());
+            http_response_code(400);
+            echo json_encode([
+                'success' => false,
+                'error' => $e->getMessage()
+            ]);
         }
     }
     

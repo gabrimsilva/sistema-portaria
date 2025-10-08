@@ -191,6 +191,7 @@
                                     <thead>
                                         <tr>
                                             <th style="width: 50px">#</th>
+                                            <th style="width: 80px">Foto</th>
                                             <th>Profissional</th>
                                             <th>Setor</th>
                                             <th style="width: 150px">Data de Inclusão</th>
@@ -201,6 +202,24 @@
                                         <?php foreach ($brigadistas as $index => $brigadista): ?>
                                             <tr>
                                                 <td><?= $index + 1 ?></td>
+                                                <td>
+                                                    <div class="photo-upload-cell" data-brigadista-id="<?= (int)$brigadista['professional_id'] ?>">
+                                                        <?php if (!empty($brigadista['foto_url'])): ?>
+                                                            <img src="/uploads/<?= htmlspecialchars($brigadista['foto_url']) ?>" 
+                                                                 class="img-thumbnail photo-preview" 
+                                                                 style="width: 50px; height: 50px; object-fit: cover; cursor: pointer;"
+                                                                 title="Clique para alterar foto">
+                                                        <?php else: ?>
+                                                            <button type="button" class="btn btn-sm btn-outline-secondary upload-photo-btn" title="Adicionar foto">
+                                                                <i class="fas fa-camera"></i>
+                                                            </button>
+                                                        <?php endif; ?>
+                                                        <input type="file" 
+                                                               class="photo-input d-none" 
+                                                               accept="image/jpeg,image/jpg,image/png,image/webp"
+                                                               data-brigadista-id="<?= (int)$brigadista['professional_id'] ?>">
+                                                    </div>
+                                                </td>
                                                 <td>
                                                     <i class="fas fa-user-shield text-danger mr-2"></i>
                                                     <strong><?= htmlspecialchars($brigadista['professional_name']) ?></strong>
@@ -337,6 +356,137 @@
         if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
             searchResults.style.display = 'none';
         }
+    });
+    
+    // Upload de foto do brigadista
+    document.addEventListener('DOMContentLoaded', function() {
+        // Botões de upload de foto
+        document.querySelectorAll('.upload-photo-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const cell = this.closest('.photo-upload-cell');
+                const fileInput = cell.querySelector('.photo-input');
+                fileInput.click();
+            });
+        });
+        
+        // Clique na foto para alterar
+        document.querySelectorAll('.photo-preview').forEach(img => {
+            img.addEventListener('click', function() {
+                const cell = this.closest('.photo-upload-cell');
+                const fileInput = cell.querySelector('.photo-input');
+                fileInput.click();
+            });
+        });
+        
+        // Processar upload quando arquivo for selecionado
+        document.querySelectorAll('.photo-input').forEach(input => {
+            input.addEventListener('change', async function() {
+                const file = this.files[0];
+                if (!file) return;
+                
+                // Validar tamanho (max 2MB)
+                if (file.size > 2 * 1024 * 1024) {
+                    alert('A foto deve ter no máximo 2MB');
+                    this.value = '';
+                    return;
+                }
+                
+                // Validar tipo
+                if (!file.type.match(/^image\/(jpeg|jpg|png|webp)$/)) {
+                    alert('Apenas imagens JPG, PNG ou WEBP são permitidas');
+                    this.value = '';
+                    return;
+                }
+                
+                const brigadistaId = this.dataset.brigadistaId;
+                const cell = this.closest('.photo-upload-cell');
+                
+                // Criar FormData
+                const formData = new FormData();
+                formData.append('photo', file);
+                formData.append('professional_id', brigadistaId);
+                
+                // Obter CSRF token
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+                formData.append('csrf_token', csrfToken);
+                
+                // Mostrar loading
+                cell.innerHTML = '<div class="spinner-border spinner-border-sm text-primary" role="status"></div>';
+                
+                try {
+                    const response = await fetch('/brigada/upload-foto', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (response.ok && result.success) {
+                        // Atualizar preview da foto
+                        cell.innerHTML = `
+                            <img src="/uploads/${result.foto_url}?t=${Date.now()}" 
+                                 class="img-thumbnail photo-preview" 
+                                 style="width: 50px; height: 50px; object-fit: cover; cursor: pointer;"
+                                 title="Clique para alterar foto">
+                            <input type="file" 
+                                   class="photo-input d-none" 
+                                   accept="image/jpeg,image/jpg,image/png,image/webp"
+                                   data-brigadista-id="${brigadistaId}">
+                        `;
+                        
+                        // Re-adicionar event listener
+                        const newImg = cell.querySelector('.photo-preview');
+                        const newInput = cell.querySelector('.photo-input');
+                        
+                        newImg.addEventListener('click', function() {
+                            newInput.click();
+                        });
+                        
+                        newInput.addEventListener('change', arguments.callee);
+                        
+                        // Mostrar mensagem de sucesso
+                        const alert = document.createElement('div');
+                        alert.className = 'alert alert-success alert-dismissible fade show';
+                        alert.innerHTML = `
+                            <button type="button" class="close" data-dismiss="alert">&times;</button>
+                            <i class="fas fa-check-circle mr-2"></i>
+                            Foto atualizada com sucesso!
+                        `;
+                        document.querySelector('.container-fluid').insertBefore(alert, document.querySelector('.card'));
+                        
+                        setTimeout(() => alert.remove(), 3000);
+                        
+                    } else {
+                        throw new Error(result.error || 'Erro ao fazer upload da foto');
+                    }
+                    
+                } catch (error) {
+                    console.error('Erro no upload:', error);
+                    alert('Erro ao fazer upload da foto: ' + error.message);
+                    
+                    // Restaurar botão
+                    cell.innerHTML = `
+                        <button type="button" class="btn btn-sm btn-outline-secondary upload-photo-btn" title="Adicionar foto">
+                            <i class="fas fa-camera"></i>
+                        </button>
+                        <input type="file" 
+                               class="photo-input d-none" 
+                               accept="image/jpeg,image/jpg,image/png,image/webp"
+                               data-brigadista-id="${brigadistaId}">
+                    `;
+                    
+                    // Re-adicionar event listeners
+                    const newBtn = cell.querySelector('.upload-photo-btn');
+                    const newInput = cell.querySelector('.photo-input');
+                    
+                    newBtn.addEventListener('click', function() {
+                        newInput.click();
+                    });
+                    
+                    newInput.addEventListener('change', arguments.callee);
+                }
+            });
+        });
     });
     </script>
 </body>

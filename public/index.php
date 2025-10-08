@@ -1,7 +1,27 @@
 <?php
 // 🛡️ PROTEÇÃO CRÍTICA: Bloquear acesso direto a uploads independente do servidor
 $requestUri = $_SERVER['REQUEST_URI'] ?? '';
-if (strpos($requestUri, '/uploads/') !== false || strpos($requestUri, 'uploads/') !== false) {
+$pathParsed = parse_url($requestUri, PHP_URL_PATH) ?? '';
+
+// ✅ EXCEÇÃO: Permitir acesso a fotos de profissionais (não são dados biométricos sensíveis)
+// 🔒 VALIDAÇÃO CANÔNICA: Prevenir traversal (../, %2e%2e, etc)
+$isProfissionaisPath = false;
+if (strpos($pathParsed, '/uploads/profissionais/') !== false) {
+    // Construir path absoluto e resolver canonicamente
+    $requestedFile = __DIR__ . $pathParsed;
+    $canonicalPath = realpath($requestedFile);
+    $allowedBase = realpath(__DIR__ . '/uploads/profissionais');
+    
+    // Verificar se arquivo existe E está dentro do diretório permitido
+    if ($canonicalPath !== false && 
+        $allowedBase !== false &&
+        strpos($canonicalPath, $allowedBase . DIRECTORY_SEPARATOR) === 0 &&
+        is_file($canonicalPath)) {
+        $isProfissionaisPath = true;
+    }
+}
+
+if ((strpos($requestUri, '/uploads/') !== false || strpos($requestUri, 'uploads/') !== false) && !$isProfissionaisPath) {
     http_response_code(403);
     header('Content-Type: text/plain');
     die('🚫 ACESSO NEGADO: Dados biométricos protegidos pela LGPD');
@@ -527,6 +547,12 @@ try {
             $controller->remove();
             break;
             
+        case 'brigada/upload-foto':
+            require_once '../src/controllers/BrigadaController.php';
+            $controller = new BrigadaController();
+            $controller->uploadFoto();
+            break;
+            
         case 'api/professionals/search':
             require_once '../src/controllers/BrigadaController.php';
             $controller = new BrigadaController();
@@ -612,11 +638,12 @@ try {
                 }
             } else if (strpos($path, 'assets/') === 0 || strpos($path, 'uploads/') === 0) {
                 // 🚫 BLOQUEAR uploads - não servir mais arquivos estáticos de uploads
-                if (strpos($path, 'uploads/') === 0) {
+                // ✅ EXCEÇÃO: /uploads/profissionais/ já foi validado no topo do arquivo
+                if (strpos($path, 'uploads/') === 0 && strpos($path, 'uploads/profissionais/') !== 0) {
                     http_response_code(403);
                     echo json_encode(['error' => 'Acesso negado: dados biométricos protegidos']);
                 } else {
-                    // Apenas assets são permitidos
+                    // Apenas assets e /uploads/profissionais/ são permitidos
                     return false; // Let the web server handle static assets
                 }
             } else {

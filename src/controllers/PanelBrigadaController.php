@@ -68,12 +68,19 @@ class PanelBrigadaController {
                     }
                 }
                 
+                // Normalizar caminho da foto (adicionar /uploads/ se necessário)
+                $fotoUrl = $p['foto_url'] ?? null;
+                if ($fotoUrl && strpos($fotoUrl, '/') !== 0) {
+                    // Se não começa com /, adicionar /uploads/
+                    $fotoUrl = '/uploads/' . $fotoUrl;
+                }
+                
                 $resultado[] = [
                     'nome' => $p['nome'],
                     'setor' => $p['setor'] ?? 'N/A',
                     'professional_id' => (int)$p['professional_id'],
                     'desde' => $desde,
-                    'foto_url' => $p['foto_url'] ?? null
+                    'foto_url' => $fotoUrl
                     // NÃO incluir CPF (LGPD)
                 ];
             }

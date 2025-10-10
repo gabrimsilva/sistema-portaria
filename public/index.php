@@ -547,6 +547,12 @@ try {
             $controller->remove();
             break;
             
+        case 'brigada/update':
+            require_once '../src/controllers/BrigadaController.php';
+            $controller = new BrigadaController();
+            $controller->update();
+            break;
+            
         case 'brigada/upload-foto':
             require_once '../src/controllers/BrigadaController.php';
             $controller = new BrigadaController();

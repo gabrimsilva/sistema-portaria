@@ -292,6 +292,84 @@ class BrigadaController {
     }
     
     /**
+     * Atualizar brigadista
+     */
+    public function update() {
+        $this->checkPermission('brigada.write');
+        
+        header('Content-Type: application/json; charset=utf-8');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'error' => 'Método não permitido']);
+            return;
+        }
+        
+        try {
+            CSRFProtection::verifyRequest();
+            
+            $id = (int)($_POST['id'] ?? 0);
+            $ramal = trim($_POST['ramal'] ?? '');
+            $note = trim($_POST['note'] ?? '');
+            
+            if ($id <= 0) {
+                throw new Exception("ID inválido");
+            }
+            
+            // Buscar brigadista
+            $brigadista = $this->db->fetch("
+                SELECT b.id, b.professional_id, b.ramal, b.note, p.nome AS professional_name
+                FROM public.brigadistas b
+                JOIN public.profissionais_renner p ON p.id = b.professional_id
+                WHERE b.id = ? AND b.active = TRUE
+            ", [$id]);
+            
+            if (!$brigadista) {
+                throw new Exception("Brigadista não encontrado");
+            }
+            
+            // Preparar valores antigos para auditoria
+            $oldData = [
+                'ramal' => $brigadista['ramal'],
+                'note' => $brigadista['note']
+            ];
+            
+            // Atualizar brigadista
+            $this->db->query("
+                UPDATE public.brigadistas 
+                SET ramal = ?, note = ?, updated_at = NOW()
+                WHERE id = ?
+            ", [$ramal ?: null, $note ?: null, $id]);
+            
+            // Auditoria
+            $this->auditService->log(
+                'brigada',
+                'update',
+                $id,
+                [
+                    'old' => $oldData,
+                    'new' => ['ramal' => $ramal, 'note' => $note],
+                    'professional_name' => $brigadista['professional_name']
+                ],
+                "Atualizou dados do brigadista {$brigadista['professional_name']}"
+            );
+            
+            echo json_encode([
+                'success' => true,
+                'message' => 'Brigadista atualizado com sucesso!'
+            ]);
+            
+        } catch (Exception $e) {
+            error_log("Erro ao atualizar brigadista: " . $e->getMessage());
+            http_response_code(400);
+            echo json_encode([
+                'success' => false,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
      * Remover brigadista
      */
     public function remove() {

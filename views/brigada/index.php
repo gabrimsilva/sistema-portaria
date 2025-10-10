@@ -148,6 +148,24 @@
                                             Profissional selecionado: <strong id="selectedProfessionalName"></strong>
                                         </div>
                                         
+                                        <div class="form-group">
+                                            <label for="ramal">
+                                                <i class="fas fa-phone mr-1"></i>
+                                                Ramal Interno
+                                            </label>
+                                            <input 
+                                                type="text" 
+                                                class="form-control" 
+                                                id="ramal" 
+                                                name="ramal" 
+                                                placeholder="Ex: 5432" 
+                                                maxlength="20"
+                                            />
+                                            <small class="form-text text-muted">
+                                                Ramal para contato em caso de emergência (opcional)
+                                            </small>
+                                        </div>
+                                        
                                         <button type="submit" class="btn btn-primary">
                                             <i class="fas fa-plus-circle mr-2"></i>
                                             Adicionar à Brigada

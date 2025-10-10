@@ -121,6 +121,7 @@ class BrigadaController {
             CSRFProtection::verifyRequest();
             
             $professionalId = (int)($_POST['professional_id'] ?? 0);
+            $ramal = trim($_POST['ramal'] ?? '');
             
             if ($professionalId <= 0) {
                 throw new Exception("ID do profissional inválido");
@@ -149,11 +150,11 @@ class BrigadaController {
             
             // Inserir na brigada (ou reativar se já existiu)
             $this->db->query("
-                INSERT INTO public.brigadistas (professional_id, active)
-                VALUES (?, TRUE)
+                INSERT INTO public.brigadistas (professional_id, ramal, active)
+                VALUES (?, ?, TRUE)
                 ON CONFLICT (professional_id) 
-                DO UPDATE SET active = TRUE, updated_at = NOW()
-            ", [$professionalId]);
+                DO UPDATE SET active = TRUE, ramal = EXCLUDED.ramal, updated_at = NOW()
+            ", [$professionalId, $ramal ?: null]);
             
             // Auditoria
             $this->auditService->log(

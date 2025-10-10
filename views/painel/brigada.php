@@ -23,29 +23,27 @@
             margin-bottom: 30px;
         }
         
-        .card-brigadista {
+        .lista-brigadistas {
             background: rgba(255, 255, 255, 0.05);
-            border: 2px solid rgba(220, 53, 69, 0.3);
-            border-radius: 12px;
-            transition: all 0.3s ease;
-            font-size: 1.3rem;
+            border: 1px solid rgba(220, 53, 69, 0.2);
+            border-radius: 8px;
+            padding: 0;
         }
         
-        .card-brigadista:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(220, 53, 69, 0.4);
-            border-color: #dc3545;
+        .brigadista-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(220, 53, 69, 0.1);
+            transition: background 0.2s ease;
         }
         
-        .badge-fire {
-            font-size: 1.5rem;
-            padding: 10px 15px;
-            animation: pulse 2s infinite;
+        .brigadista-item:last-child {
+            border-bottom: none;
         }
         
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
+        .brigadista-item:hover {
+            background: rgba(220, 53, 69, 0.1);
         }
         
         .status-online {
@@ -76,31 +74,53 @@
         }
         
         .foto-brigadista {
-            width: 120px;
-            height: 120px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             object-fit: cover;
-            border: 3px solid #dc3545;
-            box-shadow: 0 4px 10px rgba(220, 53, 69, 0.3);
-            margin: 0 auto;
-            display: block;
+            border: 2px solid #dc3545;
+            margin-right: 15px;
         }
         
         .foto-placeholder {
-            width: 120px;
-            height: 120px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             background: rgba(220, 53, 69, 0.1);
-            border: 3px solid rgba(220, 53, 69, 0.3);
+            border: 2px solid rgba(220, 53, 69, 0.3);
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto;
+            margin-right: 15px;
         }
         
         .foto-placeholder i {
-            font-size: 3rem;
+            font-size: 1.5rem;
             color: rgba(220, 53, 69, 0.5);
+        }
+        
+        .brigadista-info {
+            flex: 1;
+        }
+        
+        .brigadista-nome {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 3px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .badge-fire-small {
+            font-size: 0.9rem;
+            margin-right: 8px;
+            color: #dc3545;
+        }
+        
+        .brigadista-detalhe {
+            font-size: 0.9rem;
+            color: #adb5bd;
+            margin-bottom: 2px;
         }
     </style>
 </head>
@@ -180,7 +200,7 @@
         }
         
         /**
-         * Renderiza grid de brigadistas
+         * Renderiza lista de brigadistas
          */
         function renderGrid(data) {
             const grid = document.getElementById('brigadistasGrid');
@@ -194,36 +214,35 @@
             
             emptyState.style.display = 'none';
             
-            grid.innerHTML = data.map(b => `
-                <div class="col-lg-4 col-md-6 mb-4">
-                    <div class="card card-brigadista">
-                        <div class="card-body text-center">
-                            ${b.foto_url ? `
-                                <img src="${escapeHtml(b.foto_url)}" alt="${escapeHtml(b.nome)}" class="foto-brigadista mb-3">
-                            ` : `
-                                <div class="foto-placeholder mb-3">
-                                    <i class="fas fa-user"></i>
+            grid.innerHTML = `
+                <div class="col-12">
+                    <div class="lista-brigadistas">
+                        ${data.map(b => `
+                            <div class="brigadista-item">
+                                ${b.foto_url ? `
+                                    <img src="${escapeHtml(b.foto_url)}" alt="${escapeHtml(b.nome)}" class="foto-brigadista">
+                                ` : `
+                                    <div class="foto-placeholder">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                `}
+                                <div class="brigadista-info">
+                                    <div class="brigadista-nome">
+                                        <i class="fas fa-fire-extinguisher badge-fire-small"></i>
+                                        ${escapeHtml(b.nome)}
+                                    </div>
+                                    <div class="brigadista-detalhe">
+                                        <i class="fas fa-building"></i> ${escapeHtml(b.setor)}
+                                    </div>
+                                    <div class="brigadista-detalhe">
+                                        <i class="far fa-clock"></i> Desde ${formatTime(b.desde)}
+                                    </div>
                                 </div>
-                            `}
-                            <h4 class="mb-3">
-                                <span class="badge badge-danger badge-fire">
-                                    <i class="fas fa-fire-extinguisher"></i>
-                                </span>
-                                <br>
-                                ${escapeHtml(b.nome)}
-                            </h4>
-                            <p class="mb-2">
-                                <i class="fas fa-building text-info"></i> 
-                                <strong>Setor:</strong> ${escapeHtml(b.setor)}
-                            </p>
-                            <p class="text-muted mb-0">
-                                <i class="far fa-clock"></i> 
-                                <small>Desde: ${formatTime(b.desde)}</small>
-                            </p>
-                        </div>
+                            </div>
+                        `).join('')}
                     </div>
                 </div>
-            `).join('');
+            `;
         }
         
         /**

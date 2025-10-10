@@ -261,6 +261,15 @@
                                                     </small>
                                                 </td>
                                                 <td>
+                                                    <button type="button" 
+                                                            class="btn btn-sm btn-info mr-1 btn-edit-brigadista" 
+                                                            data-id="<?= (int)$brigadista['id'] ?>"
+                                                            data-name="<?= htmlspecialchars($brigadista['professional_name']) ?>"
+                                                            data-ramal="<?= htmlspecialchars($brigadista['ramal'] ?? '') ?>"
+                                                            data-note="<?= htmlspecialchars($brigadista['note'] ?? '') ?>"
+                                                            title="Editar">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
                                                     <form method="POST" action="/brigada/remove" style="display: inline;" onsubmit="return confirm('Tem certeza que deseja remover este brigadista?');">
                                                         <?= CSRFProtection::getHiddenInput() ?>
                                                         <input type="hidden" name="id" value="<?= (int)$brigadista['id'] ?>">
@@ -279,6 +288,72 @@
                     
                 </div>
             </section>
+        </div>
+        
+        <!-- Modal: Editar Brigadista -->
+        <div class="modal fade" id="modalEditBrigadista" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header bg-info">
+                        <h5 class="modal-title">
+                            <i class="fas fa-edit mr-2"></i>
+                            Editar Brigadista
+                        </h5>
+                        <button type="button" class="close text-white" data-dismiss="modal">
+                            <span>&times;</span>
+                        </button>
+                    </div>
+                    <form id="formEditBrigadista" method="POST" action="/brigada/update">
+                        <?= CSRFProtection::getHiddenInput() ?>
+                        <input type="hidden" id="edit_brigadista_id" name="id">
+                        
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label>Profissional</label>
+                                <input type="text" id="edit_professional_name" class="form-control" disabled>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="edit_ramal">Ramal</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="edit_ramal" 
+                                       name="ramal"
+                                       pattern="[0-9]{4,10}"
+                                       maxlength="10"
+                                       placeholder="Ex: 5891">
+                                <small class="form-text text-muted">
+                                    Ramal para contato em caso de emergência (opcional)
+                                </small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="edit_note">Observações</label>
+                                <textarea class="form-control" 
+                                          id="edit_note" 
+                                          name="note" 
+                                          rows="3"
+                                          maxlength="500"
+                                          placeholder="Anotações adicionais sobre o brigadista (opcional)"></textarea>
+                                <small class="form-text text-muted">
+                                    Máximo 500 caracteres
+                                </small>
+                            </div>
+                        </div>
+                        
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                <i class="fas fa-times mr-2"></i>
+                                Cancelar
+                            </button>
+                            <button type="submit" class="btn btn-info">
+                                <i class="fas fa-save mr-2"></i>
+                                Salvar Alterações
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
         
         <!-- Footer -->

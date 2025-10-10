@@ -596,6 +596,84 @@
             });
         });
     });
+    
+    // Modal de Edição de Brigadista
+    document.querySelectorAll('.btn-edit-brigadista').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const id = this.dataset.id;
+            const name = this.dataset.name;
+            const ramal = this.dataset.ramal || '';
+            const note = this.dataset.note || '';
+            
+            // Preencher campos do modal
+            document.getElementById('edit_brigadista_id').value = id;
+            document.getElementById('edit_professional_name').value = name;
+            document.getElementById('edit_ramal').value = ramal;
+            document.getElementById('edit_note').value = note;
+            
+            // Abrir modal
+            $('#modalEditBrigadista').modal('show');
+        });
+    });
+    
+    // Processar formulário de edição
+    document.getElementById('formEditBrigadista').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn.innerHTML;
+        
+        // Mostrar loading
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Salvando...';
+        
+        try {
+            const response = await fetch('/brigada/update', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok && result.success) {
+                // Fechar modal
+                $('#modalEditBrigadista').modal('hide');
+                
+                // Mostrar mensagem de sucesso
+                const alert = document.createElement('div');
+                alert.className = 'alert alert-success alert-dismissible fade show';
+                alert.innerHTML = `
+                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                    <i class="fas fa-check-circle mr-2"></i>
+                    ${result.message || 'Brigadista atualizado com sucesso!'}
+                `;
+                const container = document.querySelector('.container-fluid');
+                const firstCard = container.querySelector('.card');
+                if (firstCard) {
+                    container.insertBefore(alert, firstCard);
+                } else {
+                    container.prepend(alert);
+                }
+                
+                // Recarregar página após 1 segundo
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+                
+            } else {
+                throw new Error(result.error || 'Erro ao atualizar brigadista');
+            }
+            
+        } catch (error) {
+            console.error('Erro na atualização:', error);
+            alert('Erro ao atualizar brigadista: ' + error.message);
+            
+            // Restaurar botão
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnText;
+        }
+    });
     </script>
 </body>
 </html>

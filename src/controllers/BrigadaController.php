@@ -47,6 +47,7 @@ class BrigadaController {
                     b.professional_id,
                     b.active,
                     b.note,
+                    b.ramal,
                     b.created_at,
                     p.nome AS professional_name,
                     p.setor AS sector,

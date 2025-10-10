@@ -212,6 +212,7 @@
                                             <th style="width: 80px">Foto</th>
                                             <th>Profissional</th>
                                             <th>Setor</th>
+                                            <th style="width: 100px">Ramal</th>
                                             <th style="width: 150px">Data de Inclusão</th>
                                             <th style="width: 100px">Ações</th>
                                         </tr>
@@ -243,6 +244,14 @@
                                                     <strong><?= htmlspecialchars($brigadista['professional_name']) ?></strong>
                                                 </td>
                                                 <td><?= htmlspecialchars($brigadista['sector'] ?? '-') ?></td>
+                                                <td>
+                                                    <?php if (!empty($brigadista['ramal'])): ?>
+                                                        <i class="fas fa-phone text-success mr-1"></i>
+                                                        <?= htmlspecialchars($brigadista['ramal']) ?>
+                                                    <?php else: ?>
+                                                        <span class="text-muted">-</span>
+                                                    <?php endif; ?>
+                                                </td>
                                                 <td>
                                                     <small>
                                                         <?php

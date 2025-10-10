@@ -38,7 +38,8 @@ class PanelBrigadaController {
                     p.foto_url,
                     r.profissional_renner_id as professional_id,
                     COALESCE(r.retorno, r.entrada_at) as desde,
-                    b.active
+                    b.active,
+                    b.ramal
                 FROM registro_acesso r
                 JOIN profissionais_renner p ON p.id = r.profissional_renner_id
                 JOIN brigadistas b ON b.professional_id = p.id
@@ -80,7 +81,8 @@ class PanelBrigadaController {
                     'setor' => $p['setor'] ?? 'N/A',
                     'professional_id' => (int)$p['professional_id'],
                     'desde' => $desde,
-                    'foto_url' => $fotoUrl
+                    'foto_url' => $fotoUrl,
+                    'ramal' => $p['ramal'] ?? null
                     // NÃO incluir CPF (LGPD)
                 ];
             }

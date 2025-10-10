@@ -233,6 +233,7 @@
                                     </div>
                                     <div class="brigadista-detalhe">
                                         <i class="fas fa-building"></i> ${escapeHtml(b.setor)}
+                                        ${b.ramal ? ` | <i class="fas fa-phone ml-2"></i> Ramal ${escapeHtml(b.ramal)}` : ''}
                                     </div>
                                     <div class="brigadista-detalhe">
                                         <i class="far fa-clock"></i> Desde ${formatTime(b.desde)}

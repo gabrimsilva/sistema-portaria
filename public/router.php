@@ -78,9 +78,12 @@ function requirePanelAuth(): void {
     
     $clientIp = getClientIp();
     
-    // Dev Mode: Permite 127.0.0.1 sem header se PANEL_BRG_DEV_MODE=1
+    // Dev Mode: Permite bypass em desenvolvimento
     $devMode = ($_ENV['PANEL_BRG_DEV_MODE'] ?? '0') === '1';
-    if ($devMode && ($clientIp === '127.0.0.1' || $clientIp === '::1')) {
+    $isReplit = !empty($_ENV['REPLIT_DEV_DOMAIN'] ?? '');
+    
+    // Bypass em dev mode para localhost OU ambiente Replit
+    if ($devMode && ($clientIp === '127.0.0.1' || $clientIp === '::1' || $isReplit)) {
         return; // Bypass em dev mode
     }
     

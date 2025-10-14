@@ -1,0 +1,248 @@
+PROMPT (cole no Replit)
+
+Quero preparar o Plano de Implementação da versão 2.0.0 do nosso sistema de Portaria.
+NÃO EXECUTE NADA SEM MINHA APROVAÇÃO.
+Trabalhe em etapas M1 → M12, cada uma com: objetivo, ações propostas, arquivos/diffs/SQL gerados em drafts, testes, critérios de aceite, e a pergunta “Posso aplicar?” antes de qualquer modificação real.
+
+Contexto do projeto (usar como padrão)
+
+Stack: PHP 8 + PostgreSQL, AdminLTE 3 + Bootstrap 4.6
+
+Arquitetura: Controllers em src/controllers/ (sem namespaces), rotas em public/router.php, views em views/, JS público em public/assets/js/, acesso a BD via wrapper Database, RBAC via AuthorizationService
+
+LGPD: dados mínimos na UI, máscaras quando aplicável, auditoria em alterações retroativas
+
+Fuso: America/Sao_Paulo
+
+Pontos de Atenção (bugs/ajustes)
+
+Visitantes / Prestadores de Serviços: incluir documentos estrangeiros (ex.: Passaporte), além de RG/CPF.
+
+Prestadores de Serviços: saídas não registram corretamente nos relatórios, impactando controle de placas (registros ficam em aberto).
+
+Profissionais Renner: entrada retroativa (quando esqueceram de registrar na hora), preservando integridade da saída intermediária.
+
+Sugestões de Melhoria
+
+Validade de cadastro (Visitantes/Prestadores): período de validade p/ agilizar entradas recorrentes.
+
+Filtro avançado em documentação e placas (busca/gestão).
+
+Lista de ramais no sistema (consulta rápida).
+
+ETAPAS (pergunte antes de cada uma)
+M1 — Descoberta & Plano Detalhado
+
+Objetivo: levantar estrutura atual, campos e rotas afetadas.
+
+Ações:
+
+Detectar tabelas/colunas: visitantes, prestadores_servico, profissionais_renner, registro_acesso, veiculos/placas (ou equivalentes).
+
+Mapear rotas e telas onde RG/CPF aparecem e onde filtros/documentos/placas são usados.
+
+Ver onde os relatórios de prestadores obtêm “saída” e “placa”.
+
+Entregas (drafts/sem aplicar):
+
+docs/v2.0.0_discovery.md com achados e impacto por módulo.
+
+Cronograma proposto M2→M12.
+
+Pergunta: “Posso seguir com M2 (modelagem & migrations em draft)?”
+
+M2 — Modelagem & Migrations (Draft)
+
+Objetivo: propor mudanças de schema sem executar.
+
+Ações (rascunho SQL em feature_v200/drafts/sql/):
+
+Documentos estrangeiros: adicionar doc_type (enum-like: CPF, RG, PASSAPORTE…), doc_number, doc_country (ISO-3166 alpha-2), índices e normalização.
+
+Validade de cadastro: campos valid_from, valid_until, status (ativo/expirado/bloqueado).
+
+Integridade de saída/placa (Prestadores): revisar chaves entre registro_acesso e entidade de veiculo (ou campos placa), índices para saida_final.
+
+Auditoria retroativa: tabela/trigger audit_log (se não existir) p/ registrar before/after, actor, reason.
+
+Entregas (drafts):
+
+001_docs_estrangeiros.sql
+
+002_validade_cadastros.sql
+
+003_fix_saida_placas.sql
+
+004_auditoria_retroativa.sql
+
+Critérios: compatibilidade com dados atuais, chaves/índices propostos.
+
+Pergunta: “Aprova as migrations em draft? Sigo com M3 (Draft de endpoints/rotas)?”
+
+M3 — Endpoints & Rotas (Draft)
+
+Objetivo: desenhar API/rotas necessárias sem aplicar.
+
+Ações:
+
+Documentos: endpoints para CRUD com doc_type/doc_number/doc_country.
+
+Prestadores/Relatórios: endpoint que garanta fechamento correto da saída e concilie placas (consulta única consistente).
+
+Entrada retroativa (Renner): endpoint POST /api/profissionais/entrada-retroativa com payload { profissional_id, entrada_at, motivo }, validações, RBAC (acesso.retroativo) e auditoria.
+
+Filtros avançados: parâmetros doc_type, doc_number, placa, date_range, setor.
+
+Ramais: endpoint simples GET /api/ramais (busca por nome/setor/ramal).
+
+Entregas (drafts):
+
+feature_v200/drafts/snippets/router.php.diff (diff unificado p/ public/router.php)
+
+Esqueleto de controllers em feature_v200/drafts/controllers/*.php
+
+Pergunta: “Posso gerar as views e JS em M4 (draft)?”
+
+M4 — Views & JS (Draft)
+
+Objetivo: telas e UX (sem aplicar).
+
+Ações:
+
+Form de documentos: incluir opções de Passaporte (internacional), UI para país do documento (select ISO-3166), máscara condicional.
+
+Entrada retroativa: modal com campos Data/Hora, Motivo (obrigatório), highlight de auditoria.
+
+Filtros avançados: inputs de datas, doc_type, doc_number, placa, setor.
+
+Validade: destaque válido/expirado em listas.
+
+Ramais: página de consulta com busca instantânea.
+
+Entregas (drafts):
+
+Views em feature_v200/drafts/views/...
+
+JS em feature_v200/drafts/js/...
+
+Padrão AdminLTE 3 + Bootstrap 4.6; sem expor dados sensíveis.
+
+Pergunta: “Aprova os drafts de UI? Sigo com M5 (Plano de correção de relatórios)?”
+
+M5 — Correção de Relatórios (Draft de estratégia)
+
+Objetivo: fechar bug das saídas de prestadores e placas.
+
+Ações:
+
+Mapear origem de dados (JOINs) dos relatórios; propor SQL corrigido que só considera registros com saída devidamente fechada e vincula placa atual do acesso.
+
+Adicionar índices e regras de consistência (trigger para impedir “fechar sem entrada”).
+
+Entregas (drafts): relatorios_fix.md + relatorios_fix.sql
+
+Pergunta: “Posso aplicar correções de relatório e índices? (em ambiente de teste)”
+
+M6 — Segurança & LGPD (Checklist Draft)
+
+Objetivo: garantir conformidade.
+
+Ações:
+
+Revisar exibição de CPF (mascarar onde não é essencial).
+
+Campos novos auditados; motivo obrigatório para retroativo.
+
+Cache-Control adequado em endpoints de listagens.
+
+Entregas: lgpd_checklist_v200.md
+
+Pergunta: “Posso aplicar ajustes de headers/máscaras?”
+
+M7 — Testes Automatizados (Draft)
+
+Objetivo: cenários mínimos de regressão.
+
+Ações:
+
+Retroativo: cria entrada retroativa → verifica trilha de auditoria e integridade com saídas intermediárias.
+
+Relatórios Prestadores: simula entrada/saída + placa → relatório fechado corretamente.
+
+Documentos estrangeiros: cadastro/passaporte com país → aparece corretamente nos filtros.
+
+Entregas: tests_v200/ (scripts curl/Postman e PHP unitário se aplicável).
+
+Pergunta: “Posso executar os testes automatizados? (ambiente de dev)”
+
+M8 — Aplicação Parcial (Com Aprovação)
+
+Objetivo: aplicar apenas o que você aprovar (migrations, rotas, controllers, views, js).
+
+Ações:
+
+Gerar patches unificados para cada arquivo e listar.
+
+Aplicar somente após OK explícito.
+
+Pergunta: “Posso aplicar o conjunto X/Y/Z?”
+
+M9 — Smoke Tests & Validação Manual
+
+Objetivo: checagens manuais rápidas (sem dados reais sensíveis).
+
+Ações: lista de passos por módulo (documentos, relatórios, retroativo, filtros, validade, ramais).
+
+Entrega: smoke_tests_v200.md
+
+Pergunta: “Posso guiar a execução dos smoke tests?”
+
+M10 — Observabilidade & Logs (Draft/Aplicação)
+
+Objetivo: logs úteis para suporte, sem excesso.
+
+Ações: log leve em erros de saída/relatório; métricas simples (contagem de retroativos/dia).
+
+Pergunta: “Aprova ativar logs e métricas leves?”
+
+M11 — Documentação do Usuário (Draft)
+
+Objetivo: instruções claras para o time.
+
+Ações: docs/guia_v200.md com:
+
+Como cadastrar documento estrangeiro;
+
+Como usar entrada retroativa (com motivo);
+
+Novos filtros;
+
+Validade de cadastros;
+
+Ramais.
+
+Pergunta: “Posso gerar o guia do usuário?”
+
+M12 — Plano de Rollback
+
+Objetivo: segurança de implantação.
+
+Ações: gerar rollback_v200.patch para desfazer alterações e script para reverter migrations, se necessário.
+
+Pergunta: “Posso gerar pacote de rollback?”
+
+Regras Gerais
+
+Sempre mostrar diffs antes de aplicar.
+
+Nada de execução automática (SQL, patch, testes) sem meu OK.
+
+Onde houver divergência de nomes de tabelas/colunas, me pergunte antes de ajustar.
+
+Use ISO 8601 para datas/hora nos endpoints; exibir PT-BR na UI.
+
+Máscaras: CPF apenas quando estritamente necessário (LGPD).
+
+Permissões: para retroativo, exigir permissão específica (ex.: acesso.retroativo) e registrar motivo em auditoria.
+
+Inicie com M1 agora — apenas descoberta e plano detalhado — e aguarde meu OK.

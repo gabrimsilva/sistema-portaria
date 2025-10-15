@@ -247,21 +247,21 @@ END $$;
 -- Registrar na auditoria
 INSERT INTO audit_log (
     user_id,
-    entity,
-    entity_id,
-    action,
-    before_data,
-    after_data,
+    acao,
+    entidade,
+    entidade_id,
+    dados_antes,
+    dados_depois,
     ip_address,
     user_agent,
     severidade,
     modulo,
     resultado
 ) VALUES (
-    1, -- Sistema/Admin
-    'permissions',
-    NULL,
+    1,
     'migration_005_rbac_v2',
+    'permissions',
+    0,
     NULL,
     jsonb_build_object(
         'novas_permissoes', 5,

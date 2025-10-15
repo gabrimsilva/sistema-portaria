@@ -621,6 +621,9 @@ try {
                 require_once '../src/services/ComponentService.php';
                 require_once '../views/demo/components.php';
             }
+            else if ($path === 'test/document-selector') {
+                require_once '../views/test-document-selector.php';
+            }
             
             // ============================================
             // 🆕 V2.0.0 - DOCUMENTOS INTERNACIONAIS

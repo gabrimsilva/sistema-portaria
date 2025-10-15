@@ -55,9 +55,13 @@ Preferred communication style: Simple, everyday language.
 - **M8 - Validação Final**: 3 testes completos (visitante estrangeiro Passaporte US, prestador validade híbrida, segurança + 47 índices de performance)
 
 ### Bug Fixes & UX Improvements (Oct 15, 2025) ✅ CONCLUÍDO
-- **Exit Buttons in Reports**: Adicionados botões "Registrar Saída" em `/reports/visitantes` e `/reports/prestadores-servico` com AJAX handlers, CSRF protection, e feedback visual (spinner)
-- **Navigation Standardization**: Substituído menu hardcoded em `views/visitantes_novo/list.php` por NavigationService para consistência em toda aplicação
-- **UI/UX Cleanup**: Verificação completa de views para eliminar código duplicado e elementos desnecessários
+- **Inline Edit Modals with Exit Option**: Sistema de edição inline completo em `/reports/visitantes` e `/reports/prestadores-servico`:
+  - Botão amarelo abre modal de edição com campos editáveis
+  - Botão verde "Registrar Saída" aparece dentro do modal apenas se pessoa ainda não saiu
+  - AJAX handlers com CSRF protection para salvar edições e registrar saídas
+  - Feedback visual (spinner) durante operações
+- **Navigation Standardization**: Substituído menu hardcoded em `views/visitantes_novo/list.php` por NavigationService para consistência
+- **UI/UX Cleanup**: Verificação completa de views para eliminar código duplicado
 
 ## System Architecture
 

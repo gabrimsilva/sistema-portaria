@@ -116,35 +116,35 @@ class PrestadoresServicoController {
                 doc_number,
                 doc_country,
                 cpf,
-                entrada_at,
+                entrada,
                 saida_consolidada,
                 validity_status
             FROM vw_prestadores_consolidado 
-            WHERE entrada_at IS NOT NULL";
+            WHERE entrada IS NOT NULL";
         
-        $countQuery = "SELECT COUNT(*) as total FROM vw_prestadores_consolidado WHERE entrada_at IS NOT NULL";
+        $countQuery = "SELECT COUNT(*) as total FROM vw_prestadores_consolidado WHERE entrada IS NOT NULL";
         $params = [];
         $countParams = [];
         
         // Filtro por período (data inicial e/ou final)
         if (!empty($data_inicial) && !empty($data_final)) {
             // Ambas as datas: filtrar entre elas
-            $query .= " AND DATE(entrada_at) BETWEEN ? AND ?";
-            $countQuery .= " AND DATE(entrada_at) BETWEEN ? AND ?";
+            $query .= " AND DATE(entrada) BETWEEN ? AND ?";
+            $countQuery .= " AND DATE(entrada) BETWEEN ? AND ?";
             $params[] = $data_inicial;
             $params[] = $data_final;
             $countParams[] = $data_inicial;
             $countParams[] = $data_final;
         } elseif (!empty($data_inicial)) {
             // Apenas data inicial: a partir dela
-            $query .= " AND DATE(entrada_at) >= ?";
-            $countQuery .= " AND DATE(entrada_at) >= ?";
+            $query .= " AND DATE(entrada) >= ?";
+            $countQuery .= " AND DATE(entrada) >= ?";
             $params[] = $data_inicial;
             $countParams[] = $data_inicial;
         } elseif (!empty($data_final)) {
             // Apenas data final: até ela
-            $query .= " AND DATE(entrada_at) <= ?";
-            $countQuery .= " AND DATE(entrada_at) <= ?";
+            $query .= " AND DATE(entrada) <= ?";
+            $countQuery .= " AND DATE(entrada) <= ?";
             $params[] = $data_final;
             $countParams[] = $data_final;
         }
@@ -183,7 +183,7 @@ class PrestadoresServicoController {
         }
         
         // Ordenação e paginação
-        $query .= " ORDER BY entrada_at DESC LIMIT ? OFFSET ?";
+        $query .= " ORDER BY entrada DESC LIMIT ? OFFSET ?";
         $params[] = $pageSize;
         $params[] = $offset;
         
@@ -979,9 +979,9 @@ class PrestadoresServicoController {
                 $updateParams[] = $placa;
             }
             
-            if (isset($_POST['entrada_at'])) {
-                $updateFields[] = 'entrada_at = ?';
-                $updateParams[] = $_POST['entrada_at'] ?: null;
+            if (isset($_POST['entrada'])) {
+                $updateFields[] = 'entrada = ?';
+                $updateParams[] = $_POST['entrada'] ?: null;
             }
             
             if (isset($_POST['saida'])) {
@@ -1106,7 +1106,7 @@ class PrestadoresServicoController {
                 empresa,
                 funcionario_responsavel,
                 cpf,
-                entrada as entrada_at,
+                entrada as entrada,
                 saida as saida_at
             FROM prestadores_servico 
             WHERE entrada IS NOT NULL";
@@ -1115,14 +1115,14 @@ class PrestadoresServicoController {
         
         // Filtro por período (data inicial e/ou final)
         if (!empty($data_inicial) && !empty($data_final)) {
-            $query .= " AND DATE(entrada_at) BETWEEN ? AND ?";
+            $query .= " AND DATE(entrada) BETWEEN ? AND ?";
             $params[] = $data_inicial;
             $params[] = $data_final;
         } elseif (!empty($data_inicial)) {
-            $query .= " AND DATE(entrada_at) >= ?";
+            $query .= " AND DATE(entrada) >= ?";
             $params[] = $data_inicial;
         } elseif (!empty($data_final)) {
-            $query .= " AND DATE(entrada_at) <= ?";
+            $query .= " AND DATE(entrada) <= ?";
             $params[] = $data_final;
         }
         
@@ -1151,7 +1151,7 @@ class PrestadoresServicoController {
             $params[] = "%$responsavel%";
         }
         
-        $query .= " ORDER BY entrada_at DESC";
+        $query .= " ORDER BY entrada DESC";
         
         // Buscar TODOS os dados (sem paginação) para exportação
         $prestadores = $this->db->fetchAll($query, $params);
@@ -1194,7 +1194,7 @@ class PrestadoresServicoController {
                 $this->sanitizeForCsv($prestador['empresa'] ?? ''),
                 $this->sanitizeForCsv($prestador['funcionario_responsavel'] ?? ''),
                 $this->sanitizeForCsv($prestador['placa_ou_ape']),
-                $this->sanitizeForCsv($prestador['entrada_at'] ?? ''),
+                $this->sanitizeForCsv($prestador['entrada'] ?? ''),
                 $this->sanitizeForCsv($prestador['saida_at'] ?? '')
             ], ';');
         }

@@ -26,10 +26,21 @@ feature_v200/
 │   │   └── DocumentValidator.php
 │   ├── snippets/                    # Diffs de código (M3) ✅
 │   │   └── rotas_v2_diff.md         # Diff de public/index.php
-│   ├── views/                       # Views novas (M4)
-│   └── js/                          # JavaScript novo (M4)
+│   ├── views/                       # Views novas (M4) ✅
+│   │   ├── ramais/index.php
+│   │   └── components/
+│   │       ├── modal_entrada_retroativa.php
+│   │       ├── widget_cadastros_expirando.php
+│   │       └── seletor_documento.php
+│   └── js/                          # JavaScript novo (M4) ✅
+│       ├── ramais.js
+│       ├── entrada-retroativa.js
+│       ├── widget-cadastros-expirando.js
+│       ├── document-validator.js
+│       └── gestao-validade.js
 ├── COMPATIBILIDADE_IMPACTO.md       # Relatório de impacto (M2)
 ├── M3_ENDPOINTS_RESUMO.md           # Resumo M3 ✅
+├── M4_VIEWS_JS_RESUMO.md            # Resumo M4 ✅
 └── README.md                        # Este arquivo
 
 docs/
@@ -58,9 +69,17 @@ docs/
 - 100% CSRF protegido, auditado e com RBAC
 - **NADA FOI APLICADO** - tudo em rascunho!
 
+### ✅ M4 - Views & JavaScript (CONCLUÍDO)
+- 4 views PHP criadas (ramais, modal retroativa, widget expirando, seletor documento)
+- 6 arquivos JavaScript criados
+- 5 componentes UI prontos e responsivos
+- Validação de 8 tipos de documentos
+- Gestão completa de validade (renovar/bloquear/desbloquear)
+- 100% escape HTML, CSRF protegido
+- **NADA FOI APLICADO** - tudo em rascunho!
+
 ### ⏳ PRÓXIMOS PASSOS
-- M4: Views & JS (aguardando aprovação)
-- M5: Correção de Relatórios
+- M5: Correção de Relatórios (aguardando aprovação)
 - M6-M12: Conforme cronograma
 
 ## 📋 MIGRATIONS CRIADAS

@@ -868,12 +868,29 @@ class PrestadoresServicoController {
                     return;
                 }
                 
-                // Registrar saída
+                // BUG FIX v2.0.0: Atualizar AMBAS as tabelas para manter consistência
+                // 1. Atualizar tabela legacy (prestadores_servico)
                 $this->db->query("
                     UPDATE prestadores_servico 
                     SET saida = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
                     WHERE id = ?
                 ", [$id]);
+                
+                // 2. Atualizar tabela de registro de acesso (se existir)
+                $this->db->query("
+                    UPDATE registro_acesso
+                    SET saida_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+                    WHERE tipo = 'prestador_servico' 
+                      AND entrada_at = ? 
+                      AND nome = ?
+                      AND COALESCE(doc_number, cpf) = COALESCE(?, ?)
+                      AND saida_at IS NULL
+                ", [
+                    $prestador['entrada'],
+                    $prestador['nome'],
+                    $prestador['doc_number'],
+                    $prestador['cpf']
+                ]);
                 
                 echo json_encode([
                     'success' => true, 

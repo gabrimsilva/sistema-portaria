@@ -179,6 +179,141 @@
                         </div>
                     </div>
                     
+                    <!-- Widget: Cadastros Expirando (v2.0.0) -->
+                    <?php if (!empty($cadastrosExpirando['visitantes']) || !empty($cadastrosExpirando['prestadores'])): ?>
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <div class="card card-warning">
+                                <div class="card-header">
+                                    <h3 class="card-title">
+                                        <i class="fas fa-exclamation-triangle"></i> Cadastros Expirando (Próximos 30 dias)
+                                    </h3>
+                                    <div class="card-tools">
+                                        <span class="badge badge-warning" id="total-expirando">
+                                            <?= (count($cadastrosExpirando['visitantes'] ?? []) + count($cadastrosExpirando['prestadores'] ?? [])) ?>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <ul class="nav nav-tabs" id="expiring-tabs" role="tablist">
+                                        <li class="nav-item">
+                                            <a class="nav-link active" id="visitantes-expiring-tab" data-toggle="tab" href="#visitantes-expiring" role="tab">
+                                                Visitantes <span class="badge badge-success"><?= count($cadastrosExpirando['visitantes'] ?? []) ?></span>
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" id="prestadores-expiring-tab" data-toggle="tab" href="#prestadores-expiring" role="tab">
+                                                Prestadores <span class="badge badge-warning"><?= count($cadastrosExpirando['prestadores'] ?? []) ?></span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                    <div class="tab-content mt-3" id="expiring-tabs-content">
+                                        <!-- Visitantes Tab -->
+                                        <div class="tab-pane fade show active" id="visitantes-expiring" role="tabpanel">
+                                            <?php if (!empty($cadastrosExpirando['visitantes'])): ?>
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm table-hover">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Nome</th>
+                                                                <th>Documento</th>
+                                                                <th>Empresa</th>
+                                                                <th>Validade</th>
+                                                                <th>Dias Restantes</th>
+                                                                <th>Ações</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <?php foreach ($cadastrosExpirando['visitantes'] as $visitante): ?>
+                                                                <tr>
+                                                                    <td><?= htmlspecialchars($visitante['nome']) ?></td>
+                                                                    <td>
+                                                                        <small class="text-muted">
+                                                                            <?= htmlspecialchars($visitante['doc_type'] ?? 'CPF') ?>: 
+                                                                            <?= htmlspecialchars($visitante['doc_number'] ?? '-') ?>
+                                                                        </small>
+                                                                    </td>
+                                                                    <td><?= htmlspecialchars($visitante['empresa'] ?? '-') ?></td>
+                                                                    <td><?= date('d/m/Y', strtotime($visitante['data_validade'])) ?></td>
+                                                                    <td>
+                                                                        <span class="badge <?= $visitante['dias_restantes'] <= 7 ? 'badge-danger' : 'badge-warning' ?>">
+                                                                            <?= $visitante['dias_restantes'] ?> dias
+                                                                        </span>
+                                                                    </td>
+                                                                    <td>
+                                                                        <button class="btn btn-sm btn-primary renovar-cadastro" 
+                                                                                data-tipo="visitante" 
+                                                                                data-id="<?= $visitante['id'] ?>"
+                                                                                data-nome="<?= htmlspecialchars($visitante['nome']) ?>">
+                                                                            <i class="fas fa-sync"></i> Renovar
+                                                                        </button>
+                                                                    </td>
+                                                                </tr>
+                                                            <?php endforeach; ?>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            <?php else: ?>
+                                                <p class="text-muted">Nenhum visitante com cadastro expirando nos próximos 30 dias.</p>
+                                            <?php endif; ?>
+                                        </div>
+                                        
+                                        <!-- Prestadores Tab -->
+                                        <div class="tab-pane fade" id="prestadores-expiring" role="tabpanel">
+                                            <?php if (!empty($cadastrosExpirando['prestadores'])): ?>
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm table-hover">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Nome</th>
+                                                                <th>Documento</th>
+                                                                <th>Empresa</th>
+                                                                <th>Validade</th>
+                                                                <th>Dias Restantes</th>
+                                                                <th>Ações</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <?php foreach ($cadastrosExpirando['prestadores'] as $prestador): ?>
+                                                                <tr>
+                                                                    <td><?= htmlspecialchars($prestador['nome']) ?></td>
+                                                                    <td>
+                                                                        <small class="text-muted">
+                                                                            <?= htmlspecialchars($prestador['doc_type'] ?? 'CPF') ?>: 
+                                                                            <?= htmlspecialchars($prestador['doc_number'] ?? '-') ?>
+                                                                        </small>
+                                                                    </td>
+                                                                    <td><?= htmlspecialchars($prestador['empresa'] ?? '-') ?></td>
+                                                                    <td><?= date('d/m/Y', strtotime($prestador['data_validade'])) ?></td>
+                                                                    <td>
+                                                                        <span class="badge <?= $prestador['dias_restantes'] <= 7 ? 'badge-danger' : 'badge-warning' ?>">
+                                                                            <?= $prestador['dias_restantes'] ?> dias
+                                                                        </span>
+                                                                    </td>
+                                                                    <td>
+                                                                        <button class="btn btn-sm btn-primary renovar-cadastro" 
+                                                                                data-tipo="prestador" 
+                                                                                data-id="<?= $prestador['id'] ?>"
+                                                                                data-nome="<?= htmlspecialchars($prestador['nome']) ?>">
+                                                                            <i class="fas fa-sync"></i> Renovar
+                                                                        </button>
+                                                                    </td>
+                                                                </tr>
+                                                            <?php endforeach; ?>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            <?php else: ?>
+                                                <p class="text-muted">Nenhum prestador com cadastro expirando nos próximos 30 dias.</p>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+                    
                     <!-- Pessoas Atualmente na Empresa -->
                     <div class="row">
                         <div class="col-12">
@@ -1581,6 +1716,62 @@
         });
         
         console.log('🎯 Sistema de máscaras inicializado com Bootstrap 4.6.2!');
+        
+        // ===================================
+        // WIDGET: Renovação de Cadastros (v2.0.0)
+        // ===================================
+        $(document).on('click', '.renovar-cadastro', function() {
+            const tipo = $(this).data('tipo');
+            const id = $(this).data('id');
+            const nome = $(this).data('nome');
+            
+            if (!confirm(`Deseja renovar o cadastro de ${nome} por mais 30 dias?`)) {
+                return;
+            }
+            
+            const btn = $(this);
+            btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Renovando...');
+            
+            // Calcular nova data (30 dias a partir de hoje)
+            const novaValidade = new Date();
+            novaValidade.setDate(novaValidade.getDate() + 30);
+            const dataFormatada = novaValidade.toISOString().split('T')[0];
+            
+            // Endpoint depende do tipo
+            const endpoint = tipo === 'visitante' ? '/visitantes' : '/prestadores-servico';
+            
+            $.ajax({
+                url: `${endpoint}?action=update`,
+                method: 'PUT',
+                headers: {
+                    'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+                },
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    id: id,
+                    valid_until: dataFormatada,
+                    validity_status: 'ativo'
+                }),
+                success: function(response) {
+                    if (response.success) {
+                        showToast(`Cadastro de ${nome} renovado até ${new Date(dataFormatada).toLocaleDateString('pt-BR')}!`, 'success');
+                        // Recarregar a página após 1 segundo para atualizar o widget
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showToast('Erro ao renovar cadastro: ' + (response.message || 'Erro desconhecido'), 'error');
+                        btn.prop('disabled', false).html('<i class="fas fa-sync"></i> Renovar');
+                    }
+                },
+                error: function(xhr) {
+                    const errorMsg = xhr.responseJSON?.message || 'Erro ao conectar com o servidor';
+                    showToast('Erro ao renovar: ' + errorMsg, 'error');
+                    btn.prop('disabled', false).html('<i class="fas fa-sync"></i> Renovar');
+                }
+            });
+        });
+        
+        // Auto-refresh do widget a cada 5 minutos (opcional)
+        // setInterval(() => location.reload(), 5 * 60 * 1000);
         
     });
     </script>

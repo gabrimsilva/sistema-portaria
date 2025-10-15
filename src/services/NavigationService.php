@@ -66,6 +66,14 @@ class NavigationService
             'children' => []
         ],
         [
+            'id' => 'ramais',
+            'label' => 'Ramais',
+            'url' => '/ramais',
+            'icon' => 'bi-telephone',
+            'permission' => 'all',
+            'children' => []
+        ],
+        [
             'id' => 'importacao',
             'label' => 'Importação',
             'url' => '/importacao',
@@ -106,6 +114,7 @@ class NavigationService
         '/privacy/portal' => ['privacy'],
         '/privacy/cookies' => ['privacy'],
         '/brigada' => ['brigada'],
+        '/ramais' => ['ramais'],
         '/importacao' => ['importacao'],
         '/config' => ['config']
     ];

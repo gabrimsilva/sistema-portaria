@@ -28,8 +28,8 @@ class DashboardController {
                 case 'prestador':
                     return $this->db->fetch("
                         SELECT COUNT(*) as total 
-                        FROM prestadores_servico 
-                        WHERE entrada IS NOT NULL AND saida IS NULL
+                        FROM vw_prestadores_consolidado 
+                        WHERE entrada IS NOT NULL AND saida_consolidada IS NULL
                     ")['total'] ?? 0;
                 
                 case 'profissional_renner':
@@ -165,6 +165,9 @@ class DashboardController {
             
             // Pessoas atualmente na empresa
             $pessoasNaEmpresa = $this->getPessoasNaEmpresa();
+            
+            // NOVO: Dados do widget de cadastros expirando (v2.0.0)
+            $cadastrosExpirando = $this->getCadastrosExpirando();
             
             include '../views/dashboard/index.php';
         } catch (Exception $e) {
@@ -312,17 +315,19 @@ class DashboardController {
             
             // Visitantes na empresa (entraram mas não saíram)
             $visitantesAtivos = $this->db->fetchAll("
-                SELECT nome, cpf, empresa, setor, hora_entrada, 'Visitante' as tipo, id, placa_veiculo, funcionario_responsavel
+                SELECT nome, cpf, doc_type, doc_number, doc_country, empresa, setor, 
+                       hora_entrada, 'Visitante' as tipo, id, placa_veiculo, funcionario_responsavel
                 FROM visitantes_novo 
                 WHERE hora_entrada IS NOT NULL AND hora_saida IS NULL
                 ORDER BY hora_entrada DESC
             ") ?? [];
             
-            // Prestadores trabalhando (entraram mas não saíram)
+            // Prestadores trabalhando (usando view consolidada - BUG FIX v2.0.0)
             $prestadoresAtivos = $this->db->fetchAll("
-                SELECT nome, cpf, empresa, setor, entrada as hora_entrada, 'Prestador' as tipo, id, placa_veiculo, funcionario_responsavel
-                FROM prestadores_servico 
-                WHERE entrada IS NOT NULL AND saida IS NULL
+                SELECT nome, doc_type, doc_number, cpf, empresa, setor, 
+                       entrada as hora_entrada, 'Prestador' as tipo, id, placa_veiculo, funcionario_responsavel
+                FROM vw_prestadores_consolidado 
+                WHERE entrada IS NOT NULL AND saida_consolidada IS NULL
                 ORDER BY entrada DESC
             ") ?? [];
             
@@ -360,6 +365,50 @@ class DashboardController {
             return $pessoas;
         } catch (Exception $e) {
             return [];
+        }
+    }
+    
+    /**
+     * Obter cadastros expirando (visitantes e prestadores)
+     * Usado no widget do dashboard v2.0.0
+     */
+    public function getCadastrosExpirando() {
+        try {
+            $data = [
+                'visitantes' => [],
+                'prestadores' => []
+            ];
+            
+            // Visitantes expirando (próximos 30 dias)
+            $data['visitantes'] = $this->db->fetchAll("
+                SELECT id, nome, doc_type, doc_number, empresa, 
+                       valid_until as data_validade, validity_status,
+                       DATE(valid_until) - CURRENT_DATE as dias_restantes
+                FROM visitantes_novo
+                WHERE valid_until IS NOT NULL 
+                  AND validity_status IN ('ativo', 'expirando')
+                  AND DATE(valid_until) BETWEEN CURRENT_DATE AND (CURRENT_DATE + INTERVAL '30 days')
+                ORDER BY valid_until ASC
+                LIMIT 10
+            ") ?? [];
+            
+            // Prestadores expirando (próximos 30 dias)
+            $data['prestadores'] = $this->db->fetchAll("
+                SELECT id, nome, doc_type, doc_number, empresa, 
+                       valid_until as data_validade, validity_status,
+                       DATE(valid_until) - CURRENT_DATE as dias_restantes
+                FROM vw_prestadores_consolidado
+                WHERE valid_until IS NOT NULL 
+                  AND validity_status IN ('ativo', 'expirando')
+                  AND DATE(valid_until) BETWEEN CURRENT_DATE AND (CURRENT_DATE + INTERVAL '30 days')
+                ORDER BY valid_until ASC
+                LIMIT 10
+            ") ?? [];
+            
+            return $data;
+        } catch (Exception $e) {
+            error_log("Erro getCadastrosExpirando: " . $e->getMessage());
+            return ['visitantes' => [], 'prestadores' => []];
         }
     }
 }

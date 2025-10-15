@@ -57,7 +57,8 @@ class VisitantesNovoController {
         $params = [];
         
         if (!empty($search)) {
-            $query .= " AND (nome ILIKE ? OR cpf ILIKE ? OR empresa ILIKE ?)";
+            $query .= " AND (nome ILIKE ? OR cpf ILIKE ? OR doc_number ILIKE ? OR empresa ILIKE ?)";
+            $params[] = "%$search%";
             $params[] = "%$search%";
             $params[] = "%$search%";
             $params[] = "%$search%";
@@ -138,7 +139,8 @@ class VisitantesNovoController {
         
         // Busca geral
         if (!empty($search)) {
-            $whereConditions[] = "(nome ILIKE ? OR cpf ILIKE ?)";
+            $whereConditions[] = "(nome ILIKE ? OR cpf ILIKE ? OR doc_number ILIKE ?)";
+            $params[] = "%$search%";
             $params[] = "%$search%";
             $params[] = "%$search%";
         }
@@ -152,7 +154,8 @@ class VisitantesNovoController {
         
         // Query principal com paginação e ordenação otimizada
         $query = "
-            SELECT id, nome, cpf, empresa, funcionario_responsavel, setor, 
+            SELECT id, nome, cpf, doc_type, doc_number, doc_country, 
+                   empresa, funcionario_responsavel, setor, 
                    placa_veiculo, hora_entrada, hora_saida
             FROM visitantes_novo 
             WHERE $whereClause 
@@ -1044,7 +1047,8 @@ class VisitantesNovoController {
         
         // Busca geral
         if (!empty($search)) {
-            $whereConditions[] = "(nome ILIKE ? OR cpf ILIKE ?)";
+            $whereConditions[] = "(nome ILIKE ? OR cpf ILIKE ? OR doc_number ILIKE ?)";
+            $params[] = "%$search%";
             $params[] = "%$search%";
             $params[] = "%$search%";
         }
@@ -1053,7 +1057,8 @@ class VisitantesNovoController {
         
         // Buscar TODOS os dados (sem paginação) para exportação
         $query = "
-            SELECT id, nome, cpf, empresa, funcionario_responsavel, setor, 
+            SELECT id, nome, cpf, doc_type, doc_number, doc_country,
+                   empresa, funcionario_responsavel, setor, 
                    placa_veiculo, hora_entrada, hora_saida
             FROM visitantes_novo 
             WHERE $whereClause 
@@ -1077,6 +1082,9 @@ class VisitantesNovoController {
             'ID',
             'Nome',
             'CPF',
+            'Tipo Documento',
+            'Número Documento',
+            'País Documento',
             'Empresa',
             'Funcionário Responsável',
             'Setor',
@@ -1092,6 +1100,10 @@ class VisitantesNovoController {
             $cpf_display = !empty($visitante['cpf']) ? 
                 ($canViewFullCpf ? $visitante['cpf'] : $this->maskCpf($visitante['cpf'])) : '';
             
+            // Mascarar doc_number se necessário (LGPD)
+            $doc_number_display = !empty($visitante['doc_number']) ? 
+                ($canViewFullCpf ? $visitante['doc_number'] : $this->maskCpf($visitante['doc_number'])) : '';
+            
             // Lógica "A pé" para placas
             $placa_display = empty($visitante['placa_veiculo']) ? 'A pé' : $visitante['placa_veiculo'];
             
@@ -1099,6 +1111,9 @@ class VisitantesNovoController {
                 $this->sanitizeForCsv($visitante['id']),
                 $this->sanitizeForCsv($visitante['nome']),
                 $this->sanitizeForCsv($cpf_display),
+                $this->sanitizeForCsv($visitante['doc_type'] ?? ''),
+                $this->sanitizeForCsv($doc_number_display),
+                $this->sanitizeForCsv($visitante['doc_country'] ?? ''),
                 $this->sanitizeForCsv($visitante['empresa'] ?? ''),
                 $this->sanitizeForCsv($visitante['funcionario_responsavel'] ?? ''),
                 $this->sanitizeForCsv($visitante['setor'] ?? ''),

@@ -574,6 +574,20 @@ try {
             $controller->index();
             break;
         
+        // 🆕 V2.0.0 - PAINEL PÚBLICO DE BRIGADA
+        // ============================================
+        case 'painel/brigada':
+            require_once '../src/controllers/PainelBrigadaController.php';
+            $controller = new PainelBrigadaController();
+            $controller->index();
+            break;
+        
+        case 'api/painel/brigada':
+            require_once '../src/controllers/PainelBrigadaController.php';
+            $controller = new PainelBrigadaController();
+            $controller->api();
+            break;
+        
         case 'api/ramais/buscar':
             require_once '../src/controllers/RamalController.php';
             $controller = new RamalController();

@@ -54,6 +54,11 @@ Preferred communication style: Simple, everyday language.
 - **M7.2 - Painel Público Brigada**: Controller público `/painel/brigada` com fotos circulares, auto-refresh 60s, segurança LGPD (realpath validation)
 - **M8 - Validação Final**: 3 testes completos (visitante estrangeiro Passaporte US, prestador validade híbrida, segurança + 47 índices de performance)
 
+### Bug Fixes & UX Improvements (Oct 15, 2025) ✅ CONCLUÍDO
+- **Exit Buttons in Reports**: Adicionados botões "Registrar Saída" em `/reports/visitantes` e `/reports/prestadores-servico` com AJAX handlers, CSRF protection, e feedback visual (spinner)
+- **Navigation Standardization**: Substituído menu hardcoded em `views/visitantes_novo/list.php` por NavigationService para consistência em toda aplicação
+- **UI/UX Cleanup**: Verificação completa de views para eliminar código duplicado e elementos desnecessários
+
 ## System Architecture
 
 ### UI/UX Decisions

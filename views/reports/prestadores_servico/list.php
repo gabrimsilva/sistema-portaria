@@ -217,6 +217,11 @@ $canDeleteInline = $authService->hasPermission('relatorios.excluir_linha');
                                                 </td>
                                                 <?php if ($canEditInline || $canDeleteInline): ?>
                                                 <td class="text-center">
+                                                    <?php if (empty($p['saida'])): ?>
+                                                    <button class="btn btn-sm btn-success btn-registrar-saida-prest" data-id="<?= $p['id'] ?>" data-nome="<?= htmlspecialchars($p['nome']) ?>" title="Registrar Saída">
+                                                        <i class="fas fa-sign-out-alt"></i>
+                                                    </button>
+                                                    <?php endif; ?>
                                                     <?php if ($canEditInline): ?>
                                                     <button class="btn btn-sm btn-warning btn-edit-inline" data-id="<?= $p['id'] ?>" title="Editar">
                                                         <i class="fas fa-edit"></i>
@@ -439,6 +444,35 @@ $canDeleteInline = $authService->hasPermission('relatorios.excluir_linha');
                 history.replaceState({}, '', url.toString());
             }
         }
+        
+        // Botões inline - Registrar Saída
+        $('.btn-registrar-saida-prest').on('click', function() {
+            const id = $(this).data('id');
+            const nome = $(this).data('nome');
+            
+            if (!confirm('Confirmar saída de "' + nome + '"?')) {
+                return;
+            }
+            
+            const $btn = $(this);
+            $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+            
+            $.ajax({
+                url: '/prestadores-servico?action=saida',
+                method: 'POST',
+                headers: {
+                    'X-CSRF-Token': csrfToken
+                },
+                data: { id: id },
+                success: function(response) {
+                    location.reload();
+                },
+                error: function(xhr) {
+                    alert('Erro ao registrar saída.');
+                    $btn.prop('disabled', false).html('<i class="fas fa-sign-out-alt"></i>');
+                }
+            });
+        });
         
         // Botões inline - Editar
         $('.btn-edit-inline').on('click', function() {

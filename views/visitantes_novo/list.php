@@ -38,69 +38,8 @@
             </ul>
         </nav>
         
-        <!-- Main Sidebar -->
-        <aside class="main-sidebar sidebar-dark-primary elevation-4">
-            <a href="/dashboard" class="brand-link">
-                <?= LogoService::renderSimpleLogo('renner', 'sidebar'); ?>
-                <span class="brand-text font-weight-light">Controle Acesso</span>
-            </a>
-            
-            <div class="sidebar">
-                <nav class="mt-2">
-                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
-                        <li class="nav-item">
-                            <a href="/dashboard" class="nav-link">
-                                <i class="nav-icon fas fa-tachometer-alt"></i>
-                                <p>Dashboard</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="/prestadores-servico" class="nav-link">
-                                <i class="nav-icon fas fa-tools"></i>
-                                <p>Prestador de Serviços</p>
-                            </a>
-                        </li>
-                        <li class="nav-item has-treeview">
-                            <a href="#" class="nav-link">
-                                <i class="nav-icon fas fa-chart-bar"></i>
-                                <p>
-                                    Relatórios
-                                    <i class="fas fa-angle-left right"></i>
-                                </p>
-                            </a>
-                            <ul class="nav nav-treeview">
-                                <li class="nav-item">
-                                    <a href="/reports/profissionais-renner" class="nav-link">
-                                        <i class="nav-icon fas fa-user-tie"></i>
-                                        <p>Profissionais Renner</p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="/reports/visitantes" class="nav-link">
-                                        <i class="nav-icon fas fa-users"></i>
-                                        <p>Visitantes</p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="/reports/prestadores-servico" class="nav-link">
-                                        <i class="nav-icon fas fa-tools"></i>
-                                        <p>Prestador de Serviços</p>
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-                        <?php if ($_SESSION['user_profile'] === 'administrador' || $_SESSION['user_profile'] === 'seguranca'): ?>
-                        <li class="nav-item">
-                            <a href="/config" class="nav-link">
-                                <i class="nav-icon fas fa-cogs"></i>
-                                <p>Configurações</p>
-                            </a>
-                        </li>
-                        <?php endif; ?>
-                    </ul>
-                </nav>
-            </div>
-        </aside>
+        <!-- 🎯 NavigationService: Navegação Unificada -->
+        <?= NavigationService::renderSidebar() ?>
         
         <!-- Content Wrapper -->
         <div class="content-wrapper">

@@ -212,6 +212,11 @@ $canDeleteInline = $authService->hasPermission('relatorios.excluir_linha');
                                                 </td>
                                                 <?php if ($canEditInline || $canDeleteInline): ?>
                                                 <td class="text-center">
+                                                    <?php if (empty($visitante['hora_saida_formatted'])): ?>
+                                                    <button class="btn btn-sm btn-success btn-registrar-saida" data-id="<?= $visitante['id'] ?>" data-nome="<?= htmlspecialchars($visitante['nome']) ?>" title="Registrar Saída">
+                                                        <i class="fas fa-sign-out-alt"></i>
+                                                    </button>
+                                                    <?php endif; ?>
                                                     <?php if ($canEditInline): ?>
                                                     <button class="btn btn-sm btn-warning btn-edit-inline" data-id="<?= $visitante['id'] ?>" title="Editar">
                                                         <i class="fas fa-edit"></i>
@@ -328,6 +333,39 @@ $canDeleteInline = $authService->hasPermission('relatorios.excluir_linha');
     <script>
     $(document).ready(function() {
         const csrfToken = $('meta[name="csrf-token"]').attr('content');
+        
+        $('.btn-registrar-saida').on('click', function() {
+            const id = $(this).data('id');
+            const nome = $(this).data('nome');
+            
+            if (!confirm('Confirmar saída de "' + nome + '"?')) {
+                return;
+            }
+            
+            const $btn = $(this);
+            $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+            
+            $.ajax({
+                url: '/visitantes?action=saida&id=' + id,
+                method: 'POST',
+                headers: {
+                    'X-CSRF-Token': csrfToken
+                },
+                data: { id: id },
+                success: function(response) {
+                    if (response.success) {
+                        location.reload();
+                    } else {
+                        alert('Erro ao registrar saída: ' + response.message);
+                        $btn.prop('disabled', false).html('<i class="fas fa-sign-out-alt"></i>');
+                    }
+                },
+                error: function(xhr) {
+                    alert('Erro ao registrar saída.');
+                    $btn.prop('disabled', false).html('<i class="fas fa-sign-out-alt"></i>');
+                }
+            });
+        });
         
         $('.btn-edit-inline').on('click', function() {
             const id = $(this).data('id');

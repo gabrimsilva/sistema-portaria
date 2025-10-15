@@ -212,13 +212,17 @@ $canDeleteInline = $authService->hasPermission('relatorios.excluir_linha');
                                                 </td>
                                                 <?php if ($canEditInline || $canDeleteInline): ?>
                                                 <td class="text-center">
-                                                    <?php if (empty($visitante['hora_saida_formatted'])): ?>
-                                                    <button class="btn btn-sm btn-success btn-registrar-saida" data-id="<?= $visitante['id'] ?>" data-nome="<?= htmlspecialchars($visitante['nome']) ?>" title="Registrar Saída">
-                                                        <i class="fas fa-sign-out-alt"></i>
-                                                    </button>
-                                                    <?php endif; ?>
                                                     <?php if ($canEditInline): ?>
-                                                    <button class="btn btn-sm btn-warning btn-edit-inline" data-id="<?= $visitante['id'] ?>" title="Editar">
+                                                    <button class="btn btn-sm btn-warning btn-edit-inline" 
+                                                            data-id="<?= $visitante['id'] ?>"
+                                                            data-nome="<?= htmlspecialchars($visitante['nome']) ?>"
+                                                            data-cpf="<?= htmlspecialchars($visitante['cpf']) ?>"
+                                                            data-empresa="<?= htmlspecialchars($visitante['empresa'] ?? '') ?>"
+                                                            data-responsavel="<?= htmlspecialchars($visitante['funcionario_responsavel'] ?? '') ?>"
+                                                            data-setor="<?= htmlspecialchars($visitante['setor'] ?? '') ?>"
+                                                            data-placa="<?= htmlspecialchars($visitante['placa_veiculo'] ?? '') ?>"
+                                                            data-tem-saida="<?= !empty($visitante['hora_saida_formatted']) ? '1' : '0' ?>"
+                                                            title="Editar">
                                                         <i class="fas fa-edit"></i>
                                                     </button>
                                                     <?php endif; ?>
@@ -326,6 +330,64 @@ $canDeleteInline = $authService->hasPermission('relatorios.excluir_linha');
         </div>
     </div>
     
+    <!-- Modal de Edição -->
+    <div class="modal fade" id="modalEditarVisitante" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title">
+                        <i class="fas fa-edit"></i> Editar Visitante
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="edit_visitante_id">
+                    
+                    <div class="form-group">
+                        <label>Nome *</label>
+                        <input type="text" class="form-control" id="edit_nome">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>CPF</label>
+                        <input type="text" class="form-control" id="edit_cpf" readonly>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Empresa</label>
+                        <input type="text" class="form-control" id="edit_empresa">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Funcionário Responsável</label>
+                        <input type="text" class="form-control" id="edit_responsavel">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Setor</label>
+                        <input type="text" class="form-control" id="edit_setor">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Placa do Veículo</label>
+                        <input type="text" class="form-control" id="edit_placa">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-success" id="btnRegistrarSaidaModal" style="display:none;">
+                        <i class="fas fa-sign-out-alt"></i> Registrar Saída
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-warning" id="btnSalvarEdicao">
+                        <i class="fas fa-save"></i> Salvar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
@@ -334,16 +396,84 @@ $canDeleteInline = $authService->hasPermission('relatorios.excluir_linha');
     $(document).ready(function() {
         const csrfToken = $('meta[name="csrf-token"]').attr('content');
         
-        $('.btn-registrar-saida').on('click', function() {
+        // Botão Editar - Abre modal
+        $('.btn-edit-inline').on('click', function() {
             const id = $(this).data('id');
             const nome = $(this).data('nome');
+            const cpf = $(this).data('cpf');
+            const empresa = $(this).data('empresa');
+            const responsavel = $(this).data('responsavel');
+            const setor = $(this).data('setor');
+            const placa = $(this).data('placa');
+            const temSaida = $(this).data('tem-saida');
+            
+            // Preencher campos do modal
+            $('#edit_visitante_id').val(id);
+            $('#edit_nome').val(nome);
+            $('#edit_cpf').val(cpf);
+            $('#edit_empresa').val(empresa);
+            $('#edit_responsavel').val(responsavel);
+            $('#edit_setor').val(setor);
+            $('#edit_placa').val(placa);
+            
+            // Mostrar/esconder botão de saída
+            if (temSaida === '0' || temSaida === 0) {
+                $('#btnRegistrarSaidaModal').show();
+            } else {
+                $('#btnRegistrarSaidaModal').hide();
+            }
+            
+            // Abrir modal
+            $('#modalEditarVisitante').modal('show');
+        });
+        
+        // Salvar edição
+        $('#btnSalvarEdicao').on('click', function() {
+            const id = $('#edit_visitante_id').val();
+            const $btn = $(this);
+            
+            $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Salvando...');
+            
+            $.ajax({
+                url: '/visitantes?action=update_ajax',
+                method: 'POST',
+                headers: {
+                    'X-CSRF-Token': csrfToken
+                },
+                data: {
+                    id: id,
+                    nome: $('#edit_nome').val(),
+                    empresa: $('#edit_empresa').val(),
+                    funcionario_responsavel: $('#edit_responsavel').val(),
+                    setor: $('#edit_setor').val(),
+                    placa_veiculo: $('#edit_placa').val()
+                },
+                success: function(response) {
+                    if (response.success) {
+                        location.reload();
+                    } else {
+                        alert('Erro ao salvar: ' + response.message);
+                        $btn.prop('disabled', false).html('<i class="fas fa-save"></i> Salvar');
+                    }
+                },
+                error: function(xhr) {
+                    alert('Erro ao salvar alterações.');
+                    $btn.prop('disabled', false).html('<i class="fas fa-save"></i> Salvar');
+                }
+            });
+        });
+        
+        // Registrar saída pelo modal
+        $('#btnRegistrarSaidaModal').on('click', function() {
+            const id = $('#edit_visitante_id').val();
+            const nome = $('#edit_nome').val();
             
             if (!confirm('Confirmar saída de "' + nome + '"?')) {
                 return;
             }
             
             const $btn = $(this);
-            $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+            $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Registrando...');
             
             $.ajax({
                 url: '/visitantes?action=saida&id=' + id,
@@ -357,19 +487,14 @@ $canDeleteInline = $authService->hasPermission('relatorios.excluir_linha');
                         location.reload();
                     } else {
                         alert('Erro ao registrar saída: ' + response.message);
-                        $btn.prop('disabled', false).html('<i class="fas fa-sign-out-alt"></i>');
+                        $btn.prop('disabled', false).html('<i class="fas fa-sign-out-alt"></i> Registrar Saída');
                     }
                 },
                 error: function(xhr) {
                     alert('Erro ao registrar saída.');
-                    $btn.prop('disabled', false).html('<i class="fas fa-sign-out-alt"></i>');
+                    $btn.prop('disabled', false).html('<i class="fas fa-sign-out-alt"></i> Registrar Saída');
                 }
             });
-        });
-        
-        $('.btn-edit-inline').on('click', function() {
-            const id = $(this).data('id');
-            window.location.href = '/reports/visitantes?action=edit&id=' + id;
         });
         
         $('.btn-delete-inline').on('click', function() {

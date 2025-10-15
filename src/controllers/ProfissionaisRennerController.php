@@ -80,10 +80,12 @@ class ProfissionaisRennerController {
         
         if (!empty($search)) {
             if ($isReport) {
-                $query .= " AND p.nome ILIKE ?";
+                $query .= " AND (p.nome ILIKE ? OR p.doc_number ILIKE ?)";
+                $params[] = "%$search%";
                 $params[] = "%$search%";
             } else {
-                $query .= " AND (nome ILIKE ? OR setor ILIKE ?)";
+                $query .= " AND (nome ILIKE ? OR doc_number ILIKE ? OR setor ILIKE ?)";
+                $params[] = "%$search%";
                 $params[] = "%$search%";
                 $params[] = "%$search%";
             }
@@ -1087,7 +1089,8 @@ class ProfissionaisRennerController {
         $data_final = $_GET['data_final'] ?? '';
         
         // Query base para exportação
-        $query = "SELECT r.id, p.nome, p.setor, r.placa_veiculo, r.entrada_at, r.saida_at, r.retorno, r.saida_final 
+        $query = "SELECT r.id, p.nome, p.doc_type, p.doc_number, p.doc_country, 
+                         p.setor, r.placa_veiculo, r.entrada_at, r.saida_at, r.retorno, r.saida_final 
                   FROM registro_acesso r 
                   JOIN profissionais_renner p ON p.id = r.profissional_renner_id 
                   WHERE r.tipo = 'profissional_renner'";
@@ -1109,7 +1112,8 @@ class ProfissionaisRennerController {
         
         // Busca geral
         if (!empty($search)) {
-            $query .= " AND p.nome ILIKE ?";
+            $query .= " AND (p.nome ILIKE ? OR p.doc_number ILIKE ?)";
+            $params[] = "%$search%";
             $params[] = "%$search%";
         }
         
@@ -1145,6 +1149,9 @@ class ProfissionaisRennerController {
         fputcsv($output, [
             'ID',
             'Nome',
+            'Tipo Documento',
+            'Número Documento',
+            'País Documento',
             'Setor',
             'Placa do Veículo',
             'Entrada',
@@ -1158,6 +1165,9 @@ class ProfissionaisRennerController {
             fputcsv($output, [
                 $this->sanitizeForCsv($profissional['id']),
                 $this->sanitizeForCsv($profissional['nome']),
+                $this->sanitizeForCsv($profissional['doc_type'] ?? ''),
+                $this->sanitizeForCsv($profissional['doc_number'] ?? ''),
+                $this->sanitizeForCsv($profissional['doc_country'] ?? ''),
                 $this->sanitizeForCsv($profissional['setor'] ?? ''),
                 $this->sanitizeForCsv($profissional['placa_veiculo'] ?? ''),
                 $this->sanitizeForCsv($profissional['entrada_at'] ?? ''),
@@ -1182,14 +1192,14 @@ class ProfissionaisRennerController {
                 exit;
             }
             
-            $sql = "SELECT id, nome, setor, fre 
+            $sql = "SELECT id, nome, setor, fre, doc_type, doc_number, doc_country
                     FROM profissionais_renner 
-                    WHERE nome ILIKE ? OR setor ILIKE ?
+                    WHERE nome ILIKE ? OR doc_number ILIKE ? OR setor ILIKE ?
                     ORDER BY nome ASC
                     LIMIT 20";
             
             $searchTerm = "%{$query}%";
-            $results = $this->db->fetchAll($sql, [$searchTerm, $searchTerm]);
+            $results = $this->db->fetchAll($sql, [$searchTerm, $searchTerm, $searchTerm]);
             
             echo json_encode(['success' => true, 'data' => $results]);
             

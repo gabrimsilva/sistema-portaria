@@ -6,7 +6,7 @@ This project is an access control system for companies, developed with PHP 8+ an
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
-## Project Progress (Updated: Oct 08, 2025)
+## Project Progress (Updated: Oct 15, 2025)
 
 ### Configuration Module Stages
 - **ETAPA 1 - Organização**: ████████████ 100% ✅ CONCLUÍDA
@@ -34,9 +34,19 @@ Preferred communication style: Simple, everyday language.
   - Export CSV funcional com filtros aplicados
   - Modal de detalhes com visualização diff antes/depois
 - **ETAPA 6 - Higiene UX**: ░░░░░░░░░░░░ 0% (pendente)
-- **ETAPA 7 - Segurança Extra**: ████░░░░░░░░ 30% (básica implementada)
+- **ETAPA 7 - Segurança Extra**: ████████████ 100% ✅ CONCLUÍDA
 
-**Total concluído: ~75% do plano original (5 de 7 etapas completas)**
+**Total concluído: ~85% do plano original (6 de 7 etapas completas)**
+
+### v2.0.0 Enhancements (Oct 15, 2025) ✅ COMPLETO
+- **M4.1 - Widget Cadastros Expirando**: Dashboard com tabs Visitantes/Prestadores, badges coloridos (ativo/expirando/expirado), renovação rápida +30 dias via AJAX
+- **M4.2 - Seletor de Documento Internacional**: 8 tipos de documentos (CPF, RG, CNH, PASSAPORTE, RNE, DNI, CI, OUTROS), validação JavaScript + PHP por tipo, campo país (ISO-3166)
+- **M4.3 - Modal Entrada Retroativa**: Interface para registrar entradas passadas, validação de data, audit trail com campo `is_retroactive=true`
+- **M4.4 - Gestão de Validade UI**: Modais dinâmicos (renovar, bloquear, desbloquear), ValidadeController com 6 endpoints, renovação visitante +45d / prestador +60d
+- **M6 - Bug Crítico Saídas Prestadores**: Fix arquitetura híbrida - saída atualiza AMBAS tabelas (`prestadores_servico.saida` + `registro_acesso.saida_at`), view consolidada funcional
+- **M7.1 - CRUD Ramais**: Tabela `ramais` com gestão completa (adicionar, editar, remover), export CSV, unique constraints (ramal, professional_id)
+- **M7.2 - Painel Público Brigada**: Controller público `/painel/brigada` com fotos circulares, auto-refresh 60s, segurança LGPD (realpath validation)
+- **M8 - Validação Final**: 3 testes completos (visitante estrangeiro Passaporte US, prestador validade híbrida, segurança + 47 índices de performance)
 
 ## System Architecture
 

@@ -1,16 +1,17 @@
 // ================================================
 // JAVASCRIPT: GESTÃO DE VALIDADE
-// Versão: 2.0.0
+// Versão: 2.1.0 (ETAPA 6 - Higiene UX)
 // Objetivo: Gerenciar renovação, bloqueio e status de cadastros
 // ================================================
-
-// IMPORTANTE: Este é um DRAFT - NÃO copiar para assets/js/ sem aprovação!
 
 const GestaoValidade = (function() {
     'use strict';
 
+    // Registrar no CleanupManager
+    const cleanup = window.CleanupManager ? CleanupManager.register('gestao-validade') : null;
+
     /**
-     * Renovar cadastro
+     * Renovar cadastro (com fetch cleanup)
      */
     async function renovar(tipo, id, dias = null) {
         // Dias padrão por tipo
@@ -19,18 +20,33 @@ const GestaoValidade = (function() {
         }
 
         try {
-            const response = await fetch('/api/cadastros/validade/renovar', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-Token': getCsrfToken()
-                },
-                body: JSON.stringify({
-                    tipo: tipo,
-                    id: id,
-                    dias: dias
-                })
-            });
+            const response = cleanup ?
+                await cleanup.fetch('/api/cadastros/validade/renovar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': getCsrfToken()
+                    },
+                    body: JSON.stringify({
+                        tipo: tipo,
+                        id: id,
+                        dias: dias
+                    })
+                }) :
+                await fetch('/api/cadastros/validade/renovar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': getCsrfToken()
+                    },
+                    body: JSON.stringify({
+                        tipo: tipo,
+                        id: id,
+                        dias: dias
+                    })
+                });
+
+            if (!response) return false; // Abortado
 
             const data = await response.json();
 
@@ -42,8 +58,10 @@ const GestaoValidade = (function() {
                 return false;
             }
         } catch (error) {
-            console.error('Erro ao renovar:', error);
-            showAlert('Erro ao renovar cadastro', 'danger');
+            if (error.name !== 'AbortError') {
+                console.error('Erro ao renovar:', error);
+                showAlert('Erro ao renovar cadastro', 'danger');
+            }
             return false;
         }
     }
@@ -110,19 +128,25 @@ const GestaoValidade = (function() {
         const novaDataElement = document.getElementById('novaDataValidade');
         const btnConfirmar = document.getElementById('btnConfirmarRenovacao');
 
-        // Atualizar data ao mudar dias
-        selectDias.addEventListener('change', function() {
+        // Atualizar data ao mudar dias (com cleanup)
+        const changeHandler = function() {
             const dias = parseInt(this.value);
             const novaData = new Date();
             novaData.setDate(novaData.getDate() + dias);
             novaDataElement.textContent = novaData.toLocaleDateString('pt-BR');
-        });
+        };
+        
+        if (cleanup) {
+            cleanup.addEventListener(selectDias, 'change', changeHandler);
+        } else {
+            selectDias.addEventListener('change', changeHandler);
+        }
 
         // Trigger inicial
         selectDias.dispatchEvent(new Event('change'));
 
-        // Confirmar renovação
-        btnConfirmar.addEventListener('click', async function() {
+        // Confirmar renovação (com cleanup)
+        const clickHandler = async function() {
             const dias = parseInt(selectDias.value);
             btnConfirmar.disabled = true;
             btnConfirmar.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Renovando...';
@@ -139,13 +163,19 @@ const GestaoValidade = (function() {
 
             btnConfirmar.disabled = false;
             btnConfirmar.innerHTML = '<i class="bi bi-check-circle me-1"></i>Confirmar Renovação';
-        });
+        };
+        
+        if (cleanup) {
+            cleanup.addEventListener(btnConfirmar, 'click', clickHandler);
+        } else {
+            btnConfirmar.addEventListener('click', clickHandler);
+        }
 
         modal.show();
     }
 
     /**
-     * Bloquear cadastro
+     * Bloquear cadastro (com fetch cleanup)
      */
     async function bloquear(tipo, id, motivo) {
         if (!motivo || motivo.trim().length < 10) {
@@ -154,18 +184,33 @@ const GestaoValidade = (function() {
         }
 
         try {
-            const response = await fetch('/api/cadastros/validade/bloquear', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-Token': getCsrfToken()
-                },
-                body: JSON.stringify({
-                    tipo: tipo,
-                    id: id,
-                    motivo: motivo
-                })
-            });
+            const response = cleanup ?
+                await cleanup.fetch('/api/cadastros/validade/bloquear', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': getCsrfToken()
+                    },
+                    body: JSON.stringify({
+                        tipo: tipo,
+                        id: id,
+                        motivo: motivo
+                    })
+                }) :
+                await fetch('/api/cadastros/validade/bloquear', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': getCsrfToken()
+                    },
+                    body: JSON.stringify({
+                        tipo: tipo,
+                        id: id,
+                        motivo: motivo
+                    })
+                });
+
+            if (!response) return false; // Abortado
 
             const data = await response.json();
 
@@ -177,8 +222,10 @@ const GestaoValidade = (function() {
                 return false;
             }
         } catch (error) {
-            console.error('Erro ao bloquear:', error);
-            showAlert('Erro ao bloquear cadastro', 'danger');
+            if (error.name !== 'AbortError') {
+                console.error('Erro ao bloquear:', error);
+                showAlert('Erro ao bloquear cadastro', 'danger');
+            }
             return false;
         }
     }
@@ -237,14 +284,20 @@ const GestaoValidade = (function() {
         const contador = document.getElementById('contadorBloqueio');
         const btnConfirmar = document.getElementById('btnConfirmarBloqueio');
 
-        // Contador de caracteres
-        textarea.addEventListener('input', function() {
+        // Contador de caracteres (com cleanup)
+        const inputHandler = function() {
             contador.textContent = this.value.length;
             contador.style.color = this.value.length < 10 ? 'red' : 'inherit';
-        });
+        };
+        
+        if (cleanup) {
+            cleanup.addEventListener(textarea, 'input', inputHandler);
+        } else {
+            textarea.addEventListener('input', inputHandler);
+        }
 
-        // Confirmar bloqueio
-        btnConfirmar.addEventListener('click', async function() {
+        // Confirmar bloqueio (com cleanup)
+        const clickHandler = async function() {
             const motivo = textarea.value.trim();
             
             if (motivo.length < 10) {
@@ -267,13 +320,19 @@ const GestaoValidade = (function() {
 
             btnConfirmar.disabled = false;
             btnConfirmar.innerHTML = '<i class="bi bi-slash-circle me-1"></i>Confirmar Bloqueio';
-        });
+        };
+        
+        if (cleanup) {
+            cleanup.addEventListener(btnConfirmar, 'click', clickHandler);
+        } else {
+            btnConfirmar.addEventListener('click', clickHandler);
+        }
 
         modal.show();
     }
 
     /**
-     * Desbloquear cadastro
+     * Desbloquear cadastro (com fetch cleanup)
      */
     async function desbloquear(tipo, id) {
         if (!confirm('Deseja realmente desbloquear este cadastro?')) {
@@ -281,17 +340,31 @@ const GestaoValidade = (function() {
         }
 
         try {
-            const response = await fetch('/api/cadastros/validade/desbloquear', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-Token': getCsrfToken()
-                },
-                body: JSON.stringify({
-                    tipo: tipo,
-                    id: id
-                })
-            });
+            const response = cleanup ?
+                await cleanup.fetch('/api/cadastros/validade/desbloquear', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': getCsrfToken()
+                    },
+                    body: JSON.stringify({
+                        tipo: tipo,
+                        id: id
+                    })
+                }) :
+                await fetch('/api/cadastros/validade/desbloquear', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': getCsrfToken()
+                    },
+                    body: JSON.stringify({
+                        tipo: tipo,
+                        id: id
+                    })
+                });
+
+            if (!response) return false; // Abortado
 
             const data = await response.json();
 
@@ -303,8 +376,10 @@ const GestaoValidade = (function() {
                 return false;
             }
         } catch (error) {
-            console.error('Erro ao desbloquear:', error);
-            showAlert('Erro ao desbloquear cadastro', 'danger');
+            if (error.name !== 'AbortError') {
+                console.error('Erro ao desbloquear:', error);
+                showAlert('Erro ao desbloquear cadastro', 'danger');
+            }
             return false;
         }
     }
@@ -367,6 +442,13 @@ const GestaoValidade = (function() {
             "'": '&#039;'
         };
         return text ? String(text).replace(/[&<>"']/g, m => map[m]) : '';
+    }
+
+    // Cleanup ao sair
+    if (cleanup) {
+        console.log('[GestaoValidade] CleanupManager integrado - fetch e listeners gerenciados');
+    } else {
+        console.warn('[GestaoValidade] CleanupManager não disponível');
     }
 
     // API pública

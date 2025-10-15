@@ -148,6 +148,7 @@ class LayoutService
         
         // ETAPA 6 - CleanupManager (Sistema de higiene UX)
         $html .= '<script src="/assets/js/cleanup-manager.js?v=' . time() . '"></script>';
+        $html .= '<script src="/assets/js/tab-navigation-cleanup.js?v=' . time() . '"></script>';
         
         // Additional scripts
         foreach ($additionalScripts as $script) {

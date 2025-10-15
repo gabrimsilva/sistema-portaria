@@ -1,15 +1,17 @@
 // ================================================
 // JAVASCRIPT: CONSULTA DE RAMAIS
-// Versão: 2.0.0
+// Versão: 2.1.0 (ETAPA 6 - Higiene UX)
 // ================================================
-
-// IMPORTANTE: Este é um DRAFT - NÃO copiar para assets/js/ sem aprovação!
 
 (function() {
     'use strict';
 
+    // Registrar no CleanupManager
+    const cleanup = window.CleanupManager ? CleanupManager.register('ramais') : null;
+
     let ramaisCache = [];
     let setoresCache = [];
+    let debounceTimer = null;
 
     // Elementos DOM
     const elements = {
@@ -33,47 +35,83 @@
         configurarEventos();
     });
 
-    // Configurar eventos
+    // Configurar eventos (com cleanup automático)
     function configurarEventos() {
-        // Busca em tempo real (debounce)
-        let timeoutBusca;
+        // Busca em tempo real (debounce com cleanup)
         if (elements.inputBusca) {
-            elements.inputBusca.addEventListener('input', function() {
-                clearTimeout(timeoutBusca);
-                timeoutBusca = setTimeout(() => {
-                    filtrarRamais();
-                }, 300);
-            });
+            const handler = function() {
+                if (debounceTimer && cleanup) {
+                    cleanup.clearTimeout(debounceTimer);
+                } else if (debounceTimer) {
+                    clearTimeout(debounceTimer);
+                }
+                
+                debounceTimer = cleanup ? 
+                    cleanup.setTimeout(filtrarRamais, 300) : 
+                    setTimeout(filtrarRamais, 300);
+            };
+            
+            if (cleanup) {
+                cleanup.addEventListener(elements.inputBusca, 'input', handler);
+            } else {
+                elements.inputBusca.addEventListener('input', handler);
+            }
         }
 
         // Filtros
         if (elements.selectSetor) {
-            elements.selectSetor.addEventListener('change', filtrarRamais);
+            if (cleanup) {
+                cleanup.addEventListener(elements.selectSetor, 'change', filtrarRamais);
+            } else {
+                elements.selectSetor.addEventListener('change', filtrarRamais);
+            }
         }
+        
         if (elements.selectTipo) {
-            elements.selectTipo.addEventListener('change', filtrarRamais);
+            if (cleanup) {
+                cleanup.addEventListener(elements.selectTipo, 'change', filtrarRamais);
+            } else {
+                elements.selectTipo.addEventListener('change', filtrarRamais);
+            }
         }
 
         // Exportar
         if (elements.btnExportar) {
-            elements.btnExportar.addEventListener('click', exportarRamais);
+            if (cleanup) {
+                cleanup.addEventListener(elements.btnExportar, 'click', exportarRamais);
+            } else {
+                elements.btnExportar.addEventListener('click', exportarRamais);
+            }
         }
 
         // Salvar ramal
         if (elements.btnSalvar) {
-            elements.btnSalvar.addEventListener('click', salvarRamal);
+            if (cleanup) {
+                cleanup.addEventListener(elements.btnSalvar, 'click', salvarRamal);
+            } else {
+                elements.btnSalvar.addEventListener('click', salvarRamal);
+            }
         }
 
         // Atualizar ramal
         if (elements.btnAtualizar) {
-            elements.btnAtualizar.addEventListener('click', atualizarRamal);
+            if (cleanup) {
+                cleanup.addEventListener(elements.btnAtualizar, 'click', atualizarRamal);
+            } else {
+                elements.btnAtualizar.addEventListener('click', atualizarRamal);
+            }
         }
     }
 
-    // Carregar setores
+    // Carregar setores (com fetch cleanup)
     async function carregarSetores() {
         try {
-            const response = await fetch('/api/ramais/setores');
+            const response = cleanup ?
+                await cleanup.fetch('/api/ramais/setores') :
+                await fetch('/api/ramais/setores');
+            
+            if (!response) return; // Abortado
+            
             const data = await response.json();
             
             if (data.success && data.setores) {
@@ -81,7 +119,9 @@
                 renderizarSetores();
             }
         } catch (error) {
-            console.error('Erro ao carregar setores:', error);
+            if (error.name !== 'AbortError') {
+                console.error('Erro ao carregar setores:', error);
+            }
         }
     }
 
@@ -99,7 +139,7 @@
         });
     }
 
-    // Carregar ramais
+    // Carregar ramais (com fetch cleanup)
     async function carregarRamais(termo = '') {
         mostrarLoading(true);
         
@@ -107,7 +147,12 @@
             const params = new URLSearchParams();
             if (termo) params.append('q', termo);
             
-            const response = await fetch(`/api/ramais/buscar?${params}`);
+            const response = cleanup ?
+                await cleanup.fetch(`/api/ramais/buscar?${params}`) :
+                await fetch(`/api/ramais/buscar?${params}`);
+            
+            if (!response) return; // Abortado
+            
             const data = await response.json();
             
             if (data.success) {
@@ -115,8 +160,10 @@
                 renderizarRamais(ramaisCache);
             }
         } catch (error) {
-            console.error('Erro ao carregar ramais:', error);
-            mostrarErro('Erro ao carregar ramais');
+            if (error.name !== 'AbortError') {
+                console.error('Erro ao carregar ramais:', error);
+                mostrarErro('Erro ao carregar ramais');
+            }
         } finally {
             mostrarLoading(false);
         }
@@ -200,16 +247,26 @@
                 </td>
             `;
 
-            // Eventos de ação
+            // Eventos de ação (com cleanup automático)
             const btnEditar = tr.querySelector('.btn-editar');
             const btnRemover = tr.querySelector('.btn-remover');
 
             if (btnEditar) {
-                btnEditar.addEventListener('click', () => abrirModalEditar(ramal));
+                const handler = () => abrirModalEditar(ramal);
+                if (cleanup) {
+                    cleanup.addEventListener(btnEditar, 'click', handler);
+                } else {
+                    btnEditar.addEventListener('click', handler);
+                }
             }
 
             if (btnRemover) {
-                btnRemover.addEventListener('click', () => confirmarRemocao(ramal));
+                const handler = () => confirmarRemocao(ramal);
+                if (cleanup) {
+                    cleanup.addEventListener(btnRemover, 'click', handler);
+                } else {
+                    btnRemover.addEventListener('click', handler);
+                }
             }
 
             elements.tbody.appendChild(tr);
@@ -230,7 +287,7 @@
         modal.show();
     }
 
-    // Salvar ramal
+    // Salvar ramal (com fetch cleanup)
     async function salvarRamal() {
         const profissionalId = document.getElementById('selectProfissional').value;
         const ramal = document.getElementById('inputRamal').value;
@@ -243,17 +300,31 @@
         elements.btnSalvar.disabled = true;
 
         try {
-            const response = await fetch('/api/ramais/adicionar', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content
-                },
-                body: JSON.stringify({
-                    profissional_id: profissionalId,
-                    ramal: ramal
-                })
-            });
+            const response = cleanup ?
+                await cleanup.fetch('/api/ramais/adicionar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content
+                    },
+                    body: JSON.stringify({
+                        profissional_id: profissionalId,
+                        ramal: ramal
+                    })
+                }) :
+                await fetch('/api/ramais/adicionar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content
+                    },
+                    body: JSON.stringify({
+                        profissional_id: profissionalId,
+                        ramal: ramal
+                    })
+                });
+
+            if (!response) return; // Abortado
 
             const data = await response.json();
 
@@ -266,14 +337,16 @@
                 mostrarAlerta(data.message || 'Erro ao adicionar ramal', 'danger');
             }
         } catch (error) {
-            console.error('Erro:', error);
-            mostrarAlerta('Erro ao salvar ramal', 'danger');
+            if (error.name !== 'AbortError') {
+                console.error('Erro:', error);
+                mostrarAlerta('Erro ao salvar ramal', 'danger');
+            }
         } finally {
             elements.btnSalvar.disabled = false;
         }
     }
 
-    // Atualizar ramal
+    // Atualizar ramal (com fetch cleanup)
     async function atualizarRamal() {
         const profissionalId = document.getElementById('editProfissionalId').value;
         const ramal = document.getElementById('editRamal').value;
@@ -286,14 +359,25 @@
         elements.btnAtualizar.disabled = true;
 
         try {
-            const response = await fetch(`/api/ramais/${profissionalId}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content
-                },
-                body: JSON.stringify({ ramal: ramal })
-            });
+            const response = cleanup ?
+                await cleanup.fetch(`/api/ramais/${profissionalId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content
+                    },
+                    body: JSON.stringify({ ramal: ramal })
+                }) :
+                await fetch(`/api/ramais/${profissionalId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content
+                    },
+                    body: JSON.stringify({ ramal: ramal })
+                });
+
+            if (!response) return; // Abortado
 
             const data = await response.json();
 
@@ -305,8 +389,10 @@
                 mostrarAlerta(data.message || 'Erro ao atualizar ramal', 'danger');
             }
         } catch (error) {
-            console.error('Erro:', error);
-            mostrarAlerta('Erro ao atualizar ramal', 'danger');
+            if (error.name !== 'AbortError') {
+                console.error('Erro:', error);
+                mostrarAlerta('Erro ao atualizar ramal', 'danger');
+            }
         } finally {
             elements.btnAtualizar.disabled = false;
         }
@@ -319,15 +405,24 @@
         }
     }
 
-    // Remover ramal
+    // Remover ramal (com fetch cleanup)
     async function removerRamal(profissionalId) {
         try {
-            const response = await fetch(`/api/ramais/${profissionalId}`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content
-                }
-            });
+            const response = cleanup ?
+                await cleanup.fetch(`/api/ramais/${profissionalId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content
+                    }
+                }) :
+                await fetch(`/api/ramais/${profissionalId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content
+                    }
+                });
+
+            if (!response) return; // Abortado
 
             const data = await response.json();
 
@@ -338,8 +433,10 @@
                 mostrarAlerta(data.message || 'Erro ao remover ramal', 'danger');
             }
         } catch (error) {
-            console.error('Erro:', error);
-            mostrarAlerta('Erro ao remover ramal', 'danger');
+            if (error.name !== 'AbortError') {
+                console.error('Erro:', error);
+                mostrarAlerta('Erro ao remover ramal', 'danger');
+            }
         }
     }
 
@@ -360,7 +457,6 @@
     }
 
     function mostrarAlerta(mensagem, tipo = 'info') {
-        // Usar sistema de alertas existente ou criar toast
         alert(mensagem);
     }
 
@@ -378,6 +474,13 @@
             "'": '&#039;'
         };
         return text ? String(text).replace(/[&<>"']/g, m => map[m]) : '';
+    }
+
+    // Cleanup ao sair da página/trocar de aba
+    if (cleanup) {
+        console.log('[Ramais] CleanupManager integrado - higiene UX ativa');
+    } else {
+        console.warn('[Ramais] CleanupManager não disponível - funcionalidade básica ativa');
     }
 
 })();

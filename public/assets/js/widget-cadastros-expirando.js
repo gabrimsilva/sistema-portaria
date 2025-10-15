@@ -1,12 +1,13 @@
 // ================================================
 // JAVASCRIPT: WIDGET CADASTROS EXPIRANDO
-// Versão: 2.0.0
+// Versão: 2.1.0 (ETAPA 6 - Higiene UX)
 // ================================================
-
-// IMPORTANTE: Este é um DRAFT - NÃO copiar para assets/js/ sem aprovação!
 
 (function() {
     'use strict';
+
+    // Registrar no CleanupManager
+    const cleanup = window.CleanupManager ? CleanupManager.register('widget-expirando') : null;
 
     const elements = {
         widget: document.getElementById('widgetCadastrosExpirando'),
@@ -22,32 +23,50 @@
         btnRecarregar: document.getElementById('btnRecarregarExpirando')
     };
 
+    let autoRefreshInterval = null;
+
     // Inicialização
     document.addEventListener('DOMContentLoaded', function() {
         carregarCadastrosExpirando();
         configurarEventos();
         
-        // Auto-refresh a cada 5 minutos
-        setInterval(carregarCadastrosExpirando, 5 * 60 * 1000);
+        // Auto-refresh a cada 5 minutos (com cleanup automático)
+        autoRefreshInterval = cleanup ?
+            cleanup.setInterval(carregarCadastrosExpirando, 5 * 60 * 1000) :
+            setInterval(carregarCadastrosExpirando, 5 * 60 * 1000);
     });
 
     // Configurar eventos
     function configurarEventos() {
         if (elements.btnRecarregar) {
-            elements.btnRecarregar.addEventListener('click', function() {
+            const handler = function() {
                 this.classList.add('rotate');
                 carregarCadastrosExpirando();
-                setTimeout(() => this.classList.remove('rotate'), 1000);
-            });
+                
+                const rotateTimeout = cleanup ?
+                    cleanup.setTimeout(() => this.classList.remove('rotate'), 1000) :
+                    setTimeout(() => this.classList.remove('rotate'), 1000);
+            };
+            
+            if (cleanup) {
+                cleanup.addEventListener(elements.btnRecarregar, 'click', handler);
+            } else {
+                elements.btnRecarregar.addEventListener('click', handler);
+            }
         }
     }
 
-    // Carregar cadastros expirando
+    // Carregar cadastros expirando (com fetch cleanup)
     async function carregarCadastrosExpirando() {
         mostrarLoading(true);
 
         try {
-            const response = await fetch('/api/cadastros/validade/expirando');
+            const response = cleanup ?
+                await cleanup.fetch('/api/cadastros/validade/expirando') :
+                await fetch('/api/cadastros/validade/expirando');
+
+            if (!response) return; // Abortado
+
             const data = await response.json();
 
             if (data.success) {
@@ -59,7 +78,9 @@
                 console.error('Erro ao carregar cadastros expirando:', data.message);
             }
         } catch (error) {
-            console.error('Erro:', error);
+            if (error.name !== 'AbortError') {
+                console.error('Erro:', error);
+            }
         } finally {
             mostrarLoading(false);
         }
@@ -162,17 +183,23 @@
             </div>
         `;
 
-        // Evento de renovação
+        // Evento de renovação (com cleanup automático)
         const btnRenovar = div.querySelector('.btn-renovar');
         if (btnRenovar) {
-            btnRenovar.addEventListener('click', function() {
+            const handler = function() {
                 const dadosRenovacao = {
                     tipo: this.dataset.tipo,
                     id: this.dataset.id,
                     nome: this.dataset.nome
                 };
                 abrirModalRenovacao(dadosRenovacao);
-            });
+            };
+            
+            if (cleanup) {
+                cleanup.addEventListener(btnRenovar, 'click', handler);
+            } else {
+                btnRenovar.addEventListener('click', handler);
+            }
         }
 
         return div;
@@ -205,21 +232,36 @@
         }
     }
 
-    // Renovar cadastro
+    // Renovar cadastro (com fetch cleanup)
     async function renovarCadastro(tipo, id) {
         try {
-            const response = await fetch('/api/cadastros/validade/renovar', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content
-                },
-                body: JSON.stringify({
-                    tipo: tipo,
-                    id: id,
-                    dias: tipo === 'visitante' ? 90 : 30
-                })
-            });
+            const response = cleanup ?
+                await cleanup.fetch('/api/cadastros/validade/renovar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content
+                    },
+                    body: JSON.stringify({
+                        tipo: tipo,
+                        id: id,
+                        dias: tipo === 'visitante' ? 90 : 30
+                    })
+                }) :
+                await fetch('/api/cadastros/validade/renovar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content
+                    },
+                    body: JSON.stringify({
+                        tipo: tipo,
+                        id: id,
+                        dias: tipo === 'visitante' ? 90 : 30
+                    })
+                });
+
+            if (!response) return; // Abortado
 
             const data = await response.json();
 
@@ -230,8 +272,10 @@
                 mostrarAlerta(data.message || 'Erro ao renovar cadastro', 'danger');
             }
         } catch (error) {
-            console.error('Erro:', error);
-            mostrarAlerta('Erro ao renovar cadastro', 'danger');
+            if (error.name !== 'AbortError') {
+                console.error('Erro:', error);
+                mostrarAlerta('Erro ao renovar cadastro', 'danger');
+            }
         }
     }
 
@@ -278,5 +322,12 @@
         }
     `;
     document.head.appendChild(style);
+
+    // Cleanup ao sair da página/trocar de aba
+    if (cleanup) {
+        console.log('[Widget Expirando] CleanupManager integrado - auto-refresh gerenciado');
+    } else {
+        console.warn('[Widget Expirando] CleanupManager não disponível');
+    }
 
 })();

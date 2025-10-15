@@ -565,6 +565,39 @@ try {
             $controller->apiSearchProfessionals();
             break;
         
+        // ============================================
+        // 🆕 V2.0.0 - RAMAIS
+        // ============================================
+        case 'ramais':
+            require_once '../src/controllers/RamalController.php';
+            $controller = new RamalController();
+            $controller->index();
+            break;
+        
+        case 'api/ramais/buscar':
+            require_once '../src/controllers/RamalController.php';
+            $controller = new RamalController();
+            $controller->buscar();
+            break;
+        
+        case 'api/ramais/setores':
+            require_once '../src/controllers/RamalController.php';
+            $controller = new RamalController();
+            $controller->setores();
+            break;
+        
+        case 'api/ramais/adicionar':
+            require_once '../src/controllers/RamalController.php';
+            $controller = new RamalController();
+            $controller->adicionar();
+            break;
+        
+        case 'api/ramais/export':
+            require_once '../src/controllers/RamalController.php';
+            $controller = new RamalController();
+            $controller->exportar();
+            break;
+        
         default:
             // Verificar se é rota de config dinâmica (usuários)
             if (preg_match('#^config/users/\d+/(toggle-status|reset-password)$#', $path)) {
@@ -588,6 +621,110 @@ try {
                 require_once '../src/services/ComponentService.php';
                 require_once '../views/demo/components.php';
             }
+            
+            // ============================================
+            // 🆕 V2.0.0 - DOCUMENTOS INTERNACIONAIS
+            // ============================================
+            else if (preg_match('/^api\/documentos\/tipos$/', $path)) {
+                require_once '../src/controllers/DocumentoController.php';
+                $controller = new DocumentoController();
+                $controller->getTipos();
+            }
+            else if (preg_match('/^api\/documentos\/paises$/', $path)) {
+                require_once '../src/controllers/DocumentoController.php';
+                $controller = new DocumentoController();
+                $controller->getPaises();
+            }
+            else if (preg_match('/^api\/documentos\/validar$/', $path)) {
+                require_once '../src/controllers/DocumentoController.php';
+                $controller = new DocumentoController();
+                $controller->validar();
+            }
+            else if (preg_match('/^api\/documentos\/buscar$/', $path)) {
+                require_once '../src/controllers/DocumentoController.php';
+                $controller = new DocumentoController();
+                $controller->buscar();
+            }
+            
+            // ============================================
+            // 🆕 V2.0.0 - ENTRADA RETROATIVA
+            // ============================================
+            else if (preg_match('/^api\/profissionais\/entrada-retroativa$/', $path)) {
+                require_once '../src/controllers/EntradaRetroativaController.php';
+                $controller = new EntradaRetroativaController();
+                $controller->registrar();
+            }
+            else if (preg_match('/^api\/entradas-retroativas$/', $path)) {
+                require_once '../src/controllers/EntradaRetroativaController.php';
+                $controller = new EntradaRetroativaController();
+                $controller->listar();
+            }
+            else if (preg_match('/^api\/entradas-retroativas\/stats$/', $path)) {
+                require_once '../src/controllers/EntradaRetroativaController.php';
+                $controller = new EntradaRetroativaController();
+                $controller->estatisticas();
+            }
+            else if (preg_match('/^api\/entradas-retroativas\/(\d+)\/aprovar$/', $path, $matches)) {
+                require_once '../src/controllers/EntradaRetroativaController.php';
+                $controller = new EntradaRetroativaController();
+                $controller->aprovar($matches[1]);
+            }
+            
+            // ============================================
+            // 🆕 V2.0.0 - VALIDADE DE CADASTROS
+            // ============================================
+            else if (preg_match('/^api\/cadastros\/validade\/expirando$/', $path)) {
+                require_once '../src/controllers/ValidadeController.php';
+                $controller = new ValidadeController();
+                $controller->expirando();
+            }
+            else if (preg_match('/^api\/cadastros\/validade\/expirados$/', $path)) {
+                require_once '../src/controllers/ValidadeController.php';
+                $controller = new ValidadeController();
+                $controller->expirados();
+            }
+            else if (preg_match('/^api\/cadastros\/validade\/renovar$/', $path)) {
+                require_once '../src/controllers/ValidadeController.php';
+                $controller = new ValidadeController();
+                $controller->renovar();
+            }
+            else if (preg_match('/^api\/cadastros\/validade\/bloquear$/', $path)) {
+                require_once '../src/controllers/ValidadeController.php';
+                $controller = new ValidadeController();
+                $controller->bloquear();
+            }
+            else if (preg_match('/^api\/cadastros\/validade\/desbloquear$/', $path)) {
+                require_once '../src/controllers/ValidadeController.php';
+                $controller = new ValidadeController();
+                $controller->desbloquear();
+            }
+            else if (preg_match('/^api\/cadastros\/validade\/configuracoes$/', $path)) {
+                require_once '../src/controllers/ValidadeController.php';
+                $controller = new ValidadeController();
+                if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+                    $controller->configuracoes();
+                } else if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
+                    $controller->atualizarConfiguracoes();
+                }
+            }
+            
+            // ============================================
+            // 🆕 V2.0.0 - RAMAIS (rotas dinâmicas)
+            // ============================================
+            else if (preg_match('/^api\/ramais\/(\d+)$/', $path, $matches)) {
+                require_once '../src/controllers/RamalController.php';
+                $controller = new RamalController();
+                
+                if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
+                    $controller->atualizar($matches[1]);
+                } else if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
+                    $controller->remover($matches[1]);
+                } else {
+                    http_response_code(405);
+                    echo json_encode(['success' => false, 'message' => 'Método não permitido']);
+                }
+            }
+            
             // Handle new API endpoints
             else if (preg_match('/^entradas$/', $path)) {
                 require_once '../src/controllers/RegistroAcessoController.php';

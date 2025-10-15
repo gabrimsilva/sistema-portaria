@@ -24,8 +24,12 @@ feature_v200/
 │   │   └── ValidadeController.php
 │   ├── services/                    # Services novos (M3) ✅
 │   │   └── DocumentValidator.php
-│   ├── snippets/                    # Diffs de código (M3) ✅
-│   │   └── rotas_v2_diff.md         # Diff de public/index.php
+│   ├── snippets/                    # Diffs de código (M3+M5) ✅
+│   │   ├── rotas_v2_diff.md                      # Diff de public/index.php (M3)
+│   │   ├── diff_prestadores_controller.md        # BUG FIX: Saídas (M5) 🔴
+│   │   ├── diff_visitantes_controller.md         # Docs internacionais (M5)
+│   │   ├── diff_profissionais_controller.md      # Docs estrangeiros (M5)
+│   │   └── diff_dashboard_controller.md          # BUG FIX + Widget (M5) 🔴
 │   ├── views/                       # Views novas (M4) ✅
 │   │   ├── ramais/index.php
 │   │   └── components/
@@ -41,6 +45,7 @@ feature_v200/
 ├── COMPATIBILIDADE_IMPACTO.md       # Relatório de impacto (M2)
 ├── M3_ENDPOINTS_RESUMO.md           # Resumo M3 ✅
 ├── M4_VIEWS_JS_RESUMO.md            # Resumo M4 ✅
+├── M5_REPORTS_RESUMO.md             # Resumo M5 ✅
 └── README.md                        # Este arquivo
 
 docs/
@@ -78,9 +83,18 @@ docs/
 - 100% escape HTML, CSRF protegido
 - **NADA FOI APLICADO** - tudo em rascunho!
 
+### ✅ M5 - Correção de Relatórios (CONCLUÍDO)
+- 4 diffs de controllers criados
+- BUG CRÍTICO corrigido: saídas de prestadores (view consolidada)
+- Suporte a documentos internacionais em relatórios
+- Widget de cadastros expirando (dashboard)
+- Filtros de validade e tipo de documento
+- Export CSV atualizado com novos campos
+- **NADA FOI APLICADO** - tudo em rascunho!
+
 ### ⏳ PRÓXIMOS PASSOS
-- M5: Correção de Relatórios (aguardando aprovação)
-- M6-M12: Conforme cronograma
+- M6: Integração Completa (aguardando aprovação)
+- M7-M12: Conforme cronograma
 
 ## 📋 MIGRATIONS CRIADAS
 

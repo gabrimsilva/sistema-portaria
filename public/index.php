@@ -797,5 +797,13 @@ try {
     }
 } catch (Exception $e) {
     error_log($e->getMessage());
-    echo "<h1>Error</h1><p>An error occurred. Please try again.</p>";
+    // DEBUG MODE: Mostrar erro completo
+    if (getenv('PANEL_BRG_DEV_MODE') === 'true' || true) {
+        echo "<h1>Error</h1>";
+        echo "<p><strong>Message:</strong> " . htmlspecialchars($e->getMessage()) . "</p>";
+        echo "<p><strong>File:</strong> " . htmlspecialchars($e->getFile()) . ":" . $e->getLine() . "</p>";
+        echo "<pre>" . htmlspecialchars($e->getTraceAsString()) . "</pre>";
+    } else {
+        echo "<h1>Error</h1><p>An error occurred. Please try again.</p>";
+    }
 }

@@ -109,9 +109,18 @@ docs/
 - Estimativa: 4-6h de janela de manutenção
 - **PRONTO PARA APLICAÇÃO EM PRODUÇÃO**
 
+### ✅ M7 - RBAC Permissions (CONCLUÍDO)
+- 5 novas permissões mapeadas
+- SQL de permissões + rollback (005_rbac_permissions_v2.sql)
+- Matriz completa de roles x permissões (17 permissões total)
+- 10 correções em 4 controllers (diff_permissions_fix.md)
+- Script de aplicação (apply_m7_rbac.sh)
+- Documentação completa de RBAC
+- **PRONTO PARA APLICAÇÃO**
+
 ### ⏳ PRÓXIMOS PASSOS
-- **APLICAR v2.0.0 EM PRODUÇÃO** (com aprovação)
-- M7-M12: Conforme cronograma
+- M8: Testes de Segurança
+- M9-M12: Conforme cronograma
 
 ## 📋 MIGRATIONS CRIADAS
 

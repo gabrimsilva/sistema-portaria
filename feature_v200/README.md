@@ -5,7 +5,7 @@
 ```
 feature_v200/
 ├── drafts/                          # Rascunhos (NÃO aplicados)
-│   ├── sql/                         # Scripts SQL
+│   ├── sql/                         # Scripts SQL (M2)
 │   │   ├── 001_docs_estrangeiros.sql
 │   │   ├── 002_validade_cadastros.sql
 │   │   ├── 003_fix_saida_placas.sql
@@ -17,11 +17,19 @@ feature_v200/
 │   │       ├── 003_fix_saida_placas_rollback.sql
 │   │       ├── 004_auditoria_retroativa_rollback.sql
 │   │       └── ROLLBACK_COMPLETO.sql
-│   ├── snippets/                    # Diffs de código (M3)
-│   ├── controllers/                 # Controllers novos (M3)
+│   ├── controllers/                 # Controllers novos (M3) ✅
+│   │   ├── DocumentoController.php
+│   │   ├── EntradaRetroativaController.php
+│   │   ├── RamalController.php
+│   │   └── ValidadeController.php
+│   ├── services/                    # Services novos (M3) ✅
+│   │   └── DocumentValidator.php
+│   ├── snippets/                    # Diffs de código (M3) ✅
+│   │   └── rotas_v2_diff.md         # Diff de public/index.php
 │   ├── views/                       # Views novas (M4)
 │   └── js/                          # JavaScript novo (M4)
-├── COMPATIBILIDADE_IMPACTO.md       # Relatório de impacto
+├── COMPATIBILIDADE_IMPACTO.md       # Relatório de impacto (M2)
+├── M3_ENDPOINTS_RESUMO.md           # Resumo M3 ✅
 └── README.md                        # Este arquivo
 
 docs/
@@ -42,9 +50,16 @@ docs/
 - Scripts de rollback preparados
 - **NADA FOI EXECUTADO** - tudo em rascunho!
 
+### ✅ M3 - Endpoints & Rotas (CONCLUÍDO)
+- 4 controllers criados (Documento, EntradaRetroativa, Ramal, Validade)
+- 1 service criado (DocumentValidator)
+- 22 rotas API documentadas
+- Diff de rotas para public/index.php
+- 100% CSRF protegido, auditado e com RBAC
+- **NADA FOI APLICADO** - tudo em rascunho!
+
 ### ⏳ PRÓXIMOS PASSOS
-- M3: Endpoints & Rotas (aguardando aprovação)
-- M4: Views & JS
+- M4: Views & JS (aguardando aprovação)
 - M5: Correção de Relatórios
 - M6-M12: Conforme cronograma
 

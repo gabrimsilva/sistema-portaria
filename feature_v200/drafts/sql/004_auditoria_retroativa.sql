@@ -49,7 +49,7 @@ CREATE INDEX IF NOT EXISTS idx_audit_retroactive
 
 CREATE INDEX IF NOT EXISTS idx_audit_modulo_retroativo 
     ON audit_log(modulo, is_retroactive) 
-    WHERE is_retroative = TRUE;
+    WHERE is_retroactive = TRUE;
 
 -- ================================================
 -- PARTE 3: TABELA DE ENTRADAS RETROATIVAS
@@ -290,7 +290,7 @@ SELECT
         ELSE NULL
     END AS setor,
     -- Aprovador
-    u_aprovador.name AS aprovador_nome,
+    u_aprovador.nome AS aprovador_nome,
     -- Tempo decorrido
     EXTRACT(DAY FROM (er.data_registro - er.data_entrada_original)) AS dias_atraso,
     er.created_at
@@ -306,15 +306,13 @@ COMMENT ON VIEW vw_entradas_retroativas IS 'Relatório completo de entradas retr
 -- ================================================
 
 -- Inserir permissão nova no sistema (se não existir)
-INSERT INTO permissions (name, description, module, created_at, updated_at)
+INSERT INTO permissions (key, description, module)
 VALUES (
     'acesso.retroativo',
     'Permite registrar entradas retroativas (datas passadas)',
-    'acesso',
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
+    'acesso'
 )
-ON CONFLICT (name) DO NOTHING;
+ON CONFLICT (key) DO NOTHING;
 
 -- ================================================
 -- PARTE 7: FUNCTION PARA ESTATÍSTICAS

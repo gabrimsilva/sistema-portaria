@@ -48,15 +48,20 @@ ALTER TABLE visitantes
     ADD COLUMN validity_status VARCHAR(20) DEFAULT 'ativo'
         CHECK (validity_status IN ('ativo', 'expirado', 'bloqueado', 'pendente'));
 
--- Migrar dados existentes de cpf para doc_number
+-- Migrar dados existentes de cpf para doc_number (tratando strings vazias como NULL)
 UPDATE visitantes 
-SET doc_number = cpf, 
+SET doc_number = CASE 
+        WHEN cpf IS NOT NULL AND LENGTH(TRIM(cpf)) > 0 THEN cpf
+        ELSE NULL
+    END, 
     doc_type = CASE 
         WHEN cpf IS NOT NULL AND LENGTH(TRIM(cpf)) > 0 THEN 'CPF'::document_type
         ELSE NULL
     END,
-    doc_country = 'BR'
-WHERE cpf IS NOT NULL;
+    doc_country = CASE 
+        WHEN cpf IS NOT NULL AND LENGTH(TRIM(cpf)) > 0 THEN 'BR'
+        ELSE NULL
+    END;
 
 -- Adicionar comentários
 COMMENT ON COLUMN visitantes.doc_type IS 'Tipo de documento de identificação';
@@ -78,15 +83,20 @@ ALTER TABLE prestadores_servico
     ADD COLUMN validity_status VARCHAR(20) DEFAULT 'ativo'
         CHECK (validity_status IN ('ativo', 'expirado', 'bloqueado', 'pendente'));
 
--- Migrar dados existentes
+-- Migrar dados existentes (tratando strings vazias como NULL)
 UPDATE prestadores_servico 
-SET doc_number = cpf,
+SET doc_number = CASE 
+        WHEN cpf IS NOT NULL AND LENGTH(TRIM(cpf)) > 0 THEN cpf
+        ELSE NULL
+    END,
     doc_type = CASE 
         WHEN cpf IS NOT NULL AND LENGTH(TRIM(cpf)) > 0 THEN 'CPF'::document_type
         ELSE NULL
     END,
-    doc_country = 'BR'
-WHERE cpf IS NOT NULL;
+    doc_country = CASE 
+        WHEN cpf IS NOT NULL AND LENGTH(TRIM(cpf)) > 0 THEN 'BR'
+        ELSE NULL
+    END;
 
 -- Comentários
 COMMENT ON COLUMN prestadores_servico.doc_type IS 'Tipo de documento de identificação';
@@ -105,15 +115,20 @@ ALTER TABLE profissionais_renner
     ADD COLUMN doc_number VARCHAR(50),
     ADD COLUMN doc_country CHAR(2) DEFAULT 'BR';
 
--- Migrar dados existentes
+-- Migrar dados existentes (tratando strings vazias como NULL)
 UPDATE profissionais_renner 
-SET doc_number = cpf,
+SET doc_number = CASE 
+        WHEN cpf IS NOT NULL AND LENGTH(TRIM(cpf)) > 0 THEN cpf
+        ELSE NULL
+    END,
     doc_type = CASE 
         WHEN cpf IS NOT NULL AND LENGTH(TRIM(cpf)) > 0 THEN 'CPF'::document_type
         ELSE NULL
     END,
-    doc_country = 'BR'
-WHERE cpf IS NOT NULL;
+    doc_country = CASE 
+        WHEN cpf IS NOT NULL AND LENGTH(TRIM(cpf)) > 0 THEN 'BR'
+        ELSE NULL
+    END;
 
 -- Comentários
 COMMENT ON COLUMN profissionais_renner.doc_type IS 'Tipo de documento de identificação';
@@ -129,15 +144,20 @@ ALTER TABLE registro_acesso
     ADD COLUMN doc_number VARCHAR(50),
     ADD COLUMN doc_country CHAR(2) DEFAULT 'BR';
 
--- Migrar dados existentes
+-- Migrar dados existentes (tratando strings vazias como NULL)
 UPDATE registro_acesso 
-SET doc_number = cpf,
+SET doc_number = CASE 
+        WHEN cpf IS NOT NULL AND LENGTH(TRIM(cpf)) > 0 THEN cpf
+        ELSE NULL
+    END,
     doc_type = CASE 
         WHEN cpf IS NOT NULL AND LENGTH(TRIM(cpf)) > 0 THEN 'CPF'::document_type
         ELSE NULL
     END,
-    doc_country = 'BR'
-WHERE cpf IS NOT NULL;
+    doc_country = CASE 
+        WHEN cpf IS NOT NULL AND LENGTH(TRIM(cpf)) > 0 THEN 'BR'
+        ELSE NULL
+    END;
 
 -- Comentários
 COMMENT ON COLUMN registro_acesso.doc_type IS 'Tipo de documento de identificação';

@@ -146,6 +146,9 @@ class LayoutService
         $html .= '<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>';
         $html .= '<script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>';
         
+        // ETAPA 6 - CleanupManager (Sistema de higiene UX)
+        $html .= '<script src="/assets/js/cleanup-manager.js?v=' . time() . '"></script>';
+        
         // Additional scripts
         foreach ($additionalScripts as $script) {
             if (is_array($script)) {

@@ -183,11 +183,18 @@ $canDeleteInline = $authService->hasPermission('relatorios.excluir_linha');
                                             }
                                             echo "<!-- DEBUG: Total registros: " . count($visitantes) . " -->";
                                             ?>
-                                            <?php foreach ($visitantes as $visitante): ?>
+                                            <?php 
+                                            $render_counter = 0;
+                                            foreach ($visitantes as $visitante): 
+                                                $render_counter++;
+                                                // DEBUG: Linha sendo renderizada
+                                                echo "<!-- DEBUG LINHA $render_counter: ID={$visitante['id']}, Nome={$visitante['nome']} -->";
+                                            ?>
                                             <tr data-id="<?= $visitante['id'] ?>">
                                                 <td>
                                                     <strong><?= htmlspecialchars($visitante['nome']) ?></strong>
                                                     <small class="text-muted ml-2">(ID: <?= $visitante['id'] ?>)</small>
+                                                    <small class="badge badge-warning ml-1">Linha #<?= $render_counter ?></small>
                                                     <?php if (!empty($visitante['hora_saida_formatted'])): ?>
                                                         <span class="badge bg-secondary ml-2">Saiu</span>
                                                     <?php else: ?>

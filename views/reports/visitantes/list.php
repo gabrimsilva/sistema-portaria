@@ -172,16 +172,20 @@ $canDeleteInline = $authService->hasPermission('relatorios.excluir_linha');
                                             </tr>
                                         <?php else: ?>
                                             <?php 
-                                            // DEBUG: Mostrar quantidade de registros e IDs duplicados
+                                            // DEBUG: Mostrar TODOS os IDs no array $visitantes
+                                            $all_ids = array_map(function($v) { return "ID={$v['id']} Nome={$v['nome']}"; }, $visitantes);
+                                            echo "<!-- DEBUG ARRAY COMPLETO: " . implode(", ", $all_ids) . " -->";
+                                            echo "<!-- DEBUG: Total registros: " . count($visitantes) . " -->";
+                                            
+                                            // DEBUG: Contar IDs
                                             $ids_count = [];
                                             foreach ($visitantes as $v) {
                                                 $ids_count[$v['id']] = ($ids_count[$v['id']] ?? 0) + 1;
                                             }
                                             $duplicados = array_filter($ids_count, function($count) { return $count > 1; });
                                             if (!empty($duplicados)) {
-                                                echo "<!-- DEBUG: IDs DUPLICADOS: " . json_encode($duplicados) . " -->";
+                                                echo "<!-- DEBUG: IDs DUPLICADOS NO ARRAY PHP: " . json_encode($duplicados) . " -->";
                                             }
-                                            echo "<!-- DEBUG: Total registros: " . count($visitantes) . " -->";
                                             ?>
                                             <?php 
                                             $render_counter = 0;

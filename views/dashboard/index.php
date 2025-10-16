@@ -1350,6 +1350,17 @@
             const funcionario = btn.data('funcionarioResponsavel');  // jQuery converte data-funcionario_responsavel para funcionarioResponsavel
             const placa_veiculo = btn.data('placa_veiculo');  // MANTÉM underscore! jQuery não converte este atributo
             
+            // DEBUG: Verificar TESTE 3 com Passaporte
+            if (nome === 'TESTE 3') {
+                console.log('🔍 DEBUG TESTE 3 - Antes de preencher:', {
+                    doc_type: doc_type,
+                    doc_number: doc_number,
+                    doc_country: doc_country,
+                    tipo_doc_type: typeof doc_type,
+                    tipo_doc_number: typeof doc_number
+                });
+            }
+            
             // Preencher campos básicos
             $('#edit_id').val(id);
             $('#edit_tipo_original').val(tipo);

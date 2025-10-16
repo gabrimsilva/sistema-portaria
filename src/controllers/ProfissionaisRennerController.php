@@ -522,6 +522,7 @@ class ProfissionaisRennerController {
                 $setor = trim($_POST['setor'] ?? '');
                 $placa_veiculo = trim($_POST['placa_veiculo'] ?? '');
                 $data_entrada_input = trim($_POST['data_entrada'] ?? '');
+                $observacao = trim($_POST['observacao'] ?? '');
                 
                 if (empty($nome)) {
                     echo json_encode(['success' => false, 'message' => 'Nome é obrigatório']);
@@ -546,6 +547,7 @@ class ProfissionaisRennerController {
                     }
                 }
                 
+                // Processar data de entrada
                 if (!empty($data_entrada_input)) {
                     $timestamp = strtotime($data_entrada_input);
                     if ($timestamp === false) {
@@ -555,6 +557,17 @@ class ProfissionaisRennerController {
                     $data_entrada = date('Y-m-d H:i:s', $timestamp);
                 } else {
                     $data_entrada = date('Y-m-d H:i:s');
+                }
+                
+                // Detectar entrada retroativa (data no passado)
+                $agora = time();
+                $timestamp_entrada = strtotime($data_entrada);
+                $is_retroativa = $timestamp_entrada < $agora;
+                
+                // Validar observação obrigatória para entradas retroativas
+                if ($is_retroativa && empty($observacao)) {
+                    echo json_encode(['success' => false, 'message' => 'Observação/justificativa é obrigatória para entradas retroativas']);
+                    return;
                 }
                 
                 $this->db->beginTransaction();
@@ -585,19 +598,28 @@ class ProfissionaisRennerController {
                 
                 $this->db->commit();
                 
-                // Registrar auditoria
+                // Registrar auditoria (incluir observação se entrada retroativa)
+                $auditData = [
+                    'tipo' => 'profissional_renner',
+                    'nome' => $nome,
+                    'setor' => $setor,
+                    'placa_veiculo' => $placa_veiculo,
+                    'profissional_renner_id' => $profissional_id,
+                    'entrada_at' => $data_entrada
+                ];
+                
+                if ($is_retroativa) {
+                    $auditData['entrada_retroativa'] = true;
+                    $auditData['justificativa'] = $observacao;
+                    $auditData['diferenca_tempo'] = $agora - $timestamp_entrada;
+                }
+                
                 $this->auditService->log(
                     'create',
                     'registro_acesso',
                     $registro_id,
                     null,
-                    [
-                        'tipo' => 'profissional_renner',
-                        'nome' => $nome,
-                        'setor' => $setor,
-                        'placa_veiculo' => $placa_veiculo,
-                        'profissional_renner_id' => $profissional_id
-                    ]
+                    $auditData
                 );
                 
                 echo json_encode([

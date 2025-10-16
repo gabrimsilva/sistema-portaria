@@ -63,3 +63,12 @@ This project is an access control system for companies, developed with PHP 8+ an
 - **PhpSpreadsheet**: For CSV/XLSX import functionality.
 - **jQuery**: For JavaScript functionalities, including cookie consent and autocomplete.
 - **jQuery UI**: For autocomplete feature.
+
+## Recent Changes
+
+- **Retroactive Entry Detection for Professionals** (October 16, 2025): Implemented automatic detection of retroactive entries for Profissionais Renner. When user selects a past date/time in the entry field, system automatically displays an "Observação/Justificativa" field (required). Backend validates mandatory justification and logs it in audit trail with metadata (entrada_retroativa flag, justificativa text, diferenca_tempo).
+- Resolved critical PHP reference bug causing duplicate entries in visitor reports by adding `unset($visitante)` after `foreach` loop with reference parameter.
+- Implemented multi-document support in visitor edit form matching dashboard modal (type selector, number field, country field with dynamic visibility).
+- Fixed database schema constraints: expanded `doc_country` from `character(2)` to `varchar(100)` in both `visitantes_novo` and `prestadores_servico` tables, handling view dependencies with transactional migration.
+- Upgraded visitor report to show "Documento" column instead of "CPF" with intelligent display (badges for document types, LGPD-compliant masking showing only last 4 characters).
+- Resolved professional import failures (174 errors): fixed constraint violation by explicitly inserting NULL for doc_type/doc_number fields to override default values during CSV import.

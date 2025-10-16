@@ -626,6 +626,16 @@
                             <input type="datetime-local" class="form-control" id="profissional_data_entrada" name="data_entrada" required>
                             <small class="form-text text-muted">Hora atual preenchida automaticamente, mas pode ser editada</small>
                         </div>
+                        
+                        <!-- Campo de Observação para Entrada Retroativa -->
+                        <div class="form-group" id="profissional_observacao_container" style="display: none;">
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle"></i> <strong>Entrada Retroativa Detectada</strong>
+                            </div>
+                            <label for="profissional_observacao">Observação/Justificativa *</label>
+                            <textarea class="form-control" id="profissional_observacao" name="observacao" rows="3" placeholder="Informe o motivo da entrada retroativa"></textarea>
+                            <small class="form-text text-muted">Obrigatório para entradas retroativas</small>
+                        </div>
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -1267,6 +1277,23 @@
 
         $('#modalProfissional').on('show.bs.modal', function() {
             $('#profissional_data_entrada').val(obterDataHoraAtual());
+            $('#profissional_observacao_container').hide();
+            $('#profissional_observacao').val('');
+        });
+
+        // Detectar entrada retroativa e mostrar campo de observação
+        $('#profissional_data_entrada').on('change', function() {
+            const dataEntradaSelecionada = new Date($(this).val());
+            const agora = new Date();
+            
+            // Se a data selecionada é anterior à data atual (retroativa)
+            if (dataEntradaSelecionada < agora) {
+                $('#profissional_observacao_container').slideDown();
+                $('#profissional_observacao').attr('required', true);
+            } else {
+                $('#profissional_observacao_container').slideUp();
+                $('#profissional_observacao').attr('required', false).val('');
+            }
         });
 
         $('#modalPrestador').on('show.bs.modal', function() {

@@ -188,6 +188,29 @@ class VisitantesNovoController {
                 }
             }
             
+            // Mascarar documento (LGPD) - mostrar apenas últimos dígitos
+            if (!empty($visitante['doc_number'])) {
+                if (!$canViewFullCpf) {
+                    $docNumber = $visitante['doc_number'];
+                    $docType = $visitante['doc_type'] ?? '';
+                    
+                    // Remover formatação para contar caracteres reais
+                    $cleanDoc = preg_replace('/[^A-Za-z0-9]/', '', $docNumber);
+                    $length = strlen($cleanDoc);
+                    
+                    // Mostrar apenas últimos 4 caracteres, resto com asteriscos
+                    if ($length > 4) {
+                        $visiblePart = substr($cleanDoc, -4);
+                        $maskedPart = str_repeat('*', min($length - 4, 8)); // Max 8 asteriscos
+                        $visitante['doc_number_masked'] = $maskedPart . $visiblePart;
+                    } else {
+                        $visitante['doc_number_masked'] = $docNumber;
+                    }
+                } else {
+                    $visitante['doc_number_masked'] = $visitante['doc_number'];
+                }
+            }
+            
             // Lógica "A pé" para placas vazias
             if (empty($visitante['placa_veiculo']) || trim($visitante['placa_veiculo']) === '') {
                 $visitante['placa_display'] = 'A pé';

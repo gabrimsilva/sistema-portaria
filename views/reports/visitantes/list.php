@@ -184,9 +184,9 @@ $canDeleteInline = $authService->hasPermission('relatorios.excluir_linha');
                                                 </td>
                                                 <td>
                                                     <?php 
-                                                    // Exibir documento baseado no tipo
+                                                    // Exibir documento baseado no tipo (com mascaramento LGPD)
                                                     $docType = $visitante['doc_type'] ?? '';
-                                                    $docNumber = $visitante['doc_number'] ?? $visitante['cpf_masked'] ?? '';
+                                                    $docNumber = $visitante['doc_number_masked'] ?? $visitante['cpf_masked'] ?? '';
                                                     
                                                     if (!empty($docNumber)):
                                                         // Mostrar tipo de documento se não for CPF

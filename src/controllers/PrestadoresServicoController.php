@@ -313,12 +313,15 @@ class PrestadoresServicoController {
                 // ===============================================
                 
                 $this->db->query("
-                    INSERT INTO prestadores_servico (nome, cpf, empresa, funcionario_responsavel, setor, observacao, placa_veiculo, entrada, saida)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO prestadores_servico (nome, cpf, empresa, funcionario_responsavel, setor, observacao, placa_veiculo, entrada, saida, doc_type, doc_number, doc_country)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ", [
                     $nome, $cpf, $empresa, $funcionario_responsavel, $setor, $observacao, $placa_veiculo,
                     $entrada,
-                    $saida ?: null
+                    $saida ?: null,
+                    null, // doc_type - explicitamente NULL para evitar DEFAULT 'CPF'
+                    null, // doc_number
+                    null  // doc_country - explicitamente NULL para evitar DEFAULT 'BR'
                 ]);
                 
                 header('Location: ' . $this->getBaseRoute() . '?success=1');
@@ -422,12 +425,15 @@ class PrestadoresServicoController {
                 $this->db->query("
                     UPDATE prestadores_servico 
                     SET nome = ?, cpf = ?, empresa = ?, funcionario_responsavel = ?, setor = ?, observacao = ?, placa_veiculo = ?, 
-                        entrada = ?, saida = ?, updated_at = CURRENT_TIMESTAMP
+                        entrada = ?, saida = ?, doc_type = ?, doc_number = ?, doc_country = ?, updated_at = CURRENT_TIMESTAMP
                     WHERE id = ?
                 ", [
                     $nome, $cpf, $empresa, $funcionario_responsavel, $setor, $observacao, $placa_veiculo,
                     $entrada ?: null,
                     $saida ?: null,
+                    null, // doc_type - explicitamente NULL
+                    null, // doc_number
+                    null, // doc_country - explicitamente NULL
                     $id
                 ]);
                 

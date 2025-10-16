@@ -437,6 +437,9 @@
                                                                 data-tipo="<?= htmlspecialchars($pessoa['tipo']) ?>"
                                                                 data-nome="<?= htmlspecialchars($pessoa['nome']) ?>"
                                                                 data-cpf="<?= htmlspecialchars($pessoa['cpf'] ?? '') ?>"
+                                                                data-doc_type="<?= htmlspecialchars($pessoa['doc_type'] ?? '') ?>"
+                                                                data-doc_number="<?= htmlspecialchars($pessoa['doc_number'] ?? '') ?>"
+                                                                data-doc_country="<?= htmlspecialchars($pessoa['doc_country'] ?? '') ?>"
                                                                 data-empresa="<?= htmlspecialchars($pessoa['empresa'] ?? '') ?>"
                                                                 data-setor="<?= htmlspecialchars($pessoa['setor'] ?? '') ?>"
                                                                 data-placa_veiculo="<?= htmlspecialchars($pessoa['placa_veiculo'] ?? '') ?>"
@@ -740,20 +743,46 @@
                             </div>
                         </div>
                         
+                        <div class="form-group">
+                            <label for="edit_nome">Nome Completo *</label>
+                            <input type="text" class="form-control" id="edit_nome" name="nome" required>
+                        </div>
+                        
+                        <!-- Seletor de Tipo de Documento -->
                         <div class="row">
-                            <div class="col-md-8">
+                            <div class="col-md-4">
                                 <div class="form-group">
-                                    <label for="edit_nome">Nome Completo *</label>
-                                    <input type="text" class="form-control" id="edit_nome" name="nome" required>
+                                    <label for="edit_doc_type">Tipo de Documento</label>
+                                    <select class="form-control" id="edit_doc_type" name="doc_type">
+                                        <option value="">CPF (padrão)</option>
+                                        <option value="RG">RG</option>
+                                        <option value="CNH">CNH</option>
+                                        <option value="Passaporte">Passaporte</option>
+                                        <option value="RNE">RNE (Registro Nacional de Estrangeiro)</option>
+                                        <option value="DNI">DNI (Documento Nacional de Identidad)</option>
+                                        <option value="CI">CI (Cédula de Identidad)</option>
+                                        <option value="Outros">Outros</option>
+                                    </select>
+                                    <small class="text-muted">Deixe vazio para CPF</small>
                                 </div>
                             </div>
-                            <div id="campo_cpf" class="col-md-4">
+                            <div class="col-md-5">
                                 <div class="form-group">
-                                    <label for="edit_cpf">CPF</label>
-                                    <input type="text" class="form-control" id="edit_cpf" name="cpf" placeholder="000.000.000-00" maxlength="14">
+                                    <label for="edit_doc_number">Número do Documento *</label>
+                                    <input type="text" class="form-control" id="edit_doc_number" name="doc_number" required>
+                                    <small class="text-muted">Máscara automática por tipo</small>
+                                </div>
+                            </div>
+                            <div id="edit_country_container" class="col-md-3" style="display: none;">
+                                <div class="form-group">
+                                    <label for="edit_doc_country">País</label>
+                                    <input type="text" class="form-control" id="edit_doc_country" name="doc_country" placeholder="Brasil">
                                 </div>
                             </div>
                         </div>
+                        
+                        <!-- Campo CPF oculto para compatibilidade -->
+                        <input type="hidden" id="edit_cpf" name="cpf">
                         
                         <div class="row">
                             <div id="campo_empresa" class="col-md-6">
@@ -1308,6 +1337,9 @@
             const tipo = btn.data('tipo');
             const nome = btn.data('nome');
             const cpf = btn.data('cpf');
+            const doc_type = btn.data('doc_type');
+            const doc_number = btn.data('doc_number');
+            const doc_country = btn.data('doc_country');
             const empresa = btn.data('empresa');
             const setor = btn.data('setor');
             const funcionario = btn.data('funcionario');
@@ -1318,7 +1350,20 @@
             $('#edit_tipo_original').val(tipo);
             $('#edit_tipo_display').text(tipo);
             $('#edit_nome').val(nome);
-            $('#edit_cpf').val(cpf);
+            $('#edit_cpf').val(cpf); // Campo oculto para compatibilidade
+            
+            // Preencher campos de documento
+            $('#edit_doc_type').val(doc_type || '');
+            $('#edit_doc_number').val(doc_number || cpf || ''); // Fallback para CPF legado
+            $('#edit_doc_country').val(doc_country || '');
+            
+            // Mostrar campo país se for documento internacional
+            if (doc_type && !['CPF', 'RG', 'CNH', ''].includes(doc_type)) {
+                $('#edit_country_container').show();
+            } else {
+                $('#edit_country_container').hide();
+            }
+            
             $('#edit_empresa').val(empresa);
             $('#edit_setor').val(setor);
             $('#edit_placa_veiculo').val(placa_veiculo);
@@ -1796,9 +1841,10 @@
         });
         
         $('#modalEditar').on('shown.bs.modal', function() {
-            aplicarMascaraCPF('#edit_cpf');
             aplicarMascaraPlaca('#edit_placa_veiculo');
-            console.log('✅ Máscaras aplicadas ao Modal Editar');
+            // Configurar seletor de documento
+            setupDocumentSelector('edit');
+            console.log('✅ Máscaras e seletor de documento aplicados ao Modal Editar');
             
             // Controle do checkbox "A pé" para modal de edição
             let previousValueEdit = '';

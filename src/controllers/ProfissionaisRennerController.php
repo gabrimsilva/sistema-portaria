@@ -810,11 +810,12 @@ class ProfissionaisRennerController {
                 
                 // Buscar informação de entrada retroativa no audit log
                 $auditLog = $this->db->fetch("
-                    SELECT metadata
+                    SELECT justificativa, is_retroactive
                     FROM audit_log
-                    WHERE table_name = 'registro_acesso' 
-                      AND record_id = ?
-                      AND action = 'create'
+                    WHERE entidade = 'registro_acesso' 
+                      AND entidade_id = ?
+                      AND acao = 'create'
+                      AND is_retroactive = true
                     ORDER BY timestamp DESC
                     LIMIT 1
                 ", [$id]);
@@ -822,12 +823,9 @@ class ProfissionaisRennerController {
                 $is_retroativa = false;
                 $observacao_retroativa = null;
                 
-                if ($auditLog && !empty($auditLog['metadata'])) {
-                    $metadata = json_decode($auditLog['metadata'], true);
-                    if (isset($metadata['entrada_retroativa']) && $metadata['entrada_retroativa']) {
-                        $is_retroativa = true;
-                        $observacao_retroativa = $metadata['justificativa'] ?? null;
-                    }
+                if ($auditLog && $auditLog['is_retroactive']) {
+                    $is_retroativa = true;
+                    $observacao_retroativa = $auditLog['justificativa'] ?? null;
                 }
                 
                 echo json_encode([

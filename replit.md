@@ -54,6 +54,18 @@ Preferred communication style: Simple, everyday language.
 - **M7.2 - Painel Público Brigada**: Controller público `/painel/brigada` com fotos circulares, auto-refresh 60s, segurança LGPD (realpath validation)
 - **M8 - Validação Final**: 3 testes completos (visitante estrangeiro Passaporte US, prestador validade híbrida, segurança + 47 índices de performance)
 
+### Validation Relaxation (Oct 16, 2025) ✅ CONCLUÍDO
+- **CPF/RG Validation Simplified**: Validação de dígitos verificadores desabilitada a pedido da portaria
+  - **Problema**: CPFs inválidos impediam registro de visitantes/prestadores na portaria
+  - **Solução**: Sistema agora aceita qualquer CPF com 11 dígitos (sem validar dígitos verificadores)
+  - **Arquivos modificados**: 
+    - `src/utils/CpfValidator.php` - validateAndNormalize() simplificado
+    - `src/services/DocumentValidator.php` - nota sobre validação desabilitada
+    - `public/assets/js/document-validator.js` - validateCPFLocal() simplificado
+  - **RG**: Mantém validação simplificada (aceita 7-10 caracteres)
+  - **Formatação**: Mantida para exibição consistente
+  - **Segurança**: Sem problemas observados, validação de comprimento mantida
+
 ### Bug Fixes & UX Improvements (Oct 16, 2025) ✅ CONCLUÍDO
 - **Edit Workflow Standardization**: Sistema de edição alinhado ao padrão UX de Profissionais Renner:
   - Botão amarelo redireciona para página separada de edição (form.php) com todos os campos editáveis

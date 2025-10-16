@@ -150,7 +150,7 @@ $canDeleteInline = $authService->hasPermission('relatorios.excluir_linha');
                                     <thead class="table-dark">
                                         <tr>
                                             <th width="20%">Nome</th>
-                                            <th width="9%">CPF</th>
+                                            <th width="9%">Documento</th>
                                             <th width="14%">Empresa</th>
                                             <th width="12%">Funcionário Responsável</th>
                                             <th width="9%">Setor</th>
@@ -183,7 +183,21 @@ $canDeleteInline = $authService->hasPermission('relatorios.excluir_linha');
                                                     <?php endif; ?>
                                                 </td>
                                                 <td>
-                                                    <span class="text-muted"><?= htmlspecialchars($visitante['cpf_masked'] ?? '') ?></span>
+                                                    <?php 
+                                                    // Exibir documento baseado no tipo
+                                                    $docType = $visitante['doc_type'] ?? '';
+                                                    $docNumber = $visitante['doc_number'] ?? $visitante['cpf_masked'] ?? '';
+                                                    
+                                                    if (!empty($docNumber)):
+                                                        // Mostrar tipo de documento se não for CPF
+                                                        if (!empty($docType) && $docType !== 'CPF'):
+                                                    ?>
+                                                        <small class="badge badge-info"><?= htmlspecialchars($docType) ?></small><br>
+                                                        <span class="text-muted"><?= htmlspecialchars($docNumber) ?></span>
+                                                    <?php else: ?>
+                                                        <span class="text-muted"><?= htmlspecialchars($docNumber) ?></span>
+                                                    <?php endif; ?>
+                                                    <?php endif; ?>
                                                 </td>
                                                 <td><?= htmlspecialchars($visitante['empresa'] ?? '') ?></td>
                                                 <td><?= htmlspecialchars($visitante['funcionario_responsavel'] ?? '') ?></td>

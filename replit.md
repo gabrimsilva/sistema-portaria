@@ -6,100 +6,6 @@ This project is an access control system for companies, developed with PHP 8+ an
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
-## Project Progress (Updated: Oct 15, 2025)
-
-### Configuration Module Stages
-- **ETAPA 1 - Organização**: ████████████ 100% ✅ CONCLUÍDA
-  - Formulário completo com validações em tempo real
-  - Upload de logo (2MB max, PNG/JPG) com preview
-  - Validação CNPJ com formatação automática
-  - CSRF protection ativada
-- **ETAPA 2 - Sites/Locais**: ████████████ 100% ✅ CONCLUÍDA
-  - CRUD completo de sites e setores
-  - Horários de funcionamento (7 dias)
-  - Gestão de feriados (globais/específicos)
-- **ETAPA 3 - RBAC**: ████████████ 100% ✅ CONCLUÍDA
-  - Matriz interativa de permissões (5 roles × 7 módulos)
-  - Proteções de segurança (Admin mantém config.* e CPF não mascarado)
-  - Modal de usuários por perfil
-- **ETAPA 4 - Autenticação**: ████████████ 100% ✅ CONCLUÍDA
-  - Formulário completo de políticas de autenticação
-  - Validações em tempo real (senha mínima, expiração, timeout)
-  - Toggles 2FA/SSO (placeholder UI preparado)
-  - APIs GET/PUT funcionais com CSRF protection
-- **ETAPA 5 - Auditoria**: ████████████ 100% ✅ CONCLUÍDA
-  - Filtros avançados (usuário, entidade, ação, datas)
-  - Paginação eficiente com prev/next e contador de registros
-  - Carregamento dinâmico de usuários no filtro
-  - Export CSV funcional com filtros aplicados
-  - Modal de detalhes com visualização diff antes/depois
-- **ETAPA 6 - Higiene UX**: ████████████ 100% ✅ CONCLUÍDA
-  - CleanupManager com AbortController para cancelar requests pendentes
-  - TabNavigationCleanup para detecção automática de mudança de módulo
-  - Gerenciamento de timers (setTimeout/setInterval) com cleanup automático
-  - Rastreamento e remoção de event listeners
-  - Fechamento automático de modais ao navegar entre seções
-  - Estados isolados por aba/módulo (sem vazamento de cache)
-- **ETAPA 7 - Segurança Extra**: ████████████ 100% ✅ CONCLUÍDA
-
-**Total concluído: 100% do plano original (7 de 7 etapas completas) 🎉**
-
-### v2.0.0 Enhancements (Oct 15, 2025) ✅ COMPLETO
-- **M4.1 - Widget Cadastros Expirando**: Dashboard com tabs Visitantes/Prestadores, badges coloridos (ativo/expirando/expirado), renovação rápida +30 dias via AJAX
-- **M4.2 - Seletor de Documento Internacional**: 8 tipos de documentos (CPF, RG, CNH, PASSAPORTE, RNE, DNI, CI, OUTROS), validação JavaScript + PHP por tipo, campo país (ISO-3166)
-- **M4.3 - Modal Entrada Retroativa**: Interface para registrar entradas passadas, validação de data, audit trail com campo `is_retroactive=true`
-- **M4.4 - Gestão de Validade UI**: Modais dinâmicos (renovar, bloquear, desbloquear), ValidadeController com 6 endpoints, renovação visitante +45d / prestador +60d
-- **M6 - Bug Crítico Saídas Prestadores**: Fix arquitetura híbrida - saída atualiza AMBAS tabelas (`prestadores_servico.saida` + `registro_acesso.saida_at`), view consolidada funcional
-- **M7.1 - CRUD Ramais**: Tabela `ramais` com gestão completa (adicionar, editar, remover), export CSV, unique constraints (ramal, professional_id)
-- **M7.2 - Painel Público Brigada**: Controller público `/painel/brigada` com fotos circulares, auto-refresh 60s, segurança LGPD (realpath validation)
-- **M8 - Validação Final**: 3 testes completos (visitante estrangeiro Passaporte US, prestador validade híbrida, segurança + 47 índices de performance)
-
-### Validation Relaxation (Oct 16, 2025) ✅ CONCLUÍDO
-- **CPF/RG Validation Simplified**: Validação de dígitos verificadores desabilitada a pedido da portaria
-  - **Problema**: CPFs inválidos impediam registro de visitantes/prestadores na portaria
-  - **Solução**: Sistema agora aceita qualquer CPF com 11 dígitos (sem validar dígitos verificadores)
-  - **Arquivos modificados**: 
-    - `src/utils/CpfValidator.php` - validateAndNormalize() simplificado
-    - `src/services/DocumentValidator.php` - nota sobre validação desabilitada
-    - `public/assets/js/document-validator.js` - validateCPFLocal() simplificado
-  - **RG**: Mantém validação simplificada (aceita 7-10 caracteres)
-  - **Formatação**: Mantida para exibição consistente
-  - **Segurança**: Sem problemas observados, validação de comprimento mantida
-
-- **Database Constraint Bug Fix**: Corrigido erro SQLSTATE[23514] chk_doc_consistency
-  - **Problema**: Conflito entre trigger sync_cpf_doc_number e defaults do banco
-  - **Causa Raiz**: 
-    - Trigger `sync_cpf_doc_number` sincroniza cpf ↔ doc_number quando doc_type='CPF'
-    - Colunas doc_type/doc_country tinham DEFAULT 'CPF'/'BR'
-    - PostgreSQL aplicava defaults ANTES do trigger, fazendo trigger copiar NULL para cpf
-    - Resultado: doc_type='CPF' (NOT NULL) + doc_number=NULL → violação de constraint
-  - **Solução**: Removidos os DEFAULT values das colunas doc_type e doc_country
-    - `ALTER TABLE prestadores_servico ALTER COLUMN doc_type DROP DEFAULT, ALTER COLUMN doc_country DROP DEFAULT`
-    - `ALTER TABLE visitantes_novo ALTER COLUMN doc_type DROP DEFAULT, ALTER COLUMN doc_country DROP DEFAULT`
-  - **Arquivos ajustados para enviar NULL explícito**:
-    - `PrestadoresServicoController.php` - save() INSERT, update() UPDATE
-    - `VisitantesNovoController.php` - save() INSERT, saveAjax() INSERT, update() UPDATE
-
-### Bug Fixes & UX Improvements (Oct 16, 2025) ✅ CONCLUÍDO
-- **Edit Workflow Standardization**: Sistema de edição alinhado ao padrão UX de Profissionais Renner:
-  - Botão amarelo redireciona para página separada de edição (form.php) com todos os campos editáveis
-  - Campos de saída (hora_saida/saida) presentes nas páginas de edição
-  - Actions 'edit' e 'update' já configuradas no router (index.php)
-  - Mesmo padrão aplicado em Visitantes, Prestadores e Profissionais Renner
-- **Navigation Standardization**: Todas as views de relatórios agora usam NavigationService::renderSidebar():
-  - `/reports/visitantes/list.php` e `form.php`
-  - `/reports/prestadores-servico/list.php` e `form.php`
-  - `/reports/profissionais-renner/form.php`
-  - Elimina duplicação de código e garante navegação consistente
-- **Critical Bug Fix - Exit Registration**: Corrigido bug crítico que impedia salvar hora de saída:
-  - **Root Cause**: Formulários enviavam dados para rotas antigas + validações excessivas bloqueavam submit
-  - **Forms Fixed**: Actions corrigidos para `/reports/visitantes` e `/reports/prestadores-servico`
-  - **Controllers Simplified**: Removidas validações de setor/CPF obrigatórios no update() (não eram required no form)
-  - **Temporal Validation**: Entrada/saída tornadas opcionais durante edição, normalizadas apenas se fornecidas
-  - **Duplicity Check**: Validação de duplicidade removida do update() para permitir edição livre de saídas
-  - **Navigation Fixed**: Botões "Voltar" corrigidos para rotas de relatórios
-- **UI/UX Cleanup**: Removida implementação modal incorreta, código duplicado eliminado
-
 ## System Architecture
 
 ### UI/UX Decisions
@@ -124,8 +30,8 @@ Preferred communication style: Simple, everyday language.
 - **Access Registration Autocomplete**: API endpoint for searching professionals and dynamic autocomplete for forms, preventing data duplication.
 - **Audit Log System**: Enhanced audit logging with automatic inference of severity and module, and advanced filtering capabilities.
 - **CSV Export System**: Enterprise-grade CSV export for all access reports (Visitantes, Prestadores de Serviço, Profissionais Renner) with full filter preservation, CSV formula injection protection (sanitizeForCsv), LGPD-compliant CPF masking, UTF-8 BOM for Excel compatibility, and semicolon delimiter.
-- **PostgreSQL Boolean Handling**: Robust normalization of PostgreSQL boolean values which can be returned as 't'/'f' strings, true/false booleans, or 1/0 integers depending on PDO driver, ensuring consistent strict boolean comparisons in views.
-- **Hygiene UX System (ETAPA 6)**: Comprehensive resource management system preventing memory leaks and optimizing navigation. CleanupManager tracks and cancels pending AJAX requests via AbortController, manages timers (setTimeout/setInterval) with automatic cleanup, removes event listeners on module changes, and closes Bootstrap modals/tooltips. TabNavigationCleanup detects URL changes (popstate, pushState) and triggers cleanup when switching between modules, ensuring isolated states per tab without resource leakage. All JavaScript modules (ramais.js, widget-cadastros-expirando.js, gestao-validade.js) integrate with graceful fallback when CleanupManager is unavailable.
+- **PostgreSQL Boolean Handling**: Robust normalization of PostgreSQL boolean values ensuring consistent strict boolean comparisons in views.
+- **Hygiene UX System**: Comprehensive resource management system preventing memory leaks and optimizing navigation. CleanupManager tracks and cancels pending AJAX requests via AbortController, manages timers, removes event listeners, and closes Bootstrap modals/tooltips. TabNavigationCleanup detects URL changes and triggers cleanup when switching between modules, ensuring isolated states per tab without resource leakage.
 
 ### Feature Specifications
 - **User Roles**: Role-based access control (e.g., 'porteiro').
@@ -135,6 +41,8 @@ Preferred communication style: Simple, everyday language.
 - **LGPD Compliance**: Comprehensive framework including consent, privacy notices, and cookie policy.
 - **Biometric Infrastructure**: Pre-configured secure biometric storage with AES-256-GCM encryption (currently inactive).
 - **Security Testing**: Automated CI/CD pipeline with runtime tests and static code scanning.
+- **Multi-Document Support**: System accepts 8 types of documents for visitors (CPF, RG, CNH, Passaporte, RNE, DNI, CI, Outros) with country field and automatic masks.
+- **Validation Relaxation**: CPF/RG validation simplified to accept any 11-digit CPF (without verifying checksums) and 7-10 character RG.
 
 ### System Design Choices
 - **Data Separation**: Refactored `profissionais_renner` table into two distinct tables (`profissionais_renner` for registration data and `registro_acesso` for access control data) to improve data integrity and auditability.
@@ -142,7 +50,7 @@ Preferred communication style: Simple, everyday language.
 - **Local File Storage**: For captured photos.
 - **Environment Configuration**: Centralized configuration in `/config` directory.
 - **Audit Log Database Schema**: Migration of `audit_log` table to `timestamptz` with added `severidade`, `modulo`, and `resultado` fields, along with performance-enhancing indices.
-- **Fire Brigade Photo Storage**: Field `foto_url` in `profissionais_renner` table stores corporate photos (non-biometric) for panel display, protected by realpath() validation and .htaccess rules preventing literal and percent-encoded path traversal.
+- **Fire Brigade Photo Storage**: Field `foto_url` in `profissionais_renner` table stores corporate photos (non-biometric) for panel display, protected by realpath() validation and .htaccess rules.
 
 ## External Dependencies
 

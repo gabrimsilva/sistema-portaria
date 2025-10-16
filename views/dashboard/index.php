@@ -473,20 +473,52 @@
                 <div class="modal-body">
                     <form id="formVisitante">
                         <input type="hidden" name="csrf_token" value="<?= CSRFProtection::generateToken() ?>">
+                        <div class="form-group">
+                            <label for="visitante_nome">Nome Completo *</label>
+                            <input type="text" class="form-control" id="visitante_nome" name="nome" required>
+                        </div>
+                        
+                        <!-- Seletor de Tipo de Documento -->
                         <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <div class="form-group">
-                                    <label for="visitante_nome">Nome Completo *</label>
-                                    <input type="text" class="form-control" id="visitante_nome" name="nome" required>
+                                    <label for="visitante_doc_type">Tipo de Documento</label>
+                                    <select class="form-control" id="visitante_doc_type" name="doc_type">
+                                        <option value="">CPF (padrão)</option>
+                                        <optgroup label="🇧🇷 Documentos Brasileiros">
+                                            <option value="CPF">CPF</option>
+                                            <option value="RG">RG</option>
+                                            <option value="CNH">CNH</option>
+                                        </optgroup>
+                                        <optgroup label="🌎 Documentos Internacionais">
+                                            <option value="PASSAPORTE">Passaporte</option>
+                                            <option value="RNE">RNE</option>
+                                            <option value="DNI">DNI</option>
+                                            <option value="CI">CI</option>
+                                            <option value="OUTRO">Outro</option>
+                                        </optgroup>
+                                    </select>
+                                    <small class="form-text text-muted">Deixe vazio para CPF</small>
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-5">
                                 <div class="form-group">
-                                    <label for="visitante_cpf">CPF *</label>
-                                    <input type="text" class="form-control" id="visitante_cpf" name="cpf" placeholder="000.000.000-00" maxlength="14" required>
+                                    <label for="visitante_doc_number">Número do Documento *</label>
+                                    <input type="text" class="form-control" id="visitante_doc_number" name="doc_number" placeholder="Digite o número" required>
+                                    <small class="form-text text-muted">Máscara automática por tipo</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3" id="visitante_country_container" style="display: none;">
+                                <div class="form-group">
+                                    <label for="visitante_doc_country">País</label>
+                                    <input type="text" class="form-control" id="visitante_doc_country" name="doc_country" placeholder="BR" maxlength="2">
+                                    <small class="form-text text-muted">Código ISO</small>
                                 </div>
                             </div>
                         </div>
+                        
+                        <!-- Campo CPF legado (hidden, preenchido via JS) -->
+                        <input type="hidden" id="visitante_cpf" name="cpf">
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
@@ -1574,11 +1606,77 @@
             });
         }
         
+        // ==================== SELETOR DE TIPO DE DOCUMENTO ====================
+        
+        function setupDocumentSelector(prefix) {
+            const $docType = $(`#${prefix}_doc_type`);
+            const $docNumber = $(`#${prefix}_doc_number`);
+            const $docCountry = $(`#${prefix}_doc_country`);
+            const $countryContainer = $(`#${prefix}_country_container`);
+            const $cpfLegacy = $(`#${prefix}_cpf`);
+            
+            // Função centralizada: normalizar tipo vazio como CPF
+            function getEffectiveDocType() {
+                return ($docType.val() || 'CPF').toUpperCase();
+            }
+            
+            // Aplicar máscara conforme tipo de documento
+            function applyDocumentMask() {
+                const docType = getEffectiveDocType(); // Usar função centralizada
+                let value = $docNumber.val().replace(/\D/g, ''); // Remove formatação
+                
+                // Tipo CPF (incluindo quando vazio/padrão)
+                if (docType === 'CPF') {
+                    // Máscara CPF: 000.000.000-00
+                    value = value.substring(0, 11);
+                    value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                    value = value.replace(/(\d{3})\.(\d{3})(\d)/, '$1.$2.$3');
+                    value = value.replace(/(\d{3})\.(\d{3})\.(\d{3})(\d)/, '$1.$2.$3-$4');
+                    // SEMPRE sincronizar com campo CPF legado quando tipo = CPF ou vazio
+                    $cpfLegacy.val(value.replace(/\D/g, ''));
+                } else if (docType === 'RG') {
+                    // Máscara RG: 00.000.000-0
+                    value = $docNumber.val().replace(/[^0-9X]/gi, '').toUpperCase().substring(0, 9);
+                    value = value.replace(/(\d{2})(\d)/, '$1.$2');
+                    value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                    value = value.replace(/(\d{3})(\d{1})$/, '$1-$2');
+                } else if (docType === 'CNH') {
+                    // CNH: apenas números, 11 dígitos
+                    value = value.substring(0, 11);
+                } else {
+                    // Outros: sem máscara, aceita alfanumérico
+                    value = $docNumber.val().replace(/[^A-Z0-9]/gi, '').toUpperCase();
+                }
+                
+                $docNumber.val(value);
+                
+                // Mostrar campo país para documentos internacionais
+                if (['PASSAPORTE', 'RNE', 'DNI', 'CI', 'OUTRO'].indexOf(docType) !== -1) {
+                    $countryContainer.show();
+                } else {
+                    $countryContainer.hide();
+                    $docCountry.val('BR');
+                }
+            }
+            
+            // Eventos
+            $docType.on('change', applyDocumentMask);
+            $docNumber.on('input paste keyup blur', applyDocumentMask);
+            
+            // Garantir sincronização antes do submit
+            $(`#form${prefix.charAt(0).toUpperCase() + prefix.slice(1)}`).on('submit', function() {
+                applyDocumentMask(); // Forçar sincronização final
+            });
+            
+            // Aplicar na inicialização
+            applyDocumentMask();
+        }
+        
         // Aplicar máscaras quando os modais abrem
         $('#modalVisitante').on('shown.bs.modal', function() {
-            aplicarMascaraCPF('#visitante_cpf');
+            setupDocumentSelector('visitante');
             aplicarMascaraPlaca('#visitante_placa_veiculo');
-            console.log('✅ Máscaras aplicadas ao Modal Visitante');
+            console.log('✅ Seletor de documentos aplicado ao Modal Visitante');
             
             // Controle do checkbox "A pé" para visitante
             let previousValueVisitante = '';

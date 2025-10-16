@@ -76,23 +76,57 @@ require_once '../../src/services/FormService.php';
                                             <?= FormService::renderAlert($error, 'danger') ?>
                                         <?php endif; ?>
                                         
+                                        <div class="form-group">
+                                            <label for="nome">Nome *</label>
+                                            <input type="text" class="form-control" id="nome" name="nome" 
+                                                   value="<?= htmlspecialchars($visitante['nome'] ?? '') ?>" required>
+                                        </div>
+                                        
+                                        <!-- Seletor de Tipo de Documento -->
                                         <div class="row">
-                                            <div class="col-md-6">
+                                            <div class="col-md-4">
                                                 <div class="form-group">
-                                                    <label for="nome">Nome *</label>
-                                                    <input type="text" class="form-control" id="nome" name="nome" 
-                                                           value="<?= htmlspecialchars($visitante['nome'] ?? '') ?>" required>
+                                                    <label for="doc_type">Tipo de Documento</label>
+                                                    <select class="form-control" id="doc_type" name="doc_type">
+                                                        <option value="">CPF (padrão)</option>
+                                                        <optgroup label="🇧🇷 Documentos Brasileiros">
+                                                            <option value="CPF" <?= ($visitante['doc_type'] ?? '') === 'CPF' ? 'selected' : '' ?>>CPF</option>
+                                                            <option value="RG" <?= ($visitante['doc_type'] ?? '') === 'RG' ? 'selected' : '' ?>>RG</option>
+                                                            <option value="CNH" <?= ($visitante['doc_type'] ?? '') === 'CNH' ? 'selected' : '' ?>>CNH</option>
+                                                        </optgroup>
+                                                        <optgroup label="🌎 Documentos Internacionais">
+                                                            <option value="PASSAPORTE" <?= ($visitante['doc_type'] ?? '') === 'PASSAPORTE' ? 'selected' : '' ?>>Passaporte</option>
+                                                            <option value="RNE" <?= ($visitante['doc_type'] ?? '') === 'RNE' ? 'selected' : '' ?>>RNE</option>
+                                                            <option value="DNI" <?= ($visitante['doc_type'] ?? '') === 'DNI' ? 'selected' : '' ?>>DNI</option>
+                                                            <option value="CI" <?= ($visitante['doc_type'] ?? '') === 'CI' ? 'selected' : '' ?>>CI</option>
+                                                            <option value="OUTRO" <?= ($visitante['doc_type'] ?? '') === 'OUTRO' ? 'selected' : '' ?>>Outro</option>
+                                                        </optgroup>
+                                                    </select>
+                                                    <small class="form-text text-muted">Deixe vazio para CPF</small>
                                                 </div>
                                             </div>
-                                            <div class="col-md-6">
+                                            <div class="col-md-5">
                                                 <div class="form-group">
-                                                    <label for="cpf">CPF</label>
-                                                    <input type="text" class="form-control" id="cpf" name="cpf" 
-                                                           value="<?= htmlspecialchars($visitante['cpf'] ?? '') ?>" 
-                                                           placeholder="000.000.000-00">
+                                                    <label for="doc_number">Número do Documento *</label>
+                                                    <input type="text" class="form-control" id="doc_number" name="doc_number" 
+                                                           value="<?= htmlspecialchars($visitante['doc_number'] ?? '') ?>" 
+                                                           placeholder="Digite o número" required>
+                                                    <small class="form-text text-muted">Máscara automática por tipo</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3" id="country_container" style="display: <?= !empty($visitante['doc_country']) && $visitante['doc_country'] !== 'BR' ? 'block' : 'none' ?>;">
+                                                <div class="form-group">
+                                                    <label for="doc_country">País</label>
+                                                    <input type="text" class="form-control" id="doc_country" name="doc_country" 
+                                                           value="<?= htmlspecialchars($visitante['doc_country'] ?? 'BR') ?>" 
+                                                           placeholder="BR" maxlength="2">
+                                                    <small class="form-text text-muted">Código ISO</small>
                                                 </div>
                                             </div>
                                         </div>
+                                        
+                                        <!-- Campo CPF legado (hidden, preenchido via JS ou direto se vazio) -->
+                                        <input type="hidden" id="cpf" name="cpf" value="<?= htmlspecialchars($visitante['cpf'] ?? '') ?>">
                                         
                                         <div class="row">
                                             <div class="col-md-6">
@@ -173,9 +207,71 @@ require_once '../../src/services/FormService.php';
     
     <script>
     $(document).ready(function() {
+        // ==================== SELETOR DE TIPO DE DOCUMENTO ====================
+        function setupDocumentSelector() {
+            const $docType = $('#doc_type');
+            const $docNumber = $('#doc_number');
+            const $docCountry = $('#doc_country');
+            const $countryContainer = $('#country_container');
+            const $cpfLegacy = $('#cpf');
+            
+            // Função centralizada: normalizar tipo vazio como CPF
+            function getEffectiveDocType() {
+                return ($docType.val() || 'CPF').toUpperCase();
+            }
+            
+            function applyDocumentMask() {
+                const docType = getEffectiveDocType(); // Usar função centralizada
+                let value = $docNumber.val().replace(/\D/g, '');
+                
+                // Tipo CPF (incluindo quando vazio/padrão)
+                if (docType === 'CPF') {
+                    // Máscara CPF: 000.000.000-00
+                    value = value.substring(0, 11);
+                    value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                    value = value.replace(/(\d{3})\.(\d{3})(\d)/, '$1.$2.$3');
+                    value = value.replace(/(\d{3})\.(\d{3})\.(\d{3})(\d)/, '$1.$2.$3-$4');
+                    // SEMPRE sincronizar com campo CPF legado quando tipo = CPF ou vazio
+                    $cpfLegacy.val(value.replace(/\D/g, ''));
+                } else if (docType === 'RG') {
+                    // Máscara RG: 00.000.000-0
+                    value = $docNumber.val().replace(/[^0-9X]/gi, '').toUpperCase().substring(0, 9);
+                    value = value.replace(/(\d{2})(\d)/, '$1.$2');
+                    value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                    value = value.replace(/(\d{3})(\d{1})$/, '$1-$2');
+                } else if (docType === 'CNH') {
+                    value = value.substring(0, 11);
+                } else {
+                    value = $docNumber.val().replace(/[^A-Z0-9]/gi, '').toUpperCase();
+                }
+                
+                $docNumber.val(value);
+                
+                // Mostrar campo país para documentos internacionais
+                if (['PASSAPORTE', 'RNE', 'DNI', 'CI', 'OUTRO'].indexOf(docType) !== -1) {
+                    $countryContainer.show();
+                } else {
+                    $countryContainer.hide();
+                    $docCountry.val('BR');
+                }
+            }
+            
+            $docType.on('change', applyDocumentMask);
+            $docNumber.on('input paste keyup blur', applyDocumentMask);
+            
+            // Garantir sincronização antes do submit
+            $('form').on('submit', function() {
+                applyDocumentMask(); // Forçar sincronização final
+            });
+            
+            applyDocumentMask();
+        }
+        
+        setupDocumentSelector();
+        
+        // ==================== CONTROLE PLACA "A PÉ" ====================
         let previousValue = '';
         
-        // Controlar checkbox "A pé"
         $('#ape_checkbox').change(function() {
             if ($(this).is(':checked')) {
                 previousValue = $('#placa_veiculo').val() !== 'APE' ? $('#placa_veiculo').val() : '';
@@ -185,20 +281,10 @@ require_once '../../src/services/FormService.php';
             }
         });
         
-        // Verificar estado inicial
         if ($('#placa_veiculo').val() === 'APE') {
             $('#ape_checkbox').prop('checked', true);
             $('#placa_veiculo').prop('readonly', true);
         }
-    });
-    
-    // Format CPF input
-    document.getElementById('cpf').addEventListener('input', function (e) {
-        var value = e.target.value.replace(/\D/g, '');
-        value = value.replace(/(\d{3})(\d)/, '$1.$2');
-        value = value.replace(/(\d{3})(\d)/, '$1.$2');
-        value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-        e.target.value = value;
     });
     </script>
 </body>

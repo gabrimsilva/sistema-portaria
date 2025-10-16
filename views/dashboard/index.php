@@ -810,6 +810,16 @@
                                     </div>
                                 </div>
                             </div>
+                            
+                            <!-- Campo de Observação para Entrada Retroativa -->
+                            <div class="form-group" id="edit_profissional_observacao_container" style="display: none;">
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle"></i> <strong>Entrada Retroativa</strong>
+                                </div>
+                                <label for="edit_profissional_observacao">Observação/Justificativa</label>
+                                <textarea class="form-control" id="edit_profissional_observacao" name="observacao_retroativa" rows="3" readonly></textarea>
+                                <small class="form-text text-muted">Registro da justificativa da entrada retroativa</small>
+                            </div>
                         </div>
                         
                         <div id="campo_hora_saida" class="form-group" style="display: none;">
@@ -1391,6 +1401,42 @@
                 $('#campos_profissional_renner').show();
                 // Alterar cor do header do modal para Profissional Renner
                 $('.modal-header').removeClass('bg-info').addClass('bg-primary');
+                
+                // Buscar dados do profissional para verificar se é entrada retroativa
+                $.ajax({
+                    url: `/profissionais-renner?action=get_data&id=${id}`,
+                    method: 'GET',
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.success) {
+                            // Preencher saída e retorno se existirem
+                            if (response.data.saida) {
+                                const saidaFormatada = response.data.saida.replace(' ', 'T').slice(0, 16);
+                                $('#edit_saida').val(saidaFormatada);
+                            }
+                            if (response.data.retorno) {
+                                const retornoFormatado = response.data.retorno.replace(' ', 'T').slice(0, 16);
+                                $('#edit_retorno').val(retornoFormatado);
+                            }
+                            if (response.data.saida_final) {
+                                const saidaFinalFormatada = response.data.saida_final.replace(' ', 'T').slice(0, 16);
+                                $('#edit_hora_saida').val(saidaFinalFormatada);
+                            }
+                            
+                            // Verificar se é entrada retroativa e mostrar observação
+                            if (response.data.is_retroativa || response.data.observacao_retroativa) {
+                                $('#edit_profissional_observacao_container').show();
+                                $('#edit_profissional_observacao').val(response.data.observacao_retroativa || '');
+                            } else {
+                                $('#edit_profissional_observacao_container').hide();
+                            }
+                        }
+                    },
+                    error: function() {
+                        // Em caso de erro, esconder observação
+                        $('#edit_profissional_observacao_container').hide();
+                    }
+                });
             } else {
                 $('#campo_empresa').show();
                 $('#campo_cpf').show();

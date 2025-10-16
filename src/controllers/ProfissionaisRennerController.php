@@ -808,6 +808,28 @@ class ProfissionaisRennerController {
                     return;
                 }
                 
+                // Buscar informação de entrada retroativa no audit log
+                $auditLog = $this->db->fetch("
+                    SELECT metadata
+                    FROM audit_log
+                    WHERE table_name = 'registro_acesso' 
+                      AND record_id = ?
+                      AND action = 'create'
+                    ORDER BY timestamp DESC
+                    LIMIT 1
+                ", [$id]);
+                
+                $is_retroativa = false;
+                $observacao_retroativa = null;
+                
+                if ($auditLog && !empty($auditLog['metadata'])) {
+                    $metadata = json_decode($auditLog['metadata'], true);
+                    if (isset($metadata['entrada_retroativa']) && $metadata['entrada_retroativa']) {
+                        $is_retroativa = true;
+                        $observacao_retroativa = $metadata['justificativa'] ?? null;
+                    }
+                }
+                
                 echo json_encode([
                     'success' => true, 
                     'data' => [
@@ -817,7 +839,9 @@ class ProfissionaisRennerController {
                         'data_entrada' => $registro['entrada_at'],
                         'saida' => $registro['saida_at'],
                         'retorno' => $registro['retorno'],
-                        'saida_final' => $registro['saida_final']
+                        'saida_final' => $registro['saida_final'],
+                        'is_retroativa' => $is_retroativa,
+                        'observacao_retroativa' => $observacao_retroativa
                     ]
                 ]);
             } catch (Exception $e) {

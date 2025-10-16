@@ -198,12 +198,15 @@ class ImportacaoController {
             $imported = 0;
             $skipped = 0;
             $errors = 0;
+            $errorDetails = [];
             
             for ($i = 1; $i < count($rows); $i++) {
                 $row = $rows[$i];
+                $linha = $i + 1; // Linha no arquivo (começando do 1, contando header)
                 
                 if (empty($row[$nomeIndex])) {
                     $errors++;
+                    $errorDetails[] = "Linha $linha: Nome vazio";
                     continue;
                 }
                 
@@ -211,9 +214,28 @@ class ImportacaoController {
                 $setor = trim($row[$setorIndex] ?? '');
                 $fre = trim($row[$freIndex] ?? '');
                 
+                // Validar se FRE está vazio
+                if (empty($fre)) {
+                    $errors++;
+                    $errorDetails[] = "Linha $linha ($nome): Campo FRE obrigatório está vazio";
+                    continue;
+                }
+                
+                // Validar se Setor está vazio
+                if (empty($setor)) {
+                    $errors++;
+                    $errorDetails[] = "Linha $linha ($nome): Campo Setor obrigatório está vazio";
+                    continue;
+                }
+                
                 $dataAdmissao = null;
                 if (!empty($row[$dataAdmissaoIndex])) {
                     $dataAdmissao = $this->parseDate($row[$dataAdmissaoIndex]);
+                    if ($dataAdmissao === null) {
+                        $errors++;
+                        $errorDetails[] = "Linha $linha ($nome): Data de Admissão em formato inválido";
+                        continue;
+                    }
                 }
                 
                 $exists = $this->db->fetch(
@@ -234,6 +256,8 @@ class ImportacaoController {
                     $imported++;
                 } catch (Exception $e) {
                     $errors++;
+                    $errorDetails[] = "Linha $linha ($nome): Erro ao inserir - " . $e->getMessage();
+                    error_log("❌ Erro importação linha $linha: " . $e->getMessage());
                 }
             }
             
@@ -260,7 +284,8 @@ class ImportacaoController {
                 'data' => [
                     'imported' => $imported,
                     'skipped' => $skipped,
-                    'errors' => $errors
+                    'errors' => $errors,
+                    'error_details' => array_slice($errorDetails, 0, 50) // Limitar a 50 primeiros erros para não sobrecarregar
                 ]
             ]);
             

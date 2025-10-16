@@ -758,42 +758,6 @@
                             <input type="text" class="form-control" id="edit_nome" name="nome" required>
                         </div>
                         
-                        <!-- Seletor de Tipo de Documento -->
-                        <div class="row">
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label for="edit_doc_type">Tipo de Documento</label>
-                                    <select class="form-control" id="edit_doc_type" name="doc_type">
-                                        <option value="">CPF (padrão)</option>
-                                        <option value="RG">RG</option>
-                                        <option value="CNH">CNH</option>
-                                        <option value="PASSAPORTE">Passaporte</option>
-                                        <option value="RNE">RNE (Registro Nacional de Estrangeiro)</option>
-                                        <option value="DNI">DNI (Documento Nacional de Identidad)</option>
-                                        <option value="CI">CI (Cédula de Identidad)</option>
-                                        <option value="OUTROS">Outros</option>
-                                    </select>
-                                    <small class="text-muted">Deixe vazio para CPF</small>
-                                </div>
-                            </div>
-                            <div class="col-md-5">
-                                <div class="form-group">
-                                    <label for="edit_doc_number">Número do Documento *</label>
-                                    <input type="text" class="form-control" id="edit_doc_number" name="doc_number" required>
-                                    <small class="text-muted">Máscara automática por tipo</small>
-                                </div>
-                            </div>
-                            <div id="edit_country_container" class="col-md-3" style="display: none;">
-                                <div class="form-group">
-                                    <label for="edit_doc_country">País</label>
-                                    <input type="text" class="form-control" id="edit_doc_country" name="doc_country" placeholder="Brasil">
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Campo CPF oculto para compatibilidade -->
-                        <input type="hidden" id="edit_cpf" name="cpf">
-                        
                         <div class="row">
                             <div id="campo_empresa" class="col-md-6">
                                 <div class="form-group">

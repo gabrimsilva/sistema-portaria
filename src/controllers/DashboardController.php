@@ -324,7 +324,7 @@ class DashboardController {
             
             // Prestadores trabalhando (usando view consolidada - BUG FIX v2.0.0)
             $prestadoresAtivos = $this->db->fetchAll("
-                SELECT nome, doc_type, doc_number, cpf, empresa, setor, 
+                SELECT nome, doc_type, doc_number, doc_country, cpf, empresa, setor, 
                        entrada as hora_entrada, 'Prestador' as tipo, id, placa_veiculo, funcionario_responsavel
                 FROM vw_prestadores_consolidado 
                 WHERE entrada IS NOT NULL AND saida_consolidada IS NULL
@@ -333,9 +333,9 @@ class DashboardController {
             
             // Profissionais que estão na empresa (têm entrada_at ou retorno, mas não saída_final)
             $profissionaisAtivos = $this->db->fetchAll("
-                SELECT p.nome, r.cpf, r.empresa, p.setor, 
+                SELECT p.nome, p.doc_type, p.doc_number, p.doc_country, r.cpf, r.empresa, p.setor, 
                        COALESCE(r.retorno, r.entrada_at) as hora_entrada, 
-                       'Profissional Renner' as tipo, r.id, r.placa_veiculo,
+                       'Profissional Renner' as tipo, r.id, r.placa_veiculo, '' as funcionario_responsavel,
                        CASE WHEN b.id IS NOT NULL AND b.active = TRUE THEN TRUE ELSE FALSE END as is_brigadista
                 FROM registro_acesso r
                 JOIN profissionais_renner p ON p.id = r.profissional_renner_id

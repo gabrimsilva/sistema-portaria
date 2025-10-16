@@ -1342,7 +1342,7 @@
             const doc_country = btn.data('doc_country');
             const empresa = btn.data('empresa');
             const setor = btn.data('setor');
-            const funcionario = btn.data('funcionario');
+            const funcionario = btn.data('funcionario_responsavel');
             const placa_veiculo = btn.data('placa_veiculo');
             
             // Preencher campos básicos
@@ -1404,7 +1404,7 @@
             if (tipo === 'Visitante') {
                 $('#campo_funcionario_responsavel').show();
                 // Preencher campos específicos do visitante
-                $('#edit_funcionario_responsavel').val(btn.data('funcionario_responsavel') || '');
+                $('#edit_funcionario_responsavel').val(funcionario || '');
                 
                 // Buscar dados completos do visitante para preencher hora de saída
                 $.ajax({
@@ -1427,7 +1427,7 @@
                 $('#campo_funcionario_responsavel').show();
                 $('#campo_observacao').show();
                 // Preencher campos específicos do prestador
-                $('#edit_funcionario_responsavel').val(btn.data('funcionario_responsavel') || '');
+                $('#edit_funcionario_responsavel').val(funcionario || '');
                 $('#edit_observacao').val('');
                 
                 $.ajax({

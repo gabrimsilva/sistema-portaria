@@ -168,6 +168,14 @@ class VisitantesNovoController {
         
         $visitantes = $this->db->fetchAll($query, $params);
         
+        // DEBUG: Verificar se há duplicação no resultado da query
+        error_log("🔍 DEBUG Relatório Visitantes - Total registros retornados: " . count($visitantes));
+        foreach ($visitantes as $v) {
+            if (strpos($v['nome'], 'TESTE') !== false) {
+                error_log("🔍 DEBUG Visitante: ID={$v['id']}, Nome={$v['nome']}");
+            }
+        }
+        
         // Processar dados para exibição
         $canViewFullCpf = $this->canViewFullCpf();
         foreach ($visitantes as &$visitante) {

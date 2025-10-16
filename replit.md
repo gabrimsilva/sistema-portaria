@@ -67,13 +67,18 @@ Preferred communication style: Simple, everyday language.
   - **Segurança**: Sem problemas observados, validação de comprimento mantida
 
 - **Database Constraint Bug Fix**: Corrigido erro SQLSTATE[23514] chk_doc_consistency
-  - **Problema**: Campos doc_type/doc_country tinham DEFAULT 'CPF'/'BR', mas doc_number era NULL, violando constraint
-  - **Constraint**: Exige que doc_type e doc_number sejam AMBOS NULL ou AMBOS NOT NULL
-  - **Solução**: Todos INSERTs/UPDATEs agora definem explicitamente doc_type=NULL, doc_number=NULL, doc_country=NULL quando usam campo legado `cpf`
-  - **Arquivos corrigidos**:
-    - `PrestadoresServicoController.php` - save() INSERT (linhas 319-327), update() UPDATE (linhas 431-440)
-    - `VisitantesNovoController.php` - save() INSERT (303-311), saveAjax() INSERT (625-631), update() UPDATE (411-420)
-  - **5 pontos corrigidos** para prevenir violação de constraint em cadastros futuros
+  - **Problema**: Conflito entre trigger sync_cpf_doc_number e defaults do banco
+  - **Causa Raiz**: 
+    - Trigger `sync_cpf_doc_number` sincroniza cpf ↔ doc_number quando doc_type='CPF'
+    - Colunas doc_type/doc_country tinham DEFAULT 'CPF'/'BR'
+    - PostgreSQL aplicava defaults ANTES do trigger, fazendo trigger copiar NULL para cpf
+    - Resultado: doc_type='CPF' (NOT NULL) + doc_number=NULL → violação de constraint
+  - **Solução**: Removidos os DEFAULT values das colunas doc_type e doc_country
+    - `ALTER TABLE prestadores_servico ALTER COLUMN doc_type DROP DEFAULT, ALTER COLUMN doc_country DROP DEFAULT`
+    - `ALTER TABLE visitantes_novo ALTER COLUMN doc_type DROP DEFAULT, ALTER COLUMN doc_country DROP DEFAULT`
+  - **Arquivos ajustados para enviar NULL explícito**:
+    - `PrestadoresServicoController.php` - save() INSERT, update() UPDATE
+    - `VisitantesNovoController.php` - save() INSERT, saveAjax() INSERT, update() UPDATE
 
 ### Bug Fixes & UX Improvements (Oct 16, 2025) ✅ CONCLUÍDO
 - **Edit Workflow Standardization**: Sistema de edição alinhado ao padrão UX de Profissionais Renner:

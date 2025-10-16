@@ -1345,6 +1345,13 @@
             const funcionario = btn.data('funcionario_responsavel');
             const placa_veiculo = btn.data('placa_veiculo');
             
+            // DEBUG: Log dos dados capturados
+            console.log('📋 Dados do botão editar:', {
+                id, tipo, nome, cpf,
+                doc_type, doc_number, doc_country,
+                empresa, setor, funcionario, placa_veiculo
+            });
+            
             // Preencher campos básicos
             $('#edit_id').val(id);
             $('#edit_tipo_original').val(tipo);

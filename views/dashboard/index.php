@@ -1894,9 +1894,7 @@
         
         $('#modalEditar').on('shown.bs.modal', function() {
             aplicarMascaraPlaca('#edit_placa_veiculo');
-            // Configurar seletor de documento
-            setupDocumentSelector('edit');
-            console.log('✅ Máscaras e seletor de documento aplicados ao Modal Editar');
+            console.log('✅ Máscara de placa aplicada ao Modal Editar');
             
             // Controle do checkbox "A pé" para modal de edição
             let previousValueEdit = '';

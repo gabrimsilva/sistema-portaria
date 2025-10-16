@@ -41,8 +41,9 @@ Preferred communication style: Simple, everyday language.
 - **LGPD Compliance**: Comprehensive framework including consent, privacy notices, and cookie policy.
 - **Biometric Infrastructure**: Pre-configured secure biometric storage with AES-256-GCM encryption (currently inactive).
 - **Security Testing**: Automated CI/CD pipeline with runtime tests and static code scanning.
-- **Multi-Document Support**: System accepts 8 types of documents for visitors (CPF, RG, CNH, Passaporte, RNE, DNI, CI, Outros) with country field and automatic masks.
+- **Multi-Document Support**: System accepts 8 types of documents for visitors (CPF, RG, CNH, Passaporte, RNE, DNI, CI, Outros) with country field and automatic masks. Document normalization is type-aware: Brazilian documents (CPF/RG/CNH) use digits-only, while international documents preserve alphanumeric format.
 - **Validation Relaxation**: CPF/RG validation simplified to accept any 11-digit CPF (without verifying checksums) and 7-10 character RG.
+- **Document Validation System**: Conditional validation based on document type with centralized `getEffectiveDocType()` function normalizing empty type as CPF (default). Backend validates "Número do documento é obrigatório" for all document types.
 
 ### System Design Choices
 - **Data Separation**: Refactored `profissionais_renner` table into two distinct tables (`profissionais_renner` for registration data and `registro_acesso` for access control data) to improve data integrity and auditability.

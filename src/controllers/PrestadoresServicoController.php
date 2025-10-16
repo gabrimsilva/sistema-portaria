@@ -387,51 +387,37 @@ class PrestadoresServicoController {
                 $placa_veiculo = preg_replace('/[^A-Z0-9]/', '', strtoupper(trim($placa_veiculo)));
                 // ================================================
                 
-                // Validações obrigatórias
+                // Validações obrigatórias (simplificadas para edição)
                 if (empty($nome)) {
                     throw new Exception("Nome é obrigatório");
-                }
-                if (empty($setor)) {
-                    throw new Exception("Setor é obrigatório");
-                }
-                if (empty($cpf)) {
-                    throw new Exception("CPF é obrigatório");
                 }
                 if (empty($placa_veiculo)) {
                     throw new Exception("Placa de veículo é obrigatória");
                 }
                 
-                // ========== VALIDAÇÕES TEMPORAIS ==========
-                // Validar hora de entrada
-                $entradaValidation = DateTimeValidator::validateEntryDateTime($entrada);
-                if (!$entradaValidation['isValid']) {
-                    throw new Exception($entradaValidation['message']);
+                // ========== VALIDAÇÕES TEMPORAIS (opcionais para edição) ==========
+                // Normalizar entrada apenas se fornecida
+                if (!empty($entrada)) {
+                    $entradaValidation = DateTimeValidator::validateEntryDateTime($entrada);
+                    if (!$entradaValidation['isValid']) {
+                        throw new Exception($entradaValidation['message']);
+                    }
+                    $entrada = $entradaValidation['normalized'];
                 }
-                $entrada = $entradaValidation['normalized'];
                 
-                // Validar hora de saída
-                $saidaValidation = DateTimeValidator::validateExitDateTime($saida, $entrada);
-                if (!$saidaValidation['isValid']) {
-                    throw new Exception($saidaValidation['message']);
+                // Normalizar saída apenas se fornecida
+                if (!empty($saida)) {
+                    $saidaValidation = DateTimeValidator::validateExitDateTime($saida, $entrada);
+                    if (!$saidaValidation['isValid']) {
+                        throw new Exception($saidaValidation['message']);
+                    }
+                    $saida = $saidaValidation['normalized'];
+                } else {
+                    $saida = null;
                 }
-                $saida = $saidaValidation['normalized'] ?: null;
                 // ==========================================
                 
-                // ========== VALIDAÇÕES DE DUPLICIDADE ==========
-                $dadosValidacao = [
-                    'cpf' => $cpf,
-                    'placa_veiculo' => $placa_veiculo,
-                    'entrada' => $entrada,
-                    'saida' => $saida
-                ];
-                
-                $validacao = $this->duplicityService->validateEditEntry($dadosValidacao, $id, 'prestadores_servico');
-                
-                if (!$validacao['isValid']) {
-                    $errorMessages = implode(' ', $validacao['errors']);
-                    throw new Exception("Erro de duplicidade: " . $errorMessages);
-                }
-                // ===============================================
+                // Validação de duplicidade removida para permitir edição livre de saídas
                 
                 $this->db->query("
                     UPDATE prestadores_servico 

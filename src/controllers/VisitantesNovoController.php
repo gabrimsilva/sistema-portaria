@@ -370,51 +370,37 @@ class VisitantesNovoController {
                 $placa_veiculo = preg_replace('/[^A-Z0-9]/', '', strtoupper(trim($placa_veiculo)));
                 // ================================================
                 
-                // Validações obrigatórias
+                // Validações obrigatórias (simplificadas para edição)
                 if (empty($nome)) {
                     throw new Exception("Nome é obrigatório");
-                }
-                if (empty($setor)) {
-                    throw new Exception("Setor é obrigatório");
-                }
-                if (empty($cpf)) {
-                    throw new Exception("CPF é obrigatório");
                 }
                 if (empty($placa_veiculo)) {
                     throw new Exception("Placa de veículo é obrigatória");
                 }
                 
-                // ========== VALIDAÇÕES TEMPORAIS ==========
-                // Validar hora de entrada
-                $entradaValidation = DateTimeValidator::validateEntryDateTime($hora_entrada);
-                if (!$entradaValidation['isValid']) {
-                    throw new Exception($entradaValidation['message']);
+                // ========== VALIDAÇÕES TEMPORAIS (opcionais para edição) ==========
+                // Normalizar hora de entrada apenas se fornecida
+                if (!empty($hora_entrada)) {
+                    $entradaValidation = DateTimeValidator::validateEntryDateTime($hora_entrada);
+                    if (!$entradaValidation['isValid']) {
+                        throw new Exception($entradaValidation['message']);
+                    }
+                    $hora_entrada = $entradaValidation['normalized'];
                 }
-                $hora_entrada = $entradaValidation['normalized'];
                 
-                // Validar hora de saída
-                $saidaValidation = DateTimeValidator::validateExitDateTime($hora_saida, $hora_entrada);
-                if (!$saidaValidation['isValid']) {
-                    throw new Exception($saidaValidation['message']);
+                // Normalizar hora de saída apenas se fornecida
+                if (!empty($hora_saida)) {
+                    $saidaValidation = DateTimeValidator::validateExitDateTime($hora_saida, $hora_entrada);
+                    if (!$saidaValidation['isValid']) {
+                        throw new Exception($saidaValidation['message']);
+                    }
+                    $hora_saida = $saidaValidation['normalized'];
+                } else {
+                    $hora_saida = null;
                 }
-                $hora_saida = $saidaValidation['normalized'] ?: null;
                 // ==========================================
                 
-                // ========== VALIDAÇÕES DE DUPLICIDADE ==========
-                $dadosValidacao = [
-                    'cpf' => $cpf,
-                    'placa_veiculo' => $placa_veiculo,
-                    'hora_entrada' => $hora_entrada,
-                    'hora_saida' => $hora_saida
-                ];
-                
-                $validacao = $this->duplicityService->validateEditEntry($dadosValidacao, $id, 'visitantes_novo');
-                
-                if (!$validacao['isValid']) {
-                    $errorMessages = implode(' ', $validacao['errors']);
-                    throw new Exception("Erro de duplicidade: " . $errorMessages);
-                }
-                // ===============================================
+                // Validação de duplicidade removida para permitir edição livre de saídas
                 
                 $this->db->query("
                     UPDATE visitantes_novo 

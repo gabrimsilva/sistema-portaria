@@ -166,7 +166,7 @@
                                         <button type="submit" class="btn btn-primary">
                                             <i class="fas fa-save"></i> Salvar
                                         </button>
-                                        <a href="/prestadores-servico" class="btn btn-secondary">
+                                        <a href="/reports/prestadores-servico" class="btn btn-secondary">
                                             <i class="fas fa-arrow-left"></i> Voltar
                                         </a>
                                     </div>

@@ -369,7 +369,12 @@
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                <?php foreach ($pessoasNaEmpresa as $pessoa): ?>
+                                                <?php foreach ($pessoasNaEmpresa as $pessoa): 
+                                                    // DEBUG: Log TESTE 2
+                                                    if ($pessoa['nome'] === 'TESTE 2') {
+                                                        error_log("🔍 DEBUG TESTE 2 no PHP: " . json_encode($pessoa));
+                                                    }
+                                                ?>
                                                 <tr>
                                                     <td>
                                                         <strong><?= htmlspecialchars($pessoa['nome']) ?></strong>
@@ -1344,6 +1349,17 @@
             const setor = btn.data('setor');
             const funcionario = btn.data('funcionarioResponsavel');  // jQuery converte data-funcionario_responsavel para funcionarioResponsavel
             const placa_veiculo = btn.data('placa_veiculo');  // MANTÉM underscore! jQuery não converte este atributo
+            
+            // DEBUG: Verificar TESTE 2 especificamente
+            if (nome === 'TESTE 2') {
+                console.log('🔍 DEBUG TESTE 2 - Dados do botão:', {
+                    doc_type: doc_type,
+                    doc_number: doc_number,
+                    doc_country: doc_country,
+                    cpf: cpf,
+                    todos_atributos: btn.data()
+                });
+            }
             
             // Preencher campos básicos
             $('#edit_id').val(id);

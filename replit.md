@@ -66,9 +66,12 @@ Preferred communication style: Simple, everyday language.
   - `/reports/profissionais-renner/form.php`
   - Elimina duplicação de código e garante navegação consistente
 - **Critical Bug Fix - Exit Registration**: Corrigido bug crítico que impedia salvar hora de saída:
-  - Formulários estavam enviando para rotas antigas (`/visitantes`, `/prestadores-servico`)
-  - Corrigido para rotas corretas de relatórios (`/reports/visitantes`, `/reports/prestadores-servico`)
-  - Controllers update() já processavam saída corretamente, problema era apenas no action do form
+  - **Root Cause**: Formulários enviavam dados para rotas antigas + validações excessivas bloqueavam submit
+  - **Forms Fixed**: Actions corrigidos para `/reports/visitantes` e `/reports/prestadores-servico`
+  - **Controllers Simplified**: Removidas validações de setor/CPF obrigatórios no update() (não eram required no form)
+  - **Temporal Validation**: Entrada/saída tornadas opcionais durante edição, normalizadas apenas se fornecidas
+  - **Duplicity Check**: Validação de duplicidade removida do update() para permitir edição livre de saídas
+  - **Navigation Fixed**: Botões "Voltar" corrigidos para rotas de relatórios
 - **UI/UX Cleanup**: Removida implementação modal incorreta, código duplicado eliminado
 
 ## System Architecture

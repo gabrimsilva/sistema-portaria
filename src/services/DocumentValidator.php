@@ -55,10 +55,11 @@ class DocumentValidator {
     
     /**
      * Valida CPF brasileiro
+     * NOTA: Validação de dígitos verificadores DESABILITADA
      */
     private static function validateCPF($cpf) {
-        // Usar CpfValidator existente
-        require_once __DIR__ . '/../../src/services/CpfValidator.php';
+        // Usar CpfValidator existente (validação simplificada)
+        require_once __DIR__ . '/../utils/CpfValidator.php';
         return CpfValidator::validateAndNormalize($cpf);
     }
     

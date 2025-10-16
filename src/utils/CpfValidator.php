@@ -72,17 +72,22 @@ class CpfValidator
     /**
      * Valida e normaliza CPF em uma operação
      * Retorna array com resultado da validação e CPF normalizado
+     * 
+     * NOTA: Validação de dígitos verificadores DESABILITADA por solicitação
+     * O sistema aceita qualquer CPF informado pela portaria
      */
     public static function validateAndNormalize(string $cpf): array 
     {
         $normalized = self::normalize($cpf);
-        $isValid = self::isValidCPF($normalized);  // Corrigido: valida CPF normalizado
+        
+        // Verifica apenas se tem 11 dígitos (sem validar dígitos verificadores)
+        $isValid = strlen($normalized) === 11;
         
         return [
             'isValid' => $isValid,
             'normalized' => $normalized,
-            'formatted' => $isValid ? self::format($normalized) : $cpf,  // Corrigido: usa normalizado
-            'message' => $isValid ? '' : 'CPF inválido - verifique os dígitos verificadores'
+            'formatted' => $isValid ? self::format($normalized) : $cpf,
+            'message' => $isValid ? '' : 'CPF deve conter 11 dígitos'
         ];
     }
 }

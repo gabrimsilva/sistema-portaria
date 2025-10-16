@@ -28,14 +28,25 @@ class AuditService {
         $severidade = $severidade ?? $this->inferSeveridade($acao);
         $modulo = $modulo ?? $this->inferModulo($entidade, $acao);
         
+        // Extrair campos de entrada retroativa se presentes
+        $is_retroactive = false;
+        $justificativa = null;
+        
+        if (is_array($dados_depois)) {
+            if (isset($dados_depois['entrada_retroativa']) && $dados_depois['entrada_retroativa']) {
+                $is_retroactive = true;
+                $justificativa = $dados_depois['justificativa'] ?? null;
+            }
+        }
+        
         // Anonimizar dados pessoais antes de salvar
         $dados_antes_anonimizados = $dados_antes ? $this->anonymizeData($dados_antes, $entidade) : null;
         $dados_depois_anonimizados = $dados_depois ? $this->anonymizeData($dados_depois, $entidade) : null;
         
         try {
             $this->db->query(
-                "INSERT INTO audit_log (user_id, acao, entidade, entidade_id, dados_antes, dados_depois, ip_address, user_agent, severidade, modulo, resultado) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                "INSERT INTO audit_log (user_id, acao, entidade, entidade_id, dados_antes, dados_depois, ip_address, user_agent, severidade, modulo, resultado, is_retroactive, justificativa) 
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 [
                     $user_id,
                     $acao,
@@ -47,7 +58,9 @@ class AuditService {
                     $user_agent,
                     $severidade,
                     $modulo,
-                    $resultado
+                    $resultado,
+                    $is_retroactive,
+                    $justificativa
                 ]
             );
         } catch (Exception $e) {

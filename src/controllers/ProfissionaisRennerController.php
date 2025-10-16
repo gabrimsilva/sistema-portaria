@@ -457,6 +457,54 @@ class ProfissionaisRennerController {
         }
     }
     
+    public function edit() {
+        $id = $_GET['id'] ?? null;
+        if (!$id) {
+            header('Location: ' . $this->getBaseRoute());
+            exit;
+        }
+        
+        // Buscar dados do registro
+        $registro = $this->db->fetch("
+            SELECT r.*, p.nome, p.setor
+            FROM registro_acesso r
+            LEFT JOIN profissionais_renner p ON p.id = r.profissional_renner_id
+            WHERE r.id = ? AND r.tipo = 'profissional_renner'
+        ", [$id]);
+        
+        if (!$registro) {
+            header('Location: ' . $this->getBaseRoute());
+            exit;
+        }
+        
+        // Buscar informação de entrada retroativa no audit log
+        $auditLog = $this->db->fetch("
+            SELECT justificativa, is_retroactive
+            FROM audit_log
+            WHERE entidade = 'registro_acesso' 
+              AND entidade_id = ?
+              AND acao = 'create'
+              AND is_retroactive = true
+            ORDER BY timestamp DESC
+            LIMIT 1
+        ", [$id]);
+        
+        $is_retroativa = false;
+        $observacao_retroativa = null;
+        
+        if ($auditLog && $auditLog['is_retroactive']) {
+            $is_retroativa = true;
+            $observacao_retroativa = $auditLog['justificativa'] ?? null;
+        }
+        
+        // Passar dados para a view
+        $profissional = $registro;
+        $profissional['is_retroativa'] = $is_retroativa;
+        $profissional['observacao_retroativa'] = $observacao_retroativa;
+        
+        include $this->getViewPath('edit.php');
+    }
+    
     public function delete() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             CSRFProtection::verifyRequest();

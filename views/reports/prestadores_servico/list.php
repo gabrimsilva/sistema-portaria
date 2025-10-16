@@ -218,16 +218,7 @@ $canDeleteInline = $authService->hasPermission('relatorios.excluir_linha');
                                                 <?php if ($canEditInline || $canDeleteInline): ?>
                                                 <td class="text-center">
                                                     <?php if ($canEditInline): ?>
-                                                    <button class="btn btn-sm btn-warning btn-edit-inline" 
-                                                            data-id="<?= $p['id'] ?>"
-                                                            data-nome="<?= htmlspecialchars($p['nome']) ?>"
-                                                            data-cpf="<?= htmlspecialchars($p['cpf']) ?>"
-                                                            data-empresa="<?= htmlspecialchars($p['empresa'] ?? '') ?>"
-                                                            data-responsavel="<?= htmlspecialchars($p['funcionario_responsavel'] ?? '') ?>"
-                                                            data-setor="<?= htmlspecialchars($p['setor'] ?? '') ?>"
-                                                            data-placa="<?= htmlspecialchars($p['placa_ou_ape'] ?? '') ?>"
-                                                            data-tem-saida="<?= !empty($p['saida']) ? '1' : '0' ?>"
-                                                            title="Editar">
+                                                    <button class="btn btn-sm btn-warning btn-edit-inline" data-id="<?= $p['id'] ?>" title="Editar">
                                                         <i class="fas fa-edit"></i>
                                                     </button>
                                                     <?php endif; ?>
@@ -334,64 +325,6 @@ $canDeleteInline = $authService->hasPermission('relatorios.excluir_linha');
                     </div>
                 </div>
             </section>
-        </div>
-    </div>
-    
-    <!-- Modal de Edição -->
-    <div class="modal fade" id="modalEditarPrestador" tabindex="-1" role="dialog">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header bg-warning">
-                    <h5 class="modal-title">
-                        <i class="fas fa-edit"></i> Editar Prestador de Serviço
-                    </h5>
-                    <button type="button" class="close" data-dismiss="modal">
-                        <span>&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <input type="hidden" id="edit_prestador_id">
-                    
-                    <div class="form-group">
-                        <label>Nome *</label>
-                        <input type="text" class="form-control" id="edit_nome">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>CPF</label>
-                        <input type="text" class="form-control" id="edit_cpf" readonly>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Empresa</label>
-                        <input type="text" class="form-control" id="edit_empresa">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Funcionário Responsável</label>
-                        <input type="text" class="form-control" id="edit_responsavel">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Setor</label>
-                        <input type="text" class="form-control" id="edit_setor">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Placa do Veículo / A pé</label>
-                        <input type="text" class="form-control" id="edit_placa">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-success" id="btnRegistrarSaidaPrestadorModal" style="display:none;">
-                        <i class="fas fa-sign-out-alt"></i> Registrar Saída
-                    </button>
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-warning" id="btnSalvarEdicaoPrestador">
-                        <i class="fas fa-save"></i> Salvar
-                    </button>
-                </div>
-            </div>
         </div>
     </div>
     
@@ -508,100 +441,10 @@ $canDeleteInline = $authService->hasPermission('relatorios.excluir_linha');
             }
         }
         
-        // Botão Editar - Abre modal
+        // Botão Editar - Redireciona para página de edição
         $('.btn-edit-inline').on('click', function() {
             const id = $(this).data('id');
-            const nome = $(this).data('nome');
-            const cpf = $(this).data('cpf');
-            const empresa = $(this).data('empresa');
-            const responsavel = $(this).data('responsavel');
-            const setor = $(this).data('setor');
-            const placa = $(this).data('placa');
-            const temSaida = $(this).data('tem-saida');
-            
-            // Preencher campos do modal
-            $('#edit_prestador_id').val(id);
-            $('#edit_nome').val(nome);
-            $('#edit_cpf').val(cpf);
-            $('#edit_empresa').val(empresa);
-            $('#edit_responsavel').val(responsavel);
-            $('#edit_setor').val(setor);
-            $('#edit_placa').val(placa);
-            
-            // Mostrar/esconder botão de saída
-            if (temSaida === '0' || temSaida === 0) {
-                $('#btnRegistrarSaidaPrestadorModal').show();
-            } else {
-                $('#btnRegistrarSaidaPrestadorModal').hide();
-            }
-            
-            // Abrir modal
-            $('#modalEditarPrestador').modal('show');
-        });
-        
-        // Salvar edição
-        $('#btnSalvarEdicaoPrestador').on('click', function() {
-            const id = $('#edit_prestador_id').val();
-            const $btn = $(this);
-            
-            $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Salvando...');
-            
-            $.ajax({
-                url: '/prestadores-servico?action=update_ajax',
-                method: 'POST',
-                headers: {
-                    'X-CSRF-Token': csrfToken
-                },
-                data: {
-                    id: id,
-                    nome: $('#edit_nome').val(),
-                    empresa: $('#edit_empresa').val(),
-                    funcionario_responsavel: $('#edit_responsavel').val(),
-                    setor: $('#edit_setor').val(),
-                    placa_ou_ape: $('#edit_placa').val()
-                },
-                success: function(response) {
-                    if (response.success) {
-                        location.reload();
-                    } else {
-                        alert('Erro ao salvar: ' + response.message);
-                        $btn.prop('disabled', false).html('<i class="fas fa-save"></i> Salvar');
-                    }
-                },
-                error: function(xhr) {
-                    alert('Erro ao salvar alterações.');
-                    $btn.prop('disabled', false).html('<i class="fas fa-save"></i> Salvar');
-                }
-            });
-        });
-        
-        // Registrar saída pelo modal
-        $('#btnRegistrarSaidaPrestadorModal').on('click', function() {
-            const id = $('#edit_prestador_id').val();
-            const nome = $('#edit_nome').val();
-            
-            if (!confirm('Confirmar saída de "' + nome + '"?')) {
-                return;
-            }
-            
-            const $btn = $(this);
-            $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Registrando...');
-            
-            $.ajax({
-                url: '/prestadores-servico?action=saida',
-                method: 'POST',
-                headers: {
-                    'X-CSRF-Token': csrfToken
-                },
-                data: { id: id },
-                success: function(response) {
-                    location.reload();
-                },
-                error: function(xhr) {
-                    alert('Erro ao registrar saída.');
-                    $btn.prop('disabled', false).html('<i class="fas fa-sign-out-alt"></i> Registrar Saída');
-                }
-            });
+            window.location.href = '/reports/prestadores-servico?action=edit&id=' + id;
         });
         
         // Botões inline - Excluir

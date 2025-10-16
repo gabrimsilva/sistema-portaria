@@ -4,7 +4,9 @@
 This project is an access control system for companies, developed with PHP 8+ and PostgreSQL. It manages employee and visitor access, including photo capture, user authentication, and real-time access logging. The system features a modern UX, is designed for easy deployment on Replit, and is prepared for future migration to production environments. Its business vision includes enhancing corporate security and streamlining access management processes.
 
 ## User Preferences
-Preferred communication style: Simple, everyday language.
+- **Communication style**: Simple, everyday language.
+- **Work methodology**: Incremental testing approach - test one feature at a time, investigate deeply with detailed debugging, fix individual issues without creating long error lists. Focus on one problem until fully resolved before moving to the next.
+- **Debugging approach**: Use console logs, database queries, and step-by-step verification to trace issues to their root cause before implementing fixes.
 
 ## System Architecture
 

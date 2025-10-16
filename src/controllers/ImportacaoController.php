@@ -249,8 +249,9 @@ class ImportacaoController {
                 }
                 
                 try {
+                    // Inserir explicitamente NULL para doc_type e doc_number para evitar defaults que violam constraint
                     $this->db->query(
-                        "INSERT INTO profissionais_renner (nome, setor, fre, data_admissao, data_entrada) VALUES (?, ?, ?, ?, NOW())",
+                        "INSERT INTO profissionais_renner (nome, setor, fre, data_admissao, data_entrada, doc_type, doc_number) VALUES (?, ?, ?, ?, NOW(), NULL, NULL)",
                         [$nome, $setor, $fre, $dataAdmissao]
                     );
                     $imported++;

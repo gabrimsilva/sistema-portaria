@@ -14,7 +14,7 @@ This project is an access control system for companies, developed with PHP 8+ an
 - **Template System**: Simple PHP template engine with includes for layout.
 - **Modern UX**: Contemporary interface design with responsive layouts.
 - **Photo Capture**: Browser-based photo capture for employees and visitors.
-- **Form Standardization**: Standardized form components with robust validation, masks, and reusability.
+- **Form Standardization**: Standardized form components with robust validation, masks, and reusability. Visitor edit form includes multi-document fields (Tipo de Documento, Número, País) matching dashboard modal format.
 - **LGPD Cookie Banner**: Responsive cookie banner with detailed preferences and granular control.
 - **Autocomplete UI**: jQuery UI-based autocomplete for access registration, enhancing data entry speed and accuracy.
 - **Color-Coded Dashboard**: Dashboard cards use Bootstrap color classes (bg-primary/blue for Profissional Renner, bg-success/green for Visitante, bg-warning/yellow for Prestador, bg-danger/red for Total) matching registration button colors for visual consistency.

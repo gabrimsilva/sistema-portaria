@@ -369,12 +369,7 @@
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                <?php foreach ($pessoasNaEmpresa as $pessoa): 
-                                                    // DEBUG: Log TESTE 2
-                                                    if ($pessoa['nome'] === 'TESTE 2') {
-                                                        error_log("🔍 DEBUG TESTE 2 no PHP: " . json_encode($pessoa));
-                                                    }
-                                                ?>
+                                                <?php foreach ($pessoasNaEmpresa as $pessoa): ?>
                                                 <tr>
                                                     <td>
                                                         <strong><?= htmlspecialchars($pessoa['nome']) ?></strong>
@@ -762,11 +757,11 @@
                                         <option value="">CPF (padrão)</option>
                                         <option value="RG">RG</option>
                                         <option value="CNH">CNH</option>
-                                        <option value="Passaporte">Passaporte</option>
+                                        <option value="PASSAPORTE">Passaporte</option>
                                         <option value="RNE">RNE (Registro Nacional de Estrangeiro)</option>
                                         <option value="DNI">DNI (Documento Nacional de Identidad)</option>
                                         <option value="CI">CI (Cédula de Identidad)</option>
-                                        <option value="Outros">Outros</option>
+                                        <option value="OUTROS">Outros</option>
                                     </select>
                                     <small class="text-muted">Deixe vazio para CPF</small>
                                 </div>
@@ -1350,17 +1345,6 @@
             const funcionario = btn.data('funcionarioResponsavel');  // jQuery converte data-funcionario_responsavel para funcionarioResponsavel
             const placa_veiculo = btn.data('placa_veiculo');  // MANTÉM underscore! jQuery não converte este atributo
             
-            // DEBUG: Verificar TESTE 3 com Passaporte
-            if (nome === 'TESTE 3') {
-                console.log('🔍 DEBUG TESTE 3 - Antes de preencher:', {
-                    doc_type: doc_type,
-                    doc_number: doc_number,
-                    doc_country: doc_country,
-                    tipo_doc_type: typeof doc_type,
-                    tipo_doc_number: typeof doc_number
-                });
-            }
-            
             // Preencher campos básicos
             $('#edit_id').val(id);
             $('#edit_tipo_original').val(tipo);
@@ -1370,7 +1354,14 @@
             
             // Preencher campos de documento
             $('#edit_doc_type').val(doc_type || '');
-            $('#edit_doc_number').val(doc_number || cpf || ''); // Fallback para CPF legado
+            
+            // Remover qualquer máscara antiga antes de preencher
+            const docNumberField = $('#edit_doc_number');
+            if (docNumberField.data('mask')) {
+                docNumberField.unmask();
+            }
+            
+            docNumberField.val(doc_number || cpf || ''); // Fallback para CPF legado
             $('#edit_doc_country').val(doc_country || '');
             
             // Mostrar campo país se for documento internacional

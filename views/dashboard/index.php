@@ -383,7 +383,12 @@
                                                             doc_type: "<?= $pessoa['doc_type'] ?? 'NULL' ?>"<br>
                                                             doc_number: "<?= $pessoa['doc_number'] ?? 'NULL' ?>"<br>
                                                             doc_country: "<?= $pessoa['doc_country'] ?? 'NULL' ?>"<br>
-                                                            funcionario_responsavel: "<?= $pessoa['funcionario_responsavel'] ?? 'NULL' ?>"
+                                                            funcionario_responsavel: "<?= $pessoa['funcionario_responsavel'] ?? 'NULL' ?>"<br>
+                                                            <br>
+                                                            <strong>HTML data-attributes que serão gerados:</strong><br>
+                                                            data-doc_type="<?= htmlspecialchars($pessoa['doc_type'] ?? '') ?>"<br>
+                                                            data-doc_number="<?= htmlspecialchars($pessoa['doc_number'] ?? '') ?>"<br>
+                                                            data-doc_country="<?= htmlspecialchars($pessoa['doc_country'] ?? '') ?>"
                                                         </td>
                                                     </tr>
                                                     <tr>

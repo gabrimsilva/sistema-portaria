@@ -364,11 +364,15 @@ class DashboardController {
             // Combinar todos os tipos
             $pessoas = array_merge($visitantesAtivos, $prestadoresAtivos, $profissionaisAtivos);
             
-            // DEBUG: Verificar se Gabriel Marcelo tem doc_type DEPOIS do merge
+            // DEBUG: Contar quantas vezes Gabriel aparece
+            $gabriel_count = 0;
             foreach ($pessoas as $p) {
                 if ($p['nome'] === 'Gabriel Marcelo') {
-                    file_put_contents('/tmp/debug_gabriel_merge.txt', "DEBUG DEPOIS DO MERGE: " . print_r($p, true));
+                    $gabriel_count++;
                 }
+            }
+            if ($gabriel_count > 0) {
+                file_put_contents('/tmp/debug_gabriel_count.txt', "Gabriel Marcelo aparece $gabriel_count vez(es) na lista");
             }
             
             // Ordenar por hora de entrada mais recente

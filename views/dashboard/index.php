@@ -1403,11 +1403,13 @@
                 $('.modal-header').removeClass('bg-info').addClass('bg-primary');
                 
                 // Buscar dados do profissional para verificar se é entrada retroativa
+                console.log('🔍 Buscando dados do profissional ID:', id);
                 $.ajax({
                     url: `/profissionais-renner?action=get_data&id=${id}`,
                     method: 'GET',
                     dataType: 'json',
                     success: function(response) {
+                        console.log('✅ Resposta do servidor:', response);
                         if (response.success) {
                             // Preencher saída e retorno se existirem
                             if (response.data.saida) {
@@ -1424,15 +1426,21 @@
                             }
                             
                             // Verificar se é entrada retroativa e mostrar observação
+                            console.log('🔍 is_retroativa:', response.data.is_retroativa);
+                            console.log('🔍 observacao_retroativa:', response.data.observacao_retroativa);
+                            
                             if (response.data.is_retroativa || response.data.observacao_retroativa) {
+                                console.log('✅ Mostrando campo de observação retroativa');
                                 $('#edit_profissional_observacao_container').show();
                                 $('#edit_profissional_observacao').val(response.data.observacao_retroativa || '');
                             } else {
+                                console.log('❌ Não é entrada retroativa, escondendo campo');
                                 $('#edit_profissional_observacao_container').hide();
                             }
                         }
                     },
-                    error: function() {
+                    error: function(xhr, status, error) {
+                        console.error('❌ Erro ao buscar dados:', error, xhr.responseText);
                         // Em caso de erro, esconder observação
                         $('#edit_profissional_observacao_container').hide();
                     }

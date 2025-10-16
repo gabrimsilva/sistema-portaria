@@ -1343,15 +1343,7 @@
             const empresa = btn.data('empresa');
             const setor = btn.data('setor');
             const funcionario = btn.data('funcionarioResponsavel');  // jQuery converte data-funcionario_responsavel para funcionarioResponsavel
-            const placa_veiculo = btn.data('placaVeiculo');  // jQuery converte data-placa_veiculo para placaVeiculo
-            
-            // DEBUG: Verificar se placa está vindo
-            console.log('🔍 DEBUG PLACA:', {
-                nome: nome,
-                placa_veiculo: placa_veiculo,
-                tipo_placa: typeof placa_veiculo,
-                todos_atributos: btn.data()
-            });
+            const placa_veiculo = btn.data('placa_veiculo');  // MANTÉM underscore! jQuery não converte este atributo
             
             // Preencher campos básicos
             $('#edit_id').val(id);

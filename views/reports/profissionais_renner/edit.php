@@ -47,16 +47,7 @@
                 <div class="container-fluid">
                     <div class="row mb-2">
                         <div class="col-sm-6">
-                            <h1 class="m-0">
-                                <i class="fas fa-edit"></i> Editar Profissional Renner
-                            </h1>
-                        </div>
-                        <div class="col-sm-6">
-                            <ol class="breadcrumb float-sm-right">
-                                <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
-                                <li class="breadcrumb-item"><a href="/reports/profissionais-renner">Relatório</a></li>
-                                <li class="breadcrumb-item active">Editar</li>
-                            </ol>
+                            <h1 class="m-0">Editar Profissional Renner</h1>
                         </div>
                     </div>
                 </div>
@@ -66,11 +57,9 @@
                 <div class="container-fluid">
                     <div class="row">
                         <div class="col-md-8">
-                            <div class="card card-warning">
+                            <div class="card">
                                 <div class="card-header">
-                                    <h3 class="card-title">
-                                        <i class="fas fa-user-tie"></i> Dados do Registro
-                                    </h3>
+                                    <h3 class="card-title">Dados do Profissional</h3>
                                 </div>
                                 
                                 <form method="POST" action="/reports/profissionais-renner?action=update">
@@ -79,16 +68,10 @@
                                     
                                     <div class="card-body">
                                         <?php if (isset($error)): ?>
-                                            <div class="alert alert-danger alert-dismissible">
-                                                <button type="button" class="close" data-dismiss="alert">&times;</button>
-                                                <i class="icon fas fa-ban"></i> <?= htmlspecialchars($error) ?>
+                                            <div class="alert alert-danger">
+                                                <?= htmlspecialchars($error) ?>
                                             </div>
                                         <?php endif; ?>
-                                        
-                                        <div class="alert alert-info">
-                                            <i class="fas fa-info-circle"></i> 
-                                            <strong>Profissional Renner</strong> - Nome e Setor não podem ser alterados
-                                        </div>
                                         
                                         <div class="form-group">
                                             <label>Nome Completo *</label>
@@ -159,11 +142,11 @@
                                     </div>
                                     
                                     <div class="card-footer">
-                                        <button type="submit" class="btn btn-warning">
-                                            <i class="fas fa-save"></i> Salvar Alterações
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-save"></i> Salvar
                                         </button>
                                         <a href="/reports/profissionais-renner" class="btn btn-secondary">
-                                            <i class="fas fa-times"></i> Cancelar
+                                            <i class="fas fa-arrow-left"></i> Voltar
                                         </a>
                                     </div>
                                 </form>

@@ -66,6 +66,15 @@ Preferred communication style: Simple, everyday language.
   - **Formatação**: Mantida para exibição consistente
   - **Segurança**: Sem problemas observados, validação de comprimento mantida
 
+- **Database Constraint Bug Fix**: Corrigido erro SQLSTATE[23514] chk_doc_consistency
+  - **Problema**: Campos doc_type/doc_country tinham DEFAULT 'CPF'/'BR', mas doc_number era NULL, violando constraint
+  - **Constraint**: Exige que doc_type e doc_number sejam AMBOS NULL ou AMBOS NOT NULL
+  - **Solução**: Todos INSERTs/UPDATEs agora definem explicitamente doc_type=NULL, doc_number=NULL, doc_country=NULL quando usam campo legado `cpf`
+  - **Arquivos corrigidos**:
+    - `PrestadoresServicoController.php` - save() INSERT (linhas 319-327), update() UPDATE (linhas 431-440)
+    - `VisitantesNovoController.php` - save() INSERT (303-311), saveAjax() INSERT (625-631), update() UPDATE (411-420)
+  - **5 pontos corrigidos** para prevenir violação de constraint em cadastros futuros
+
 ### Bug Fixes & UX Improvements (Oct 16, 2025) ✅ CONCLUÍDO
 - **Edit Workflow Standardization**: Sistema de edição alinhado ao padrão UX de Profissionais Renner:
   - Botão amarelo redireciona para página separada de edição (form.php) com todos os campos editáveis

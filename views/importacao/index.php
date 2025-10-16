@@ -239,6 +239,18 @@
                                     </div>
                                 </div>
                             </div>
+                            
+                            <!-- Detalhes dos Erros -->
+                            <div id="errorDetailsCard" style="display: none;" class="mt-3">
+                                <div class="alert alert-danger">
+                                    <h5><i class="fas fa-exclamation-triangle"></i> Detalhes dos Erros</h5>
+                                    <div id="errorDetailsList" class="mt-2" style="max-height: 300px; overflow-y: auto;">
+                                        <!-- Erros serão inseridos aqui via JavaScript -->
+                                    </div>
+                                    <small class="text-muted">Mostrando até 50 primeiros erros</small>
+                                </div>
+                            </div>
+                            
                             <div class="mt-3">
                                 <a href="/importacao" class="btn btn-primary">
                                     <i class="fas fa-plus"></i> Nova Importação
@@ -463,6 +475,20 @@
                 $('#importedCount').text(data.imported || 0);
                 $('#skippedCount').text(data.skipped || 0);
                 $('#errorCount').text(data.errors || 0);
+                
+                // Mostrar detalhes dos erros se houver
+                if (data.errors > 0 && data.error_details && data.error_details.length > 0) {
+                    const errorList = $('#errorDetailsList');
+                    errorList.empty();
+                    
+                    const ul = $('<ul class="mb-0"></ul>');
+                    data.error_details.forEach(function(error) {
+                        ul.append(`<li>${error}</li>`);
+                    });
+                    errorList.append(ul);
+                    
+                    $('#errorDetailsCard').fadeIn();
+                }
                 
                 $('#resultCard').fadeIn();
             }

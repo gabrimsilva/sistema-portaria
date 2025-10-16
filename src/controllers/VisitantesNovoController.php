@@ -297,12 +297,15 @@ class VisitantesNovoController {
                 // ===============================================
                 
                 $this->db->query("
-                    INSERT INTO visitantes_novo (nome, cpf, empresa, funcionario_responsavel, setor, placa_veiculo, hora_entrada, hora_saida)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO visitantes_novo (nome, cpf, empresa, funcionario_responsavel, setor, placa_veiculo, hora_entrada, hora_saida, doc_type, doc_number, doc_country)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ", [
                     $nome, $cpf, $empresa, $funcionario_responsavel, $setor, $placa_veiculo,
                     $hora_entrada,
-                    $hora_saida ?: null
+                    $hora_saida ?: null,
+                    null, // doc_type - explicitamente NULL para evitar DEFAULT 'CPF'
+                    null, // doc_number
+                    null  // doc_country - explicitamente NULL para evitar DEFAULT 'BR'
                 ]);
                 
                 header('Location: ' . $this->getBaseRoute() . '?success=1');
@@ -405,12 +408,15 @@ class VisitantesNovoController {
                 $this->db->query("
                     UPDATE visitantes_novo 
                     SET nome = ?, cpf = ?, empresa = ?, funcionario_responsavel = ?, setor = ?, placa_veiculo = ?, 
-                        hora_entrada = ?, hora_saida = ?, updated_at = CURRENT_TIMESTAMP
+                        hora_entrada = ?, hora_saida = ?, doc_type = ?, doc_number = ?, doc_country = ?, updated_at = CURRENT_TIMESTAMP
                     WHERE id = ?
                 ", [
                     $nome, $cpf, $empresa, $funcionario_responsavel, $setor, $placa_veiculo,
                     $hora_entrada ?: null,
                     $hora_saida ?: null,
+                    null, // doc_type - explicitamente NULL
+                    null, // doc_number
+                    null, // doc_country - explicitamente NULL
                     $id
                 ]);
                 
@@ -616,10 +622,13 @@ class VisitantesNovoController {
                 // ===============================================
                 
                 $this->db->query("
-                    INSERT INTO visitantes_novo (nome, cpf, empresa, funcionario_responsavel, setor, placa_veiculo, hora_entrada)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO visitantes_novo (nome, cpf, empresa, funcionario_responsavel, setor, placa_veiculo, hora_entrada, doc_type, doc_number, doc_country)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ", [
-                    $nome, $cpf, $empresa, $funcionario_responsavel, $setor, $placa_veiculo, $hora_entrada
+                    $nome, $cpf, $empresa, $funcionario_responsavel, $setor, $placa_veiculo, $hora_entrada,
+                    null, // doc_type - explicitamente NULL para evitar DEFAULT 'CPF'
+                    null, // doc_number
+                    null  // doc_country - explicitamente NULL para evitar DEFAULT 'BR'
                 ]);
                 
                 $id = $this->db->lastInsertId();

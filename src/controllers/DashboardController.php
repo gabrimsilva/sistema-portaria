@@ -322,6 +322,13 @@ class DashboardController {
                 ORDER BY hora_entrada DESC
             ") ?? [];
             
+            // DEBUG: Verificar se Gabriel tem doc_type nos visitantes
+            foreach ($visitantesAtivos as $v) {
+                if ($v['nome'] === 'Gabriel Marcelo') {
+                    file_put_contents('/tmp/debug_gabriel.txt', "DEBUG Visitantes: " . print_r($v, true));
+                }
+            }
+            
             // Prestadores trabalhando (usando view consolidada - BUG FIX v2.0.0)
             $prestadoresAtivos = $this->db->fetchAll("
                 SELECT nome, doc_type, doc_number, doc_country, cpf, empresa, setor, 
@@ -357,14 +364,10 @@ class DashboardController {
             // Combinar todos os tipos
             $pessoas = array_merge($visitantesAtivos, $prestadoresAtivos, $profissionaisAtivos);
             
-            // DEBUG: Verificar se Gabriel Marcelo tem doc_type
+            // DEBUG: Verificar se Gabriel Marcelo tem doc_type DEPOIS do merge
             foreach ($pessoas as $p) {
                 if ($p['nome'] === 'Gabriel Marcelo') {
-                    error_log("🔍 DEBUG Gabriel no controller: " . json_encode([
-                        'doc_type' => $p['doc_type'] ?? 'MISSING',
-                        'doc_number' => $p['doc_number'] ?? 'MISSING',
-                        'doc_country' => $p['doc_country'] ?? 'MISSING'
-                    ]));
+                    file_put_contents('/tmp/debug_gabriel_merge.txt', "DEBUG DEPOIS DO MERGE: " . print_r($p, true));
                 }
             }
             

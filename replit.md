@@ -54,14 +54,18 @@ Preferred communication style: Simple, everyday language.
 - **M7.2 - Painel Público Brigada**: Controller público `/painel/brigada` com fotos circulares, auto-refresh 60s, segurança LGPD (realpath validation)
 - **M8 - Validação Final**: 3 testes completos (visitante estrangeiro Passaporte US, prestador validade híbrida, segurança + 47 índices de performance)
 
-### Bug Fixes & UX Improvements (Oct 15, 2025) ✅ CONCLUÍDO
-- **Inline Edit Modals with Exit Option**: Sistema de edição inline completo em `/reports/visitantes` e `/reports/prestadores-servico`:
-  - Botão amarelo abre modal de edição com campos editáveis
-  - Botão verde "Registrar Saída" aparece dentro do modal apenas se pessoa ainda não saiu
-  - AJAX handlers com CSRF protection para salvar edições e registrar saídas
-  - Feedback visual (spinner) durante operações
-- **Navigation Standardization**: Substituído menu hardcoded em `views/visitantes_novo/list.php` por NavigationService para consistência
-- **UI/UX Cleanup**: Verificação completa de views para eliminar código duplicado
+### Bug Fixes & UX Improvements (Oct 16, 2025) ✅ CONCLUÍDO
+- **Edit Workflow Standardization**: Sistema de edição alinhado ao padrão UX de Profissionais Renner:
+  - Botão amarelo redireciona para página separada de edição (form.php) com todos os campos editáveis
+  - Campos de saída (hora_saida/saida) presentes nas páginas de edição
+  - Actions 'edit' e 'update' já configuradas no router (index.php)
+  - Mesmo padrão aplicado em Visitantes, Prestadores e Profissionais Renner
+- **Navigation Standardization**: Todas as views de relatórios agora usam NavigationService::renderSidebar():
+  - `/reports/visitantes/list.php` e `form.php`
+  - `/reports/prestadores-servico/list.php` e `form.php`
+  - `/reports/profissionais-renner/form.php`
+  - Elimina duplicação de código e garante navegação consistente
+- **UI/UX Cleanup**: Removida implementação modal incorreta, código duplicado eliminado
 
 ## System Architecture
 

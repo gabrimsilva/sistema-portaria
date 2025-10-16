@@ -377,6 +377,17 @@
                                                     }
                                                 ?>
                                                 <tr>
+                                                    <?php if ($pessoa['nome'] === 'Gabriel Marcelo'): ?>
+                                                        <td colspan="8" style="background: #ffffcc; padding: 10px; font-family: monospace;">
+                                                            <strong>🔍 DEBUG Gabriel Marcelo:</strong><br>
+                                                            doc_type: "<?= $pessoa['doc_type'] ?? 'NULL' ?>"<br>
+                                                            doc_number: "<?= $pessoa['doc_number'] ?? 'NULL' ?>"<br>
+                                                            doc_country: "<?= $pessoa['doc_country'] ?? 'NULL' ?>"<br>
+                                                            funcionario_responsavel: "<?= $pessoa['funcionario_responsavel'] ?? 'NULL' ?>"
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                    <?php endif; ?>
                                                     <td>
                                                         <strong><?= htmlspecialchars($pessoa['nome']) ?></strong>
                                                         <?php if (isset($pessoa['is_brigadista']) && $pessoa['is_brigadista'] === true): ?>

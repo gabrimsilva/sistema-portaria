@@ -357,6 +357,17 @@ class DashboardController {
             // Combinar todos os tipos
             $pessoas = array_merge($visitantesAtivos, $prestadoresAtivos, $profissionaisAtivos);
             
+            // DEBUG: Verificar se Gabriel Marcelo tem doc_type
+            foreach ($pessoas as $p) {
+                if ($p['nome'] === 'Gabriel Marcelo') {
+                    error_log("🔍 DEBUG Gabriel no controller: " . json_encode([
+                        'doc_type' => $p['doc_type'] ?? 'MISSING',
+                        'doc_number' => $p['doc_number'] ?? 'MISSING',
+                        'doc_country' => $p['doc_country'] ?? 'MISSING'
+                    ]));
+                }
+            }
+            
             // Ordenar por hora de entrada mais recente
             usort($pessoas, function($a, $b) {
                 return strtotime($b['hora_entrada']) - strtotime($a['hora_entrada']);

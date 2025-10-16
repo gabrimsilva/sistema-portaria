@@ -205,6 +205,7 @@ class VisitantesNovoController {
                 $visitante['hora_saida_formatted'] = date('H:i', strtotime($visitante['hora_saida']));
             }
         }
+        unset($visitante); // 🔧 FIX: Limpar referência para evitar bugs em foreach subsequentes
         
         // Metadados de paginação
         $totalPages = ceil($totalRecords / $perPage);

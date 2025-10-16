@@ -171,34 +171,11 @@ $canDeleteInline = $authService->hasPermission('relatorios.excluir_linha');
                                                 </td>
                                             </tr>
                                         <?php else: ?>
-                                            <?php 
-                                            // DEBUG: Mostrar TODOS os IDs no array $visitantes
-                                            $all_ids = array_map(function($v) { return "ID={$v['id']} Nome={$v['nome']}"; }, $visitantes);
-                                            echo "<!-- DEBUG ARRAY COMPLETO: " . implode(", ", $all_ids) . " -->";
-                                            echo "<!-- DEBUG: Total registros: " . count($visitantes) . " -->";
-                                            
-                                            // DEBUG: Contar IDs
-                                            $ids_count = [];
-                                            foreach ($visitantes as $v) {
-                                                $ids_count[$v['id']] = ($ids_count[$v['id']] ?? 0) + 1;
-                                            }
-                                            $duplicados = array_filter($ids_count, function($count) { return $count > 1; });
-                                            if (!empty($duplicados)) {
-                                                echo "<!-- DEBUG: IDs DUPLICADOS NO ARRAY PHP: " . json_encode($duplicados) . " -->";
-                                            }
-                                            ?>
-                                            <?php 
-                                            $render_counter = 0;
-                                            foreach ($visitantes as $visitante): 
-                                                $render_counter++;
-                                                // DEBUG: Linha sendo renderizada
-                                                echo "<!-- DEBUG LINHA $render_counter: ID={$visitante['id']}, Nome={$visitante['nome']} -->";
-                                            ?>
+                                            <?php foreach ($visitantes as $visitante): ?>
                                             <tr data-id="<?= $visitante['id'] ?>">
                                                 <td>
                                                     <strong><?= htmlspecialchars($visitante['nome']) ?></strong>
                                                     <small class="text-muted ml-2">(ID: <?= $visitante['id'] ?>)</small>
-                                                    <small class="badge badge-warning ml-1">Linha #<?= $render_counter ?></small>
                                                     <?php if (!empty($visitante['hora_saida_formatted'])): ?>
                                                         <span class="badge bg-secondary ml-2">Saiu</span>
                                                     <?php else: ?>

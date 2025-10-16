@@ -61,7 +61,7 @@
                                     <h3 class="card-title">Dados do Prestador de Serviço</h3>
                                 </div>
                                 
-                                <form method="POST" action="/prestadores-servico?action=<?= isset($prestador) ? 'update' : 'save' ?>">
+                                <form method="POST" action="/reports/prestadores-servico?action=<?= isset($prestador) ? 'update' : 'save' ?>">
                                     <?= CSRFProtection::getHiddenInput() ?>
                                     <?php if (isset($prestador)): ?>
                                         <input type="hidden" name="id" value="<?= $prestador['id'] ?>">

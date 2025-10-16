@@ -61,7 +61,7 @@
                                     <h3 class="card-title">Dados do Visitante</h3>
                                 </div>
                                 
-                                <form method="POST" action="/visitantes?action=<?= isset($visitante) ? 'update' : 'save' ?>">
+                                <form method="POST" action="/reports/visitantes?action=<?= isset($visitante) ? 'update' : 'save' ?>">
                                     <?= CSRFProtection::getHiddenInput() ?>
                                     <?php if (isset($visitante)): ?>
                                         <input type="hidden" name="id" value="<?= $visitante['id'] ?>">

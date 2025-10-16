@@ -432,18 +432,13 @@
                                                         <?php endif; ?>
                                                     </td>
                                                     <td>
-                                                        <?php
-                                                                // Fallback inteligente: se doc_type vazio mas cpf existe, inferir CPF
-                                                                $doc_type_fallback = !empty($pessoa['doc_type']) ? $pessoa['doc_type'] : (!empty($pessoa['cpf']) ? 'CPF' : '');
-                                                                $doc_number_fallback = !empty($pessoa['doc_number']) ? $pessoa['doc_number'] : $pessoa['cpf'];
-                                                                ?>
-                                                <button class="btn btn-sm btn-info btn-editar" 
+                                                        <button class="btn btn-sm btn-info btn-editar" 
                                                                 data-id="<?= $pessoa['id'] ?>" 
                                                                 data-tipo="<?= htmlspecialchars($pessoa['tipo']) ?>"
                                                                 data-nome="<?= htmlspecialchars($pessoa['nome']) ?>"
                                                                 data-cpf="<?= htmlspecialchars($pessoa['cpf'] ?? '') ?>"
-                                                                data-doc_type="<?= htmlspecialchars($doc_type_fallback) ?>"
-                                                                data-doc_number="<?= htmlspecialchars($doc_number_fallback ?? '') ?>"
+                                                                data-doc_type="<?= htmlspecialchars($pessoa['doc_type'] ?? '') ?>"
+                                                                data-doc_number="<?= htmlspecialchars($pessoa['doc_number'] ?? '') ?>"
                                                                 data-doc_country="<?= htmlspecialchars($pessoa['doc_country'] ?? '') ?>"
                                                                 data-empresa="<?= htmlspecialchars($pessoa['empresa'] ?? '') ?>"
                                                                 data-setor="<?= htmlspecialchars($pessoa['setor'] ?? '') ?>"

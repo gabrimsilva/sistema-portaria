@@ -581,9 +581,10 @@ class ProfissionaisRennerController {
                     $profissional_id = $this->db->lastInsertId();
                 }
                 
+                // Inserir com doc_type e doc_number explicitamente NULL para evitar defaults que violam constraint
                 $this->db->query("
-                    INSERT INTO registro_acesso (tipo, nome, setor, placa_veiculo, entrada_at, profissional_renner_id, created_by)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO registro_acesso (tipo, nome, setor, placa_veiculo, entrada_at, profissional_renner_id, created_by, doc_type, doc_number)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, NULL, NULL)
                 ", [
                     'profissional_renner',
                     $nome,

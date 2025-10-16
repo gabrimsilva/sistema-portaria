@@ -1337,13 +1337,13 @@
             const tipo = btn.data('tipo');
             const nome = btn.data('nome');
             const cpf = btn.data('cpf');
-            const doc_type = btn.data('doc_type');
-            const doc_number = btn.data('doc_number');
-            const doc_country = btn.data('doc_country');
+            const doc_type = btn.data('docType');  // jQuery converte data-doc_type para docType
+            const doc_number = btn.data('docNumber');  // jQuery converte data-doc_number para docNumber
+            const doc_country = btn.data('docCountry');  // jQuery converte data-doc_country para docCountry
             const empresa = btn.data('empresa');
             const setor = btn.data('setor');
-            const funcionario = btn.data('funcionario_responsavel');
-            const placa_veiculo = btn.data('placa_veiculo');
+            const funcionario = btn.data('funcionarioResponsavel');  // jQuery converte data-funcionario_responsavel para funcionarioResponsavel
+            const placa_veiculo = btn.data('placaVeiculo');  // jQuery converte data-placa_veiculo para placaVeiculo
             
             // DEBUG: Log dos dados capturados
             console.log('📋 Dados do botão editar:', {

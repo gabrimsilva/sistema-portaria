@@ -65,6 +65,10 @@ Preferred communication style: Simple, everyday language.
   - `/reports/prestadores-servico/list.php` e `form.php`
   - `/reports/profissionais-renner/form.php`
   - Elimina duplicação de código e garante navegação consistente
+- **Critical Bug Fix - Exit Registration**: Corrigido bug crítico que impedia salvar hora de saída:
+  - Formulários estavam enviando para rotas antigas (`/visitantes`, `/prestadores-servico`)
+  - Corrigido para rotas corretas de relatórios (`/reports/visitantes`, `/reports/prestadores-servico`)
+  - Controllers update() já processavam saída corretamente, problema era apenas no action do form
 - **UI/UX Cleanup**: Removida implementação modal incorreta, código duplicado eliminado
 
 ## System Architecture

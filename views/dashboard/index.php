@@ -332,7 +332,7 @@
                                                 <div class="input-group-prepend">
                                                     <span class="input-group-text"><i class="fas fa-search"></i></span>
                                                 </div>
-                                                <input type="text" class="form-control" id="filtro-pessoas" placeholder="Buscar por nome, CPF, empresa ou setor...">
+                                                <input type="text" class="form-control" id="filtro-pessoas" placeholder="Buscar por nome, documento, empresa ou setor...">
                                                 <div class="input-group-append">
                                                     <button class="btn btn-outline-secondary" type="button" id="limpar-filtros">
                                                         <i class="fas fa-times"></i> Limpar
@@ -359,7 +359,7 @@
                                                 <tr>
                                                     <th>Nome</th>
                                                     <th>Tipo</th>
-                                                    <th>CPF</th>
+                                                    <th>Documento</th>
                                                     <th>Empresa</th>
                                                     <th>Setor</th>
                                                     <th>Responsável</th>
@@ -398,7 +398,13 @@
                                                             <?= htmlspecialchars($pessoa['tipo']) ?>
                                                         </span>
                                                     </td>
-                                                    <td><?= !empty($pessoa['cpf']) ? htmlspecialchars($pessoa['cpf']) : '-' ?></td>
+                                                    <td>
+                                                        <?php 
+                                                        // Priorizar doc_number, fallback para cpf legado
+                                                        $documento = !empty($pessoa['doc_number']) ? $pessoa['doc_number'] : ($pessoa['cpf'] ?? '');
+                                                        echo !empty($documento) ? htmlspecialchars($documento) : '-';
+                                                        ?>
+                                                    </td>
                                                     <td><?= !empty($pessoa['empresa']) ? htmlspecialchars($pessoa['empresa']) : '-' ?></td>
                                                     <td><?= !empty($pessoa['setor']) ? htmlspecialchars($pessoa['setor']) : '-' ?></td>
                                                     <td>
@@ -969,7 +975,7 @@
                             <tr>
                                 <th>Nome</th>
                                 <th>Tipo</th>
-                                <th>CPF</th>
+                                <th>Documento</th>
                                 <th>Empresa</th>
                                 <th>Setor</th>
                                 <th>Responsável</th>

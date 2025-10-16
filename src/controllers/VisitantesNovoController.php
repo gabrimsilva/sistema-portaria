@@ -237,14 +237,34 @@ class VisitantesNovoController {
                 $hora_entrada = $_POST['hora_entrada'] ?? null;
                 $hora_saida = $_POST['hora_saida'] ?? null;
                 
+                // Novos campos de documento
+                $doc_type = trim($_POST['doc_type'] ?? '');
+                $doc_number = trim($_POST['doc_number'] ?? '');
+                $doc_country = trim($_POST['doc_country'] ?? '');
+                
                 // ========== VALIDAR E NORMALIZAR DADOS ==========
-                // Validar CPF com dígitos verificadores
-                if (!empty($cpf)) {
-                    $cpfValidation = CpfValidator::validateAndNormalize($cpf);
+                // Normalizar tipo de documento: vazio = CPF (padrão)
+                if (empty($doc_type)) {
+                    $doc_type = 'CPF';
+                }
+                
+                // Normalizar número do documento conforme tipo
+                if (in_array($doc_type, ['CPF', 'RG', 'CNH'])) {
+                    // Documentos brasileiros: apenas dígitos
+                    $doc_number = preg_replace('/\D/', '', $doc_number);
+                } else {
+                    // Documentos internacionais: alfanuméricos (letras e números)
+                    $doc_number = preg_replace('/[^A-Z0-9]/i', '', strtoupper($doc_number));
+                }
+                
+                // Validar CPF se tipo for CPF
+                if ($doc_type === 'CPF' && !empty($doc_number)) {
+                    $cpfValidation = CpfValidator::validateAndNormalize($doc_number);
                     if (!$cpfValidation['isValid']) {
                         throw new Exception($cpfValidation['message']);
                     }
-                    $cpf = $cpfValidation['normalized'];
+                    $doc_number = $cpfValidation['normalized'];
+                    $cpf = $doc_number; // Sincronizar campo legado
                 }
                 
                 // Placa: apenas letras e números, maiúscula
@@ -258,8 +278,8 @@ class VisitantesNovoController {
                 if (empty($setor)) {
                     throw new Exception("Setor é obrigatório");
                 }
-                if (empty($cpf)) {
-                    throw new Exception("CPF é obrigatório");
+                if (empty($doc_number)) {
+                    throw new Exception("Número do documento é obrigatório");
                 }
                 if (empty($placa_veiculo)) {
                     throw new Exception("Placa de veículo é obrigatória");
@@ -303,9 +323,9 @@ class VisitantesNovoController {
                     $nome, $cpf, $empresa, $funcionario_responsavel, $setor, $placa_veiculo,
                     $hora_entrada,
                     $hora_saida ?: null,
-                    null, // doc_type - explicitamente NULL para evitar DEFAULT 'CPF'
-                    null, // doc_number
-                    null  // doc_country - explicitamente NULL para evitar DEFAULT 'BR'
+                    $doc_type,
+                    $doc_number,
+                    !empty($doc_country) ? $doc_country : null
                 ]);
                 
                 header('Location: ' . $this->getBaseRoute() . '?success=1');
@@ -359,14 +379,34 @@ class VisitantesNovoController {
                 $hora_entrada = $_POST['hora_entrada'] ?? null;
                 $hora_saida = $_POST['hora_saida'] ?? null;
                 
+                // Novos campos de documento
+                $doc_type = trim($_POST['doc_type'] ?? '');
+                $doc_number = trim($_POST['doc_number'] ?? '');
+                $doc_country = trim($_POST['doc_country'] ?? '');
+                
                 // ========== VALIDAR E NORMALIZAR DADOS ==========
-                // Validar CPF com dígitos verificadores
-                if (!empty($cpf)) {
-                    $cpfValidation = CpfValidator::validateAndNormalize($cpf);
+                // Normalizar tipo de documento: vazio = CPF (padrão)
+                if (empty($doc_type)) {
+                    $doc_type = 'CPF';
+                }
+                
+                // Normalizar número do documento conforme tipo
+                if (in_array($doc_type, ['CPF', 'RG', 'CNH'])) {
+                    // Documentos brasileiros: apenas dígitos
+                    $doc_number = preg_replace('/\D/', '', $doc_number);
+                } else {
+                    // Documentos internacionais: alfanuméricos (letras e números)
+                    $doc_number = preg_replace('/[^A-Z0-9]/i', '', strtoupper($doc_number));
+                }
+                
+                // Validar CPF se tipo for CPF
+                if ($doc_type === 'CPF' && !empty($doc_number)) {
+                    $cpfValidation = CpfValidator::validateAndNormalize($doc_number);
                     if (!$cpfValidation['isValid']) {
                         throw new Exception($cpfValidation['message']);
                     }
-                    $cpf = $cpfValidation['normalized'];
+                    $doc_number = $cpfValidation['normalized'];
+                    $cpf = $doc_number; // Sincronizar campo legado
                 }
                 
                 // Placa: apenas letras e números, maiúscula
@@ -376,6 +416,9 @@ class VisitantesNovoController {
                 // Validações obrigatórias (simplificadas para edição)
                 if (empty($nome)) {
                     throw new Exception("Nome é obrigatório");
+                }
+                if (empty($doc_number)) {
+                    throw new Exception("Número do documento é obrigatório");
                 }
                 if (empty($placa_veiculo)) {
                     throw new Exception("Placa de veículo é obrigatória");
@@ -414,9 +457,9 @@ class VisitantesNovoController {
                     $nome, $cpf, $empresa, $funcionario_responsavel, $setor, $placa_veiculo,
                     $hora_entrada ?: null,
                     $hora_saida ?: null,
-                    null, // doc_type - explicitamente NULL
-                    null, // doc_number
-                    null, // doc_country - explicitamente NULL
+                    $doc_type,
+                    $doc_number,
+                    !empty($doc_country) ? $doc_country : null,
                     $id
                 ]);
                 
@@ -558,9 +601,37 @@ class VisitantesNovoController {
                 $placa_veiculo = trim($_POST['placa_veiculo'] ?? '');
                 $hora_entrada_input = trim($_POST['hora_entrada'] ?? '');
                 
+                // Novos campos de documento
+                $doc_type = trim($_POST['doc_type'] ?? '');
+                $doc_number = trim($_POST['doc_number'] ?? '');
+                $doc_country = trim($_POST['doc_country'] ?? '');
+                
                 // ========== NORMALIZAR DADOS ==========
-                // CPF: apenas dígitos
-                $cpf = preg_replace('/\D/', '', $cpf);
+                // Normalizar tipo de documento: vazio = CPF (padrão)
+                if (empty($doc_type)) {
+                    $doc_type = 'CPF';
+                }
+                
+                // Normalizar número do documento conforme tipo
+                if (in_array($doc_type, ['CPF', 'RG', 'CNH'])) {
+                    // Documentos brasileiros: apenas dígitos
+                    $doc_number = preg_replace('/\D/', '', $doc_number);
+                } else {
+                    // Documentos internacionais: alfanuméricos (letras e números)
+                    $doc_number = preg_replace('/[^A-Z0-9]/i', '', strtoupper($doc_number));
+                }
+                
+                // Validar CPF se tipo for CPF
+                if ($doc_type === 'CPF' && !empty($doc_number)) {
+                    $cpfValidation = CpfValidator::validateAndNormalize($doc_number);
+                    if (!$cpfValidation['isValid']) {
+                        echo json_encode(['success' => false, 'message' => $cpfValidation['message']]);
+                        return;
+                    }
+                    $doc_number = $cpfValidation['normalized'];
+                    $cpf = $doc_number; // Sincronizar campo legado
+                }
+                
                 // Placa: apenas letras e números, maiúscula
                 $placa_veiculo = preg_replace('/[^A-Z0-9]/', '', strtoupper(trim($placa_veiculo)));
                 // =====================================
@@ -573,22 +644,14 @@ class VisitantesNovoController {
                     echo json_encode(['success' => false, 'message' => 'Setor é obrigatório']);
                     return;
                 }
-                if (empty($cpf)) {
-                    echo json_encode(['success' => false, 'message' => 'CPF é obrigatório']);
+                if (empty($doc_number)) {
+                    echo json_encode(['success' => false, 'message' => 'Número do documento é obrigatório']);
                     return;
                 }
                 if (empty($placa_veiculo)) {
                     echo json_encode(['success' => false, 'message' => 'Placa de veículo é obrigatória']);
                     return;
                 }
-                
-                // Validar CPF
-                $cpfValidation = CpfValidator::validateAndNormalize($cpf);
-                if (!$cpfValidation['isValid']) {
-                    echo json_encode(['success' => false, 'message' => $cpfValidation['message']]);
-                    return;
-                }
-                $cpf = $cpfValidation['normalized'];
                 
                 // Usar hora especificada ou hora atual se não fornecida
                 if (!empty($hora_entrada_input)) {
@@ -626,9 +689,9 @@ class VisitantesNovoController {
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ", [
                     $nome, $cpf, $empresa, $funcionario_responsavel, $setor, $placa_veiculo, $hora_entrada,
-                    null, // doc_type - explicitamente NULL para evitar DEFAULT 'CPF'
-                    null, // doc_number
-                    null  // doc_country - explicitamente NULL para evitar DEFAULT 'BR'
+                    $doc_type,
+                    $doc_number,
+                    !empty($doc_country) ? $doc_country : null
                 ]);
                 
                 $id = $this->db->lastInsertId();

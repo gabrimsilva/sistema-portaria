@@ -369,30 +369,8 @@
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                <?php foreach ($pessoasNaEmpresa as $pessoa): 
-                                                    // DEBUG: Log primeira pessoa
-                                                    if (!isset($debug_logged)) {
-                                                        error_log("🔍 DEBUG primeira pessoa na view: " . json_encode($pessoa));
-                                                        $debug_logged = true;
-                                                    }
-                                                ?>
+                                                <?php foreach ($pessoasNaEmpresa as $pessoa): ?>
                                                 <tr>
-                                                    <?php if ($pessoa['nome'] === 'Gabriel Marcelo'): ?>
-                                                        <td colspan="8" style="background: #ffffcc; padding: 10px; font-family: monospace;">
-                                                            <strong>🔍 DEBUG Gabriel Marcelo:</strong><br>
-                                                            doc_type: "<?= $pessoa['doc_type'] ?? 'NULL' ?>"<br>
-                                                            doc_number: "<?= $pessoa['doc_number'] ?? 'NULL' ?>"<br>
-                                                            doc_country: "<?= $pessoa['doc_country'] ?? 'NULL' ?>"<br>
-                                                            funcionario_responsavel: "<?= $pessoa['funcionario_responsavel'] ?? 'NULL' ?>"<br>
-                                                            <br>
-                                                            <strong>HTML data-attributes que serão gerados:</strong><br>
-                                                            data-doc_type="<?= htmlspecialchars($pessoa['doc_type'] ?? '') ?>"<br>
-                                                            data-doc_number="<?= htmlspecialchars($pessoa['doc_number'] ?? '') ?>"<br>
-                                                            data-doc_country="<?= htmlspecialchars($pessoa['doc_country'] ?? '') ?>"
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                    <?php endif; ?>
                                                     <td>
                                                         <strong><?= htmlspecialchars($pessoa['nome']) ?></strong>
                                                         <?php if (isset($pessoa['is_brigadista']) && $pessoa['is_brigadista'] === true): ?>
@@ -1367,17 +1345,6 @@
             const funcionario = btn.data('funcionarioResponsavel');  // jQuery converte data-funcionario_responsavel para funcionarioResponsavel
             const placa_veiculo = btn.data('placaVeiculo');  // jQuery converte data-placa_veiculo para placaVeiculo
             
-            // DEBUG: Log dos dados capturados
-            console.log('📋 Dados do botão editar:', {
-                id, tipo, nome, cpf,
-                doc_type, doc_number, doc_country,
-                empresa, setor, funcionario, placa_veiculo
-            });
-            
-            // DEBUG VISUAL: Alert temporário
-            if (nome === 'Gabriel Marcelo') {
-                alert(`🔍 DEBUG Gabriel Marcelo:\n\ndoc_type: "${doc_type}"\ndoc_number: "${doc_number}"\ndoc_country: "${doc_country}"\nfuncionario: "${funcionario}"`);
-            }
             
             // Preencher campos básicos
             $('#edit_id').val(id);

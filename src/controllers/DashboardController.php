@@ -322,13 +322,6 @@ class DashboardController {
                 ORDER BY hora_entrada DESC
             ") ?? [];
             
-            // DEBUG: Verificar se Gabriel tem doc_type nos visitantes
-            foreach ($visitantesAtivos as $v) {
-                if ($v['nome'] === 'Gabriel Marcelo') {
-                    file_put_contents('/tmp/debug_gabriel.txt', "DEBUG Visitantes: " . print_r($v, true));
-                }
-            }
-            
             // Prestadores trabalhando (usando view consolidada - BUG FIX v2.0.0)
             $prestadoresAtivos = $this->db->fetchAll("
                 SELECT nome, doc_type, doc_number, doc_country, cpf, empresa, setor, 
@@ -363,17 +356,6 @@ class DashboardController {
             
             // Combinar todos os tipos
             $pessoas = array_merge($visitantesAtivos, $prestadoresAtivos, $profissionaisAtivos);
-            
-            // DEBUG: Contar quantas vezes Gabriel aparece
-            $gabriel_count = 0;
-            foreach ($pessoas as $p) {
-                if ($p['nome'] === 'Gabriel Marcelo') {
-                    $gabriel_count++;
-                }
-            }
-            if ($gabriel_count > 0) {
-                file_put_contents('/tmp/debug_gabriel_count.txt', "Gabriel Marcelo aparece $gabriel_count vez(es) na lista");
-            }
             
             // Ordenar por hora de entrada mais recente
             usort($pessoas, function($a, $b) {

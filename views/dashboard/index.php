@@ -369,7 +369,13 @@
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                <?php foreach ($pessoasNaEmpresa as $pessoa): ?>
+                                                <?php foreach ($pessoasNaEmpresa as $pessoa): 
+                                                    // DEBUG: Log primeira pessoa
+                                                    if (!isset($debug_logged)) {
+                                                        error_log("🔍 DEBUG primeira pessoa na view: " . json_encode($pessoa));
+                                                        $debug_logged = true;
+                                                    }
+                                                ?>
                                                 <tr>
                                                     <td>
                                                         <strong><?= htmlspecialchars($pessoa['nome']) ?></strong>
@@ -1351,6 +1357,11 @@
                 doc_type, doc_number, doc_country,
                 empresa, setor, funcionario, placa_veiculo
             });
+            
+            // DEBUG VISUAL: Alert temporário
+            if (nome === 'Gabriel Marcelo') {
+                alert(`🔍 DEBUG Gabriel Marcelo:\n\ndoc_type: "${doc_type}"\ndoc_number: "${doc_number}"\ndoc_country: "${doc_country}"\nfuncionario: "${funcionario}"`);
+            }
             
             // Preencher campos básicos
             $('#edit_id').val(id);

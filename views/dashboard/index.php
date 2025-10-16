@@ -1342,24 +1342,13 @@
             const tipo = btn.data('tipo');
             const nome = btn.data('nome');
             const cpf = btn.data('cpf');
-            const doc_type = btn.data('docType');  // jQuery converte data-doc_type para docType
-            const doc_number = btn.data('docNumber');  // jQuery converte data-doc_number para docNumber
-            const doc_country = btn.data('docCountry');  // jQuery converte data-doc_country para docCountry
+            const doc_type = btn.data('doc_type');  // MANTÉM underscore! jQuery não converte este atributo
+            const doc_number = btn.data('doc_number');  // MANTÉM underscore! jQuery não converte este atributo
+            const doc_country = btn.data('doc_country');  // MANTÉM underscore! jQuery não converte este atributo
             const empresa = btn.data('empresa');
             const setor = btn.data('setor');
             const funcionario = btn.data('funcionarioResponsavel');  // jQuery converte data-funcionario_responsavel para funcionarioResponsavel
             const placa_veiculo = btn.data('placa_veiculo');  // MANTÉM underscore! jQuery não converte este atributo
-            
-            // DEBUG: Verificar TESTE 2 especificamente
-            if (nome === 'TESTE 2') {
-                console.log('🔍 DEBUG TESTE 2 - Dados do botão:', {
-                    doc_type: doc_type,
-                    doc_number: doc_number,
-                    doc_country: doc_country,
-                    cpf: cpf,
-                    todos_atributos: btn.data()
-                });
-            }
             
             // Preencher campos básicos
             $('#edit_id').val(id);

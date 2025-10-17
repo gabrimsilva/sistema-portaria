@@ -182,8 +182,8 @@ $canDeleteInline = $authService->hasPermission('relatorios.excluir_linha');
                                                 <td>
                                                     <strong><?= htmlspecialchars($p['nome']) ?></strong>
                                                     <?php 
-                                                    // Determinar status baseado na entrada/saída
-                                                    $temSaida = !empty($p['saida']) || !empty($p['saida_final']);
+                                                    // Determinar status baseado na saída
+                                                    $temSaida = !empty($p['saida']);
                                                     ?>
                                                     <?php if ($temSaida): ?>
                                                         <span class="badge bg-secondary ml-2">Saiu</span>

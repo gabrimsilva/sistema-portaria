@@ -157,13 +157,13 @@ class PrestadoresServicoController {
             $countParams[] = $setor;
         }
         
-        // Filtro por status (usando saida_consolidada - BUG FIX v2.0.0)
+        // Filtro por status (usando saida - campo correto para prestadores)
         if ($status === 'aberto') {
-            $query .= " AND saida_consolidada IS NULL";
-            $countQuery .= " AND saida_consolidada IS NULL";
+            $query .= " AND saida IS NULL";
+            $countQuery .= " AND saida IS NULL";
         } elseif ($status === 'finalizado') {
-            $query .= " AND saida_consolidada IS NOT NULL";
-            $countQuery .= " AND saida_consolidada IS NOT NULL";
+            $query .= " AND saida IS NOT NULL";
+            $countQuery .= " AND saida IS NOT NULL";
         }
         
         // Filtro por empresa

@@ -618,31 +618,29 @@ class PrestadoresServicoController {
                 $entrada_input = trim($_POST['entrada'] ?? '');
                 
                 // ========== SISTEMA MULTI-DOCUMENTO ==========
-                // Se doc_number foi fornecido, usa ele; senão usa CPF legado
-                if (!empty($doc_number)) {
-                    $effectiveDocType = !empty($doc_type) ? $doc_type : 'CPF';
+                // Lógica: se doc_type está vazio/null, usar modo legado (apenas CPF)
+                // Constraint: doc_type e doc_number devem ser AMBOS NULL ou AMBOS preenchidos
+                
+                if (!empty($doc_type)) {
+                    // Tipo de documento especificado (RG, CNH, Passaporte, etc)
                     
                     // Normalizar documento baseado no tipo
-                    if (in_array($effectiveDocType, ['CPF', 'RG', 'CNH', ''])) {
+                    if (in_array($doc_type, ['CPF', 'RG', 'CNH'])) {
                         $doc_number = preg_replace('/\D/', '', $doc_number);
                     } else {
                         $doc_number = strtoupper(trim($doc_number));
                     }
                     
-                    // Sincronizar com CPF para compatibilidade
-                    if ($effectiveDocType === 'CPF' || $effectiveDocType === '') {
+                    // Se for CPF, sincronizar com campo legado
+                    if ($doc_type === 'CPF') {
                         $cpf = $doc_number;
                     }
-                    
-                    // Converter string vazia para NULL (ENUM do PostgreSQL)
-                    if ($doc_type === '') {
-                        $doc_type = null;
-                    }
                 } else {
-                    // Fallback para CPF legado
-                    $cpf = preg_replace('/\D/', '', $cpf);
-                    $doc_type = null; // NULL para ENUM do PostgreSQL
-                    $doc_number = $cpf;
+                    // Modo legado: CPF padrão
+                    // Constraint exige: se doc_type é NULL, doc_number também deve ser NULL
+                    $cpf = preg_replace('/\D/', '', $doc_number ?: $cpf);
+                    $doc_type = null;
+                    $doc_number = null; // NULL para respeitar constraint
                 }
                 // ===========================================
                 
@@ -773,31 +771,29 @@ class PrestadoresServicoController {
                 $saida = trim($_POST['saida'] ?? '');
                 
                 // ========== SISTEMA MULTI-DOCUMENTO ==========
-                // Se doc_number foi fornecido, usa ele; senão usa CPF legado
-                if (!empty($doc_number)) {
-                    $effectiveDocType = !empty($doc_type) ? $doc_type : 'CPF';
+                // Lógica: se doc_type está vazio/null, usar modo legado (apenas CPF)
+                // Constraint: doc_type e doc_number devem ser AMBOS NULL ou AMBOS preenchidos
+                
+                if (!empty($doc_type)) {
+                    // Tipo de documento especificado (RG, CNH, Passaporte, etc)
                     
                     // Normalizar documento baseado no tipo
-                    if (in_array($effectiveDocType, ['CPF', 'RG', 'CNH', ''])) {
+                    if (in_array($doc_type, ['CPF', 'RG', 'CNH'])) {
                         $doc_number = preg_replace('/\D/', '', $doc_number);
                     } else {
                         $doc_number = strtoupper(trim($doc_number));
                     }
                     
-                    // Sincronizar com CPF para compatibilidade
-                    if ($effectiveDocType === 'CPF' || $effectiveDocType === '') {
+                    // Se for CPF, sincronizar com campo legado
+                    if ($doc_type === 'CPF') {
                         $cpf = $doc_number;
                     }
-                    
-                    // Converter string vazia para NULL (ENUM do PostgreSQL)
-                    if ($doc_type === '') {
-                        $doc_type = null;
-                    }
                 } else {
-                    // Fallback para CPF legado
-                    $cpf = preg_replace('/\D/', '', $cpf);
-                    $doc_type = null; // NULL para ENUM do PostgreSQL
-                    $doc_number = $cpf;
+                    // Modo legado: CPF padrão
+                    // Constraint exige: se doc_type é NULL, doc_number também deve ser NULL
+                    $cpf = preg_replace('/\D/', '', $doc_number ?: $cpf);
+                    $doc_type = null;
+                    $doc_number = null; // NULL para respeitar constraint
                 }
                 // ===========================================
                 

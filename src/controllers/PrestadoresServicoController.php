@@ -106,6 +106,7 @@ class PrestadoresServicoController {
                 id,
                 nome,
                 setor,
+                placa_veiculo,
                 CASE 
                     WHEN placa_veiculo IS NULL OR placa_veiculo = '' OR placa_veiculo = 'APE' THEN 'A pé'
                     ELSE UPPER(placa_veiculo)
@@ -116,8 +117,8 @@ class PrestadoresServicoController {
                 doc_number,
                 doc_country,
                 cpf,
-                entrada,
-                saida_consolidada,
+                entrada as entrada_at,
+                saida,
                 validity_status
             FROM vw_prestadores_consolidado 
             WHERE entrada IS NOT NULL";

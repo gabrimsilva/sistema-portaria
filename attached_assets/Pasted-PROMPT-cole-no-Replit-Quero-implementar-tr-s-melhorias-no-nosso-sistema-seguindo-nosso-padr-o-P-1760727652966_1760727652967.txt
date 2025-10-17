@@ -1,0 +1,243 @@
+PROMPT (cole no Replit)
+
+Quero implementar três melhorias no nosso sistema, seguindo nosso padrão (PHP 8 + PostgreSQL, AdminLTE 3 + Bootstrap 4.6, controllers em src/controllers/, rotas em public/router.php, views em views/, JS em public/assets/js/, DB via Database, RBAC via AuthorizationService, fuso America/Sao_Paulo).
+Não execute nada sem minha aprovação. Trabalhe em etapas M1 → M9. Em cada etapa, mostre plano, arquivos/SQL em drafts, diffs unificados e pergunte “Posso aplicar?” antes de qualquer alteração real.
+
+Escopo desta tarefa (3 melhorias)
+
+Validade de cadastro para Visitantes e Prestadores (padrão 1 ano)
+
+Permitir definir período de validade para cadastro (ex.: valid_from e valid_until), com padrão automático de 1 ano a partir da primeira entrada ou do cadastro, e status derivado (válido/expirado).
+
+Objetivo: agilizar reentradas de pessoas recorrentes (evitar redigitação).
+
+Filtro avançado para Profissionais Renner (documentação & placas de veículos)
+
+Filtros por: doc_type (CPF/RG/PASSAPORTE), doc_number (ou matrícula), placa, setor, date_range (entrada/saída).
+
+Objetivo: facilitar busca e gestão de registros (controle e auditoria mais rápidos).
+
+Lista de Ramais no sistema
+
+Catálogo consultável de ramais internos (ramal, nome, setor/departamento, observações).
+
+Objetivo: facilitar contato rápido pela Portaria/Segurança/RH.
+
+ETAPAS (pergunte antes de cada passo)
+M1 — Descoberta e Plano Detalhado (somente análise)
+
+Objetivo: identificar tabelas/colunas e telas impactadas.
+
+Tarefas:
+
+Detectar entidades/tabelas atuais: visitantes, prestadores_servico (ou equivalentes), profissionais_renner, registro_acesso, e onde ficam dados de placas de veículos associados a profissionais.
+
+Levantar telas/rotas onde os cadastros de Visitantes/Prestadores são criados/atualizados e as listagens de Profissionais Renner com filtros.
+
+Entregas (drafts):
+
+feature_v200/drafts/docs/discovery_validade_filtros_ramais.md com o que foi encontrado e mapa de impacto.
+
+Pergunta: “Posso seguir com M2 (modelagem + migrations em draft)?”
+
+M2 — Modelagem & Migrations (DRAFTS, não executar)
+
+Objetivo: propor alterações de schema sem aplicar.
+
+Tarefas:
+
+Validade Visitantes/Prestadores: propor novos campos (semântica sugerida):
+
+valid_from DATE NOT NULL DEFAULT CURRENT_DATE
+
+valid_until DATE NULL (calcular default para CURRENT_DATE + INTERVAL '1 year' no app, não no DB, para manter controle)
+
+status VARCHAR(16) ou status derivado (opcional); se derivado, criar VIEW que exiba status como CASE WHEN CURRENT_DATE > valid_until THEN 'expirado' ELSE 'valido' END.
+
+Índices: (valid_until) e, se útil, (doc_number, doc_type) nas entidades.
+
+Filtros Profissionais Renner: validar onde ficam doc_type/doc_number e placas; se necessário, criar tabela veiculos_profissionais ou índice em campos existentes.
+
+Ramais: criar tabela ramais (id, nome, setor, ramal, telefone, email, observacoes, active, created_at, updated_at) com índices em (ramal), (setor), (nome).
+
+Entregas (drafts):
+
+feature_v200/drafts/sql/001_validade_visitantes_prestadores.sql
+
+feature_v200/drafts/sql/002_filtros_renner_indices.sql
+
+feature_v200/drafts/sql/003_ramais_create.sql
+
+Pergunta: “Aprova as migrations em draft? Sigo com M3 (draft de endpoints/rotas)?”
+
+M3 — Endpoints & Rotas (DRAFTS)
+
+Objetivo: desenhar APIs e rotas sem aplicar.
+
+Tarefas:
+
+Validade:
+
+Endpoints de manutenção: PUT /api/visitantes/{id}/validade, PUT /api/prestadores/{id}/validade (definem valid_from/valid_until e recalculam status derivado, se aplicável).
+
+As telas de cadastro/lista devem exibir status de validade.
+
+Filtros Profissionais Renner:
+
+Extender listagem com query params: ?doc_type=...&doc_number=...&placa=...&setor=...&from=YYYY-MM-DD&to=YYYY-MM-DD.
+
+Endpoint de export (se existir) deve respeitar filtros.
+
+Ramais:
+
+GET /ramais (view) e GET /api/ramais?query=...&setor=... (busca). CRUD pode ser futuro; por ora, só consulta.
+
+Entregas (drafts):
+
+feature_v200/drafts/snippets/router.php.diff (diff unificado p/ public/router.php)
+
+Esqueletos de controllers:
+
+VisitantesController/PrestadoresController (métodos de validade),
+
+ProfissionaisController (listagem com filtros),
+
+RamaisController (consulta).
+
+Pergunta: “Posso gerar M4 (draft das Views/JS)?”
+
+M4 — Views & JS (DRAFTS)
+
+Objetivo: telas/UX sem aplicar.
+
+Tarefas:
+
+Validade: inserir campos e indicadores visuais nas páginas de Visitantes/Prestadores (badge “Válido/Expirado”, contador D-N, input de datas com padrão 1 ano quando em branco).
+
+Filtros Renner: inputs para doc_type (CPF/RG/PASSAPORTE), doc_number, placa (autocomplete opcional), setor (select), período (date-range).
+
+Ramais: página simples com busca instantânea por nome/ramal/setor (tabela com paginação).
+
+Entregas (drafts):
+
+feature_v200/drafts/views/{visitantes|prestadores}/form_validade.php (exemplos)
+
+feature_v200/drafts/views/profissionais/list_filtros.php
+
+feature_v200/drafts/views/ramais/index.php
+
+JS em feature_v200/drafts/js/{validade.js, filtros_renner.js, ramais.js}
+
+Pergunta: “Aprova os drafts de UI? Sigo com M5 (SQL de consultas e índices)?”
+
+M5 — Consultas, Índices & Performance (DRAFTS)
+
+Objetivo: SQL final das consultas + índices sugeridos.
+
+Tarefas:
+
+Validar nomes de colunas reais (ex.: entrada_at/retorno/saida_final) para filtros por período.
+
+Índices sugeridos:
+
+CREATE INDEX IF NOT EXISTS idx_visitantes_valid_until ON visitantes(valid_until);
+
+CREATE INDEX IF NOT EXISTS idx_prestadores_valid_until ON prestadores_servico(valid_until);
+
+Se doc_type/doc_number existirem em profissionais: CREATE INDEX IF NOT EXISTS idx_prof_doc ON profissionais_renner(doc_type, doc_number);
+
+Placas: se tabela separada veiculos_profissionais(prof_id, placa), índices em (prof_id) e (placa).
+
+LGPD: consultas e views não exibem CPF nos novos componentes; manter máscara quando necessário.
+
+Entregas (drafts):
+
+feature_v200/drafts/sql/indices_otimizacao.sql
+
+feature_v200/drafts/sql/consultas_finais.sql
+
+Pergunta: “Posso aplicar os índices/consultas em ambiente de dev?”
+
+M6 — Testes (DRAFTS)
+
+Objetivo: cenários básicos de validação (curl/Postman).
+
+Tarefas:
+
+Validade: cadastro → define valid_from/valid_until default 1 ano → status “válido”; ajuste valid_until para ontem → status “expirado”.
+
+Filtros Renner: pesquisar por doc_type=PASSAPORTE, placa=ABC1234, setor=X, período.
+
+Ramais: busca por “Manutenção” e por ramal “1234”.
+
+Entregas (drafts):
+
+feature_v200/tests/README.md com comandos curl/coleções Postman.
+
+Pergunta: “Posso executar os testes em dev?”
+
+M7 — Aplicação Controlada (APLICAR somente com OK)
+
+Objetivo: aplicar patches e migrations apenas quando autorizado.
+
+Tarefas: mostrar patches por arquivo; aplicar somente os aprovados (ordem sugerida: migrations → rotas → controllers → views → js).
+
+Pergunta: “Posso aplicar o conjunto X/Y/Z agora?”
+
+M8 — Smoke Tests & Documentação do Usuário (DRAFTS/APLICAÇÃO)
+
+Objetivo: garantir operação e instruir time.
+
+Tarefas:
+
+Smoke manual guiado (5-10 passos por módulo).
+
+docs/guia_v200_validade_filtros_ramais.md: como usar validade (default 1 ano), novos filtros e tela de ramais.
+
+Pergunta: “Posso gerar e publicar o guia?”
+
+M9 — Rollback (DRAFT)
+
+Objetivo: plano de reversão.
+
+Tarefas:
+
+rollback_v200.patch para reverter diffs.
+
+Script SQL para reverter migrations se necessário.
+
+Pergunta: “Posso gerar o pacote de rollback?”
+
+Critérios de Aceite (Checklist)
+
+Validade
+
+ Visitantes/Prestadores com valid_from e valid_until (default de 1 ano ao cadastrar).
+
+ Status “válido/expirado” visível nas telas (sem expor dados sensíveis).
+
+ Filtros por validade nas listagens (opcional).
+
+Filtros Profissionais Renner
+
+ Listagem aceita parâmetros: doc_type (CPF/RG/PASSAPORTE), doc_number, placa, setor, from/to.
+
+ Export (se existir) respeita filtros.
+
+ Consultas performáticas com índices aplicados.
+
+Ramais
+
+ Tela de consulta com busca por nome/ramal/setor.
+
+ Sem dados sensíveis (apenas contato interno).
+
+LGPD & UX
+
+ CPF oculto/máscara onde não é essencial; sem CPF nas novas telas por padrão.
+
+ Datas em ISO nos endpoints; PT-BR na UI.
+
+ Sem aplicar nenhuma alteração sem OK explícito.
+
+Comece com a M1 (descoberta) e AGUARDE meu OK.

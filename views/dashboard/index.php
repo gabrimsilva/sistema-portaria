@@ -1623,6 +1623,9 @@
                 id: $('#edit_id').val(),
                 nome: $('#edit_nome').val(),
                 cpf: $('#edit_cpf').val(),
+                doc_type: $('#edit_doc_type').val() || '',
+                doc_number: $('#edit_doc_number').val() || '',
+                doc_country: $('#edit_doc_country').val() || 'Brasil',
                 setor: $('#edit_setor').val(),
                 csrf_token: $('meta[name="csrf-token"]').attr('content') || '<?= CSRFProtection::generateToken() ?>'
             };

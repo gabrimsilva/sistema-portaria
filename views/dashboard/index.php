@@ -670,12 +670,41 @@
                                     <input type="text" class="form-control" id="prestador_nome" name="nome" required>
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4">
                                 <div class="form-group">
-                                    <label for="prestador_cpf">CPF *</label>
-                                    <input type="text" class="form-control" id="prestador_cpf" name="cpf" placeholder="000.000.000-00" maxlength="14" required>
+                                    <label for="prestador_doc_type">Tipo de Documento</label>
+                                    <select class="form-control" id="prestador_doc_type" name="doc_type">
+                                        <option value="">CPF (padrão)</option>
+                                        <option value="RG">RG</option>
+                                        <option value="CNH">CNH</option>
+                                        <option value="PASSAPORTE">Passaporte</option>
+                                        <option value="RNE">RNE</option>
+                                        <option value="DNI">DNI</option>
+                                        <option value="CI">CI</option>
+                                        <option value="OUTROS">Outros</option>
+                                    </select>
+                                    <small class="text-muted">Deixe vazio para CPF</small>
                                 </div>
                             </div>
+                            <div class="col-md-5">
+                                <div class="form-group">
+                                    <label for="prestador_doc_number">Número do Documento *</label>
+                                    <input type="text" class="form-control" id="prestador_doc_number" name="doc_number" required>
+                                    <small class="text-muted">Máscara automática por tipo</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3" id="prestador_country_container" style="display: none;">
+                                <div class="form-group">
+                                    <label for="prestador_doc_country">País</label>
+                                    <input type="text" class="form-control" id="prestador_doc_country" name="doc_country" value="Brasil">
+                                </div>
+                            </div>
+                            
+                            <!-- Campo CPF oculto para compatibilidade -->
+                            <input type="hidden" id="prestador_cpf" name="cpf">
                         </div>
                         <div class="row">
                             <div class="col-md-6">
@@ -1801,9 +1830,66 @@
         });
         
         $('#modalPrestador').on('shown.bs.modal', function() {
-            aplicarMascaraCPF('#prestador_cpf');
             aplicarMascaraPlaca('#prestador_placa_veiculo');
             console.log('✅ Máscaras aplicadas ao Modal Prestador');
+            
+            // Controle de tipo de documento e máscaras dinâmicas
+            function togglePrestadorCountryField() {
+                const docType = $('#prestador_doc_type').val();
+                const internationalDocs = ['PASSAPORTE', 'RNE', 'DNI', 'CI', 'OUTROS'];
+                
+                if (internationalDocs.includes(docType)) {
+                    $('#prestador_country_container').show();
+                } else {
+                    $('#prestador_country_container').hide();
+                    $('#prestador_doc_country').val('Brasil');
+                }
+            }
+            
+            function applyPrestadorDocumentMask() {
+                const docType = $('#prestador_doc_type').val() || 'CPF';
+                const $docNumber = $('#prestador_doc_number');
+                
+                // Remover máscara anterior
+                $docNumber.unmask();
+                
+                // Aplicar nova máscara
+                if (docType === 'CPF' || docType === '') {
+                    $docNumber.mask('000.000.000-00', {reverse: true});
+                } else if (docType === 'RG') {
+                    $docNumber.mask('00.000.000-A', {
+                        translation: {
+                            'A': {pattern: /[0-9Xx]/, optional: true}
+                        }
+                    });
+                } else if (docType === 'CNH') {
+                    $docNumber.mask('00000000000');
+                } else {
+                    // Documentos internacionais: sem máscara
+                    $docNumber.attr('maxlength', 20);
+                }
+                
+                // Sincronizar com CPF oculto
+                if (docType === 'CPF' || docType === '') {
+                    $('#prestador_cpf').val($docNumber.val());
+                }
+            }
+            
+            $('#prestador_doc_type').on('change', function() {
+                togglePrestadorCountryField();
+                applyPrestadorDocumentMask();
+            });
+            
+            $('#prestador_doc_number').on('input', function() {
+                const docType = $('#prestador_doc_type').val() || 'CPF';
+                if (docType === 'CPF' || docType === '') {
+                    $('#prestador_cpf').val($(this).val());
+                }
+            });
+            
+            // Inicializar
+            togglePrestadorCountryField();
+            applyPrestadorDocumentMask();
             
             // Controle do checkbox "A pé" para prestador
             let previousValuePrestador = '';

@@ -562,10 +562,12 @@ class ProfissionaisRennerController {
                     $data_entrada = date('Y-m-d H:i:s');
                 }
                 
-                // Detectar entrada retroativa (data no passado)
+                // Detectar entrada retroativa (data no passado com tolerância de 2 minutos)
                 $agora = time();
                 $timestamp_entrada = strtotime($data_entrada);
-                $is_retroativa = $timestamp_entrada < $agora;
+                $tolerancia_segundos = 120; // 2 minutos de tolerância
+                $diferenca_tempo = $agora - $timestamp_entrada;
+                $is_retroativa = $diferenca_tempo > $tolerancia_segundos;
                 
                 // Validar observação obrigatória para entradas retroativas
                 if ($is_retroativa && empty($observacao)) {

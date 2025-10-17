@@ -633,10 +633,15 @@ class PrestadoresServicoController {
                     if ($effectiveDocType === 'CPF' || $effectiveDocType === '') {
                         $cpf = $doc_number;
                     }
+                    
+                    // Converter string vazia para NULL (ENUM do PostgreSQL)
+                    if ($doc_type === '') {
+                        $doc_type = null;
+                    }
                 } else {
                     // Fallback para CPF legado
                     $cpf = preg_replace('/\D/', '', $cpf);
-                    $doc_type = '';
+                    $doc_type = null; // NULL para ENUM do PostgreSQL
                     $doc_number = $cpf;
                 }
                 // ===========================================
@@ -783,10 +788,15 @@ class PrestadoresServicoController {
                     if ($effectiveDocType === 'CPF' || $effectiveDocType === '') {
                         $cpf = $doc_number;
                     }
+                    
+                    // Converter string vazia para NULL (ENUM do PostgreSQL)
+                    if ($doc_type === '') {
+                        $doc_type = null;
+                    }
                 } else {
                     // Fallback para CPF legado
                     $cpf = preg_replace('/\D/', '', $cpf);
-                    $doc_type = '';
+                    $doc_type = null; // NULL para ENUM do PostgreSQL
                     $doc_number = $cpf;
                 }
                 // ===========================================

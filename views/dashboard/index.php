@@ -787,6 +787,39 @@
                             <input type="text" class="form-control" id="edit_nome" name="nome" required>
                         </div>
                         
+                        <!-- Campos de Documento (para Prestadores e Visitantes) -->
+                        <div id="campos_documento" style="display: none;">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="edit_doc_type">Tipo de Documento</label>
+                                        <select class="form-control" id="edit_doc_type" name="doc_type">
+                                            <option value="">CPF (padrão)</option>
+                                            <option value="RG">RG</option>
+                                            <option value="CNH">CNH</option>
+                                            <option value="PASSAPORTE">Passaporte</option>
+                                            <option value="RNE">RNE</option>
+                                            <option value="DNI">DNI</option>
+                                            <option value="CI">CI</option>
+                                            <option value="OUTROS">Outros</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-5">
+                                    <div class="form-group">
+                                        <label for="edit_doc_number">Número do Documento</label>
+                                        <input type="text" class="form-control" id="edit_doc_number" name="doc_number">
+                                    </div>
+                                </div>
+                                <div class="col-md-3" id="edit_country_container" style="display: none;">
+                                    <div class="form-group">
+                                        <label for="edit_doc_country">País</label>
+                                        <input type="text" class="form-control" id="edit_doc_country" name="doc_country" value="Brasil">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
                         <div class="row">
                             <div id="campo_empresa" class="col-md-6">
                                 <div class="form-group">
@@ -1416,7 +1449,7 @@
             }
             
             // Mostrar/ocultar campos específicos baseado no tipo
-            $('#campo_funcionario_responsavel, #campo_hora_saida, #campo_observacao, #campos_profissional_renner').hide();
+            $('#campo_funcionario_responsavel, #campo_hora_saida, #campo_observacao, #campos_profissional_renner, #campos_documento').hide();
             
             // Mostrar campo de hora de saída para todos os tipos
             $('#campo_hora_saida').show();
@@ -1424,7 +1457,7 @@
             // Mostrar/ocultar campos específicos para Profissional Renner
             if (tipo === 'Profissional Renner') {
                 $('#campo_empresa').hide();
-                $('#campo_cpf').hide();
+                $('#campos_documento').hide();
                 // Manter placa visível para Profissionais Renner
                 $('#campo_placa_veiculo').show();
                 // Mostrar campos específicos M2: saida e retorno
@@ -1485,6 +1518,7 @@
             
             if (tipo === 'Visitante') {
                 $('#campo_funcionario_responsavel').show();
+                $('#campos_documento').show();
                 // Preencher campos específicos do visitante
                 $('#edit_funcionario_responsavel').val(funcionario || '');
                 
@@ -1508,6 +1542,7 @@
             } else if (tipo === 'Prestador') {
                 $('#campo_funcionario_responsavel').show();
                 $('#campo_observacao').show();
+                $('#campos_documento').show();
                 // Preencher campos específicos do prestador
                 $('#edit_funcionario_responsavel').val(funcionario || '');
                 $('#edit_observacao').val('');
@@ -1805,6 +1840,57 @@
             applyDocumentMask();
         }
         
+        // ==================== MÁSCARAS MODAL DE EDIÇÃO ====================
+        function toggleEditCountryField() {
+            const docType = $('#edit_doc_type').val();
+            if (docType && !['CPF', 'RG', 'CNH', ''].includes(docType)) {
+                $('#edit_country_container').show();
+            } else {
+                $('#edit_country_container').hide();
+            }
+        }
+        
+        function applyEditDocumentMask() {
+            const docType = $('#edit_doc_type').val() || 'CPF';
+            const $docNumber = $('#edit_doc_number');
+            
+            // Remover máscara anterior
+            if ($docNumber.data('mask')) {
+                $docNumber.unmask();
+            }
+            
+            // Aplicar máscara baseada no tipo
+            if (docType === 'CPF' || docType === '') {
+                $docNumber.mask('000.000.000-00', {
+                    reverse: false,
+                    clearIfNotMatch: true,
+                    onChange: function(value) {
+                        const cleanValue = value.replace(/\D/g, '');
+                        console.log('CPF edit limpo:', cleanValue);
+                    }
+                });
+            } else if (docType === 'RG') {
+                $docNumber.mask('0000000000', {
+                    reverse: false,
+                    clearIfNotMatch: true,
+                    onChange: function(value) {
+                        const cleanValue = value.replace(/\D/g, '');
+                        console.log('RG edit limpo:', cleanValue);
+                    }
+                });
+            } else if (docType === 'CNH') {
+                $docNumber.mask('00000000000');
+            } else {
+                // Documentos internacionais: sem máscara
+                $docNumber.attr('maxlength', 20);
+            }
+        }
+        
+        $('#edit_doc_type').on('change', function() {
+            toggleEditCountryField();
+            applyEditDocumentMask();
+        });
+        
         // Aplicar máscaras quando os modais abrem
         $('#modalVisitante').on('shown.bs.modal', function() {
             setupDocumentSelector('visitante');
@@ -1981,7 +2067,8 @@
         
         $('#modalEditar').on('shown.bs.modal', function() {
             aplicarMascaraPlaca('#edit_placa_veiculo');
-            console.log('✅ Máscara de placa aplicada ao Modal Editar');
+            applyEditDocumentMask();
+            console.log('✅ Máscaras aplicadas ao Modal Editar (placa e documento)');
             
             // Controle do checkbox "A pé" para modal de edição
             let previousValueEdit = '';

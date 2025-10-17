@@ -245,6 +245,9 @@ class PrestadoresServicoController {
             try {
                 $nome = $_POST['nome'] ?? '';
                 $cpf = $_POST['cpf'] ?? '';
+                $doc_type = $_POST['doc_type'] ?? '';
+                $doc_number = $_POST['doc_number'] ?? '';
+                $doc_country = $_POST['doc_country'] ?? 'Brasil';
                 $empresa = $_POST['empresa'] ?? '';
                 $funcionario_responsavel = $_POST['funcionario_responsavel'] ?? '';
                 $setor = $_POST['setor'] ?? '';
@@ -253,19 +256,38 @@ class PrestadoresServicoController {
                 $entrada = $_POST['entrada'] ?? null;
                 $saida = $_POST['saida'] ?? null;
                 
-                // ========== VALIDAR E NORMALIZAR DADOS ==========
-                // Validar CPF com dígitos verificadores
-                if (!empty($cpf)) {
+                // ========== VALIDAR E NORMALIZAR DOCUMENTOS ==========
+                $effectiveDocType = empty($doc_type) ? 'CPF' : strtoupper($doc_type);
+                
+                // Normalizar documento baseado no tipo
+                if (!empty($doc_number)) {
+                    if (in_array($effectiveDocType, ['CPF', 'RG', 'CNH'])) {
+                        // Documentos brasileiros: somente dígitos
+                        $doc_number = preg_replace('/\D/', '', $doc_number);
+                    } else {
+                        // Documentos internacionais: alfanuméricos
+                        $doc_number = strtoupper(trim($doc_number));
+                    }
+                }
+                
+                // Sincronizar CPF se tipo for CPF
+                if ($effectiveDocType === 'CPF' && !empty($doc_number)) {
+                    $cpf = $doc_number;
+                }
+                
+                // Validar CPF apenas se for tipo CPF
+                if ($effectiveDocType === 'CPF' && !empty($cpf)) {
                     $cpfValidation = CpfValidator::validateAndNormalize($cpf);
                     if (!$cpfValidation['isValid']) {
                         throw new Exception($cpfValidation['message']);
                     }
                     $cpf = $cpfValidation['normalized'];
+                    $doc_number = $cpf; // Sincronizar de volta
                 }
                 
                 // Placa: apenas letras e números, maiúscula
                 $placa_veiculo = preg_replace('/[^A-Z0-9]/', '', strtoupper(trim($placa_veiculo)));
-                // ================================================
+                // ====================================================
                 
                 // Validações obrigatórias
                 if (empty($nome)) {
@@ -274,11 +296,16 @@ class PrestadoresServicoController {
                 if (empty($setor)) {
                     throw new Exception("Setor é obrigatório");
                 }
-                if (empty($cpf)) {
-                    throw new Exception("CPF é obrigatório");
+                if (empty($doc_number)) {
+                    throw new Exception("Número do documento é obrigatório");
                 }
                 if (empty($placa_veiculo)) {
                     throw new Exception("Placa de veículo é obrigatória");
+                }
+                
+                // Validar país para documentos internacionais
+                if (in_array($effectiveDocType, ['PASSAPORTE', 'RNE', 'DNI', 'CI', 'OUTROS']) && empty($doc_country)) {
+                    throw new Exception("País é obrigatório para documentos internacionais");
                 }
                 
                 // ========== VALIDAÇÕES TEMPORAIS ==========
@@ -316,12 +343,18 @@ class PrestadoresServicoController {
                     INSERT INTO prestadores_servico (nome, cpf, empresa, funcionario_responsavel, setor, observacao, placa_veiculo, entrada, saida, doc_type, doc_number, doc_country)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ", [
-                    $nome, $cpf, $empresa, $funcionario_responsavel, $setor, $observacao, $placa_veiculo,
+                    $nome, 
+                    $cpf, 
+                    $empresa, 
+                    $funcionario_responsavel, 
+                    $setor, 
+                    $observacao, 
+                    $placa_veiculo,
                     $entrada,
                     $saida ?: null,
-                    null, // doc_type - explicitamente NULL para evitar DEFAULT 'CPF'
-                    null, // doc_number
-                    null  // doc_country - explicitamente NULL para evitar DEFAULT 'BR'
+                    empty($doc_type) ? null : $doc_type,
+                    $doc_number,
+                    $doc_country
                 ]);
                 
                 header('Location: ' . $this->getBaseRoute() . '?success=1');
@@ -358,7 +391,7 @@ class PrestadoresServicoController {
             exit;
         }
         
-        include $this->getViewPath('form.php');
+        include __DIR__ . '/../../views/reports/prestadores_servico/edit.php';
     }
     
     public function update() {
@@ -368,6 +401,9 @@ class PrestadoresServicoController {
                 $id = $_POST['id'] ?? null;
                 $nome = $_POST['nome'] ?? '';
                 $cpf = $_POST['cpf'] ?? '';
+                $doc_type = $_POST['doc_type'] ?? '';
+                $doc_number = $_POST['doc_number'] ?? '';
+                $doc_country = $_POST['doc_country'] ?? 'Brasil';
                 $empresa = $_POST['empresa'] ?? '';
                 $funcionario_responsavel = $_POST['funcionario_responsavel'] ?? '';
                 $setor = $_POST['setor'] ?? '';
@@ -376,26 +412,53 @@ class PrestadoresServicoController {
                 $entrada = $_POST['entrada'] ?? null;
                 $saida = $_POST['saida'] ?? null;
                 
-                // ========== VALIDAR E NORMALIZAR DADOS ==========
-                // Validar CPF com dígitos verificadores
-                if (!empty($cpf)) {
+                // ========== VALIDAR E NORMALIZAR DOCUMENTOS ==========
+                $effectiveDocType = empty($doc_type) ? 'CPF' : strtoupper($doc_type);
+                
+                // Normalizar documento baseado no tipo
+                if (!empty($doc_number)) {
+                    if (in_array($effectiveDocType, ['CPF', 'RG', 'CNH'])) {
+                        // Documentos brasileiros: somente dígitos
+                        $doc_number = preg_replace('/\D/', '', $doc_number);
+                    } else {
+                        // Documentos internacionais: alfanuméricos
+                        $doc_number = strtoupper(trim($doc_number));
+                    }
+                }
+                
+                // Sincronizar CPF se tipo for CPF
+                if ($effectiveDocType === 'CPF' && !empty($doc_number)) {
+                    $cpf = $doc_number;
+                }
+                
+                // Validar CPF apenas se for tipo CPF
+                if ($effectiveDocType === 'CPF' && !empty($cpf)) {
                     $cpfValidation = CpfValidator::validateAndNormalize($cpf);
                     if (!$cpfValidation['isValid']) {
                         throw new Exception($cpfValidation['message']);
                     }
                     $cpf = $cpfValidation['normalized'];
+                    $doc_number = $cpf; // Sincronizar de volta
                 }
                 
                 // Placa: apenas letras e números, maiúscula
                 $placa_veiculo = preg_replace('/[^A-Z0-9]/', '', strtoupper(trim($placa_veiculo)));
-                // ================================================
+                // ====================================================
                 
                 // Validações obrigatórias (simplificadas para edição)
                 if (empty($nome)) {
                     throw new Exception("Nome é obrigatório");
                 }
+                if (empty($doc_number)) {
+                    throw new Exception("Número do documento é obrigatório");
+                }
                 if (empty($placa_veiculo)) {
                     throw new Exception("Placa de veículo é obrigatória");
+                }
+                
+                // Validar país para documentos internacionais
+                if (in_array($effectiveDocType, ['PASSAPORTE', 'RNE', 'DNI', 'CI', 'OUTROS']) && empty($doc_country)) {
+                    throw new Exception("País é obrigatório para documentos internacionais");
                 }
                 
                 // ========== VALIDAÇÕES TEMPORAIS (opcionais para edição) ==========
@@ -428,12 +491,18 @@ class PrestadoresServicoController {
                         entrada = ?, saida = ?, doc_type = ?, doc_number = ?, doc_country = ?, updated_at = CURRENT_TIMESTAMP
                     WHERE id = ?
                 ", [
-                    $nome, $cpf, $empresa, $funcionario_responsavel, $setor, $observacao, $placa_veiculo,
+                    $nome, 
+                    $cpf, 
+                    $empresa, 
+                    $funcionario_responsavel, 
+                    $setor, 
+                    $observacao, 
+                    $placa_veiculo,
                     $entrada ?: null,
                     $saida ?: null,
-                    null, // doc_type - explicitamente NULL
-                    null, // doc_number
-                    null, // doc_country - explicitamente NULL
+                    empty($doc_type) ? null : $doc_type,
+                    $doc_number,
+                    $doc_country,
                     $id
                 ]);
                 
@@ -1115,6 +1184,9 @@ class PrestadoresServicoController {
                 empresa,
                 funcionario_responsavel,
                 cpf,
+                doc_type,
+                doc_number,
+                doc_country,
                 entrada as entrada,
                 saida as saida_at
             FROM prestadores_servico 
@@ -1179,7 +1251,8 @@ class PrestadoresServicoController {
         fputcsv($output, [
             'ID',
             'Nome',
-            'CPF',
+            'Tipo de Documento',
+            'Documento',
             'Setor',
             'Empresa',
             'Funcionário Responsável',
@@ -1189,16 +1262,24 @@ class PrestadoresServicoController {
         ], ';');
         
         // Dados
-        $canViewFullCpf = $this->canViewFullCpf();
         foreach ($prestadores as $prestador) {
-            // Mascarar CPF se necessário
-            $cpf_display = !empty($prestador['cpf']) ? 
-                ($canViewFullCpf ? $prestador['cpf'] : $this->maskCpf($prestador['cpf'])) : '';
+            // Determinar tipo de documento e aplicar mascaramento LGPD
+            $docType = !empty($prestador['doc_type']) ? strtoupper($prestador['doc_type']) : 'CPF';
+            $docNumber = $prestador['doc_number'] ?? $prestador['cpf'] ?? '';
+            
+            // Mascaramento LGPD: mostrar apenas últimos 4 caracteres
+            $maskedDoc = '';
+            if (!empty($docNumber)) {
+                $cleanDoc = preg_replace('/[^0-9A-Za-z]/', '', $docNumber);
+                $lastFour = substr($cleanDoc, -4);
+                $maskedDoc = '**** ' . $lastFour;
+            }
             
             fputcsv($output, [
                 $this->sanitizeForCsv($prestador['id']),
                 $this->sanitizeForCsv($prestador['nome']),
-                $this->sanitizeForCsv($cpf_display),
+                $this->sanitizeForCsv($docType),
+                $this->sanitizeForCsv($maskedDoc),
                 $this->sanitizeForCsv($prestador['setor'] ?? ''),
                 $this->sanitizeForCsv($prestador['empresa'] ?? ''),
                 $this->sanitizeForCsv($prestador['funcionario_responsavel'] ?? ''),

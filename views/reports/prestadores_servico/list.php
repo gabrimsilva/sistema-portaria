@@ -160,7 +160,7 @@ $canDeleteInline = $authService->hasPermission('relatorios.excluir_linha');
                                             <th width="9%">Placa/Veículo</th>
                                             <th width="13%">Empresa</th>
                                             <th width="13%">Funcionário Responsável</th>
-                                            <th width="9%">CPF</th>
+                                            <th width="9%">Documento</th>
                                             <th width="9%">Data/Hora Entrada</th>
                                             <th width="9%">Hora de Saída</th>
                                             <?php if ($canEditInline || $canDeleteInline): ?>
@@ -205,7 +205,29 @@ $canDeleteInline = $authService->hasPermission('relatorios.excluir_linha');
                                                 <td><?= htmlspecialchars($p['empresa'] ?? '') ?></td>
                                                 <td><?= htmlspecialchars($p['funcionario_responsavel'] ?? '') ?></td>
                                                 <td>
-                                                    <span class="text-muted"><?= htmlspecialchars($p['cpf']) ?></span>
+                                                    <?php 
+                                                    // Exibir documento baseado no tipo (com mascaramento LGPD)
+                                                    $docType = $p['doc_type'] ?? '';
+                                                    $docNumber = $p['doc_number'] ?? $p['cpf'] ?? '';
+                                                    
+                                                    // Mascaramento LGPD: mostrar apenas últimos 4 caracteres
+                                                    $maskedDoc = '';
+                                                    if (!empty($docNumber)) {
+                                                        $cleanDoc = preg_replace('/[^0-9A-Za-z]/', '', $docNumber);
+                                                        $lastFour = substr($cleanDoc, -4);
+                                                        $maskedDoc = '**** ' . $lastFour;
+                                                    }
+                                                    
+                                                    if (!empty($docNumber)):
+                                                        // Mostrar tipo de documento se não for CPF
+                                                        if (!empty($docType) && $docType !== 'CPF'):
+                                                    ?>
+                                                        <small class="badge badge-info"><?= htmlspecialchars($docType) ?></small><br>
+                                                        <span class="text-muted"><?= htmlspecialchars($maskedDoc) ?></span>
+                                                    <?php else: ?>
+                                                        <span class="text-muted"><?= htmlspecialchars($maskedDoc) ?></span>
+                                                    <?php endif; ?>
+                                                    <?php endif; ?>
                                                 </td>
                                                 <td><?= $p['entrada_at'] ? date('d/m/Y H:i', strtotime($p['entrada_at'])) : '-' ?></td>
                                                 <td>

@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= isset($prestador) ? 'Editar' : 'Novo' ?> Prestador de Serviço - Sistema de Controle de Acesso</title>
+    <meta name="csrf-token" content="<?= CSRFProtection::generateToken() ?>">
+    <title>Editar Prestador de Serviço - Sistema de Controle de Acesso</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -38,61 +39,8 @@
             </ul>
         </nav>
         
-        <!-- Main Sidebar -->
-        <aside class="main-sidebar sidebar-dark-primary elevation-4">
-            <a href="/dashboard" class="brand-link">
-                <?= LogoService::renderSimpleLogo('renner', 'sidebar'); ?>
-                <span class="brand-text font-weight-light">Controle Acesso</span>
-            </a>
-            
-            <div class="sidebar">
-                <nav class="mt-2">
-                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
-                        <li class="nav-item">
-                            <a href="/dashboard" class="nav-link">
-                                <i class="nav-icon fas fa-tachometer-alt"></i>
-                                <p>Dashboard</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="/prestadores-servico" class="nav-link active">
-                                <i class="nav-icon fas fa-tools"></i>
-                                <p>Prestador de Serviços</p>
-                            </a>
-                        </li>
-                        <li class="nav-item has-treeview">
-                            <a href="#" class="nav-link">
-                                <i class="nav-icon fas fa-chart-bar"></i>
-                                <p>
-                                    Relatórios
-                                    <i class="fas fa-angle-left right"></i>
-                                </p>
-                            </a>
-                            <ul class="nav nav-treeview">
-                                <li class="nav-item">
-                                    <a href="/reports/profissionais-renner" class="nav-link">
-                                        <i class="nav-icon fas fa-user-tie"></i>
-                                        <p>Profissionais Renner</p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="/reports/visitantes" class="nav-link">
-                                        <i class="nav-icon fas fa-users"></i>
-                                        <p>Visitantes</p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="/reports/prestadores-servico" class="nav-link">
-                                        <i class="nav-icon fas fa-tools"></i>
-                                        <p>Prestador de Serviços</p>
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-                    </ul>
-                </nav>
-            </div>
-        </aside>
+        <!-- 🎯 NavigationService: Navegação Unificada -->
+        <?= NavigationService::renderSidebar() ?>
         
         <!-- Content Wrapper -->
         <div class="content-wrapper">
@@ -100,7 +48,7 @@
                 <div class="container-fluid">
                     <div class="row mb-2">
                         <div class="col-sm-6">
-                            <h1 class="m-0"><?= isset($prestador) ? 'Editar' : 'Novo' ?> Prestador de Serviço</h1>
+                            <h1 class="m-0">Editar Prestador de Serviço</h1>
                         </div>
                     </div>
                 </div>
@@ -112,14 +60,12 @@
                         <div class="col-md-8">
                             <div class="card">
                                 <div class="card-header">
-                                    <h3 class="card-title">Dados do Prestador de Serviço</h3>
+                                    <h3 class="card-title">Dados do Prestador</h3>
                                 </div>
                                 
-                                <form method="POST" action="/prestadores-servico?action=<?= isset($prestador) ? 'update' : 'save' ?>">
+                                <form method="POST" action="/reports/prestadores-servico?action=update">
                                     <?= CSRFProtection::getHiddenInput() ?>
-                                    <?php if (isset($prestador)): ?>
-                                        <input type="hidden" name="id" value="<?= $prestador['id'] ?>">
-                                    <?php endif; ?>
+                                    <input type="hidden" name="id" value="<?= $prestador['id'] ?>">
                                     
                                     <div class="card-body">
                                         <?php if (isset($error)): ?>
@@ -128,14 +74,10 @@
                                             </div>
                                         <?php endif; ?>
                                         
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="nome">Nome Completo *</label>
-                                                    <input type="text" class="form-control" id="nome" name="nome" 
-                                                           value="<?= htmlspecialchars($prestador['nome'] ?? '') ?>" required>
-                                                </div>
-                                            </div>
+                                        <div class="form-group">
+                                            <label>Nome Completo *</label>
+                                            <input type="text" class="form-control" id="nome" name="nome" 
+                                                   value="<?= htmlspecialchars($prestador['nome'] ?? '') ?>" required>
                                         </div>
                                         
                                         <div class="row">
@@ -147,9 +89,9 @@
                                                         <option value="RG" <?= ($prestador['doc_type'] ?? '') === 'RG' ? 'selected' : '' ?>>RG</option>
                                                         <option value="CNH" <?= ($prestador['doc_type'] ?? '') === 'CNH' ? 'selected' : '' ?>>CNH</option>
                                                         <option value="PASSAPORTE" <?= ($prestador['doc_type'] ?? '') === 'PASSAPORTE' ? 'selected' : '' ?>>Passaporte</option>
-                                                        <option value="RNE" <?= ($prestador['doc_type'] ?? '') === 'RNE' ? 'selected' : '' ?>>RNE (Registro Nacional de Estrangeiro)</option>
-                                                        <option value="DNI" <?= ($prestador['doc_type'] ?? '') === 'DNI' ? 'selected' : '' ?>>DNI (Documento Nacional de Identidad)</option>
-                                                        <option value="CI" <?= ($prestador['doc_type'] ?? '') === 'CI' ? 'selected' : '' ?>>CI (Cédula de Identidad)</option>
+                                                        <option value="RNE" <?= ($prestador['doc_type'] ?? '') === 'RNE' ? 'selected' : '' ?>>RNE</option>
+                                                        <option value="DNI" <?= ($prestador['doc_type'] ?? '') === 'DNI' ? 'selected' : '' ?>>DNI</option>
+                                                        <option value="CI" <?= ($prestador['doc_type'] ?? '') === 'CI' ? 'selected' : '' ?>>CI</option>
                                                         <option value="OUTROS" <?= ($prestador['doc_type'] ?? '') === 'OUTROS' ? 'selected' : '' ?>>Outros</option>
                                                     </select>
                                                     <small class="text-muted">Deixe vazio para CPF</small>
@@ -159,7 +101,7 @@
                                                 <div class="form-group">
                                                     <label for="doc_number">Número do Documento *</label>
                                                     <input type="text" class="form-control" id="doc_number" name="doc_number" 
-                                                           value="<?= htmlspecialchars($prestador['doc_number'] ?? '') ?>" required>
+                                                           value="<?= htmlspecialchars($prestador['doc_number'] ?? $prestador['cpf'] ?? '') ?>" required>
                                                     <small class="text-muted">Máscara automática por tipo</small>
                                                 </div>
                                             </div>
@@ -178,70 +120,63 @@
                                         <div class="row">
                                             <div class="col-md-6">
                                                 <div class="form-group">
-                                                    <label for="empresa">Empresa</label>
+                                                    <label>Empresa</label>
                                                     <input type="text" class="form-control" id="empresa" name="empresa" 
                                                            value="<?= htmlspecialchars($prestador['empresa'] ?? '') ?>">
                                                 </div>
                                             </div>
                                             <div class="col-md-6">
                                                 <div class="form-group">
-                                                    <label for="setor">Setor</label>
+                                                    <label>Setor</label>
                                                     <input type="text" class="form-control" id="setor" name="setor" 
                                                            value="<?= htmlspecialchars($prestador['setor'] ?? '') ?>">
                                                 </div>
                                             </div>
                                         </div>
                                         
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="funcionario_responsavel">Funcionário Responsável</label>
-                                                    <input type="text" class="form-control" id="funcionario_responsavel" name="funcionario_responsavel" 
-                                                           value="<?= htmlspecialchars($prestador['funcionario_responsavel'] ?? '') ?>">
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="placa_veiculo">Placa de Veículo *</label>
-                                                    <div class="input-group">
-                                                        <input type="text" class="form-control" id="placa_veiculo" name="placa_veiculo" 
-                                                               value="<?= htmlspecialchars($prestador['placa_veiculo'] ?? '') ?>" 
-                                                               placeholder="ABC-1234" style="text-transform: uppercase;" required>
-                                                        <span class="input-group-text">
-                                                            <input type="checkbox" id="ape_checkbox" <?= ($prestador['placa_veiculo'] ?? '') === 'APE' ? 'checked' : '' ?>>
-                                                            <label for="ape_checkbox" class="ml-1 mb-0">A pé</label>
-                                                        </span>
+                                        <div class="form-group">
+                                            <label>Funcionário Responsável</label>
+                                            <input type="text" class="form-control" id="funcionario_responsavel" name="funcionario_responsavel" 
+                                                   value="<?= htmlspecialchars($prestador['funcionario_responsavel'] ?? '') ?>">
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <label>Placa de Veículo</label>
+                                            <div class="input-group">
+                                                <input type="text" class="form-control text-uppercase" id="placa_veiculo" name="placa_veiculo" 
+                                                       value="<?= htmlspecialchars($prestador['placa_veiculo'] ?? '') ?>" maxlength="7">
+                                                <div class="input-group-append">
+                                                    <div class="input-group-text">
+                                                        <input type="checkbox" id="ape_checkbox" <?= ($prestador['placa_veiculo'] ?? '') === 'APE' ? 'checked' : '' ?>>
+                                                        <label for="ape_checkbox" class="ml-1 mb-0">A pé</label>
                                                     </div>
-                                                    <small class="form-text text-muted">Marque "A pé" se não houver veículo</small>
                                                 </div>
                                             </div>
+                                            <small class="text-muted">Marque "A pé" se não houver veículo</small>
                                         </div>
                                         
                                         <div class="row">
                                             <div class="col-md-6">
                                                 <div class="form-group">
-                                                    <label for="entrada">Data/Hora de Entrada</label>
-                                                    <input type="datetime-local" class="form-control" id="entrada" name="entrada" 
-                                                           value="<?= $prestador['entrada'] ? date('Y-m-d\TH:i', strtotime($prestador['entrada'])) : '' ?>">
+                                                    <label>Data/Hora de Entrada</label>
+                                                    <input type="datetime-local" class="form-control" id="entrada" name="entrada"
+                                                           value="<?= !empty($prestador['entrada']) ? date('Y-m-d\TH:i', strtotime($prestador['entrada'])) : '' ?>">
                                                 </div>
                                             </div>
+                                            
                                             <div class="col-md-6">
                                                 <div class="form-group">
-                                                    <label for="saida">Data/Hora de Saída</label>
-                                                    <input type="datetime-local" class="form-control" id="saida" name="saida" 
-                                                           value="<?= $prestador['saida'] ? date('Y-m-d\TH:i', strtotime($prestador['saida'])) : '' ?>">
+                                                    <label>Data/Hora de Saída</label>
+                                                    <input type="datetime-local" class="form-control" id="saida" name="saida"
+                                                           value="<?= !empty($prestador['saida']) ? date('Y-m-d\TH:i', strtotime($prestador['saida'])) : '' ?>">
+                                                    <small class="text-muted">Deixe em branco se ainda não saiu</small>
                                                 </div>
                                             </div>
                                         </div>
                                         
-                                        <div class="row">
-                                            <div class="col-md-12">
-                                                <div class="form-group">
-                                                    <label for="observacao">Observações</label>
-                                                    <textarea class="form-control" id="observacao" name="observacao" rows="3" 
-                                                              placeholder="Observações sobre o serviço prestado..."><?= htmlspecialchars($prestador['observacao'] ?? '') ?></textarea>
-                                                </div>
-                                            </div>
+                                        <div class="form-group">
+                                            <label>Observações</label>
+                                            <textarea class="form-control" id="observacao" name="observacao" rows="3"><?= htmlspecialchars($prestador['observacao'] ?? '') ?></textarea>
                                         </div>
                                     </div>
                                     
@@ -249,7 +184,7 @@
                                         <button type="submit" class="btn btn-primary">
                                             <i class="fas fa-save"></i> Salvar
                                         </button>
-                                        <a href="/prestadores-servico" class="btn btn-secondary">
+                                        <a href="/reports/prestadores-servico" class="btn btn-secondary">
                                             <i class="fas fa-arrow-left"></i> Voltar
                                         </a>
                                     </div>
@@ -265,28 +200,6 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
-    
-    <script>
-    $(document).ready(function() {
-        let previousValue = '';
-        
-        // Controlar checkbox "A pé"
-        $('#ape_checkbox').change(function() {
-            if ($(this).is(':checked')) {
-                previousValue = $('#placa_veiculo').val() !== 'APE' ? $('#placa_veiculo').val() : '';
-                $('#placa_veiculo').val('APE').prop('readonly', true);
-            } else {
-                $('#placa_veiculo').val(previousValue).prop('readonly', false);
-            }
-        });
-        
-        // Verificar estado inicial
-        if ($('#placa_veiculo').val() === 'APE') {
-            $('#ape_checkbox').prop('checked', true);
-            $('#placa_veiculo').prop('readonly', true);
-        }
-    });
-    </script>
     
     <script>
     $(document).ready(function() {
@@ -356,6 +269,25 @@
         // Inicializar estado do campo país e máscara
         toggleCountryField();
         applyDocumentMask();
+        
+        // ========================================
+        // CONTROLE CHECKBOX "A PÉ"
+        // ========================================
+        
+        let previousValue = $('#placa_veiculo').val();
+        $('#ape_checkbox').on('change', function() {
+            if ($(this).is(':checked')) {
+                previousValue = $('#placa_veiculo').val();
+                $('#placa_veiculo').val('APE').prop('readonly', true);
+            } else {
+                $('#placa_veiculo').val(previousValue).prop('readonly', false);
+            }
+        });
+        
+        // Se já está marcado como "A pé", deixar readonly
+        if ($('#ape_checkbox').is(':checked')) {
+            $('#placa_veiculo').prop('readonly', true);
+        }
     });
     </script>
 </body>

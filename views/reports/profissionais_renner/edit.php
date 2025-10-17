@@ -122,7 +122,7 @@
                                         
                                         <div class="form-group">
                                             <label>Hora de Saída Final</label>
-                                            <input type="datetime-local" class="form-control" id="hora_saida" name="hora_saida"
+                                            <input type="datetime-local" class="form-control" id="saida_final" name="saida_final"
                                                    value="<?= !empty($profissional['saida_final']) ? date('Y-m-d\TH:i', strtotime($profissional['saida_final'])) : '' ?>">
                                             <small class="text-muted">Deixe em branco se a pessoa ainda não saiu da empresa</small>
                                         </div>

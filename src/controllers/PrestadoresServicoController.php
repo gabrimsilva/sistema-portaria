@@ -607,6 +607,9 @@ class PrestadoresServicoController {
                 
                 $nome = trim($_POST['nome'] ?? '');
                 $cpf = trim($_POST['cpf'] ?? '');
+                $doc_type = trim($_POST['doc_type'] ?? '');
+                $doc_number = trim($_POST['doc_number'] ?? '');
+                $doc_country = trim($_POST['doc_country'] ?? 'Brasil');
                 $empresa = trim($_POST['empresa'] ?? '');
                 $funcionario_responsavel = trim($_POST['funcionario_responsavel'] ?? '');
                 $setor = trim($_POST['setor'] ?? '');
@@ -614,12 +617,32 @@ class PrestadoresServicoController {
                 $placa_veiculo = trim($_POST['placa_veiculo'] ?? '');
                 $entrada_input = trim($_POST['entrada'] ?? '');
                 
-                // ========== NORMALIZAR DADOS ==========
-                // CPF: apenas dígitos
-                $cpf = preg_replace('/\D/', '', $cpf);
+                // ========== SISTEMA MULTI-DOCUMENTO ==========
+                // Se doc_number foi fornecido, usa ele; senão usa CPF legado
+                if (!empty($doc_number)) {
+                    $effectiveDocType = !empty($doc_type) ? $doc_type : 'CPF';
+                    
+                    // Normalizar documento baseado no tipo
+                    if (in_array($effectiveDocType, ['CPF', 'RG', 'CNH', ''])) {
+                        $doc_number = preg_replace('/\D/', '', $doc_number);
+                    } else {
+                        $doc_number = strtoupper(trim($doc_number));
+                    }
+                    
+                    // Sincronizar com CPF para compatibilidade
+                    if ($effectiveDocType === 'CPF' || $effectiveDocType === '') {
+                        $cpf = $doc_number;
+                    }
+                } else {
+                    // Fallback para CPF legado
+                    $cpf = preg_replace('/\D/', '', $cpf);
+                    $doc_type = '';
+                    $doc_number = $cpf;
+                }
+                // ===========================================
+                
                 // Placa: apenas letras e números, maiúscula
                 $placa_veiculo = preg_replace('/[^A-Z0-9]/', '', strtoupper(trim($placa_veiculo)));
-                // =====================================
                 
                 // Validações obrigatórias
                 if (empty($nome)) {
@@ -630,8 +653,8 @@ class PrestadoresServicoController {
                     echo json_encode(['success' => false, 'message' => 'Setor é obrigatório']);
                     return;
                 }
-                if (empty($cpf)) {
-                    echo json_encode(['success' => false, 'message' => 'CPF é obrigatório']);
+                if (empty($doc_number)) {
+                    echo json_encode(['success' => false, 'message' => 'Número do documento é obrigatório']);
                     return;
                 }
                 if (empty($placa_veiculo)) {
@@ -639,13 +662,16 @@ class PrestadoresServicoController {
                     return;
                 }
                 
-                // Validar CPF
-                $cpfValidation = CpfValidator::validateAndNormalize($cpf);
-                if (!$cpfValidation['isValid']) {
-                    echo json_encode(['success' => false, 'message' => $cpfValidation['message']]);
-                    return;
+                // Validar CPF se o tipo de documento for CPF
+                if ($doc_type === 'CPF' || $doc_type === '' || empty($doc_type)) {
+                    $cpfValidation = CpfValidator::validateAndNormalize($doc_number);
+                    if (!$cpfValidation['isValid']) {
+                        echo json_encode(['success' => false, 'message' => $cpfValidation['message']]);
+                        return;
+                    }
+                    $cpf = $cpfValidation['normalized'];
+                    $doc_number = $cpfValidation['normalized'];
                 }
-                $cpf = $cpfValidation['normalized'];
                 
                 // Usar hora especificada ou hora atual se não fornecida
                 if (!empty($entrada_input)) {
@@ -679,10 +705,10 @@ class PrestadoresServicoController {
                 // ===============================================
                 
                 $this->db->query("
-                    INSERT INTO prestadores_servico (nome, cpf, empresa, funcionario_responsavel, setor, observacao, placa_veiculo, entrada)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO prestadores_servico (nome, cpf, doc_type, doc_number, doc_country, empresa, funcionario_responsavel, setor, observacao, placa_veiculo, entrada)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ", [
-                    $nome, $cpf, $empresa, $funcionario_responsavel, $setor, $observacao, $placa_veiculo, $entrada
+                    $nome, $cpf, $doc_type, $doc_number, $doc_country, $empresa, $funcionario_responsavel, $setor, $observacao, $placa_veiculo, $entrada
                 ]);
                 
                 $id = $this->db->lastInsertId();

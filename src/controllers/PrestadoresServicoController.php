@@ -924,23 +924,16 @@ class PrestadoresServicoController {
                 // Parse saida if provided
                 $saida_parsed = null;
                 if (!empty($saida)) {
-                    // Log para debug
-                    error_log("DEBUG SAIDA - Valor recebido: " . $saida);
-                    
                     $date = DateTime::createFromFormat('Y-m-d\TH:i:s', $saida);
                     if (!$date) {
                         $date = DateTime::createFromFormat('Y-m-d\TH:i', $saida);
                     }
                     if ($date) {
                         $saida_parsed = $date->format('Y-m-d H:i:s');
-                        error_log("DEBUG SAIDA - Valor parseado: " . $saida_parsed);
                     } else {
-                        error_log("DEBUG SAIDA - ERRO no parse! Formato: " . $saida);
                         echo json_encode(['success' => false, 'message' => 'Formato de data/hora de saída inválido: ' . $saida]);
                         return;
                     }
-                } else {
-                    error_log("DEBUG SAIDA - Campo vazio ou não enviado");
                 }
                 
                 // ========== VALIDAÇÕES DE DUPLICIDADE PARA EDIÇÃO ==========

@@ -621,10 +621,6 @@ class PrestadoresServicoController {
                 // Lógica: se doc_type está vazio/null, usar modo legado (apenas CPF)
                 // Constraint: doc_type e doc_number devem ser AMBOS NULL ou AMBOS preenchidos
                 
-                error_log("🔍 DEBUG PRESTADOR saveAjax - doc_type recebido: " . var_export($doc_type, true));
-                error_log("🔍 DEBUG PRESTADOR saveAjax - doc_number recebido: " . var_export($doc_number, true));
-                error_log("🔍 DEBUG PRESTADOR saveAjax - cpf recebido: " . var_export($cpf, true));
-                
                 if (!empty($doc_type)) {
                     // Tipo de documento especificado (RG, CNH, Passaporte, etc)
                     
@@ -646,11 +642,6 @@ class PrestadoresServicoController {
                     $doc_type = null;
                     $doc_number = null; // NULL para respeitar constraint
                 }
-                
-                error_log("✅ DEBUG PRESTADOR saveAjax - Após processamento:");
-                error_log("   - doc_type: " . var_export($doc_type, true));
-                error_log("   - doc_number: " . var_export($doc_number, true));
-                error_log("   - cpf: " . var_export($cpf, true));
                 // ===========================================
                 
                 // Placa: apenas letras e números, maiúscula
@@ -665,7 +656,11 @@ class PrestadoresServicoController {
                     echo json_encode(['success' => false, 'message' => 'Setor é obrigatório']);
                     return;
                 }
-                if (empty($doc_number)) {
+                // Validar documento: se doc_type é NULL (modo legado), validar CPF; senão validar doc_number
+                if ($doc_type === null && empty($cpf)) {
+                    echo json_encode(['success' => false, 'message' => 'CPF é obrigatório']);
+                    return;
+                } elseif ($doc_type !== null && empty($doc_number)) {
                     echo json_encode(['success' => false, 'message' => 'Número do documento é obrigatório']);
                     return;
                 }
@@ -815,7 +810,11 @@ class PrestadoresServicoController {
                     echo json_encode(['success' => false, 'message' => 'Setor é obrigatório']);
                     return;
                 }
-                if (empty($doc_number)) {
+                // Validar documento: se doc_type é NULL (modo legado), validar CPF; senão validar doc_number
+                if ($doc_type === null && empty($cpf)) {
+                    echo json_encode(['success' => false, 'message' => 'CPF é obrigatório']);
+                    return;
+                } elseif ($doc_type !== null && empty($doc_number)) {
                     echo json_encode(['success' => false, 'message' => 'Número do documento é obrigatório']);
                     return;
                 }

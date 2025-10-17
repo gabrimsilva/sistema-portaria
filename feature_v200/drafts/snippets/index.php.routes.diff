@@ -1,0 +1,87 @@
+--- public/index.php.original
++++ public/index.php.new
+@@ -210,6 +210,81 @@
+             break;
+             
+         case 'prestadores-servico':
++            require_once '../src/controllers/PrestadoresServicoController.php';
++            $controller = new PrestadoresServicoController();
++            $action = $_GET['action'] ?? 'index';
++            switch ($action) {
++                case 'new':
++                    $controller->create();
++                    break;
++                // ... (código existente)
++            }
++            break;
++        
++        // ========================================
++        // NOVO: PRÉ-CADASTROS - VISITANTES
++        // ========================================
++        case 'pre-cadastros/visitantes':
++            require_once '../src/controllers/PreCadastrosVisitantesController.php';
++            $controller = new PreCadastrosVisitantesController();
++            $action = $_GET['action'] ?? 'index';
++            
++            switch ($action) {
++                case 'index':
++                    // Lista de pré-cadastros
++                    $controller->index();
++                    break;
++                    
++                case 'new':
++                    // Formulário de novo pré-cadastro
++                    $controller->create();
++                    break;
++                    
++                case 'save':
++                    // Salvar pré-cadastro
++                    $controller->save();
++                    break;
++                    
++                case 'edit':
++                    // Formulário de edição
++                    $id = $_GET['id'] ?? null;
++                    $controller->edit($id);
++                    break;
++                    
++                case 'update':
++                    // Atualizar pré-cadastro
++                    $controller->update();
++                    break;
++                    
++                case 'delete':
++                    // Desativar pré-cadastro (soft delete)
++                    $id = $_GET['id'] ?? null;
++                    $controller->delete($id);
++                    break;
++                    
++                case 'renovar':
++                    // Renovar validade (+1 ano)
++                    $id = $_GET['id'] ?? null;
++                    $controller->renovar($id);
++                    break;
++                    
++                default:
++                    $controller->index();
++                    break;
++            }
++            break;
++        
++        // ========================================
++        // NOVO: PRÉ-CADASTROS - PRESTADORES
++        // ========================================
++        case 'pre-cadastros/prestadores':
++            require_once '../src/controllers/PreCadastrosPrestadoresController.php';
++            $controller = new PreCadastrosPrestadoresController();
++            $action = $_GET['action'] ?? 'index';
++            
++            // Mesma estrutura de ações do visitantes
++            // (código idêntico, apenas troca o controller)
++            break;
++        
++        // ========================================
++        // ROTAS EXISTENTES (sem alteração)
++        // ========================================
+             require_once '../src/controllers/PrestadoresServicoController.php';
+             $controller = new PrestadoresServicoController();

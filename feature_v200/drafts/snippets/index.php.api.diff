@@ -1,0 +1,76 @@
+--- public/index.php.original
++++ public/index.php.new
+@@ -550,6 +550,75 @@
+             }
+             break;
+             
++        // ========================================
++        // NOVO: API PRÉ-CADASTROS
++        // ========================================
++        
++        case 'api/pre-cadastros/buscar':
++            // API: Buscar pré-cadastros por nome/documento (autocomplete dashboard)
++            require_once '../src/controllers/ApiPreCadastrosController.php';
++            $controller = new ApiPreCadastrosController();
++            $controller->buscar();
++            break;
++            
++        case 'api/pre-cadastros/verificar-validade':
++            // API: Verificar se cadastro está válido
++            require_once '../src/controllers/ApiPreCadastrosController.php';
++            $controller = new ApiPreCadastrosController();
++            $id = $_GET['id'] ?? null;
++            $tipo = $_GET['tipo'] ?? 'visitante'; // 'visitante' ou 'prestador'
++            $controller->verificarValidade($id, $tipo);
++            break;
++            
++        case 'api/pre-cadastros/obter-dados':
++            // API: Obter dados do pré-cadastro (preencher formulário dashboard)
++            require_once '../src/controllers/ApiPreCadastrosController.php';
++            $controller = new ApiPreCadastrosController();
++            $id = $_GET['id'] ?? null;
++            $tipo = $_GET['tipo'] ?? 'visitante';
++            $controller->obterDados($id, $tipo);
++            break;
++            
++        case 'api/pre-cadastros/renovar':
++            // API: Renovar validade de cadastro expirado (+1 ano)
++            require_once '../src/controllers/ApiPreCadastrosController.php';
++            $controller = new ApiPreCadastrosController();
++            
++            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
++                $controller->renovar();
++            } else {
++                http_response_code(405);
++                echo json_encode(['success' => false, 'message' => 'Método não permitido']);
++            }
++            break;
++            
++        case 'api/pre-cadastros/stats':
++            // API: Estatísticas de pré-cadastros (dashboard cards)
++            require_once '../src/controllers/ApiPreCadastrosController.php';
++            $controller = new ApiPreCadastrosController();
++            $controller->stats();
++            break;
++            
++        case 'api/pre-cadastros/visitantes/list':
++            // API: Listar visitantes pré-cadastrados (JSON para DataTables)
++            require_once '../src/controllers/PreCadastrosVisitantesController.php';
++            $controller = new PreCadastrosVisitantesController();
++            $controller->listJson();
++            break;
++            
++        case 'api/pre-cadastros/prestadores/list':
++            // API: Listar prestadores pré-cadastrados (JSON para DataTables)
++            require_once '../src/controllers/PreCadastrosPrestadoresController.php';
++            $controller = new PreCadastrosPrestadoresController();
++            $controller->listJson();
++            break;
++            
++        // ========================================
++        // ROTAS EXISTENTES (sem alteração)
++        // ========================================
++        
+         case 'api/audit-logs':
+             require_once '../src/controllers/AuditLogController.php';
+             $controller = new AuditLogController();

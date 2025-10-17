@@ -354,8 +354,9 @@ class PrestadoresServicoController {
                 // ==========================================
                 
                 // ========== VALIDAÇÕES DE DUPLICIDADE ==========
+                // Apenas validar duplicidade de CPF se o tipo de documento for CPF ou modo legado
                 $dadosValidacao = [
-                    'cpf' => $cpf,
+                    'cpf' => ($doc_type === null || $doc_type === 'CPF') ? $cpf : null,
                     'placa_veiculo' => $placa_veiculo,
                     'entrada' => $entrada
                 ];
@@ -759,8 +760,9 @@ class PrestadoresServicoController {
                 }
                 
                 // ========== VALIDAÇÕES DE DUPLICIDADE ==========
+                // Apenas validar duplicidade de CPF se o tipo de documento for CPF ou modo legado
                 $dadosValidacao = [
-                    'cpf' => $cpf,
+                    'cpf' => ($doc_type === null || $doc_type === 'CPF') ? $cpf : null,
                     'placa_veiculo' => $placa_veiculo,
                     'entrada' => $entrada
                 ];

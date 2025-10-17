@@ -669,8 +669,17 @@ class PrestadoresServicoController {
                     return;
                 }
                 
-                // Validar CPF se o tipo de documento for CPF
-                if ($doc_type === 'CPF' || $doc_type === '' || empty($doc_type)) {
+                // Validar CPF se o tipo de documento for CPF ou modo legado (NULL)
+                if ($doc_type === null) {
+                    // Modo legado: validar CPF
+                    $cpfValidation = CpfValidator::validateAndNormalize($cpf);
+                    if (!$cpfValidation['isValid']) {
+                        echo json_encode(['success' => false, 'message' => $cpfValidation['message']]);
+                        return;
+                    }
+                    $cpf = $cpfValidation['normalized'];
+                } elseif ($doc_type === 'CPF') {
+                    // CPF explícito: validar doc_number
                     $cpfValidation = CpfValidator::validateAndNormalize($doc_number);
                     if (!$cpfValidation['isValid']) {
                         echo json_encode(['success' => false, 'message' => $cpfValidation['message']]);
@@ -823,8 +832,17 @@ class PrestadoresServicoController {
                     return;
                 }
                 
-                // Validar CPF se o tipo de documento for CPF
-                if ($doc_type === 'CPF' || $doc_type === '' || empty($doc_type)) {
+                // Validar CPF se o tipo de documento for CPF ou modo legado (NULL)
+                if ($doc_type === null) {
+                    // Modo legado: validar CPF
+                    $cpfValidation = CpfValidator::validateAndNormalize($cpf);
+                    if (!$cpfValidation['isValid']) {
+                        echo json_encode(['success' => false, 'message' => $cpfValidation['message']]);
+                        return;
+                    }
+                    $cpf = $cpfValidation['normalized'];
+                } elseif ($doc_type === 'CPF') {
+                    // CPF explícito: validar doc_number
                     $cpfValidation = CpfValidator::validateAndNormalize($doc_number);
                     if (!$cpfValidation['isValid']) {
                         echo json_encode(['success' => false, 'message' => $cpfValidation['message']]);

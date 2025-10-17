@@ -64,7 +64,8 @@
                                 
                                 <form method="POST" action="/reports/profissionais-renner?action=update">
                                     <?= CSRFProtection::getHiddenInput() ?>
-                                    <input type="hidden" name="id" value="<?= $profissional['id'] ?>">
+                                    <input type="hidden" name="id" value="<?= $profissional['profissional_renner_id'] ?>">
+                                    <input type="hidden" name="registro_id" value="<?= $profissional['id'] ?>">
                                     
                                     <div class="card-body">
                                         <?php if (isset($error)): ?>

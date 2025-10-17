@@ -118,7 +118,7 @@ class PrestadoresServicoController {
                 doc_country,
                 cpf,
                 entrada as entrada_at,
-                saida,
+                saida_consolidada as saida,
                 validity_status
             FROM vw_prestadores_consolidado 
             WHERE entrada IS NOT NULL";

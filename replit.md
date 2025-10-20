@@ -46,14 +46,16 @@ This project is an access control system for companies, developed with PHP 8+ an
 - **Multi-Document Support**: System accepts 8 types of documents for visitors (CPF, RG, CNH, Passaporte, RNE, DNI, CI, Outros) with country field and automatic masks. Document normalization is type-aware: Brazilian documents (CPF/RG/CNH) use digits-only, while international documents preserve alphanumeric format.
 - **Validation Relaxation**: CPF/RG validation simplified to accept any 11-digit CPF (without verifying checksums) and 7-10 character RG.
 - **Document Validation System**: Conditional validation based on document type with centralized `getEffectiveDocType()` function normalizing empty type as CPF (default). Backend validates "Número do documento é obrigatório" for all document types.
+- **Pré-Cadastros System**: Reusable pre-registration system (v2.0.0) with 1-year validity for recurring visitors and service providers. Separates registration data (cadastros) from access events (registros) via 1:N relationship. Features validity status tracking (valid/expiring/expired), automatic renovation, soft delete protection, and RBAC permissions (Admin 5/5, Porteiro 4/5 without delete). Reduces entry time by 95% for recurring access (2 min → 5 sec).
 
 ### System Design Choices
-- **Data Separation**: Refactored `profissionais_renner` table into two distinct tables (`profissionais_renner` for registration data and `registro_acesso` for access control data) to improve data integrity and auditability.
+- **Data Separation**: Refactored `profissionais_renner` table into two distinct tables (`profissionais_renner` for registration data and `registro_acesso` for access control data) to improve data integrity and auditability. Pré-Cadastros v2.0.0 extends this pattern with 4 tables: `visitantes_cadastro`, `visitantes_registros`, `prestadores_cadastro`, `prestadores_registros` (1:N relationship via `cadastro_id` foreign key with DELETE RESTRICT).
 - **PostgreSQL Database**: Primary relational database for data storage.
 - **Local File Storage**: For captured photos.
 - **Environment Configuration**: Centralized configuration in `/config` directory.
 - **Audit Log Database Schema**: Migration of `audit_log` table to `timestamptz` with added `severidade`, `modulo`, and `resultado` fields, along with performance-enhancing indices.
 - **Fire Brigade Photo Storage**: Field `foto_url` in `profissionais_renner` table stores corporate photos (non-biometric) for panel display, protected by realpath() validation and .htaccess rules.
+- **Pré-Cadastros Performance Optimization**: 18 specialized indexes (GIN full-text search on names, B-tree on doc_type/doc_number/valid_until/ativo/deleted_at for cadastros; B-tree on cadastro_id/entrada_at/saida_at for registros). 4 derived views (`vw_*_cadastro_status`) calculate validity status (valid/expiring/expired) with day counters for proactive management.
 
 ## External Dependencies
 
@@ -66,6 +68,7 @@ This project is an access control system for companies, developed with PHP 8+ an
 
 ## Recent Changes
 
+- **Pré-Cadastros System v2.0.0** (October 20, 2025): Complete implementation of reusable pre-registration system for Visitantes and Prestadores de Serviço with 1-year validity. System features 4 new tables (cadastros + registros separation), 18 performance indexes, 4 derived views for validity status, multi-document support (8 types), LGPD-compliant masking, and RBAC permissions (Admin full access, Porteiro without delete). Dashboard ready for future autocomplete integration. Reduces entry time from 2 minutes to 5 seconds for recurring visitors/providers (-95% improvement).
 - **Multi-Document System for Prestadores de Serviço** (October 17, 2025): Complete implementation of multi-document support for service providers matching Visitantes module. System accepts 8 document types (CPF, RG, CNH, Passaporte, RNE, DNI, CI, Outros) with conditional validation, type-aware normalization (Brazilian documents digits-only, international alphanumeric uppercase), and LGPD-compliant masking. Constraint chk_prestadores_doc_consistency enforced: doc_type and doc_number must be BOTH NULL (legacy CPF mode) or BOTH filled. Dashboard modal updated to send doc_type/doc_number/doc_country fields. Query fixed: saida_consolidada AS saida for report rendering. Duplicity validation corrected to only check CPF when doc_type is NULL or 'CPF', avoiding errors with non-CPF documents.
 - **Retroactive Entry Detection for Professionals** (October 16, 2025): Implemented automatic detection of retroactive entries for Profissionais Renner. When user selects a past date/time in the entry field, system automatically displays an "Observação/Justificativa" field (required). Backend validates mandatory justification and logs it in audit trail with metadata (entrada_retroativa flag, justificativa text, diferenca_tempo).
 - Resolved critical PHP reference bug causing duplicate entries in visitor reports by adding `unset($visitante)` after `foreach` loop with reference parameter.

@@ -19,7 +19,13 @@ class AuthorizationService {
             'registro_acesso.delete',
             'registro_acesso.edit_all_fields',
             'audit_log.read',
-            'usuarios.manage'
+            'usuarios.manage',
+            // Pré-Cadastros (Full Access)
+            'pre_cadastros.read',
+            'pre_cadastros.create',
+            'pre_cadastros.update',
+            'pre_cadastros.delete',
+            'pre_cadastros.renovar'
         ],
         'seguranca' => [
             'registro_acesso.create',
@@ -38,7 +44,12 @@ class AuthorizationService {
             'registro_acesso.read',
             'registro_acesso.update',
             'registro_acesso.checkin',
-            'registro_acesso.checkout'
+            'registro_acesso.checkout',
+            // Pré-Cadastros (Limited Access - sem delete)
+            'pre_cadastros.read',
+            'pre_cadastros.create',
+            'pre_cadastros.update',
+            'pre_cadastros.renovar'
         ]
     ];
     

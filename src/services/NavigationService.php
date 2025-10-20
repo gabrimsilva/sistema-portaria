@@ -82,6 +82,27 @@ class NavigationService
             'children' => []
         ],
         [
+            'id' => 'pre-cadastros',
+            'label' => 'Pré-Cadastros',
+            'url' => '#',
+            'icon' => 'fas fa-address-card',
+            'permission' => ['administrador', 'porteiro'],
+            'children' => [
+                [
+                    'id' => 'pre-cadastros-visitantes',
+                    'label' => 'Visitantes',
+                    'url' => '/pre-cadastros/visitantes',
+                    'icon' => 'fas fa-users'
+                ],
+                [
+                    'id' => 'pre-cadastros-prestadores',
+                    'label' => 'Prestadores de Serviço',
+                    'url' => '/pre-cadastros/prestadores',
+                    'icon' => 'fas fa-tools'
+                ]
+            ]
+        ],
+        [
             'id' => 'config',
             'label' => 'Configurações',
             'url' => '/config',
@@ -116,6 +137,8 @@ class NavigationService
         '/brigada' => ['brigada'],
         '/ramais' => ['ramais'],
         '/importacao' => ['importacao'],
+        '/pre-cadastros/visitantes' => ['pre-cadastros', 'pre-cadastros-visitantes'],
+        '/pre-cadastros/prestadores' => ['pre-cadastros', 'pre-cadastros-prestadores'],
         '/config' => ['config']
     ];
 

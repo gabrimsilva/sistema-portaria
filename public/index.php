@@ -794,6 +794,25 @@ try {
             }
             
             // ============================================
+            // 🆕 V2.0.0 - PRÉ-CADASTROS API
+            // ============================================
+            else if (preg_match('/^api\/pre-cadastros\/buscar$/', $path)) {
+                require_once '../src/controllers/ApiPreCadastrosController.php';
+                $controller = new ApiPreCadastrosController();
+                $controller->buscar();
+            }
+            else if (preg_match('/^api\/pre-cadastros\/obter$/', $path)) {
+                require_once '../src/controllers/ApiPreCadastrosController.php';
+                $controller = new ApiPreCadastrosController();
+                $controller->obterDados();
+            }
+            else if (preg_match('/^api\/pre-cadastros\/verificar-validade$/', $path)) {
+                require_once '../src/controllers/ApiPreCadastrosController.php';
+                $controller = new ApiPreCadastrosController();
+                $controller->verificarValidade();
+            }
+            
+            // ============================================
             // 🆕 V2.0.0 - RAMAIS (rotas dinâmicas)
             // ============================================
             else if (preg_match('/^api\/ramais\/(\d+)$/', $path, $matches)) {

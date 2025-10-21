@@ -7,7 +7,7 @@
  */
 
 $pageTitle = 'Novo Pré-Cadastro - Visitante';
-require_once __DIR__ . '/../../../views/partials/header.php';
+require_once __DIR__ . '/../../partials/header.php';
 ?>
 
 <div class="container-fluid mt-4">
@@ -185,4 +185,4 @@ require_once __DIR__ . '/../../../views/partials/header.php';
 
 <script src="/js/pre-cadastros-form.js"></script>
 
-<?php require_once __DIR__ . '/../../../views/partials/footer.php'; ?>
+<?php require_once __DIR__ . '/../../partials/footer.php'; ?>

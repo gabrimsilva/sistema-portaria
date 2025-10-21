@@ -397,6 +397,78 @@ try {
             }
             break;
             
+        // 🆕 PRÉ-CADASTROS V2.0.0 - VISITANTES
+        case 'pre-cadastros/visitantes':
+            require_once '../src/controllers/PreCadastrosVisitantesController.php';
+            $controller = new PreCadastrosVisitantesController();
+            $action = $_GET['action'] ?? 'index';
+            switch ($action) {
+                case 'new':
+                    $controller->create();
+                    break;
+                case 'save':
+                    $controller->save();
+                    break;
+                case 'edit':
+                    $id = $_GET['id'] ?? null;
+                    $controller->edit($id);
+                    break;
+                case 'update':
+                    $controller->update();
+                    break;
+                case 'delete':
+                    $id = $_GET['id'] ?? null;
+                    $controller->delete($id);
+                    break;
+                case 'renovar':
+                    $id = $_GET['id'] ?? null;
+                    $controller->renovar($id);
+                    break;
+                case 'list':
+                    $controller->listJson();
+                    break;
+                default:
+                    $controller->index();
+                    break;
+            }
+            break;
+            
+        // 🆕 PRÉ-CADASTROS V2.0.0 - PRESTADORES
+        case 'pre-cadastros/prestadores':
+            require_once '../src/controllers/PreCadastrosPrestadoresController.php';
+            $controller = new PreCadastrosPrestadoresController();
+            $action = $_GET['action'] ?? 'index';
+            switch ($action) {
+                case 'new':
+                    $controller->create();
+                    break;
+                case 'save':
+                    $controller->save();
+                    break;
+                case 'edit':
+                    $id = $_GET['id'] ?? null;
+                    $controller->edit($id);
+                    break;
+                case 'update':
+                    $controller->update();
+                    break;
+                case 'delete':
+                    $id = $_GET['id'] ?? null;
+                    $controller->delete($id);
+                    break;
+                case 'renovar':
+                    $id = $_GET['id'] ?? null;
+                    $controller->renovar($id);
+                    break;
+                case 'list':
+                    $controller->listJson();
+                    break;
+                default:
+                    $controller->index();
+                    break;
+            }
+            break;
+            
         case 'config':
         case 'config/rbac-matrix':
         case 'config/rbac-users':
@@ -654,6 +726,19 @@ try {
             require_once '../src/controllers/PainelBrigadaController.php';
             $controller = new PainelBrigadaController();
             $controller->api();
+            break;
+        
+        // 🆕 API PRÉ-CADASTROS V2.0.0
+        case 'api/pre-cadastros/visitantes/list':
+            require_once '../src/controllers/PreCadastrosVisitantesController.php';
+            $controller = new PreCadastrosVisitantesController();
+            $controller->listJson();
+            break;
+        
+        case 'api/pre-cadastros/prestadores/list':
+            require_once '../src/controllers/PreCadastrosPrestadoresController.php';
+            $controller = new PreCadastrosPrestadoresController();
+            $controller->listJson();
             break;
         
         case 'api/ramais/buscar':

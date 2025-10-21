@@ -741,6 +741,24 @@ try {
             $controller->listJson();
             break;
         
+        case 'api/pre-cadastros/buscar':
+            require_once '../src/controllers/ApiPreCadastrosController.php';
+            $controller = new ApiPreCadastrosController();
+            $controller->buscar();
+            break;
+        
+        case 'api/pre-cadastros/obter':
+            require_once '../src/controllers/ApiPreCadastrosController.php';
+            $controller = new ApiPreCadastrosController();
+            $controller->obter();
+            break;
+        
+        case 'api/pre-cadastros/verificar-validade':
+            require_once '../src/controllers/ApiPreCadastrosController.php';
+            $controller = new ApiPreCadastrosController();
+            $controller->verificarValidade();
+            break;
+        
         case 'api/ramais/buscar':
             require_once '../src/controllers/RamalController.php';
             $controller = new RamalController();

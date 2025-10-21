@@ -9,6 +9,7 @@
     <link href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+    <link rel="stylesheet" href="/assets/css/dashboard-autocomplete.css?v=<?= time() ?>">
     <style>
         /* Garantir que o dropdown do autocomplete apareça por cima do modal */
         .ui-autocomplete {
@@ -915,6 +916,9 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+    
+    <!-- 🆕 PRÉ-CADASTROS V2.0.0 - Autocomplete -->
+    <script src="/assets/js/dashboard-autocomplete.js?v=<?= time() ?>"></script>
     
     <?php
     require_once '../src/services/ErrorHandlerService.php';

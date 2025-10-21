@@ -1,0 +1,126 @@
+/**
+ * Dashboard Autocomplete - CSS Customizado
+ * Pré-Cadastros v2.0.0
+ */
+
+/* Estilo do dropdown do autocomplete */
+.ui-autocomplete {
+    max-height: 400px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border: 1px solid #dee2e6;
+    z-index: 9999 !important;
+}
+
+/* Item do autocomplete */
+.autocomplete-item {
+    padding: 12px 15px;
+    border-bottom: 1px solid #f0f0f0;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.autocomplete-item:hover {
+    background-color: #f8f9fa !important;
+}
+
+.ui-menu-item {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+/* Estado hover/focus */
+.ui-menu-item-wrapper {
+    padding: 0 !important;
+}
+
+.ui-state-active,
+.ui-state-focus {
+    background-color: #e9ecef !important;
+    border-color: transparent !important;
+    margin: 0 !important;
+}
+
+/* Badges de status */
+.autocomplete-item .badge {
+    font-size: 10px;
+    vertical-align: middle;
+    padding: 3px 8px;
+}
+
+.autocomplete-item .badge-success {
+    background-color: #28a745;
+}
+
+.autocomplete-item .badge-warning {
+    background-color: #ffc107;
+    color: #000;
+}
+
+.autocomplete-item .badge-danger {
+    background-color: #dc3545;
+}
+
+/* Loading indicator */
+.ui-autocomplete-loading {
+    background: white url('data:image/gif;base64,R0lGODlhEAAQAPIAAP///wAAAMLCwkJCQgAAAGJiYoKCgpKSkiH/C05FVFNDQVBFMi4wAwEAAAAh/hpDcmVhdGVkIHdpdGggYWpheGxvYWQuaW5mbwAh+QQJCgAAACwAAAAAEAAQAAADMwi63P4wyklrE2MIOggZnAdOmGYJRbExwroUmcG2LmDEwnHQLVsYOd2mBzkYDAdKa+dIAAAh+QQJCgAAACwAAAAAEAAQAAADNAi63P5OjCEgG4QMu7DmikRxQlFUYDEZIGBMRVsaqHwctXXf7WEYB4Ag1xjihkMZsiUkKhIAIfkECQoAAAAsAAAAABAAEAAAAzYIujIjK8pByJDMlFYvBoVjHA70GU7xSUJhmKtwHPAKzLO9HMaoKwJZ7Rf8AYPDDzKpZBqfvwQAIfkECQoAAAAsAAAAABAAEAAAAzMIumIlK8oyhpHsnFZfhYumCYUhDAQxRIdhHBGqRoKw0R8DYlJd8z0fMDgsGo/IpHI5TAAAIfkECQoAAAAsAAAAABAAEAAAAzIIunInK0rnZBTwGPNMgQwmdsNgXGJUlIWEuR5oWUIpz8pAEAMe6TwfwyYsGo/IpFKSAAAh+QQJCgAAACwAAAAAEAAQAAADMwi6IMKQORfjdOe82p4wGccc4CEuQradylesojEMBgsUc2G7sDX3lQGBMLAJibufbSlKAAAh+QQJCgAAACwAAAAAEAAQAAADMgi63P7wCRHZnFVdmgHu2nFwlWCI3WGc3TSWhUFGxTAUkGCbtgENBMJAEJsxgMLWzpEAACH5BAkKAAAALAAAAAAQABAAAAMyCLrc/jDKSatlQtScKdceCAjDII7HcQ4EMTCpyrCuUBjCYRgHVtqlAiB1YhiCnlsRkAAAOwAAAAAAAAAAAA==') no-repeat right center;
+    background-size: 16px 16px;
+}
+
+/* Scrollbar customizado para o dropdown */
+.ui-autocomplete::-webkit-scrollbar {
+    width: 8px;
+}
+
+.ui-autocomplete::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.ui-autocomplete::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.ui-autocomplete::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Texto pequeno (hint) */
+.autocomplete-item small {
+    font-size: 12px;
+    color: #6c757d;
+}
+
+/* Alerta de pré-cadastro encontrado */
+.pre-cadastro-alert {
+    margin-top: 10px;
+    border-radius: 6px;
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsividade */
+@media (max-width: 576px) {
+    .ui-autocomplete {
+        max-height: 300px;
+        font-size: 14px;
+    }
+    
+    .autocomplete-item {
+        padding: 10px 12px;
+    }
+}

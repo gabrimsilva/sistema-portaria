@@ -92,9 +92,10 @@ class PreCadastrosPrestadoresController {
             $sql = "INSERT INTO prestadores_cadastro 
                     (nome, empresa, doc_type, doc_number, doc_country, placa_veiculo, 
                      valid_from, valid_until, observacoes) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    RETURNING id";
             
-            $this->db->execute($sql, [
+            $result = $this->db->fetch($sql, [
                 $nome, 
                 $empresa, 
                 $doc_type, 
@@ -106,12 +107,15 @@ class PreCadastrosPrestadoresController {
                 $observacoes
             ]);
             
+            $cadastro_id = $result['id'] ?? null;
+            
             // Auditoria
             $this->auditService->log(
-                'pre_cadastros_prestadores',
                 'create',
+                'pre_cadastros_prestadores',
+                $cadastro_id,
                 null,
-                "Pré-cadastro criado: $nome (Doc: $doc_type $doc_number, Válido até: $valid_until)"
+                ['nome' => $nome, 'doc_type' => $doc_type, 'valid_until' => $valid_until]
             );
             
             // Redirect com sucesso
@@ -201,10 +205,11 @@ class PreCadastrosPrestadoresController {
             
             // Auditoria
             $this->auditService->log(
-                'pre_cadastros_prestadores',
                 'update',
+                'pre_cadastros_prestadores',
                 $id,
-                "Pré-cadastro atualizado: $nome"
+                null,
+                ['nome' => $nome, 'doc_type' => $doc_type]
             );
             
             $_SESSION['flash_success'] = 'Cadastro atualizado com sucesso!';
@@ -246,10 +251,11 @@ class PreCadastrosPrestadoresController {
             
             // Auditoria
             $this->auditService->log(
-                'pre_cadastros_prestadores',
                 'delete',
+                'pre_cadastros_prestadores',
                 $id,
-                'Pré-cadastro excluído (soft delete)'
+                null,
+                null
             );
             
             $_SESSION['flash_success'] = 'Cadastro excluído com sucesso!';
@@ -291,10 +297,11 @@ class PreCadastrosPrestadoresController {
             
             // Auditoria
             $this->auditService->log(
-                'pre_cadastros_prestadores',
                 'renovar',
+                'pre_cadastros_prestadores',
                 $id,
-                "Validade renovada até: $novaValidade"
+                null,
+                ['valid_until' => $novaValidade]
             );
             
             $_SESSION['flash_success'] = 'Cadastro renovado até ' . 

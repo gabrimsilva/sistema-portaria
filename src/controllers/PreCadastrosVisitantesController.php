@@ -92,9 +92,10 @@ class PreCadastrosVisitantesController {
             $sql = "INSERT INTO visitantes_cadastro 
                     (nome, empresa, doc_type, doc_number, doc_country, placa_veiculo, 
                      valid_from, valid_until, observacoes) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    RETURNING id";
             
-            $this->db->execute($sql, [
+            $result = $this->db->fetch($sql, [
                 $nome, 
                 $empresa, 
                 $doc_type, 
@@ -106,12 +107,19 @@ class PreCadastrosVisitantesController {
                 $observacoes
             ]);
             
+            $cadastro_id = $result['id'] ?? null;
+            
             // Auditoria
             $this->auditService->log(
-                'pre_cadastros_visitantes',
                 'create',
+                'pre_cadastros_visitantes',
+                $cadastro_id,
                 null,
-                "Pré-cadastro criado: $nome (Doc: $doc_type $doc_number, Válido até: $valid_until)"
+                [
+                    'nome' => $nome,
+                    'doc_type' => $doc_type,
+                    'valid_until' => $valid_until
+                ]
             );
             
             // Redirect com sucesso
@@ -192,10 +200,11 @@ class PreCadastrosVisitantesController {
             
             // Auditoria
             $this->auditService->log(
-                'pre_cadastros_visitantes',
                 'update',
+                'pre_cadastros_visitantes',
                 $id,
-                "Pré-cadastro atualizado: $nome"
+                null,
+                ['nome' => $nome, 'doc_type' => $doc_type]
             );
             
             $_SESSION['flash_success'] = 'Pré-cadastro atualizado com sucesso!';
@@ -241,10 +250,11 @@ class PreCadastrosVisitantesController {
             
             // Auditoria
             $this->auditService->log(
-                'pre_cadastros_visitantes',
                 'delete',
+                'pre_cadastros_visitantes',
                 $id,
-                "Pré-cadastro excluído (soft delete)"
+                ['nome' => $cadastro['nome']],
+                null
             );
             
             $_SESSION['flash_success'] = 'Cadastro excluído com sucesso!';
@@ -287,10 +297,11 @@ class PreCadastrosVisitantesController {
             
             // Auditoria
             $this->auditService->log(
-                'pre_cadastros_visitantes',
                 'renovar',
+                'pre_cadastros_visitantes',
                 $id,
-                "Cadastro renovado: {$cadastro['nome']} (válido até $newValidUntil)"
+                null,
+                ['valid_until' => $newValidUntil]
             );
             
             $_SESSION['flash_success'] = 'Cadastro renovado até ' . 

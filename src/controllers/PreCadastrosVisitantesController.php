@@ -11,7 +11,7 @@
 
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../services/AuthorizationService.php';
-require_once __DIR__ . '/../services/AuditLogService.php';
+require_once __DIR__ . '/../services/AuditService.php';
 
 class PreCadastrosVisitantesController {
     private $db;
@@ -21,7 +21,7 @@ class PreCadastrosVisitantesController {
     public function __construct() {
         $this->db = new Database();
         $this->authService = new AuthorizationService();
-        $this->auditService = new AuditLogService();
+        $this->auditService = new AuditService();
     }
     
     /**

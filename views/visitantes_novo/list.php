@@ -121,6 +121,7 @@
                                         <tr>
                                             <th>Nome</th>
                                             <th>CPF</th>
+                                            <th>País</th>
                                             <th>Empresa</th>
                                             <th>Funcionário Responsável</th>
                                             <th>Setor</th>
@@ -133,13 +134,14 @@
                                     <tbody>
                                         <?php if (empty($visitantes)): ?>
                                             <tr>
-                                                <td colspan="9" class="text-center">Nenhum visitante encontrado</td>
+                                                <td colspan="10" class="text-center">Nenhum visitante encontrado</td>
                                             </tr>
                                         <?php else: ?>
                                             <?php foreach ($visitantes as $visitante): ?>
                                             <tr>
                                                 <td><?= htmlspecialchars($visitante['nome']) ?></td>
                                                 <td><?= htmlspecialchars($visitante['cpf']) ?></td>
+                                                <td><?= htmlspecialchars($visitante['doc_country'] ?? '-') ?></td>
                                                 <td><?= htmlspecialchars($visitante['empresa']) ?></td>
                                                 <td><?= htmlspecialchars($visitante['funcionario_responsavel']) ?></td>
                                                 <td><?= htmlspecialchars($visitante['setor']) ?></td>

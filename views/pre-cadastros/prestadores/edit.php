@@ -3,6 +3,7 @@
  * View: Formulário de Edição de Pré-Cadastro de Prestador
  * 
  * @version 2.0.0
+ * @var array $cadastro Dados do cadastro carregados pelo controller
  */
 
 $pageTitle = 'Editar Pré-Cadastro - Prestador de Serviço';
@@ -95,7 +96,7 @@ require_once __DIR__ . '/../../partials/header.php';
                                     Número <span class="text-danger">*</span>
                                 </label>
                                 <input type="text" class="form-control" id="doc_number" name="doc_number" 
-                                       value="<?= htmlspecialchars($cadastro['doc_number']) ?>" required>
+                                       value="<?= htmlspecialchars($cadastro['doc_number'] ?? '') ?>" required>
                                 <small class="form-text text-muted" id="doc-hint"></small>
                             </div>
                             <div class="col-md-4" id="div-doc-country">

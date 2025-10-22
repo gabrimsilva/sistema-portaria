@@ -24,18 +24,23 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Atualizar máscara ao mudar tipo de documento
     docTypeSelect.addEventListener('change', function() {
-        updateDocumentMask(this.value);
+        updateDocumentMask(this.value, false); // Limpa ao trocar manualmente
         updateCountryVisibility(this.value);
     });
     
-    // Inicializar com CPF (padrão)
-    updateDocumentMask('CPF');
-    updateCountryVisibility('CPF');
+    // Inicializar com CPF (padrão) - mas só se não tiver valor pré-carregado (modo edição)
+    const initialDocType = docTypeSelect.value || 'CPF';
+    const hasPreloadedValue = docNumberInput.value.trim().length > 0;
+    
+    updateDocumentMask(initialDocType, hasPreloadedValue);
+    updateCountryVisibility(initialDocType);
     
     /**
      * Atualizar máscara conforme tipo de documento
+     * @param {string} docType - Tipo do documento
+     * @param {boolean} preserveValue - Se true, mantém valor existente (modo edição)
      */
-    function updateDocumentMask(docType) {
+    function updateDocumentMask(docType, preserveValue = false) {
         // Remover máscaras anteriores
         if (docNumberInput._mask) {
             docNumberInput._mask.destroy();
@@ -86,7 +91,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 break;
         }
         
-        docNumberInput.value = ''; // Limpar campo
+        // 🔧 CORREÇÃO: Só limpa se não for modo edição
+        if (!preserveValue) {
+            docNumberInput.value = '';
+        }
     }
     
     /**

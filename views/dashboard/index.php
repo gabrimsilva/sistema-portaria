@@ -795,14 +795,14 @@
                                     <div class="form-group">
                                         <label for="edit_doc_type">Tipo de Documento</label>
                                         <select class="form-control" id="edit_doc_type" name="doc_type">
-                                            <option value="">CPF (padrão)</option>
+                                            <option value="CPF">CPF</option>
                                             <option value="RG">RG</option>
                                             <option value="CNH">CNH</option>
-                                            <option value="PASSAPORTE">Passaporte</option>
+                                            <option value="Passaporte">Passaporte</option>
                                             <option value="RNE">RNE</option>
                                             <option value="DNI">DNI</option>
                                             <option value="CI">CI</option>
-                                            <option value="OUTROS">Outros</option>
+                                            <option value="Outros">Outros</option>
                                         </select>
                                     </div>
                                 </div>

@@ -1410,11 +1410,8 @@
             const doc_country = btn.data('doc_country');  // MANTÉM underscore! jQuery não converte este atributo
             const empresa = btn.data('empresa');
             const setor = btn.data('setor');
-            const funcionario = btn.data('funcionarioResponsavel');  // jQuery converte data-funcionario_responsavel para funcionarioResponsavel
+            const funcionario = btn.attr('data-funcionario_responsavel') || '';  // Usar attr() é mais confiável
             const placa_veiculo = btn.data('placa_veiculo');  // MANTÉM underscore! jQuery não converte este atributo
-            
-            // 🐛 DEBUG temporário
-            console.log('📋 Funcionário Responsável:', funcionario);
             
             // Preencher campos básicos
             $('#edit_id').val(id);

@@ -25,15 +25,16 @@ document.addEventListener('DOMContentLoaded', function() {
     // Atualizar máscara ao mudar tipo de documento
     docTypeSelect.addEventListener('change', function() {
         updateDocumentMask(this.value, false); // Limpa ao trocar manualmente
-        updateCountryVisibility(this.value);
+        updateCountryVisibility(this.value, false); // Não é modo edição quando troca manualmente
     });
     
     // Inicializar com CPF (padrão) - mas só se não tiver valor pré-carregado (modo edição)
     const initialDocType = docTypeSelect.value || 'CPF';
     const hasPreloadedValue = docNumberInput.value.trim().length > 0;
+    const isEditMode = hasPreloadedValue; // Se tem valor pré-carregado = modo edição
     
     updateDocumentMask(initialDocType, hasPreloadedValue);
-    updateCountryVisibility(initialDocType);
+    updateCountryVisibility(initialDocType, isEditMode);
     
     /**
      * Atualizar máscara conforme tipo de documento
@@ -99,20 +100,25 @@ document.addEventListener('DOMContentLoaded', function() {
     
     /**
      * Mostrar/ocultar campo de país
+     * @param {string} docType - Tipo do documento
+     * @param {boolean} isEditMode - Se true, está em modo edição (não esconde campos)
      */
-    function updateCountryVisibility(docType) {
+    function updateCountryVisibility(docType, isEditMode = false) {
         const isBrazilian = ['CPF', 'RG', 'CNH'].includes(docType);
         const docCountryInput = document.getElementById('doc_country');
         
         if (isBrazilian) {
-            // Só esconde se o valor atual for vazio ou já for "Brasil"
-            const currentValue = docCountryInput.value.trim();
-            if (!currentValue || currentValue === 'Brasil') {
-                docCountryDiv.style.display = 'none';
-                docCountryInput.value = 'Brasil';
+            // 🔧 MODO EDIÇÃO: Sempre mantém visível
+            if (isEditMode) {
+                docCountryDiv.style.display = 'block';
+                return;
             }
-            // Se tiver outro valor, mantém visível (modo edição com país diferente)
+            
+            // MODO NOVO CADASTRO: Esconde e define Brasil
+            docCountryDiv.style.display = 'none';
+            docCountryInput.value = 'Brasil';
         } else {
+            // Documentos estrangeiros: sempre mostra
             docCountryDiv.style.display = 'block';
         }
     }

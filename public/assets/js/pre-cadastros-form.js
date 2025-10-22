@@ -102,10 +102,16 @@ document.addEventListener('DOMContentLoaded', function() {
      */
     function updateCountryVisibility(docType) {
         const isBrazilian = ['CPF', 'RG', 'CNH'].includes(docType);
+        const docCountryInput = document.getElementById('doc_country');
         
         if (isBrazilian) {
-            docCountryDiv.style.display = 'none';
-            document.getElementById('doc_country').value = 'Brasil';
+            // Só esconde se o valor atual for vazio ou já for "Brasil"
+            const currentValue = docCountryInput.value.trim();
+            if (!currentValue || currentValue === 'Brasil') {
+                docCountryDiv.style.display = 'none';
+                docCountryInput.value = 'Brasil';
+            }
+            // Se tiver outro valor, mantém visível (modo edição com país diferente)
         } else {
             docCountryDiv.style.display = 'block';
         }

@@ -1413,6 +1413,9 @@
             const funcionario = btn.data('funcionarioResponsavel');  // jQuery converte data-funcionario_responsavel para funcionarioResponsavel
             const placa_veiculo = btn.data('placa_veiculo');  // MANTÉM underscore! jQuery não converte este atributo
             
+            // 🐛 DEBUG temporário
+            console.log('📋 Funcionário Responsável:', funcionario);
+            
             // Preencher campos básicos
             $('#edit_id').val(id);
             $('#edit_tipo_original').val(tipo);

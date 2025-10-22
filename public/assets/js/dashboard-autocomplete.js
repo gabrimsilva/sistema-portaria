@@ -61,7 +61,7 @@
                 
                 // Placa do veículo
                 if (cadastro.placa_veiculo) {
-                    $('#visitante_placa').val(cadastro.placa_veiculo);
+                    $('#visitante_placa_veiculo').val(cadastro.placa_veiculo);
                 }
                 
                 // Mostrar alerta de sucesso
@@ -150,7 +150,7 @@
                 }
                 
                 if (cadastro.placa_veiculo) {
-                    $('#prestador_placa').val(cadastro.placa_veiculo);
+                    $('#prestador_placa_veiculo').val(cadastro.placa_veiculo);
                 }
                 
                 showPreCadastroAlert(cadastro);

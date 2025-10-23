@@ -49,39 +49,6 @@ class NavigationService
             ]
         ],
         [
-            'id' => 'privacy',
-            'label' => 'Privacidade & LGPD',
-            'url' => '/privacy',
-            'icon' => 'fas fa-shield-alt',
-            'permission' => 'all',
-            'target' => '_blank',
-            'children' => []
-        ],
-        [
-            'id' => 'brigada',
-            'label' => 'Brigada de Incêndio',
-            'url' => '/brigada',
-            'icon' => 'fas fa-fire-extinguisher',
-            'permission' => ['administrador', 'seguranca', 'rh'],
-            'children' => []
-        ],
-        [
-            'id' => 'ramais',
-            'label' => 'Ramais',
-            'url' => '/ramais',
-            'icon' => 'bi-telephone',
-            'permission' => 'all',
-            'children' => []
-        ],
-        [
-            'id' => 'importacao',
-            'label' => 'Importação',
-            'url' => '/importacao',
-            'icon' => 'fas fa-file-import',
-            'permission' => ['administrador'],
-            'children' => []
-        ],
-        [
             'id' => 'pre-cadastros',
             'label' => 'Pré-Cadastros',
             'url' => '#',
@@ -103,11 +70,44 @@ class NavigationService
             ]
         ],
         [
+            'id' => 'ramais',
+            'label' => 'Ramais',
+            'url' => '/ramais',
+            'icon' => 'fas fa-phone-alt',
+            'permission' => 'all',
+            'children' => []
+        ],
+        [
+            'id' => 'importacao',
+            'label' => 'Importação',
+            'url' => '/importacao',
+            'icon' => 'fas fa-file-import',
+            'permission' => ['administrador'],
+            'children' => []
+        ],
+        [
+            'id' => 'privacy',
+            'label' => 'Privacidade & LGPD',
+            'url' => '/privacy',
+            'icon' => 'fas fa-shield-alt',
+            'permission' => 'all',
+            'target' => '_blank',
+            'children' => []
+        ],
+        [
             'id' => 'config',
             'label' => 'Configurações',
             'url' => '/config',
             'icon' => 'fas fa-cogs',
             'permission' => ['administrador', 'seguranca'],
+            'children' => []
+        ],
+        [
+            'id' => 'brigada',
+            'label' => 'Brigada de Incêndio',
+            'url' => '/brigada',
+            'icon' => 'fas fa-fire-extinguisher',
+            'permission' => ['administrador', 'seguranca', 'rh'],
             'children' => []
         ]
     ];

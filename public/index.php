@@ -741,6 +741,12 @@ try {
             $controller->listJson();
             break;
         
+        case 'api/pre-cadastros/prestadores/stats':
+            require_once '../src/controllers/PreCadastrosPrestadoresController.php';
+            $controller = new PreCadastrosPrestadoresController();
+            $controller->statsJson();
+            break;
+        
         case 'api/pre-cadastros/prestadores/list':
             require_once '../src/controllers/PreCadastrosPrestadoresController.php';
             $controller = new PreCadastrosPrestadoresController();

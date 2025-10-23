@@ -53,6 +53,10 @@ class PreCadastrosPrestadoresController {
     public function save() {
         $this->authService->requirePermission('pre_cadastros.create');
         
+        // Validação CSRF
+        require_once __DIR__ . '/../services/CSRFProtection.php';
+        CSRFProtection::verifyRequest();
+        
         try {
             // Capturar dados do formulário
             $nome = $_POST['nome'] ?? '';
@@ -156,6 +160,10 @@ class PreCadastrosPrestadoresController {
      */
     public function update($id) {
         $this->authService->requirePermission('pre_cadastros.update');
+        
+        // Validação CSRF
+        require_once __DIR__ . '/../services/CSRFProtection.php';
+        CSRFProtection::verifyRequest();
         
         try {
             // Verificar se existe

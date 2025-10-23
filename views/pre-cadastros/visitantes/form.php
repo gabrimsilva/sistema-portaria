@@ -44,6 +44,8 @@ require_once __DIR__ . '/../../partials/header.php';
             <div class="card">
                 <div class="card-body">
                     <form id="form-pre-cadastro" method="POST" action="/pre-cadastros/visitantes?action=save">
+                        <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+                        
                         <!-- Dados Pessoais -->
                         <h5 class="mb-3">
                             <i class="fas fa-user me-2"></i>

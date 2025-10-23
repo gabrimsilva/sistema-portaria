@@ -501,11 +501,11 @@
                                             <option value="CNH">CNH</option>
                                         </optgroup>
                                         <optgroup label="🌎 Documentos Internacionais">
-                                            <option value="PASSAPORTE">Passaporte</option>
+                                            <option value="Passaporte">Passaporte</option>
                                             <option value="RNE">RNE</option>
                                             <option value="DNI">DNI</option>
                                             <option value="CI">CI</option>
-                                            <option value="OUTRO">Outro</option>
+                                            <option value="Outros">Outros</option>
                                         </optgroup>
                                     </select>
                                     <small class="form-text text-muted">Deixe vazio para CPF</small>
@@ -679,13 +679,18 @@
                                     <label for="prestador_doc_type">Tipo de Documento</label>
                                     <select class="form-control" id="prestador_doc_type" name="doc_type">
                                         <option value="">CPF (padrão)</option>
-                                        <option value="RG">RG</option>
-                                        <option value="CNH">CNH</option>
-                                        <option value="PASSAPORTE">Passaporte</option>
-                                        <option value="RNE">RNE</option>
-                                        <option value="DNI">DNI</option>
-                                        <option value="CI">CI</option>
-                                        <option value="OUTROS">Outros</option>
+                                        <optgroup label="🇧🇷 Documentos Brasileiros">
+                                            <option value="CPF">CPF</option>
+                                            <option value="RG">RG</option>
+                                            <option value="CNH">CNH</option>
+                                        </optgroup>
+                                        <optgroup label="🌎 Documentos Internacionais">
+                                            <option value="Passaporte">Passaporte</option>
+                                            <option value="RNE">RNE</option>
+                                            <option value="DNI">DNI</option>
+                                            <option value="CI">CI</option>
+                                            <option value="Outros">Outros</option>
+                                        </optgroup>
                                     </select>
                                     <small class="text-muted">Deixe vazio para CPF</small>
                                 </div>

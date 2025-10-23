@@ -95,11 +95,11 @@ require_once '../../src/services/FormService.php';
                                                             <option value="CNH" <?= ($visitante['doc_type'] ?? '') === 'CNH' ? 'selected' : '' ?>>CNH</option>
                                                         </optgroup>
                                                         <optgroup label="🌎 Documentos Internacionais">
-                                                            <option value="PASSAPORTE" <?= ($visitante['doc_type'] ?? '') === 'PASSAPORTE' ? 'selected' : '' ?>>Passaporte</option>
+                                                            <option value="Passaporte" <?= ($visitante['doc_type'] ?? '') === 'Passaporte' ? 'selected' : '' ?>>Passaporte</option>
                                                             <option value="RNE" <?= ($visitante['doc_type'] ?? '') === 'RNE' ? 'selected' : '' ?>>RNE</option>
                                                             <option value="DNI" <?= ($visitante['doc_type'] ?? '') === 'DNI' ? 'selected' : '' ?>>DNI</option>
                                                             <option value="CI" <?= ($visitante['doc_type'] ?? '') === 'CI' ? 'selected' : '' ?>>CI</option>
-                                                            <option value="OUTRO" <?= ($visitante['doc_type'] ?? '') === 'OUTRO' ? 'selected' : '' ?>>Outro</option>
+                                                            <option value="Outros" <?= ($visitante['doc_type'] ?? '') === 'Outros' ? 'selected' : '' ?>>Outros</option>
                                                         </optgroup>
                                                     </select>
                                                     <small class="form-text text-muted">Deixe vazio para CPF</small>
@@ -114,13 +114,13 @@ require_once '../../src/services/FormService.php';
                                                     <small class="form-text text-muted">Máscara automática por tipo</small>
                                                 </div>
                                             </div>
-                                            <div class="col-md-3" id="country_container" style="display: <?= !empty($visitante['doc_country']) && $visitante['doc_country'] !== 'BR' ? 'block' : 'none' ?>;">
+                                            <div class="col-md-3" id="country_container">
                                                 <div class="form-group">
                                                     <label for="doc_country">País</label>
                                                     <input type="text" class="form-control" id="doc_country" name="doc_country" 
-                                                           value="<?= htmlspecialchars($visitante['doc_country'] ?? 'BR') ?>" 
-                                                           placeholder="BR" maxlength="2">
-                                                    <small class="form-text text-muted">Código ISO</small>
+                                                           value="<?= htmlspecialchars($visitante['doc_country'] ?? '') ?>" 
+                                                           placeholder="Brasil">
+                                                    <small class="form-text text-muted">Nome do país</small>
                                                 </div>
                                             </div>
                                         </div>
@@ -222,11 +222,12 @@ require_once '../../src/services/FormService.php';
             
             function applyDocumentMask() {
                 const docType = getEffectiveDocType(); // Usar função centralizada
-                let value = $docNumber.val().replace(/\D/g, '');
+                let value;
                 
                 // Tipo CPF (incluindo quando vazio/padrão)
                 if (docType === 'CPF') {
                     // Máscara CPF: 000.000.000-00
+                    value = $docNumber.val().replace(/\D/g, ''); // Só remover não-dígitos para CPF
                     value = value.substring(0, 11);
                     value = value.replace(/(\d{3})(\d)/, '$1.$2');
                     value = value.replace(/(\d{3})\.(\d{3})(\d)/, '$1.$2.$3');
@@ -240,19 +241,20 @@ require_once '../../src/services/FormService.php';
                     value = value.replace(/(\d{3})(\d)/, '$1.$2');
                     value = value.replace(/(\d{3})(\d{1})$/, '$1-$2');
                 } else if (docType === 'CNH') {
-                    value = value.substring(0, 11);
+                    value = $docNumber.val().replace(/\D/g, '').substring(0, 11);
                 } else {
+                    // Documentos internacionais: permitir letras e números
                     value = $docNumber.val().replace(/[^A-Z0-9]/gi, '').toUpperCase();
                 }
                 
                 $docNumber.val(value);
                 
                 // Mostrar campo país para documentos internacionais
-                if (['PASSAPORTE', 'RNE', 'DNI', 'CI', 'OUTRO'].indexOf(docType) !== -1) {
+                if (['PASSAPORTE', 'PASSPORT', 'RNE', 'DNI', 'CI', 'OUTRO', 'OUTROS'].indexOf(docType) !== -1) {
                     $countryContainer.show();
                 } else {
                     $countryContainer.hide();
-                    $docCountry.val('BR');
+                    $docCountry.val('');
                 }
             }
             

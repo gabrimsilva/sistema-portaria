@@ -316,37 +316,35 @@ const PreCadastros = {
      * Confirmar exclusão
      */
     confirmarExclusao: function(id, nome) {
-        console.log('🗑️ Tentando excluir:', id, nome);
+        const self = this;
+        console.log('🗑️ Tentando excluir ID:', id, 'Nome:', nome);
         
-        const confirmacao = confirm(`Deseja realmente excluir o cadastro de ${nome}?\n\nEsta ação não pode ser desfeita.`);
-        console.log('✅ Usuário confirmou?', confirmacao);
-        
-        if (confirmacao) {
-            console.log('🚀 Criando formulário de exclusão para ID:', id);
-            
-            // Criar formulário oculto e submeter
-            const form = document.createElement('form');
-            form.method = 'GET';
-            form.action = `/pre-cadastros/${this.getEndpointSegment()}`;
-            
-            // Campo action
-            const actionInput = document.createElement('input');
-            actionInput.type = 'hidden';
-            actionInput.name = 'action';
-            actionInput.value = 'delete';
-            form.appendChild(actionInput);
-            
-            // Campo id
-            const idInput = document.createElement('input');
-            idInput.type = 'hidden';
-            idInput.name = 'id';
-            idInput.value = id;
-            form.appendChild(idInput);
-            
-            // Adicionar ao body e submeter
-            document.body.appendChild(form);
-            console.log('📤 Submetendo formulário...');
-            form.submit();
+        if (!confirm(`Deseja realmente excluir o cadastro de ${nome}?\n\nEsta ação não pode ser desfeita.`)) {
+            console.log('❌ Usuário cancelou');
+            return;
         }
+        
+        console.log('✅ Usuário confirmou - Executando exclusão');
+        
+        // SOLUÇÃO: Usar AJAX com fallback para redirect tradicional
+        const url = `/pre-cadastros/${this.getEndpointSegment()}?action=delete&id=${id}`;
+        console.log('🚀 URL de exclusão:', url);
+        
+        // Tentar via AJAX primeiro
+        $.ajax({
+            url: url,
+            method: 'GET',
+            timeout: 5000,
+            success: function(response) {
+                console.log('✅ Resposta do servidor:', response);
+                alert('Cadastro excluído com sucesso!');
+                self.loadCadastros(); // Recarregar lista
+            },
+            error: function(xhr, status, error) {
+                console.log('⚠️ AJAX falhou, redirecionando diretamente...', status, error);
+                // Fallback: redirect direto
+                window.location.href = url;
+            }
+        });
     }
 };

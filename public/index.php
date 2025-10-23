@@ -44,6 +44,11 @@ if (empty($path)) {
     $path = 'dashboard';
 }
 
+// 🔍 DEBUG: Log requisições de prestadores
+if (strpos($path, 'prestadores') !== false) {
+    error_log("🌐 REQUISIÇÃO: Path=" . $path . " | Action=" . ($_GET['action'] ?? 'none') . " | ID=" . ($_GET['id'] ?? 'none'));
+}
+
 // Check if user is authenticated
 $isAuthenticated = isset($_SESSION['user_id']);
 $publicRoutes = ['login', 'assets', 'reset-password', 'forgot-password', 'api', 'privacy'];

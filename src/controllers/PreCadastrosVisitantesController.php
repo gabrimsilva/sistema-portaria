@@ -394,6 +394,59 @@ class PreCadastrosVisitantesController {
     }
     
     /**
+     * API: Obter estatísticas em JSON
+     */
+    public function statsJson() {
+        $this->authService->requirePermission('pre_cadastros.read');
+        
+        header('Content-Type: application/json');
+        
+        try {
+            // Contar por status
+            $stats = [
+                'total' => 0,
+                'validos' => 0,
+                'expirando' => 0,
+                'expirados' => 0
+            ];
+            
+            $sql = "SELECT status_validade, COUNT(*) as total 
+                    FROM vw_visitantes_cadastro_status 
+                    GROUP BY status_validade";
+            
+            $results = $this->db->fetchAll($sql);
+            
+            foreach ($results as $row) {
+                $status = $row['status_validade'];
+                $count = (int)$row['total'];
+                
+                if ($status === 'valido') {
+                    $stats['validos'] = $count;
+                } elseif ($status === 'expirando') {
+                    $stats['expirando'] = $count;
+                } elseif ($status === 'expirado') {
+                    $stats['expirados'] = $count;
+                }
+                
+                $stats['total'] += $count;
+            }
+            
+            echo json_encode([
+                'success' => true,
+                'data' => $stats
+            ]);
+            
+        } catch (Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+        
+        exit;
+    }
+    
+    /**
      * API: Listar cadastros em JSON (para DataTables)
      */
     public function listJson() {

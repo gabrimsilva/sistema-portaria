@@ -729,6 +729,12 @@ try {
             break;
         
         // 🆕 API PRÉ-CADASTROS V2.0.0
+        case 'api/pre-cadastros/visitantes/stats':
+            require_once '../src/controllers/PreCadastrosVisitantesController.php';
+            $controller = new PreCadastrosVisitantesController();
+            $controller->statsJson();
+            break;
+        
         case 'api/pre-cadastros/visitantes/list':
             require_once '../src/controllers/PreCadastrosVisitantesController.php';
             $controller = new PreCadastrosVisitantesController();

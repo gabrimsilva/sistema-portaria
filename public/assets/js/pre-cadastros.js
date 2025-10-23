@@ -81,12 +81,38 @@ const PreCadastros = {
                 if (response.success) {
                     self.cadastros = response.data;
                     self.renderTable();
+                    self.loadStats(); // Atualizar estatísticas também
                 } else {
                     console.error('Erro ao carregar:', response.message);
                 }
             },
             error: function(xhr) {
                 console.error('Erro AJAX:', xhr.responseText);
+            }
+        });
+    },
+    
+    /**
+     * Carregar estatísticas (cards do topo)
+     */
+    loadStats: function() {
+        const endpoint = `/api/pre-cadastros/${this.tipo}s/stats`;
+        
+        $.ajax({
+            url: endpoint,
+            success: function(response) {
+                if (response.success) {
+                    const stats = response.data;
+                    
+                    // Atualizar valores nos cards
+                    $('.card.bg-primary h2').text(stats.total || 0);
+                    $('.card.bg-success h2').text(stats.validos || 0);
+                    $('.card.bg-warning h2').text(stats.expirando || 0);
+                    $('.card.bg-danger h2').text(stats.expirados || 0);
+                }
+            },
+            error: function(xhr) {
+                console.error('Erro ao carregar estatísticas:', xhr);
             }
         });
     },

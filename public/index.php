@@ -402,15 +402,19 @@ try {
             
         // 🆕 PRÉ-CADASTROS V2.0.0 - VISITANTES
         case 'pre-cadastros/visitantes':
-            error_log("🔍 INDEX.PHP: Rota pre-cadastros/visitantes acessada");
-            error_log("🔍 REQUEST_METHOD: " . $_SERVER['REQUEST_METHOD']);
-            error_log("🔍 ACTION: " . ($_GET['action'] ?? 'none'));
+            file_put_contents('php://stderr', "🔍 SWITCH: Entrando no case pre-cadastros/visitantes\n");
+            file_put_contents('php://stderr', "🔍 SWITCH: REQUEST_METHOD=" . $_SERVER['REQUEST_METHOD'] . "\n");
+            file_put_contents('php://stderr', "🔍 SWITCH: ACTION=" . ($_GET['action'] ?? 'none') . "\n");
             
+            file_put_contents('php://stderr', "🔍 SWITCH: Carregando controller...\n");
             require_once '../src/controllers/PreCadastrosVisitantesController.php';
-            $controller = new PreCadastrosVisitantesController();
-            $action = $_GET['action'] ?? 'index';
+            file_put_contents('php://stderr', "✅ SWITCH: Controller carregado\n");
             
-            error_log("🔍 Executando ação: $action");
+            $controller = new PreCadastrosVisitantesController();
+            file_put_contents('php://stderr', "✅ SWITCH: Controller instanciado\n");
+            
+            $action = $_GET['action'] ?? 'index';
+            file_put_contents('php://stderr', "🔍 SWITCH: Executando ação: $action\n");
             
             switch ($action) {
                 case 'new':
@@ -424,8 +428,9 @@ try {
                     $controller->edit($id);
                     break;
                 case 'update':
-                    error_log("🔍 Chamando controller->update()");
+                    file_put_contents('php://stderr', "🔍 SWITCH: Chamando controller->update()\n");
                     $controller->update();
+                    file_put_contents('php://stderr', "✅ SWITCH: controller->update() retornou\n");
                     break;
                 case 'delete':
                     $id = $_GET['id'] ?? null;

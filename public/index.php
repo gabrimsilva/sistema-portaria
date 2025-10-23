@@ -46,6 +46,8 @@ if (empty($path)) {
 
 // 🔍 DEBUG: Log requisições de prestadores
 if (strpos($path, 'prestadores') !== false) {
+    $logMsg = date('Y-m-d H:i:s') . " | Path=" . $path . " | Action=" . ($_GET['action'] ?? 'none') . " | ID=" . ($_GET['id'] ?? 'none') . "\n";
+    file_put_contents('/tmp/delete-debug.log', $logMsg, FILE_APPEND);
     error_log("🌐 REQUISIÇÃO: Path=" . $path . " | Action=" . ($_GET['action'] ?? 'none') . " | ID=" . ($_GET['id'] ?? 'none'));
 }
 
@@ -100,6 +102,8 @@ try {
     
     // 🔍 DEBUG CRÍTICO: Log do path antes do switch
     if (strpos($path, 'prestadores') !== false || isset($_GET['action'])) {
+        $logMsg = date('Y-m-d H:i:s') . " | SWITCH - Path: '$path' | Action: " . ($_GET['action'] ?? 'none') . " | ID: " . ($_GET['id'] ?? 'none') . "\n";
+        file_put_contents('/tmp/delete-debug.log', $logMsg, FILE_APPEND);
         error_log("🔍 SWITCH - Path: '$path' | Action: " . ($_GET['action'] ?? 'none') . " | ID: " . ($_GET['id'] ?? 'none'));
     }
     

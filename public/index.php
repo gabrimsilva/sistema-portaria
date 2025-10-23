@@ -98,6 +98,11 @@ try {
         exit; // Important: exit here so the switch doesn't run
     }
     
+    // 🔍 DEBUG CRÍTICO: Log do path antes do switch
+    if (strpos($path, 'prestadores') !== false || isset($_GET['action'])) {
+        error_log("🔍 SWITCH - Path: '$path' | Action: " . ($_GET['action'] ?? 'none') . " | ID: " . ($_GET['id'] ?? 'none'));
+    }
+    
     switch ($path) {
         case 'login':
             if ($isAuthenticated) {

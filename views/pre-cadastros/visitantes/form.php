@@ -71,8 +71,8 @@ require_once __DIR__ . '/../../partials/header.php';
                             Documento
                         </h5>
 
-                        <div class="row mb-3">
-                            <div class="col-md-3">
+                        <div class="row mb-3 align-items-end">
+                            <div class="col-md-4">
                                 <label for="doc_type" class="form-label">
                                     Tipo <span class="text-danger">*</span>
                                 </label>
@@ -87,7 +87,7 @@ require_once __DIR__ . '/../../partials/header.php';
                                     <option value="Outros">Outros</option>
                                 </select>
                             </div>
-                            <div class="col-md-5">
+                            <div class="col-md-4">
                                 <label for="doc_number" class="form-label">
                                     Número <span class="text-danger">*</span>
                                 </label>

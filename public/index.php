@@ -29,9 +29,6 @@ if ((strpos($requestUri, '/uploads/') !== false || strpos($requestUri, 'uploads/
 
 require_once __DIR__ . '/../config/config.php';
 
-// 🔍 DEBUG: Log de requisições no index.php
-file_put_contents('php://stderr', "🔍 INDEX.PHP: " . $_SERVER['REQUEST_METHOD'] . " " . $_SERVER['REQUEST_URI'] . "\n");
-
 // Simple router
 $request = $_SERVER['REQUEST_URI'];
 $path = parse_url($request, PHP_URL_PATH);
@@ -402,20 +399,9 @@ try {
             
         // 🆕 PRÉ-CADASTROS V2.0.0 - VISITANTES
         case 'pre-cadastros/visitantes':
-            file_put_contents('php://stderr', "🔍 SWITCH: Entrando no case pre-cadastros/visitantes\n");
-            file_put_contents('php://stderr', "🔍 SWITCH: REQUEST_METHOD=" . $_SERVER['REQUEST_METHOD'] . "\n");
-            file_put_contents('php://stderr', "🔍 SWITCH: ACTION=" . ($_GET['action'] ?? 'none') . "\n");
-            
-            file_put_contents('php://stderr', "🔍 SWITCH: Carregando controller...\n");
             require_once '../src/controllers/PreCadastrosVisitantesController.php';
-            file_put_contents('php://stderr', "✅ SWITCH: Controller carregado\n");
-            
             $controller = new PreCadastrosVisitantesController();
-            file_put_contents('php://stderr', "✅ SWITCH: Controller instanciado\n");
-            
             $action = $_GET['action'] ?? 'index';
-            file_put_contents('php://stderr', "🔍 SWITCH: Executando ação: $action\n");
-            
             switch ($action) {
                 case 'new':
                     $controller->create();
@@ -428,9 +414,7 @@ try {
                     $controller->edit($id);
                     break;
                 case 'update':
-                    file_put_contents('php://stderr', "🔍 SWITCH: Chamando controller->update()\n");
                     $controller->update();
-                    file_put_contents('php://stderr', "✅ SWITCH: controller->update() retornou\n");
                     break;
                 case 'delete':
                     $id = $_GET['id'] ?? null;

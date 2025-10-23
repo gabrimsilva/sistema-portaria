@@ -164,31 +164,13 @@ class PreCadastrosVisitantesController {
      * Atualizar pré-cadastro
      */
     public function update() {
-        // 🔍 DEBUG: Log de entrada - USANDO STDERR
-        file_put_contents('php://stderr', "🔍 UPDATE(): INÍCIO DO MÉTODO\n");
-        file_put_contents('php://stderr', "🔍 UPDATE(): POST Data = " . json_encode($_POST) . "\n");
+        $this->authService->requirePermission('pre_cadastros.update');
+        
+        // Validação CSRF
+        require_once __DIR__ . '/../../config/csrf.php';
+        CSRFProtection::verifyRequest();
         
         try {
-            file_put_contents('php://stderr', "🔍 UPDATE(): Verificando permissão...\n");
-            $this->authService->requirePermission('pre_cadastros.update');
-            file_put_contents('php://stderr', "✅ UPDATE(): Permissão OK\n");
-            
-            // Validação CSRF
-            file_put_contents('php://stderr', "🔍 UPDATE(): Carregando CSRF...\n");
-            require_once __DIR__ . '/../../config/csrf.php';
-            file_put_contents('php://stderr', "🔍 UPDATE(): Verificando CSRF...\n");
-            CSRFProtection::verifyRequest();
-            file_put_contents('php://stderr', "✅ UPDATE(): CSRF OK\n");
-        } catch (Exception $e) {
-            file_put_contents('php://stderr', "❌ UPDATE(): ERRO = " . $e->getMessage() . "\n");
-            file_put_contents('php://stderr', "❌ UPDATE(): Stack = " . $e->getTraceAsString() . "\n");
-            $_SESSION['flash_error'] = 'Erro: ' . $e->getMessage();
-            header('Location: /pre-cadastros/visitantes?action=edit&id=' . ($_POST['id'] ?? '0'));
-            exit;
-        }
-        
-        try {
-            file_put_contents('php://stderr', "🔍 UPDATE(): Capturando dados POST...\n");
             $id = $_POST['id'] ?? null;
             $nome = $_POST['nome'] ?? '';
             $empresa = $_POST['empresa'] ?? '';
@@ -199,57 +181,32 @@ class PreCadastrosVisitantesController {
             $valid_from = $_POST['valid_from'] ?? date('Y-m-d');
             $valid_until = $_POST['valid_until'] ?? null;
             $observacoes = $_POST['observacoes'] ?? null;
-            file_put_contents('php://stderr', "✅ UPDATE(): Dados capturados (ID=$id, Nome=$nome)\n");
             
             // Normalização
-            file_put_contents('php://stderr', "🔍 UPDATE(): Normalizando documento...\n");
             $doc_number = $this->normalizeDocument($doc_number, $doc_type);
-            file_put_contents('php://stderr', "✅ UPDATE(): Documento normalizado\n");
-            
             if (!empty($placa_veiculo) && strtoupper($placa_veiculo) !== 'APE') {
                 $placa_veiculo = strtoupper(preg_replace('/[^A-Z0-9]/', '', $placa_veiculo));
             }
             
             // Validações
-            file_put_contents('php://stderr', "🔍 UPDATE(): Executando validate()...\n");
             $this->validate($nome, $doc_type, $doc_number, $valid_from, $valid_until);
-            file_put_contents('php://stderr', "✅ UPDATE(): Validação OK\n");
             
             // Verificar duplicidade (exceto o próprio)
-            file_put_contents('php://stderr', "🔍 UPDATE(): Verificando duplicidade...\n");
             $this->checkDuplicity($doc_type, $doc_number, $id);
-            file_put_contents('php://stderr', "✅ UPDATE(): Duplicidade OK\n");
             
             // Atualizar
-            file_put_contents('php://stderr', "🔍 UPDATE(): Executando SQL UPDATE...\n");
             $sql = "UPDATE visitantes_cadastro 
                     SET nome = ?, empresa = ?, doc_type = ?, doc_number = ?, 
                         doc_country = ?, placa_veiculo = ?, valid_from = ?, 
                         valid_until = ?, observacoes = ?
                     WHERE id = ? AND deleted_at IS NULL";
             
-            file_put_contents('php://stderr', "🔍 UPDATE(): Parâmetros SQL = " . json_encode([
+            $this->db->query($sql, [
                 $nome, $empresa, $doc_type, $doc_number, $doc_country,
                 $placa_veiculo, $valid_from, $valid_until, $observacoes, $id
-            ]) . "\n");
-            
-            try {
-                $this->db->query($sql, [
-                    $nome, $empresa, $doc_type, $doc_number, $doc_country,
-                    $placa_veiculo, $valid_from, $valid_until, $observacoes, $id
-                ]);
-                file_put_contents('php://stderr', "✅ UPDATE(): SQL UPDATE executado\n");
-            } catch (PDOException $pdoEx) {
-                file_put_contents('php://stderr', "❌ UPDATE(): PDO ERROR = " . $pdoEx->getMessage() . "\n");
-                file_put_contents('php://stderr', "❌ UPDATE(): PDO Code = " . $pdoEx->getCode() . "\n");
-                throw new Exception("Erro ao atualizar cadastro: " . $pdoEx->getMessage());
-            } catch (Exception $dbEx) {
-                file_put_contents('php://stderr', "❌ UPDATE(): DB ERROR = " . $dbEx->getMessage() . "\n");
-                throw $dbEx;
-            }
+            ]);
             
             // Auditoria
-            file_put_contents('php://stderr', "🔍 UPDATE(): Gravando auditoria...\n");
             $this->auditService->log(
                 'update',
                 'pre_cadastros_visitantes',
@@ -257,16 +214,12 @@ class PreCadastrosVisitantesController {
                 null,
                 ['nome' => $nome, 'doc_type' => $doc_type]
             );
-            file_put_contents('php://stderr', "✅ UPDATE(): Auditoria gravada\n");
             
             $_SESSION['flash_success'] = 'Pré-cadastro atualizado com sucesso!';
-            file_put_contents('php://stderr', "✅ UPDATE(): Redirecionando para lista...\n");
             header('Location: /pre-cadastros/visitantes');
             exit;
             
         } catch (Exception $e) {
-            file_put_contents('php://stderr', "❌ UPDATE(): EXCEPTION = " . $e->getMessage() . "\n");
-            file_put_contents('php://stderr', "❌ UPDATE(): FILE = " . $e->getFile() . ":" . $e->getLine() . "\n");
             $_SESSION['flash_error'] = $e->getMessage();
             header('Location: /pre-cadastros/visitantes?action=edit&id=' . $id);
             exit;
@@ -307,7 +260,7 @@ class PreCadastrosVisitantesController {
                         ativo = false
                     WHERE id = ?";
             
-            $this->db->execute($sql, [$id]);
+            $this->db->query($sql, [$id]);
             
             // Auditoria
             $this->auditService->log(
@@ -354,7 +307,7 @@ class PreCadastrosVisitantesController {
                     SET valid_from = ?, valid_until = ?, ativo = true
                     WHERE id = ?";
             
-            $this->db->execute($sql, [$newValidFrom, $newValidUntil, $id]);
+            $this->db->query($sql, [$newValidFrom, $newValidUntil, $id]);
             
             // Auditoria
             $this->auditService->log(

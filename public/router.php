@@ -189,8 +189,5 @@ if ($uri === '/painel/brigada') {
     exit;
 }
 
-// 🔍 DEBUG: Log de roteamento
-file_put_contents('php://stderr', "🔍 ROUTER.PHP: " . $_SERVER['REQUEST_METHOD'] . " " . $uri . "\n");
-
 // Todas as outras requisições passam pelo index.php
 require_once __DIR__ . '/index.php';

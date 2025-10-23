@@ -156,13 +156,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const validUntilInput = document.getElementById('valid_until');
     const btnDefaultValidity = document.getElementById('btn-default-validity');
     
-    // Botão "Padrão (+1 ano)"
+    // Botão "Padrão (+1 ano)" - Atualiza AMBOS os campos para HOJE + 1 ANO
     btnDefaultValidity.addEventListener('click', function() {
-        const fromDate = new Date(validFromInput.value || new Date());
-        const untilDate = new Date(fromDate);
-        untilDate.setFullYear(untilDate.getFullYear() + 1);
+        const today = new Date();
+        const oneYearFromToday = new Date(today);
+        oneYearFromToday.setFullYear(oneYearFromToday.getFullYear() + 1);
         
-        validUntilInput.value = untilDate.toISOString().split('T')[0];
+        // Atualizar AMBOS os campos
+        validFromInput.value = today.toISOString().split('T')[0];
+        validUntilInput.value = oneYearFromToday.toISOString().split('T')[0];
     });
     
     // Atualizar "valid_until" automaticamente ao mudar "valid_from"

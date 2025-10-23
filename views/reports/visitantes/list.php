@@ -185,18 +185,23 @@ $canDeleteInline = $authService->hasPermission('relatorios.excluir_linha');
                                                 <td>
                                                     <?php 
                                                     // Exibir documento baseado no tipo (com mascaramento LGPD)
-                                                    $docType = $visitante['doc_type'] ?? '';
+                                                    $docType = $visitante['doc_type'] ?? 'CPF'; // Default CPF se vazio
                                                     $docNumber = $visitante['doc_number_masked'] ?? $visitante['cpf_masked'] ?? '';
                                                     
                                                     if (!empty($docNumber)):
-                                                        // Mostrar tipo de documento se não for CPF
-                                                        if (!empty($docType) && $docType !== 'CPF'):
+                                                        // Definir cores dos badges por tipo de documento
+                                                        $badgeClass = match($docType) {
+                                                            'CPF' => 'badge-secondary',
+                                                            'RG' => 'badge-info',
+                                                            'CNH' => 'badge-primary',
+                                                            'Passaporte' => 'badge-success',
+                                                            'RNE' => 'badge-warning',
+                                                            'DNI', 'CI' => 'badge-dark',
+                                                            default => 'badge-light'
+                                                        };
                                                     ?>
-                                                        <small class="badge badge-info"><?= htmlspecialchars($docType) ?></small><br>
+                                                        <small class="badge <?= $badgeClass ?>"><?= htmlspecialchars($docType) ?></small><br>
                                                         <span class="text-muted"><?= htmlspecialchars($docNumber) ?></span>
-                                                    <?php else: ?>
-                                                        <span class="text-muted"><?= htmlspecialchars($docNumber) ?></span>
-                                                    <?php endif; ?>
                                                     <?php endif; ?>
                                                 </td>
                                                 <td><?= htmlspecialchars($visitante['empresa'] ?? '') ?></td>

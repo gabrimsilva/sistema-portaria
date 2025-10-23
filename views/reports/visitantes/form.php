@@ -89,11 +89,11 @@
                                                         <option value="">CPF (padrão)</option>
                                                         <option value="RG" <?= ($visitante['doc_type'] ?? '') === 'RG' ? 'selected' : '' ?>>RG</option>
                                                         <option value="CNH" <?= ($visitante['doc_type'] ?? '') === 'CNH' ? 'selected' : '' ?>>CNH</option>
-                                                        <option value="PASSAPORTE" <?= ($visitante['doc_type'] ?? '') === 'PASSAPORTE' ? 'selected' : '' ?>>Passaporte</option>
+                                                        <option value="Passaporte" <?= ($visitante['doc_type'] ?? '') === 'Passaporte' ? 'selected' : '' ?>>Passaporte</option>
                                                         <option value="RNE" <?= ($visitante['doc_type'] ?? '') === 'RNE' ? 'selected' : '' ?>>RNE (Registro Nacional de Estrangeiro)</option>
                                                         <option value="DNI" <?= ($visitante['doc_type'] ?? '') === 'DNI' ? 'selected' : '' ?>>DNI (Documento Nacional de Identidad)</option>
                                                         <option value="CI" <?= ($visitante['doc_type'] ?? '') === 'CI' ? 'selected' : '' ?>>CI (Cédula de Identidad)</option>
-                                                        <option value="OUTROS" <?= ($visitante['doc_type'] ?? '') === 'OUTROS' ? 'selected' : '' ?>>Outros</option>
+                                                        <option value="Outros" <?= ($visitante['doc_type'] ?? '') === 'Outros' ? 'selected' : '' ?>>Outros</option>
                                                     </select>
                                                     <small class="text-muted">Deixe vazio para CPF</small>
                                                 </div>
@@ -208,7 +208,7 @@
         // Função para mostrar/ocultar campo de país
         function toggleCountryField() {
             const docType = $('#doc_type').val();
-            const internationalDocs = ['PASSAPORTE', 'RNE', 'DNI', 'CI', 'OUTROS'];
+            const internationalDocs = ['Passaporte', 'PASSAPORTE', 'RNE', 'DNI', 'CI', 'Outros', 'OUTROS'];
             
             if (internationalDocs.includes(docType)) {
                 $('#country_container').show();
@@ -264,9 +264,12 @@
             }
         });
         
-        // Inicializar estado do campo país e máscara
+        // Inicializar estado do campo país
         toggleCountryField();
-        applyDocumentMask();
+        
+        // ⚠️ IMPORTANTE: NÃO aplicar máscara automaticamente em modo edição!
+        // Isso preserva valores internacionais (ex: AB123456) sem aplicar máscara de CPF
+        // A máscara só será aplicada quando usuário mudar o tipo manualmente
         
         // ========================================
         // CONTROLE DE CHECKBOX "A PÉ"

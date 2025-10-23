@@ -230,7 +230,12 @@ class PreCadastrosPrestadoresController {
      * Desativar pré-cadastro (soft delete)
      */
     public function delete($id) {
+        error_log("🗑️ DELETE - Método chamado com ID: " . $id);
+        error_log("🔍 DELETE - Sessão usuário: " . ($_SESSION['usuario_id'] ?? 'não logado'));
+        
         $this->authService->requirePermission('pre_cadastros.delete');
+        
+        error_log("✅ DELETE - Permissão concedida");
         
         try {
             // Verificar se tem registros vinculados

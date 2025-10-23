@@ -435,9 +435,11 @@ try {
             
         // 🆕 PRÉ-CADASTROS V2.0.0 - PRESTADORES
         case 'pre-cadastros/prestadores':
+            error_log("📍 ROTA: pre-cadastros/prestadores - Action: " . ($_GET['action'] ?? 'index'));
             require_once '../src/controllers/PreCadastrosPrestadoresController.php';
             $controller = new PreCadastrosPrestadoresController();
             $action = $_GET['action'] ?? 'index';
+            error_log("🔍 ACTION detectada: " . $action);
             switch ($action) {
                 case 'new':
                     $controller->create();
@@ -453,6 +455,7 @@ try {
                     $controller->update();
                     break;
                 case 'delete':
+                    error_log("🗑️ CASE DELETE - ID recebido: " . ($_GET['id'] ?? 'null'));
                     $id = $_GET['id'] ?? null;
                     $controller->delete($id);
                     break;

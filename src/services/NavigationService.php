@@ -275,7 +275,7 @@ class NavigationService
         
         $html .= '<a href="' . htmlspecialchars($item['url']) . '" class="' . $linkClass . '"' . $target . '>';
         $html .= '<i class="nav-icon ' . htmlspecialchars($item['icon']) . '"></i>';
-        $html .= '<p>' . htmlspecialchars($item['label']);
+        $html .= '<p style="font-size: 1.05rem; font-weight: 500;">' . htmlspecialchars($item['label']);
         
         if ($hasChildren) {
             $html .= ' <i class="fas fa-angle-left right"></i>';
@@ -294,8 +294,8 @@ class NavigationService
                 
                 $html .= '<li class="nav-item">';
                 $html .= '<a href="' . htmlspecialchars($child['url']) . '" class="' . $childLinkClass . '">';
-                $html .= '<i class="nav-icon ' . htmlspecialchars($child['icon']) . '"></i>';
-                $html .= '<p>' . htmlspecialchars($child['label']) . '</p>';
+                $html .= '<i class="nav-icon ' . htmlspecialchars($child['icon']) . '" style="font-size: 0.85rem;"></i>';
+                $html .= '<p style="font-size: 0.92rem; font-weight: 400; padding-left: 8px;">' . htmlspecialchars($child['label']) . '</p>';
                 $html .= '</a>';
                 $html .= '</li>';
             }

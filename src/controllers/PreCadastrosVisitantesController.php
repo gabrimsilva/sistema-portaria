@@ -234,7 +234,7 @@ class PreCadastrosVisitantesController {
             ]) . "\n");
             
             try {
-                $this->db->execute($sql, [
+                $this->db->query($sql, [
                     $nome, $empresa, $doc_type, $doc_number, $doc_country,
                     $placa_veiculo, $valid_from, $valid_until, $observacoes, $id
                 ]);

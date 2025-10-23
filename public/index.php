@@ -469,9 +469,12 @@ try {
                     $controller->update();
                     break;
                 case 'delete':
+                    file_put_contents('/tmp/delete-debug.log', date('Y-m-d H:i:s') . " | ✅ ENTROU NO CASE DELETE | ID: " . ($_GET['id'] ?? 'null') . "\n", FILE_APPEND);
                     error_log("🗑️ CASE DELETE - ID recebido: " . ($_GET['id'] ?? 'null'));
                     $id = $_GET['id'] ?? null;
+                    file_put_contents('/tmp/delete-debug.log', date('Y-m-d H:i:s') . " | 🚀 CHAMANDO controller->delete($id)\n", FILE_APPEND);
                     $controller->delete($id);
+                    file_put_contents('/tmp/delete-debug.log', date('Y-m-d H:i:s') . " | ✅ controller->delete() FINALIZADO\n", FILE_APPEND);
                     break;
                 case 'renovar':
                     $id = $_GET['id'] ?? null;

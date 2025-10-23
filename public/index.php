@@ -635,40 +635,6 @@ try {
             }
             break;
             
-        case 'pre-cadastros/prestadores':
-            require_once '../src/controllers/PreCadastrosPrestadoresController.php';
-            $controller = new PreCadastrosPrestadoresController();
-            $action = $_GET['action'] ?? 'index';
-            
-            switch ($action) {
-                case 'new':
-                    $controller->create();
-                    break;
-                case 'save':
-                    $controller->save();
-                    break;
-                case 'edit':
-                    $id = $_GET['id'] ?? null;
-                    $controller->edit($id);
-                    break;
-                case 'update':
-                    $id = $_GET['id'] ?? null;
-                    $controller->update($id);
-                    break;
-                case 'delete':
-                    $id = $_GET['id'] ?? null;
-                    $controller->delete($id);
-                    break;
-                case 'renovar':
-                    $id = $_GET['id'] ?? null;
-                    $controller->renovar($id);
-                    break;
-                default:
-                    $controller->index();
-                    break;
-            }
-            break;
-            
         case 'brigada':
             require_once '../src/controllers/BrigadaController.php';
             $controller = new BrigadaController();

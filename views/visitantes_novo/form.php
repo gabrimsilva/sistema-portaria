@@ -215,6 +215,11 @@ require_once '../../src/services/FormService.php';
             const $countryContainer = $('#country_container');
             const $cpfLegacy = $('#cpf');
             
+            console.log('🔍 MODO EDIÇÃO - Valores iniciais:');
+            console.log('  doc_type:', $docType.val());
+            console.log('  doc_number:', $docNumber.val());
+            console.log('  doc_country:', $docCountry.val());
+            
             // Função centralizada: normalizar tipo vazio como CPF
             function getEffectiveDocType() {
                 return ($docType.val() || 'CPF').toUpperCase();
@@ -222,6 +227,7 @@ require_once '../../src/services/FormService.php';
             
             function applyDocumentMask() {
                 const docType = getEffectiveDocType(); // Usar função centralizada
+                console.log('🎯 applyDocumentMask chamado - docType:', docType, 'valor atual:', $docNumber.val());
                 let value;
                 
                 // Tipo CPF (incluindo quando vazio/padrão)
@@ -247,10 +253,13 @@ require_once '../../src/services/FormService.php';
                     value = $docNumber.val().replace(/[^A-Z0-9]/gi, '').toUpperCase();
                 }
                 
+                console.log('  ➡️ Valor após máscara:', value);
                 $docNumber.val(value);
                 
                 // Mostrar campo país para documentos internacionais
-                if (['PASSAPORTE', 'PASSPORT', 'RNE', 'DNI', 'CI', 'OUTRO', 'OUTROS'].indexOf(docType) !== -1) {
+                const isInternational = ['PASSAPORTE', 'PASSPORT', 'RNE', 'DNI', 'CI', 'OUTRO', 'OUTROS'].indexOf(docType) !== -1;
+                console.log('  🌍 É documento internacional?', isInternational);
+                if (isInternational) {
                     $countryContainer.show();
                 } else {
                     $countryContainer.hide();

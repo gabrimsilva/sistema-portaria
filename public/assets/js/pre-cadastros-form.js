@@ -18,9 +18,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // ========================================
     
     const docTypeSelect = document.getElementById('doc_type');
-    const docNumberInput = document.getElementById('doc_number');
+    let docNumberInput = document.getElementById('doc_number');
     const docCountryDiv = document.getElementById('div-doc-country');
     const docHint = document.getElementById('doc-hint');
+    
+    let currentInputListener = null; // Armazenar listener atual
     
     // Atualizar máscara ao mudar tipo de documento
     docTypeSelect.addEventListener('change', function() {
@@ -42,66 +44,72 @@ document.addEventListener('DOMContentLoaded', function() {
      * @param {boolean} preserveValue - Se true, mantém valor existente (modo edição)
      */
     function updateDocumentMask(docType, preserveValue = false) {
-        // Remover máscaras anteriores e event listeners
-        if (docNumberInput._mask) {
-            docNumberInput._mask.destroy();
+        // Salvar valor atual
+        const currentValue = preserveValue ? docNumberInput.value : '';
+        
+        // Remover listener anterior se existir
+        if (currentInputListener) {
+            docNumberInput.removeEventListener('input', currentInputListener);
+            currentInputListener = null;
         }
         
-        // Clonar e substituir o input para remover TODOS os event listeners antigos
-        const newInput = docNumberInput.cloneNode(true);
-        docNumberInput.parentNode.replaceChild(newInput, docNumberInput);
-        
-        // Atualizar referência
-        const docNumberInputNew = document.getElementById('doc_number');
+        // Resetar campo
+        docNumberInput.value = '';
+        docNumberInput.placeholder = '';
         
         switch (docType) {
             case 'CPF':
-                docNumberInputNew.placeholder = '000.000.000-00';
+                docNumberInput.placeholder = '000.000.000-00';
                 docHint.textContent = 'Ex: 123.456.789-00';
-                applyMask(docNumberInputNew, '000.000.000-00');
+                currentInputListener = createMaskListener('000.000.000-00');
                 break;
                 
             case 'RG':
-                docNumberInputNew.placeholder = '00.000.000-0';
+                docNumberInput.placeholder = '00.000.000-0';
                 docHint.textContent = 'Ex: 12.345.678-9';
-                applyMask(docNumberInputNew, '00.000.000-0');
+                currentInputListener = createMaskListener('00.000.000-0');
                 break;
                 
             case 'CNH':
-                docNumberInputNew.placeholder = '00000000000';
+                docNumberInput.placeholder = '00000000000';
                 docHint.textContent = 'Ex: 12345678900 (11 dígitos)';
-                applyNumericOnly(docNumberInputNew);
+                currentInputListener = createNumericListener();
                 break;
                 
             case 'Passaporte':
-                docNumberInputNew.placeholder = 'AB123456';
+                docNumberInput.placeholder = 'AB123456';
                 docHint.textContent = 'Ex: AB123456 (alfanumérico)';
-                applyAlphanumeric(docNumberInputNew);
+                currentInputListener = createAlphanumericListener(false);
                 break;
                 
             case 'RNE':
-                docNumberInputNew.placeholder = 'V123456-7';
+                docNumberInput.placeholder = 'V123456-7';
                 docHint.textContent = 'Ex: V123456-7';
-                applyAlphanumeric(docNumberInputNew, true); // Permite hífen
+                currentInputListener = createAlphanumericListener(true); // Permite hífen
                 break;
                 
             case 'DNI':
             case 'CI':
-                docNumberInputNew.placeholder = '12345678';
+                docNumberInput.placeholder = '12345678';
                 docHint.textContent = 'Documento de identificação estrangeiro';
-                applyAlphanumeric(docNumberInputNew);
+                currentInputListener = createAlphanumericListener(false);
                 break;
                 
             case 'Outros':
-                docNumberInputNew.placeholder = 'Número do documento';
+                docNumberInput.placeholder = 'Número do documento';
                 docHint.textContent = 'Informe o número conforme documento';
-                applyAlphanumeric(docNumberInputNew, true); // Permite caracteres especiais
+                currentInputListener = createAlphanumericListener(true); // Permite caracteres especiais
                 break;
         }
         
-        // 🔧 CORREÇÃO: Só limpa se não for modo edição
-        if (!preserveValue) {
-            docNumberInputNew.value = '';
+        // Aplicar listener
+        if (currentInputListener) {
+            docNumberInput.addEventListener('input', currentInputListener);
+        }
+        
+        // Restaurar valor se necessário
+        if (currentValue) {
+            docNumberInput.value = currentValue;
         }
     }
     
@@ -131,10 +139,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     /**
-     * Aplicar máscara (simples)
+     * Criar listener de máscara
      */
-    function applyMask(input, mask) {
-        input.addEventListener('input', function(e) {
+    function createMaskListener(mask) {
+        return function(e) {
             let value = e.target.value.replace(/\D/g, '');
             let result = '';
             let maskIndex = 0;
@@ -150,35 +158,31 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             e.target.value = result;
-        });
-        
-        input._mask = { destroy: () => {} };
+        };
     }
     
     /**
-     * Aplicar validação de apenas números (sem máscara visual)
+     * Criar listener para apenas números
      */
-    function applyNumericOnly(input) {
-        input.addEventListener('input', function(e) {
+    function createNumericListener() {
+        return function(e) {
             e.target.value = e.target.value.replace(/\D/g, '');
-        });
-        input._mask = { destroy: () => {} };
+        };
     }
     
     /**
-     * Aplicar validação alfanumérica (permite letras e números)
+     * Criar listener alfanumérico
      */
-    function applyAlphanumeric(input, allowSpecialChars = false) {
-        input.addEventListener('input', function(e) {
+    function createAlphanumericListener(allowSpecialChars = false) {
+        return function(e) {
             if (allowSpecialChars) {
-                // Permite alfanuméricos + hífen e outros caracteres comuns
+                // Permite alfanuméricos + hífen
                 e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9\-]/g, '');
             } else {
                 // Apenas alfanuméricos
                 e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
             }
-        });
-        input._mask = { destroy: () => {} };
+        };
     }
     
     // ========================================

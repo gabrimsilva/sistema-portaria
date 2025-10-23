@@ -191,7 +191,7 @@ const PreCadastros = {
         
         // Editar
         actions += `
-            <a href="/pre-cadastros/${this.tipo}s?action=edit&id=${c.id}" 
+            <a href="/pre-cadastros/${this.getEndpointSegment()}?action=edit&id=${c.id}" 
                class="btn btn-outline-primary" title="Editar">
                 <i class="fas fa-edit"></i>
             </a>
@@ -317,7 +317,7 @@ const PreCadastros = {
      */
     confirmarExclusao: function(id, nome) {
         if (confirm(`Deseja realmente excluir o cadastro de ${nome}?\n\nEsta ação não pode ser desfeita.`)) {
-            window.location.href = `/pre-cadastros/${this.tipo}s?action=delete&id=${id}`;
+            window.location.href = `/pre-cadastros/${this.getEndpointSegment()}?action=delete&id=${id}`;
         }
     }
 };

@@ -317,15 +317,36 @@ const PreCadastros = {
      */
     confirmarExclusao: function(id, nome) {
         console.log('🗑️ Tentando excluir:', id, nome);
-        console.log('🔍 Endpoint segment:', this.getEndpointSegment());
         
         const confirmacao = confirm(`Deseja realmente excluir o cadastro de ${nome}?\n\nEsta ação não pode ser desfeita.`);
         console.log('✅ Usuário confirmou?', confirmacao);
         
         if (confirmacao) {
-            const url = `/pre-cadastros/${this.getEndpointSegment()}?action=delete&id=${id}`;
-            console.log('🚀 Redirecionando para:', url);
-            window.location.href = url;
+            console.log('🚀 Criando formulário de exclusão para ID:', id);
+            
+            // Criar formulário oculto e submeter
+            const form = document.createElement('form');
+            form.method = 'GET';
+            form.action = `/pre-cadastros/${this.getEndpointSegment()}`;
+            
+            // Campo action
+            const actionInput = document.createElement('input');
+            actionInput.type = 'hidden';
+            actionInput.name = 'action';
+            actionInput.value = 'delete';
+            form.appendChild(actionInput);
+            
+            // Campo id
+            const idInput = document.createElement('input');
+            idInput.type = 'hidden';
+            idInput.name = 'id';
+            idInput.value = id;
+            form.appendChild(idInput);
+            
+            // Adicionar ao body e submeter
+            document.body.appendChild(form);
+            console.log('📤 Submetendo formulário...');
+            form.submit();
         }
     }
 };

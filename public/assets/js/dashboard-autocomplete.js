@@ -9,6 +9,11 @@
 (function() {
     'use strict';
     
+    // ⚠️ VALIDAÇÃO DE CADASTROS EXPIRADOS
+    let selectedCadastroStatus = null;
+    let selectedCadastroId = null;
+    let selectedCadastroTipo = null;
+    
     /**
      * Inicializar autocomplete para Visitantes
      */
@@ -43,6 +48,11 @@
             delay: 300,
             select: function(event, ui) {
                 const cadastro = ui.item.data;
+                
+                // ⚠️ ARMAZENAR STATUS PARA VALIDAÇÃO
+                selectedCadastroStatus = cadastro.status_validade;
+                selectedCadastroId = cadastro.id;
+                selectedCadastroTipo = 'visitante';
                 
                 // Preencher campos automaticamente
                 $('#visitante_nome').val(cadastro.nome);
@@ -135,6 +145,11 @@
             delay: 300,
             select: function(event, ui) {
                 const cadastro = ui.item.data;
+                
+                // ⚠️ ARMAZENAR STATUS PARA VALIDAÇÃO
+                selectedCadastroStatus = cadastro.status_validade;
+                selectedCadastroId = cadastro.id;
+                selectedCadastroTipo = 'prestador';
                 
                 // Preencher campos
                 $('#prestador_nome').val(cadastro.nome);
@@ -248,11 +263,103 @@
     }
     
     /**
+     * Validar cadastro expirado antes do submit
+     */
+    function validateCadastroExpiration() {
+        // Interceptar submit do formulário de visitante
+        $('#btnSalvarVisitante').on('click', function(e) {
+            if (selectedCadastroStatus === 'expirado') {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                
+                showExpiredRenewalDialog(selectedCadastroId, 'visitante');
+                return false;
+            }
+        });
+        
+        // Interceptar submit do formulário de prestador
+        $('#btnSalvarPrestador').on('click', function(e) {
+            if (selectedCadastroStatus === 'expirado') {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                
+                showExpiredRenewalDialog(selectedCadastroId, 'prestador');
+                return false;
+            }
+        });
+    }
+    
+    /**
+     * Mostrar diálogo para renovar cadastro expirado
+     */
+    function showExpiredRenewalDialog(cadastroId, tipo) {
+        const nomeLabel = tipo === 'visitante' ? 'Visitante' : 'Prestador';
+        
+        if (confirm(`⚠️ CADASTRO EXPIRADO!\n\nEste ${nomeLabel.toLowerCase()} possui um pré-cadastro expirado.\n\n✅ Deseja renovar o cadastro automaticamente (+1 ano) e registrar a entrada?\n❌ Cancelar (não registrar entrada)`)) {
+            // Renovar cadastro via API
+            renovarCadastro(cadastroId, tipo);
+        } else {
+            // Limpar seleção
+            selectedCadastroStatus = null;
+            selectedCadastroId = null;
+            selectedCadastroTipo = null;
+        }
+    }
+    
+    /**
+     * Renovar cadastro expirado via API
+     */
+    function renovarCadastro(id, tipo) {
+        $.ajax({
+            url: '/api/pre-cadastros/renovar',
+            method: 'POST',
+            data: JSON.stringify({ id: id, tipo: tipo }),
+            contentType: 'application/json',
+            success: function(response) {
+                if (response.success) {
+                    alert(`✅ Cadastro renovado com sucesso!\n\nNova validade: ${new Date(response.valid_until).toLocaleDateString('pt-BR')}`);
+                    
+                    // Atualizar status local
+                    selectedCadastroStatus = 'valido';
+                    
+                    // Permitir submissão agora
+                    if (tipo === 'visitante') {
+                        $('#btnSalvarVisitante').trigger('click');
+                    } else {
+                        $('#btnSalvarPrestador').trigger('click');
+                    }
+                } else {
+                    alert('❌ Erro ao renovar cadastro: ' + response.message);
+                }
+            },
+            error: function() {
+                alert('❌ Erro ao comunicar com o servidor');
+            }
+        });
+    }
+    
+    /**
+     * Resetar status quando limpar formulário
+     */
+    function resetCadastroStatus() {
+        $('#visitante_nome, #prestador_nome').on('input', function() {
+            // Se usuário digitou manualmente (não selecionou do autocomplete), resetar
+            if ($(this).val().length < 3) {
+                selectedCadastroStatus = null;
+                selectedCadastroId = null;
+                selectedCadastroTipo = null;
+            }
+        });
+    }
+    
+    /**
      * Inicializar tudo quando DOM estiver pronto
      */
     $(document).ready(function() {
         initVisitanteAutocomplete();
         initPrestadorAutocomplete();
+        validateCadastroExpiration();
+        resetCadastroStatus();
         
         console.log('✅ Dashboard Autocomplete (Pré-Cadastros) inicializado');
     });

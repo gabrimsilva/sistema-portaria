@@ -192,4 +192,44 @@ require_once __DIR__ . '/../../partials/header.php';
 
 <script src="/assets/js/pre-cadastros-form.js"></script>
 
+<script>
+// 🔍 DEBUG: Interceptar submit do formulário
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('form-pre-cadastro');
+    
+    if (form) {
+        console.log('🔍 DEBUG: Formulário encontrado, adicionando interceptor');
+        
+        form.addEventListener('submit', function(e) {
+            console.log('🔍 DEBUG: SUBMIT interceptado!');
+            
+            // Capturar todos os dados do formulário
+            const formData = new FormData(form);
+            const data = {};
+            
+            for (let [key, value] of formData.entries()) {
+                data[key] = value;
+            }
+            
+            console.log('📝 DEBUG: Dados do formulário:', data);
+            console.log('🔑 DEBUG: CSRF Token presente?', data.csrf_token ? 'SIM ✅' : 'NÃO ❌');
+            console.log('🆔 DEBUG: ID presente?', data.id ? 'SIM ✅ (' + data.id + ')' : 'NÃO ❌');
+            console.log('👤 DEBUG: Nome presente?', data.nome ? 'SIM ✅' : 'NÃO ❌');
+            console.log('📄 DEBUG: Documento presente?', data.doc_number ? 'SIM ✅' : 'NÃO ❌');
+            console.log('📅 DEBUG: Data início:', data.valid_from);
+            console.log('📅 DEBUG: Data fim:', data.valid_until);
+            console.log('🎯 DEBUG: Action URL:', form.action);
+            console.log('📮 DEBUG: Method:', form.method);
+            
+            // Não prevenir o submit, apenas logar
+            console.log('✅ DEBUG: Permitindo envio do formulário...');
+        });
+        
+        console.log('✅ DEBUG: Interceptor de submit instalado com sucesso');
+    } else {
+        console.error('❌ DEBUG: Formulário NÃO encontrado!');
+    }
+});
+</script>
+
 <?php require_once __DIR__ . '/../../partials/footer.php'; ?>

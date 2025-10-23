@@ -164,11 +164,25 @@ class PreCadastrosVisitantesController {
      * Atualizar pré-cadastro
      */
     public function update() {
-        $this->authService->requirePermission('pre_cadastros.update');
+        // 🔍 DEBUG: Log de entrada
+        error_log("🔍 PreCadastrosVisitantesController::update() - INÍCIO");
+        error_log("🔍 POST Data: " . json_encode($_POST));
         
-        // Validação CSRF
-        require_once __DIR__ . '/../services/CSRFProtection.php';
-        CSRFProtection::verifyRequest();
+        try {
+            $this->authService->requirePermission('pre_cadastros.update');
+            error_log("✅ Permissão verificada");
+            
+            // Validação CSRF
+            require_once __DIR__ . '/../services/CSRFProtection.php';
+            CSRFProtection::verifyRequest();
+            error_log("✅ CSRF validado");
+        } catch (Exception $e) {
+            error_log("❌ ERRO na validação inicial: " . $e->getMessage());
+            error_log("❌ Stack trace: " . $e->getTraceAsString());
+            $_SESSION['flash_error'] = 'Erro: ' . $e->getMessage();
+            header('Location: /pre-cadastros/visitantes?action=edit&id=' . ($_POST['id'] ?? '0'));
+            exit;
+        }
         
         try {
             $id = $_POST['id'] ?? null;

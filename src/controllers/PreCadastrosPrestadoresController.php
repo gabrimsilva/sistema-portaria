@@ -245,7 +245,7 @@ class PreCadastrosPrestadoresController {
             // Verificar se tem registros vinculados
             $count = $this->db->fetch(
                 "SELECT COUNT(*) as total FROM prestadores_registros 
-                 WHERE cadastro_id = ? AND deleted_at IS NULL",
+                 WHERE cadastro_id = ?",
                 [$id]
             );
             

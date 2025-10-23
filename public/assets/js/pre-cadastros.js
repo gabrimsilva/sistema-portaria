@@ -19,6 +19,17 @@ const PreCadastros = {
     },
     
     /**
+     * Obter endpoint correto (pluralização correta)
+     */
+    getEndpointSegment: function() {
+        const map = {
+            'visitante': 'visitantes',
+            'prestador': 'prestadores'
+        };
+        return map[this.tipo] || this.tipo + 's';
+    },
+    
+    /**
      * Inicializar módulo
      */
     init: function(tipo) {
@@ -69,7 +80,7 @@ const PreCadastros = {
      */
     loadCadastros: function() {
         const self = this;
-        const endpoint = `/api/pre-cadastros/${this.tipo}s/list`;
+        const endpoint = `/api/pre-cadastros/${this.getEndpointSegment()}/list`;
         
         $.ajax({
             url: endpoint,
@@ -96,7 +107,7 @@ const PreCadastros = {
      * Carregar estatísticas (cards do topo)
      */
     loadStats: function() {
-        const endpoint = `/api/pre-cadastros/${this.tipo}s/stats`;
+        const endpoint = `/api/pre-cadastros/${this.getEndpointSegment()}/stats`;
         
         $.ajax({
             url: endpoint,

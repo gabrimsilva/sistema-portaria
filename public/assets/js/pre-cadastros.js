@@ -229,8 +229,8 @@ const PreCadastros = {
         $('#nova-validade').text(formatted);
         $('#btn-confirmar-renovacao').data('id', id);
         
-        const modal = new bootstrap.Modal(document.getElementById('modal-renovar'));
-        modal.show();
+        // Usar jQuery/Bootstrap 4
+        $('#modal-renovar').modal('show');
     },
     
     /**
@@ -238,7 +238,6 @@ const PreCadastros = {
      */
     renovarCadastro: function(id) {
         const self = this;
-        const modalElement = document.getElementById('modal-renovar');
         
         console.log('🔄 Renovando cadastro ID:', id);
         
@@ -253,15 +252,8 @@ const PreCadastros = {
             success: function(response) {
                 console.log('✅ Resposta do servidor:', response);
                 
-                // Fechar modal de forma robusta
-                const modal = bootstrap.Modal.getInstance(modalElement);
-                if (modal) {
-                    modal.hide();
-                }
-                
-                // Remover backdrop manualmente (fallback)
-                $('.modal-backdrop').remove();
-                $('body').removeClass('modal-open').css('overflow', '');
+                // Fechar modal usando jQuery/Bootstrap 4
+                $('#modal-renovar').modal('hide');
                 
                 // Mostrar mensagem
                 if (response.success) {
@@ -275,14 +267,7 @@ const PreCadastros = {
                 console.error('❌ Erro AJAX:', xhr);
                 
                 // Fechar modal mesmo em caso de erro
-                const modal = bootstrap.Modal.getInstance(modalElement);
-                if (modal) {
-                    modal.hide();
-                }
-                
-                // Remover backdrop manualmente
-                $('.modal-backdrop').remove();
-                $('body').removeClass('modal-open').css('overflow', '');
+                $('#modal-renovar').modal('hide');
                 
                 alert('Erro ao renovar cadastro');
                 console.error(xhr.responseText);

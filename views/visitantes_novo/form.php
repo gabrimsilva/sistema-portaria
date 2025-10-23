@@ -267,8 +267,14 @@ require_once '../../src/services/FormService.php';
                 }
             }
             
+            // ⚠️ CRÍTICO: Remover TODOS os event listeners automáticos que aplicam máscara
+            // Isso evita que máscaras sejam aplicadas em modo edição
+            $docType.off('change input paste keyup blur');
+            $docNumber.off('change input paste keyup blur');
+            
+            // Apenas aplicar máscara quando usuário MUDAR o tipo manualmente
             $docType.on('change', applyDocumentMask);
-            $docNumber.on('input paste keyup blur', applyDocumentMask);
+            // REMOVIDO: $docNumber.on('input paste keyup blur', applyDocumentMask);
             
             // Garantir sincronização antes do submit
             $('form').on('submit', function() {

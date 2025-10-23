@@ -70,6 +70,14 @@ class NavigationService
             ]
         ],
         [
+            'id' => 'brigada',
+            'label' => 'Brigada de Incêndio',
+            'url' => '/brigada',
+            'icon' => 'fas fa-fire-extinguisher',
+            'permission' => ['administrador', 'seguranca', 'rh'],
+            'children' => []
+        ],
+        [
             'id' => 'ramais',
             'label' => 'Ramais',
             'url' => '/ramais',
@@ -100,14 +108,6 @@ class NavigationService
             'url' => '/config',
             'icon' => 'fas fa-cogs',
             'permission' => ['administrador', 'seguranca'],
-            'children' => []
-        ],
-        [
-            'id' => 'brigada',
-            'label' => 'Brigada de Incêndio',
-            'url' => '/brigada',
-            'icon' => 'fas fa-fire-extinguisher',
-            'permission' => ['administrador', 'seguranca', 'rh'],
             'children' => []
         ]
     ];

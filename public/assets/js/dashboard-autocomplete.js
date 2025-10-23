@@ -290,52 +290,22 @@
     }
     
     /**
-     * Mostrar diálogo para renovar cadastro expirado
+     * Mostrar diálogo para editar cadastro expirado
      */
     function showExpiredRenewalDialog(cadastroId, tipo) {
         const nomeLabel = tipo === 'visitante' ? 'Visitante' : 'Prestador';
+        const nomeLabelPlural = tipo === 'visitante' ? 'Visitantes' : 'Prestadores';
         
-        if (confirm(`⚠️ CADASTRO EXPIRADO!\n\nEste ${nomeLabel.toLowerCase()} possui um pré-cadastro expirado.\n\n✅ Deseja renovar o cadastro automaticamente (+1 ano) e registrar a entrada?\n❌ Cancelar (não registrar entrada)`)) {
-            // Renovar cadastro via API
-            renovarCadastro(cadastroId, tipo);
+        if (confirm(`⚠️ CADASTRO EXPIRADO!\n\nEste ${nomeLabel.toLowerCase()} possui um pré-cadastro expirado.\n\nPara registrar a entrada, você precisa renovar o cadastro primeiro.\n\n✅ Ir para Pré-Cadastro (editar/renovar)\n❌ Cancelar`)) {
+            // Redirecionar para página de edição do pré-cadastro
+            const editUrl = `/pre-cadastros/${tipo === 'visitante' ? 'visitantes' : 'prestadores'}?action=edit&id=${cadastroId}`;
+            window.location.href = editUrl;
         } else {
             // Limpar seleção
             selectedCadastroStatus = null;
             selectedCadastroId = null;
             selectedCadastroTipo = null;
         }
-    }
-    
-    /**
-     * Renovar cadastro expirado via API
-     */
-    function renovarCadastro(id, tipo) {
-        $.ajax({
-            url: '/api/pre-cadastros/renovar',
-            method: 'POST',
-            data: JSON.stringify({ id: id, tipo: tipo }),
-            contentType: 'application/json',
-            success: function(response) {
-                if (response.success) {
-                    alert(`✅ Cadastro renovado com sucesso!\n\nNova validade: ${new Date(response.valid_until).toLocaleDateString('pt-BR')}`);
-                    
-                    // Atualizar status local
-                    selectedCadastroStatus = 'valido';
-                    
-                    // Permitir submissão agora
-                    if (tipo === 'visitante') {
-                        $('#btnSalvarVisitante').trigger('click');
-                    } else {
-                        $('#btnSalvarPrestador').trigger('click');
-                    }
-                } else {
-                    alert('❌ Erro ao renovar cadastro: ' + response.message);
-                }
-            },
-            error: function() {
-                alert('❌ Erro ao comunicar com o servidor');
-            }
-        });
     }
     
     /**

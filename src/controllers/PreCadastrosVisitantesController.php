@@ -394,8 +394,11 @@ class PreCadastrosVisitantesController {
             throw new Exception('Número do documento é obrigatório');
         }
         
-        if (strtotime($valid_until) <= strtotime($valid_from)) {
-            throw new Exception('Data de fim deve ser posterior à data de início');
+        // ⚠️ IMPORTANTE: Validar datas apenas se ambas estiverem preenchidas
+        if (!empty($valid_until) && !empty($valid_from)) {
+            if (strtotime($valid_until) <= strtotime($valid_from)) {
+                throw new Exception('Data de fim deve ser posterior à data de início');
+            }
         }
     }
     

@@ -29,6 +29,9 @@ if ((strpos($requestUri, '/uploads/') !== false || strpos($requestUri, 'uploads/
 
 require_once __DIR__ . '/../config/config.php';
 
+// 🔍 DEBUG: Log de requisições no index.php
+file_put_contents('php://stderr', "🔍 INDEX.PHP: " . $_SERVER['REQUEST_METHOD'] . " " . $_SERVER['REQUEST_URI'] . "\n");
+
 // Simple router
 $request = $_SERVER['REQUEST_URI'];
 $path = parse_url($request, PHP_URL_PATH);

@@ -316,8 +316,16 @@ const PreCadastros = {
      * Confirmar exclusão
      */
     confirmarExclusao: function(id, nome) {
-        if (confirm(`Deseja realmente excluir o cadastro de ${nome}?\n\nEsta ação não pode ser desfeita.`)) {
-            window.location.href = `/pre-cadastros/${this.getEndpointSegment()}?action=delete&id=${id}`;
+        console.log('🗑️ Tentando excluir:', id, nome);
+        console.log('🔍 Endpoint segment:', this.getEndpointSegment());
+        
+        const confirmacao = confirm(`Deseja realmente excluir o cadastro de ${nome}?\n\nEsta ação não pode ser desfeita.`);
+        console.log('✅ Usuário confirmou?', confirmacao);
+        
+        if (confirmacao) {
+            const url = `/pre-cadastros/${this.getEndpointSegment()}?action=delete&id=${id}`;
+            console.log('🚀 Redirecionando para:', url);
+            window.location.href = url;
         }
     }
 };

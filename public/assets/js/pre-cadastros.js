@@ -238,6 +238,7 @@ const PreCadastros = {
      */
     renovarCadastro: function(id) {
         const self = this;
+        const modalElement = document.getElementById('modal-renovar');
         
         $.ajax({
             url: '/api/pre-cadastros/renovar',
@@ -248,15 +249,27 @@ const PreCadastros = {
                 tipo: this.tipo
             }),
             success: function(response) {
+                // Fechar modal ANTES do alert
+                const modal = bootstrap.Modal.getInstance(modalElement);
+                if (modal) {
+                    modal.hide();
+                }
+                
+                // Mostrar mensagem
                 if (response.success) {
                     alert(response.message);
-                    bootstrap.Modal.getInstance(document.getElementById('modal-renovar')).hide();
                     self.loadCadastros(); // Recarregar lista
                 } else {
                     alert('Erro: ' + response.message);
                 }
             },
             error: function(xhr) {
+                // Fechar modal mesmo em caso de erro
+                const modal = bootstrap.Modal.getInstance(modalElement);
+                if (modal) {
+                    modal.hide();
+                }
+                
                 alert('Erro ao renovar cadastro');
                 console.error(xhr.responseText);
             }

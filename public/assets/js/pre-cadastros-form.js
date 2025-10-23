@@ -42,59 +42,66 @@ document.addEventListener('DOMContentLoaded', function() {
      * @param {boolean} preserveValue - Se true, mantém valor existente (modo edição)
      */
     function updateDocumentMask(docType, preserveValue = false) {
-        // Remover máscaras anteriores
+        // Remover máscaras anteriores e event listeners
         if (docNumberInput._mask) {
             docNumberInput._mask.destroy();
         }
         
+        // Clonar e substituir o input para remover TODOS os event listeners antigos
+        const newInput = docNumberInput.cloneNode(true);
+        docNumberInput.parentNode.replaceChild(newInput, docNumberInput);
+        
+        // Atualizar referência
+        const docNumberInputNew = document.getElementById('doc_number');
+        
         switch (docType) {
             case 'CPF':
-                docNumberInput.placeholder = '000.000.000-00';
+                docNumberInputNew.placeholder = '000.000.000-00';
                 docHint.textContent = 'Ex: 123.456.789-00';
-                applyMask(docNumberInput, '000.000.000-00');
+                applyMask(docNumberInputNew, '000.000.000-00');
                 break;
                 
             case 'RG':
-                docNumberInput.placeholder = '00.000.000-0';
+                docNumberInputNew.placeholder = '00.000.000-0';
                 docHint.textContent = 'Ex: 12.345.678-9';
-                applyMask(docNumberInput, '00.000.000-0');
+                applyMask(docNumberInputNew, '00.000.000-0');
                 break;
                 
             case 'CNH':
-                docNumberInput.placeholder = '00000000000';
+                docNumberInputNew.placeholder = '00000000000';
                 docHint.textContent = 'Ex: 12345678900 (11 dígitos)';
-                docNumberInput._mask = null; // Sem máscara
+                applyNumericOnly(docNumberInputNew);
                 break;
                 
             case 'Passaporte':
-                docNumberInput.placeholder = 'AB123456';
+                docNumberInputNew.placeholder = 'AB123456';
                 docHint.textContent = 'Ex: AB123456 (alfanumérico)';
-                docNumberInput._mask = null;
+                applyAlphanumeric(docNumberInputNew);
                 break;
                 
             case 'RNE':
-                docNumberInput.placeholder = 'V123456-7';
+                docNumberInputNew.placeholder = 'V123456-7';
                 docHint.textContent = 'Ex: V123456-7';
-                docNumberInput._mask = null;
+                applyAlphanumeric(docNumberInputNew, true); // Permite hífen
                 break;
                 
             case 'DNI':
             case 'CI':
-                docNumberInput.placeholder = '12345678';
+                docNumberInputNew.placeholder = '12345678';
                 docHint.textContent = 'Documento de identificação estrangeiro';
-                docNumberInput._mask = null;
+                applyAlphanumeric(docNumberInputNew);
                 break;
                 
             case 'Outros':
-                docNumberInput.placeholder = 'Número do documento';
+                docNumberInputNew.placeholder = 'Número do documento';
                 docHint.textContent = 'Informe o número conforme documento';
-                docNumberInput._mask = null;
+                applyAlphanumeric(docNumberInputNew, true); // Permite caracteres especiais
                 break;
         }
         
         // 🔧 CORREÇÃO: Só limpa se não for modo edição
         if (!preserveValue) {
-            docNumberInput.value = '';
+            docNumberInputNew.value = '';
         }
     }
     
@@ -145,6 +152,32 @@ document.addEventListener('DOMContentLoaded', function() {
             e.target.value = result;
         });
         
+        input._mask = { destroy: () => {} };
+    }
+    
+    /**
+     * Aplicar validação de apenas números (sem máscara visual)
+     */
+    function applyNumericOnly(input) {
+        input.addEventListener('input', function(e) {
+            e.target.value = e.target.value.replace(/\D/g, '');
+        });
+        input._mask = { destroy: () => {} };
+    }
+    
+    /**
+     * Aplicar validação alfanumérica (permite letras e números)
+     */
+    function applyAlphanumeric(input, allowSpecialChars = false) {
+        input.addEventListener('input', function(e) {
+            if (allowSpecialChars) {
+                // Permite alfanuméricos + hífen e outros caracteres comuns
+                e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9\-]/g, '');
+            } else {
+                // Apenas alfanuméricos
+                e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+            }
+        });
         input._mask = { destroy: () => {} };
     }
     

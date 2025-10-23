@@ -7,7 +7,7 @@
  */
 
 $pageTitle = 'Pré-Cadastros - Prestadores de Serviço';
-require_once __DIR__ . '/../../partials/header.php';
+require_once __DIR__ . '/../../../views/partials/header.php';
 ?>
 
 <div class="container-fluid mt-4">
@@ -23,7 +23,7 @@ require_once __DIR__ . '/../../partials/header.php';
             </p>
         </div>
         <div class="col-md-4 text-end">
-            <a href="/pre-cadastros/prestadores?action=new" class="btn btn-warning">
+            <a href="/pre-cadastros/prestadors?action=new" class="btn btn-success">
                 <i class="fas fa-plus me-2"></i>
                 Novo Pré-Cadastro
             </a>
@@ -33,50 +33,50 @@ require_once __DIR__ . '/../../partials/header.php';
     <!-- Cards de Estatísticas -->
     <div class="row mb-4">
         <div class="col-md-3">
-            <div class="card bg-primary text-white">
-                <div class="card-body">
-                    <h5 class="card-title">
-                        <i class="fas fa-database me-2"></i>
-                        Total
-                    </h5>
-                    <h2><?= $stats['total'] ?? 0 ?></h2>
-                    <p class="mb-0">Cadastros ativos</p>
+            <div class="card bg-primary text-white" style="position: relative; overflow: hidden;">
+                <div class="card-body py-3">
+                    <h2 class="mb-0 font-weight-bold" style="font-size: 2.5rem;"><?= $stats['total'] ?? 0 ?></h2>
+                    <p class="mb-0"><strong>Total</strong></p>
+                    <small>Cadastros ativos</small>
+                </div>
+                <div style="position: absolute; top: 10px; right: 10px;">
+                    <i class="fas fa-database fa-3x" style="opacity: 0.3;"></i>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card bg-success text-white">
-                <div class="card-body">
-                    <h5 class="card-title">
-                        <i class="fas fa-check-circle me-2"></i>
-                        Válidos
-                    </h5>
-                    <h2><?= $stats['validos'] ?? 0 ?></h2>
-                    <p class="mb-0">Prontos para uso</p>
+            <div class="card bg-success text-white" style="position: relative; overflow: hidden;">
+                <div class="card-body py-3">
+                    <h2 class="mb-0 font-weight-bold" style="font-size: 2.5rem;"><?= $stats['validos'] ?? 0 ?></h2>
+                    <p class="mb-0"><strong>Válidos</strong></p>
+                    <small>Prontos para uso</small>
+                </div>
+                <div style="position: absolute; top: 10px; right: 10px;">
+                    <i class="fas fa-check-circle fa-3x" style="opacity: 0.3;"></i>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card bg-warning text-white">
-                <div class="card-body">
-                    <h5 class="card-title">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        Expirando
-                    </h5>
-                    <h2><?= $stats['expirando'] ?? 0 ?></h2>
-                    <p class="mb-0">Próximos 30 dias</p>
+            <div class="card bg-warning text-white" style="position: relative; overflow: hidden;">
+                <div class="card-body py-3">
+                    <h2 class="mb-0 font-weight-bold" style="font-size: 2.5rem;"><?= $stats['expirando'] ?? 0 ?></h2>
+                    <p class="mb-0"><strong>Expirando</strong></p>
+                    <small>Próximos 30 dias</small>
+                </div>
+                <div style="position: absolute; top: 10px; right: 10px;">
+                    <i class="fas fa-exclamation-triangle fa-3x" style="opacity: 0.3;"></i>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card bg-danger text-white">
-                <div class="card-body">
-                    <h5 class="card-title">
-                        <i class="fas fa-times-circle me-2"></i>
-                        Expirados
-                    </h5>
-                    <h2><?= $stats['expirados'] ?? 0 ?></h2>
-                    <p class="mb-0">Precisam renovação</p>
+            <div class="card bg-danger text-white" style="position: relative; overflow: hidden;">
+                <div class="card-body py-3">
+                    <h2 class="mb-0 font-weight-bold" style="font-size: 2.5rem;"><?= $stats['expirados'] ?? 0 ?></h2>
+                    <p class="mb-0"><strong>Expirados</strong></p>
+                    <small>Precisam renovação</small>
+                </div>
+                <div style="position: absolute; top: 10px; right: 10px;">
+                    <i class="fas fa-times-circle fa-3x" style="opacity: 0.3;"></i>
                 </div>
             </div>
         </div>
@@ -175,4 +175,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<?php require_once __DIR__ . '/../../partials/footer.php'; ?>
+<?php require_once __DIR__ . '/../../../views/partials/footer.php'; ?>

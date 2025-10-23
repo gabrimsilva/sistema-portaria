@@ -24,7 +24,7 @@ require_once __DIR__ . '/../../partials/header.php';
                         Cadastro reutilizável com validade de 1 ano
                     </p>
                 </div>
-                <a href="/pre-cadastros/prestadors" class="btn btn-secondary">
+                <a href="/pre-cadastros/prestadores" class="btn btn-secondary">
                     <i class="fas fa-arrow-left me-2"></i>
                     Voltar
                 </a>
@@ -43,7 +43,7 @@ require_once __DIR__ . '/../../partials/header.php';
             <!-- Formulário -->
             <div class="card">
                 <div class="card-body">
-                    <form id="form-pre-cadastro" method="POST" action="/pre-cadastros/prestadors?action=save">
+                    <form id="form-pre-cadastro" method="POST" action="/pre-cadastros/prestadores?action=save">
                         <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
                         
                         <!-- Dados Pessoais -->
@@ -156,7 +156,7 @@ require_once __DIR__ . '/../../partials/header.php';
 
                         <!-- Botões -->
                         <div class="d-flex justify-content-end gap-2 mt-4">
-                            <a href="/pre-cadastros/prestadors" class="btn btn-secondary">
+                            <a href="/pre-cadastros/prestadores" class="btn btn-secondary">
                                 <i class="fas fa-times me-2"></i>
                                 Cancelar
                             </a>

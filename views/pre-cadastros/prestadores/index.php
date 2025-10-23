@@ -23,7 +23,7 @@ require_once __DIR__ . '/../../../views/partials/header.php';
             </p>
         </div>
         <div class="col-md-4 text-end">
-            <a href="/pre-cadastros/prestadors?action=new" class="btn btn-success">
+            <a href="/pre-cadastros/prestadores?action=new" class="btn btn-success">
                 <i class="fas fa-plus me-2"></i>
                 Novo Pré-Cadastro
             </a>

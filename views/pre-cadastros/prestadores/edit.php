@@ -1,6 +1,6 @@
 <?php
 /**
- * View: Formulário de Edição de Pré-Cadastro de Prestador
+ * View: Formulário de Edição de Pré-Cadastro de Prestador de Serviço
  * 
  * @version 2.0.0
  * @var array $cadastro Dados do cadastro carregados pelo controller
@@ -62,11 +62,9 @@ require_once __DIR__ . '/../../partials/header.php';
                                        value="<?= htmlspecialchars($cadastro['nome']) ?>" required>
                             </div>
                             <div class="col-md-6">
-                                <label for="empresa" class="form-label">
-                                    Empresa <span class="text-danger">*</span>
-                                </label>
+                                <label for="empresa" class="form-label">Empresa</label>
                                 <input type="text" class="form-control" id="empresa" name="empresa" 
-                                       value="<?= htmlspecialchars($cadastro['empresa'] ?? '') ?>" required>
+                                       value="<?= htmlspecialchars($cadastro['empresa'] ?? '') ?>">
                             </div>
                         </div>
 
@@ -77,7 +75,7 @@ require_once __DIR__ . '/../../partials/header.php';
                         </h5>
 
                         <div class="row mb-3">
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <label for="doc_type" class="form-label">
                                     Tipo <span class="text-danger">*</span>
                                 </label>
@@ -92,7 +90,7 @@ require_once __DIR__ . '/../../partials/header.php';
                                     <option value="Outros" <?= ($cadastro['doc_type'] === 'Outros') ? 'selected' : '' ?>>Outros</option>
                                 </select>
                             </div>
-                            <div class="col-md-5">
+                            <div class="col-md-4">
                                 <label for="doc_number" class="form-label">
                                     Número <span class="text-danger">*</span>
                                 </label>

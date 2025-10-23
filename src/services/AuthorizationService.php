@@ -153,15 +153,25 @@ class AuthorizationService {
      */
     public function requirePermission($permission) {
         if (!$this->hasPermission($permission)) {
-            http_response_code(403);
-            header('Content-Type: application/json');
-            echo json_encode([
-                'success' => false,
-                'message' => 'Acesso negado. Permissão insuficiente.',
-                'required_permission' => $permission,
-                'user_profile' => $_SESSION['user_profile'] ?? 'não definido'
-            ]);
-            exit;
+            // Detectar se é requisição AJAX
+            $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+                      strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+            
+            if ($isAjax) {
+                // Resposta JSON para AJAX
+                http_response_code(403);
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Acesso negado. Permissão insuficiente.',
+                    'required_permission' => $permission,
+                    'user_profile' => $_SESSION['user_profile'] ?? 'não definido'
+                ]);
+                exit;
+            } else {
+                // Redirect para contexto HTML
+                throw new Exception('Acesso negado. Permissão insuficiente: ' . $permission);
+            }
         }
     }
     

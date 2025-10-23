@@ -54,7 +54,7 @@ class PreCadastrosPrestadoresController {
         $this->authService->requirePermission('pre_cadastros.create');
         
         // Validação CSRF
-        require_once __DIR__ . '/../services/CSRFProtection.php';
+        require_once __DIR__ . '/../../config/csrf.php';
         CSRFProtection::verifyRequest();
         
         try {
@@ -162,7 +162,7 @@ class PreCadastrosPrestadoresController {
         $this->authService->requirePermission('pre_cadastros.update');
         
         // Validação CSRF
-        require_once __DIR__ . '/../services/CSRFProtection.php';
+        require_once __DIR__ . '/../../config/csrf.php';
         CSRFProtection::verifyRequest();
         
         try {

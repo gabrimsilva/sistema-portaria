@@ -8,11 +8,6 @@
  * ESSENCIAL para LGPD - Proteção obrigatória de dados sensíveis.
  */
 
-// 🔍 DEBUG TEMPORÁRIO - Ativar exibição de erros
-error_reporting(E_ALL);
-ini_set('display_errors', '1');
-ini_set('log_errors', '1');
-
 // ========================================
 // HELPERS PARA PAINEL DE BRIGADA SEM LOGIN
 // ========================================

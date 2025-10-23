@@ -261,6 +261,12 @@ class PreCadastrosVisitantesController {
                 );
             }
             
+            // Buscar dados antes de deletar (para auditoria)
+            $cadastro = $this->db->fetch(
+                "SELECT nome FROM visitantes_cadastro WHERE id = ? AND deleted_at IS NULL",
+                [$id]
+            );
+            
             // Soft delete
             $sql = "UPDATE visitantes_cadastro 
                     SET deleted_at = NOW(), 
@@ -275,7 +281,7 @@ class PreCadastrosVisitantesController {
                 'delete',
                 'pre_cadastros_visitantes',
                 $id,
-                ['nome' => $cadastro['nome']],
+                ['nome' => $cadastro['nome'] ?? 'N/A'],
                 null
             );
             

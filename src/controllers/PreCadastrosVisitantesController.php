@@ -228,11 +228,25 @@ class PreCadastrosVisitantesController {
                         valid_until = ?, observacoes = ?
                     WHERE id = ? AND deleted_at IS NULL";
             
-            $this->db->execute($sql, [
+            file_put_contents('php://stderr', "🔍 UPDATE(): Parâmetros SQL = " . json_encode([
                 $nome, $empresa, $doc_type, $doc_number, $doc_country,
                 $placa_veiculo, $valid_from, $valid_until, $observacoes, $id
-            ]);
-            file_put_contents('php://stderr', "✅ UPDATE(): SQL UPDATE executado\n");
+            ]) . "\n");
+            
+            try {
+                $this->db->execute($sql, [
+                    $nome, $empresa, $doc_type, $doc_number, $doc_country,
+                    $placa_veiculo, $valid_from, $valid_until, $observacoes, $id
+                ]);
+                file_put_contents('php://stderr', "✅ UPDATE(): SQL UPDATE executado\n");
+            } catch (PDOException $pdoEx) {
+                file_put_contents('php://stderr', "❌ UPDATE(): PDO ERROR = " . $pdoEx->getMessage() . "\n");
+                file_put_contents('php://stderr', "❌ UPDATE(): PDO Code = " . $pdoEx->getCode() . "\n");
+                throw new Exception("Erro ao atualizar cadastro: " . $pdoEx->getMessage());
+            } catch (Exception $dbEx) {
+                file_put_contents('php://stderr', "❌ UPDATE(): DB ERROR = " . $dbEx->getMessage() . "\n");
+                throw $dbEx;
+            }
             
             // Auditoria
             file_put_contents('php://stderr', "🔍 UPDATE(): Gravando auditoria...\n");

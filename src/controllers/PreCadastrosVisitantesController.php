@@ -188,6 +188,7 @@ class PreCadastrosVisitantesController {
         }
         
         try {
+            file_put_contents('php://stderr', "🔍 UPDATE(): Capturando dados POST...\n");
             $id = $_POST['id'] ?? null;
             $nome = $_POST['nome'] ?? '';
             $empresa = $_POST['empresa'] ?? '';
@@ -198,20 +199,29 @@ class PreCadastrosVisitantesController {
             $valid_from = $_POST['valid_from'] ?? date('Y-m-d');
             $valid_until = $_POST['valid_until'] ?? null;
             $observacoes = $_POST['observacoes'] ?? null;
+            file_put_contents('php://stderr', "✅ UPDATE(): Dados capturados (ID=$id, Nome=$nome)\n");
             
             // Normalização
+            file_put_contents('php://stderr', "🔍 UPDATE(): Normalizando documento...\n");
             $doc_number = $this->normalizeDocument($doc_number, $doc_type);
+            file_put_contents('php://stderr', "✅ UPDATE(): Documento normalizado\n");
+            
             if (!empty($placa_veiculo) && strtoupper($placa_veiculo) !== 'APE') {
                 $placa_veiculo = strtoupper(preg_replace('/[^A-Z0-9]/', '', $placa_veiculo));
             }
             
             // Validações
+            file_put_contents('php://stderr', "🔍 UPDATE(): Executando validate()...\n");
             $this->validate($nome, $doc_type, $doc_number, $valid_from, $valid_until);
+            file_put_contents('php://stderr', "✅ UPDATE(): Validação OK\n");
             
             // Verificar duplicidade (exceto o próprio)
+            file_put_contents('php://stderr', "🔍 UPDATE(): Verificando duplicidade...\n");
             $this->checkDuplicity($doc_type, $doc_number, $id);
+            file_put_contents('php://stderr', "✅ UPDATE(): Duplicidade OK\n");
             
             // Atualizar
+            file_put_contents('php://stderr', "🔍 UPDATE(): Executando SQL UPDATE...\n");
             $sql = "UPDATE visitantes_cadastro 
                     SET nome = ?, empresa = ?, doc_type = ?, doc_number = ?, 
                         doc_country = ?, placa_veiculo = ?, valid_from = ?, 
@@ -222,8 +232,10 @@ class PreCadastrosVisitantesController {
                 $nome, $empresa, $doc_type, $doc_number, $doc_country,
                 $placa_veiculo, $valid_from, $valid_until, $observacoes, $id
             ]);
+            file_put_contents('php://stderr', "✅ UPDATE(): SQL UPDATE executado\n");
             
             // Auditoria
+            file_put_contents('php://stderr', "🔍 UPDATE(): Gravando auditoria...\n");
             $this->auditService->log(
                 'update',
                 'pre_cadastros_visitantes',
@@ -231,12 +243,16 @@ class PreCadastrosVisitantesController {
                 null,
                 ['nome' => $nome, 'doc_type' => $doc_type]
             );
+            file_put_contents('php://stderr', "✅ UPDATE(): Auditoria gravada\n");
             
             $_SESSION['flash_success'] = 'Pré-cadastro atualizado com sucesso!';
+            file_put_contents('php://stderr', "✅ UPDATE(): Redirecionando para lista...\n");
             header('Location: /pre-cadastros/visitantes');
             exit;
             
         } catch (Exception $e) {
+            file_put_contents('php://stderr', "❌ UPDATE(): EXCEPTION = " . $e->getMessage() . "\n");
+            file_put_contents('php://stderr', "❌ UPDATE(): FILE = " . $e->getFile() . ":" . $e->getLine() . "\n");
             $_SESSION['flash_error'] = $e->getMessage();
             header('Location: /pre-cadastros/visitantes?action=edit&id=' . $id);
             exit;

@@ -759,6 +759,26 @@ try {
             $controller->verificarValidade();
             break;
         
+        case 'api/pre-cadastros/renovar':
+            // Renovação rápida via AJAX
+            $requestBody = file_get_contents('php://input');
+            $data = json_decode($requestBody, true);
+            $tipo = $data['tipo'] ?? null;
+            
+            if ($tipo === 'visitante') {
+                require_once '../src/controllers/PreCadastrosVisitantesController.php';
+                $controller = new PreCadastrosVisitantesController();
+                $controller->renovarJson();
+            } elseif ($tipo === 'prestador') {
+                require_once '../src/controllers/PreCadastrosPrestadoresController.php';
+                $controller = new PreCadastrosPrestadoresController();
+                $controller->renovarJson();
+            } else {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => 'Tipo inválido']);
+            }
+            break;
+        
         case 'api/ramais/buscar':
             require_once '../src/controllers/RamalController.php';
             $controller = new RamalController();

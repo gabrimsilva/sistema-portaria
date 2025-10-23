@@ -330,6 +330,70 @@ class PreCadastrosVisitantesController {
     }
     
     /**
+     * API: Renovar validade via AJAX (+1 ano)
+     */
+    public function renovarJson() {
+        header('Content-Type: application/json');
+        
+        try {
+            $this->authService->requirePermission('pre_cadastros.update');
+            
+            // Ler dados JSON da requisição
+            $requestBody = file_get_contents('php://input');
+            $data = json_decode($requestBody, true);
+            $id = $data['id'] ?? null;
+            
+            if (!$id) {
+                throw new Exception('ID não fornecido');
+            }
+            
+            // Buscar cadastro atual
+            $cadastro = $this->db->fetch(
+                "SELECT nome FROM visitantes_cadastro WHERE id = ? AND deleted_at IS NULL",
+                [$id]
+            );
+            
+            if (!$cadastro) {
+                throw new Exception('Cadastro não encontrado');
+            }
+            
+            // Nova data de validade: hoje + 1 ano
+            $newValidFrom = date('Y-m-d');
+            $newValidUntil = date('Y-m-d', strtotime('+1 year'));
+            
+            // Atualizar
+            $sql = "UPDATE visitantes_cadastro 
+                    SET valid_from = ?, valid_until = ?, ativo = true
+                    WHERE id = ?";
+            
+            $this->db->query($sql, [$newValidFrom, $newValidUntil, $id]);
+            
+            // Auditoria
+            $this->auditService->log(
+                'renovar',
+                'pre_cadastros_visitantes',
+                $id,
+                null,
+                ['valid_until' => $newValidUntil, 'method' => 'ajax']
+            );
+            
+            echo json_encode([
+                'success' => true,
+                'message' => "Cadastro de {$cadastro['nome']} renovado até " . 
+                            date('d/m/Y', strtotime($newValidUntil))
+            ]);
+            
+        } catch (Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+        
+        exit;
+    }
+    
+    /**
      * API: Listar cadastros em JSON (para DataTables)
      */
     public function listJson() {

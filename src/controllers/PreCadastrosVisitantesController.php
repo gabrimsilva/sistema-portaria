@@ -232,6 +232,15 @@ class PreCadastrosVisitantesController {
     public function delete($id) {
         $this->authService->requirePermission('pre_cadastros.delete');
         
+        // Detectar se é requisição AJAX
+        $isAjax = (
+            !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+            strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest'
+        ) || (
+            !empty($_SERVER['HTTP_ACCEPT']) && 
+            strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false
+        );
+        
         try {
             // Verificar se tem registros vinculados
             $count = $this->db->fetch(
@@ -271,9 +280,30 @@ class PreCadastrosVisitantesController {
                 null
             );
             
+            // Resposta AJAX ou Redirect
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Cadastro excluído com sucesso!'
+                ]);
+                exit;
+            }
+            
             $_SESSION['flash_success'] = 'Cadastro excluído com sucesso!';
             
         } catch (Exception $e) {
+            // Resposta AJAX ou Redirect
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ]);
+                exit;
+            }
+            
             $_SESSION['flash_error'] = $e->getMessage();
         }
         

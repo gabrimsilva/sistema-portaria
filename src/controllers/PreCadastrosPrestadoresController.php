@@ -230,12 +230,16 @@ class PreCadastrosPrestadoresController {
      * Desativar pré-cadastro (soft delete)
      */
     public function delete($id) {
-        error_log("🗑️ DELETE - Método chamado com ID: " . $id);
-        error_log("🔍 DELETE - Sessão usuário: " . ($_SESSION['usuario_id'] ?? 'não logado'));
-        
         $this->authService->requirePermission('pre_cadastros.delete');
         
-        error_log("✅ DELETE - Permissão concedida");
+        // Detectar se é requisição AJAX
+        $isAjax = (
+            !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+            strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest'
+        ) || (
+            !empty($_SERVER['HTTP_ACCEPT']) && 
+            strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false
+        );
         
         try {
             // Verificar se tem registros vinculados
@@ -276,9 +280,30 @@ class PreCadastrosPrestadoresController {
                 null
             );
             
+            // Resposta AJAX ou Redirect
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Cadastro excluído com sucesso!'
+                ]);
+                exit;
+            }
+            
             $_SESSION['flash_success'] = 'Cadastro excluído com sucesso!';
             
         } catch (Exception $e) {
+            // Resposta AJAX ou Redirect
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ]);
+                exit;
+            }
+            
             $_SESSION['flash_error'] = $e->getMessage();
         }
         

@@ -1,6 +1,6 @@
 <?php
 /**
- * View: Formulário de Novo Pré-Cadastro de Prestador
+ * View: Formulário de Novo Pré-Cadastro de Prestador de Serviço
  * 
  * @version 2.0.0
  * @status DRAFT
@@ -24,7 +24,7 @@ require_once __DIR__ . '/../../partials/header.php';
                         Cadastro reutilizável com validade de 1 ano
                     </p>
                 </div>
-                <a href="/pre-cadastros/prestadores" class="btn btn-secondary">
+                <a href="/pre-cadastros/prestadors" class="btn btn-secondary">
                     <i class="fas fa-arrow-left me-2"></i>
                     Voltar
                 </a>
@@ -43,7 +43,7 @@ require_once __DIR__ . '/../../partials/header.php';
             <!-- Formulário -->
             <div class="card">
                 <div class="card-body">
-                    <form id="form-pre-cadastro" method="POST" action="/pre-cadastros/prestadores?action=save">
+                    <form id="form-pre-cadastro" method="POST" action="/pre-cadastros/prestadors?action=save">
                         <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
                         
                         <!-- Dados Pessoais -->
@@ -60,10 +60,8 @@ require_once __DIR__ . '/../../partials/header.php';
                                 <input type="text" class="form-control" id="nome" name="nome" required>
                             </div>
                             <div class="col-md-6">
-                                <label for="empresa" class="form-label">
-                                    Empresa <span class="text-danger">*</span>
-                                </label>
-                                <input type="text" class="form-control" id="empresa" name="empresa" required>
+                                <label for="empresa" class="form-label">Empresa</label>
+                                <input type="text" class="form-control" id="empresa" name="empresa">
                             </div>
                         </div>
 
@@ -73,8 +71,8 @@ require_once __DIR__ . '/../../partials/header.php';
                             Documento
                         </h5>
 
-                        <div class="row mb-3">
-                            <div class="col-md-3">
+                        <div class="row mb-3 align-items-end">
+                            <div class="col-md-4">
                                 <label for="doc_type" class="form-label">
                                     Tipo <span class="text-danger">*</span>
                                 </label>
@@ -89,7 +87,7 @@ require_once __DIR__ . '/../../partials/header.php';
                                     <option value="Outros">Outros</option>
                                 </select>
                             </div>
-                            <div class="col-md-5">
+                            <div class="col-md-4">
                                 <label for="doc_number" class="form-label">
                                     Número <span class="text-danger">*</span>
                                 </label>
@@ -158,11 +156,11 @@ require_once __DIR__ . '/../../partials/header.php';
 
                         <!-- Botões -->
                         <div class="d-flex justify-content-end gap-2 mt-4">
-                            <a href="/pre-cadastros/prestadores" class="btn btn-secondary">
+                            <a href="/pre-cadastros/prestadors" class="btn btn-secondary">
                                 <i class="fas fa-times me-2"></i>
                                 Cancelar
                             </a>
-                            <button type="submit" class="btn btn-warning">
+                            <button type="submit" class="btn btn-success">
                                 <i class="fas fa-save me-2"></i>
                                 Salvar Pré-Cadastro
                             </button>

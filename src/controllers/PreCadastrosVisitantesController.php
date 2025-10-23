@@ -164,21 +164,24 @@ class PreCadastrosVisitantesController {
      * Atualizar pré-cadastro
      */
     public function update() {
-        // 🔍 DEBUG: Log de entrada
-        error_log("🔍 PreCadastrosVisitantesController::update() - INÍCIO");
-        error_log("🔍 POST Data: " . json_encode($_POST));
+        // 🔍 DEBUG: Log de entrada - USANDO STDERR
+        file_put_contents('php://stderr', "🔍 UPDATE(): INÍCIO DO MÉTODO\n");
+        file_put_contents('php://stderr', "🔍 UPDATE(): POST Data = " . json_encode($_POST) . "\n");
         
         try {
+            file_put_contents('php://stderr', "🔍 UPDATE(): Verificando permissão...\n");
             $this->authService->requirePermission('pre_cadastros.update');
-            error_log("✅ Permissão verificada");
+            file_put_contents('php://stderr', "✅ UPDATE(): Permissão OK\n");
             
             // Validação CSRF
+            file_put_contents('php://stderr', "🔍 UPDATE(): Carregando CSRF...\n");
             require_once __DIR__ . '/../../config/csrf.php';
+            file_put_contents('php://stderr', "🔍 UPDATE(): Verificando CSRF...\n");
             CSRFProtection::verifyRequest();
-            error_log("✅ CSRF validado");
+            file_put_contents('php://stderr', "✅ UPDATE(): CSRF OK\n");
         } catch (Exception $e) {
-            error_log("❌ ERRO na validação inicial: " . $e->getMessage());
-            error_log("❌ Stack trace: " . $e->getTraceAsString());
+            file_put_contents('php://stderr', "❌ UPDATE(): ERRO = " . $e->getMessage() . "\n");
+            file_put_contents('php://stderr', "❌ UPDATE(): Stack = " . $e->getTraceAsString() . "\n");
             $_SESSION['flash_error'] = 'Erro: ' . $e->getMessage();
             header('Location: /pre-cadastros/visitantes?action=edit&id=' . ($_POST['id'] ?? '0'));
             exit;

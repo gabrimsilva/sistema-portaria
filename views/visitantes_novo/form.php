@@ -275,7 +275,20 @@ require_once '../../src/services/FormService.php';
                 applyDocumentMask(); // Forçar sincronização final
             });
             
-            applyDocumentMask();
+            // ⚠️ IMPORTANTE: Só aplicar máscara inicial em modo NOVO (não em modo edição)
+            // Se houver valor em doc_number no carregamento, estamos editando - NÃO aplicar máscara
+            const isEditMode = $docNumber.val().trim() !== '';
+            if (!isEditMode) {
+                applyDocumentMask(); // Só aplicar se for novo registro
+            } else {
+                console.log('⚠️ MODO EDIÇÃO detectado - mantendo valores originais sem aplicar máscara');
+                // Em modo edição, apenas mostrar/ocultar campo país
+                const docType = getEffectiveDocType();
+                const isInternational = ['PASSAPORTE', 'PASSPORT', 'RNE', 'DNI', 'CI', 'OUTRO', 'OUTROS'].indexOf(docType) !== -1;
+                if (isInternational) {
+                    $countryContainer.show();
+                }
+            }
         }
         
         setupDocumentSelector();

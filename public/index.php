@@ -399,9 +399,16 @@ try {
             
         // 🆕 PRÉ-CADASTROS V2.0.0 - VISITANTES
         case 'pre-cadastros/visitantes':
+            error_log("🔍 INDEX.PHP: Rota pre-cadastros/visitantes acessada");
+            error_log("🔍 REQUEST_METHOD: " . $_SERVER['REQUEST_METHOD']);
+            error_log("🔍 ACTION: " . ($_GET['action'] ?? 'none'));
+            
             require_once '../src/controllers/PreCadastrosVisitantesController.php';
             $controller = new PreCadastrosVisitantesController();
             $action = $_GET['action'] ?? 'index';
+            
+            error_log("🔍 Executando ação: $action");
+            
             switch ($action) {
                 case 'new':
                     $controller->create();
@@ -414,6 +421,7 @@ try {
                     $controller->edit($id);
                     break;
                 case 'update':
+                    error_log("🔍 Chamando controller->update()");
                     $controller->update();
                     break;
                 case 'delete':

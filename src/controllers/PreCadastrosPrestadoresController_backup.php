@@ -1,8 +1,8 @@
 <?php
 /**
- * Controller: Pré-Cadastros de Prestadores de Serviço
+ * Controller: Pré-Cadastros de Visitantes
  * 
- * Gerencia cadastros de prestadores com validade de 1 ano (reutilizáveis)
+ * Gerencia cadastros de visitantes com validade de 1 ano (reutilizáveis)
  * Separado dos registros de acesso (eventos pontuais de entrada/saída)
  * 
  * @version 2.0.0
@@ -13,7 +13,7 @@ require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../services/AuthorizationService.php';
 require_once __DIR__ . '/../services/AuditService.php';
 
-class PreCadastrosPrestadoresController {
+class PreCadastrosVisitantesController {
     private $db;
     private $authService;
     private $auditService;
@@ -35,7 +35,7 @@ class PreCadastrosPrestadoresController {
         $stats = $this->getStats();
         
         // Renderizar view
-        require_once __DIR__ . '/../../views/pre-cadastros/prestadores/index.php';
+        require_once __DIR__ . '/../../views/pre-cadastros/visitantes/index.php';
     }
     
     /**
@@ -44,7 +44,7 @@ class PreCadastrosPrestadoresController {
     public function create() {
         $this->authService->requirePermission('pre_cadastros.create');
         
-        require_once __DIR__ . '/../../views/pre-cadastros/prestadores/form.php';
+        require_once __DIR__ . '/../../views/pre-cadastros/visitantes/form.php';
     }
     
     /**
@@ -93,7 +93,7 @@ class PreCadastrosPrestadoresController {
             $this->checkDuplicity($doc_type, $doc_number);
             
             // Inserir no banco
-            $sql = "INSERT INTO prestadores_cadastro 
+            $sql = "INSERT INTO visitantes_cadastro 
                     (nome, empresa, doc_type, doc_number, doc_country, placa_veiculo, 
                      valid_from, valid_until, observacoes) 
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -116,7 +116,7 @@ class PreCadastrosPrestadoresController {
             // Auditoria
             $this->auditService->log(
                 'create',
-                'pre_cadastros_prestadores',
+                'pre_cadastros_visitantes',
                 $cadastro_id,
                 null,
                 [
@@ -129,12 +129,12 @@ class PreCadastrosPrestadoresController {
             // Redirect com sucesso
             $_SESSION['flash_success'] = 'Pré-cadastro criado com sucesso! Válido até ' . 
                                           date('d/m/Y', strtotime($valid_until));
-            header('Location: /pre-cadastros/prestadores');
+            header('Location: /pre-cadastros/visitantes');
             exit;
             
         } catch (Exception $e) {
             $_SESSION['flash_error'] = $e->getMessage();
-            header('Location: /pre-cadastros/prestadores?action=new');
+            header('Location: /pre-cadastros/visitantes?action=new');
             exit;
         }
     }
@@ -147,17 +147,17 @@ class PreCadastrosPrestadoresController {
         
         // Buscar cadastro
         $cadastro = $this->db->fetch(
-            "SELECT * FROM vw_prestadores_cadastro_status WHERE id = ? AND deleted_at IS NULL",
+            "SELECT * FROM vw_visitantes_cadastro_status WHERE id = ? AND deleted_at IS NULL",
             [$id]
         );
         
         if (!$cadastro) {
             $_SESSION['flash_error'] = 'Cadastro não encontrado';
-            header('Location: /pre-cadastros/prestadores');
+            header('Location: /pre-cadastros/visitantes');
             exit;
         }
         
-        require_once __DIR__ . '/../../views/pre-cadastros/prestadores/edit.php';
+        require_once __DIR__ . '/../../views/pre-cadastros/visitantes/edit.php';
     }
     
     /**
@@ -195,7 +195,7 @@ class PreCadastrosPrestadoresController {
             $this->checkDuplicity($doc_type, $doc_number, $id);
             
             // Atualizar
-            $sql = "UPDATE prestadores_cadastro 
+            $sql = "UPDATE visitantes_cadastro 
                     SET nome = ?, empresa = ?, doc_type = ?, doc_number = ?, 
                         doc_country = ?, placa_veiculo = ?, valid_from = ?, 
                         valid_until = ?, observacoes = ?
@@ -209,19 +209,19 @@ class PreCadastrosPrestadoresController {
             // Auditoria
             $this->auditService->log(
                 'update',
-                'pre_cadastros_prestadores',
+                'pre_cadastros_visitantes',
                 $id,
                 null,
                 ['nome' => $nome, 'doc_type' => $doc_type]
             );
             
             $_SESSION['flash_success'] = 'Pré-cadastro atualizado com sucesso!';
-            header('Location: /pre-cadastros/prestadores');
+            header('Location: /pre-cadastros/visitantes');
             exit;
             
         } catch (Exception $e) {
             $_SESSION['flash_error'] = $e->getMessage();
-            header('Location: /pre-cadastros/prestadores?action=edit&id=' . $id);
+            header('Location: /pre-cadastros/visitantes?action=edit&id=' . $id);
             exit;
         }
     }
@@ -235,7 +235,7 @@ class PreCadastrosPrestadoresController {
         try {
             // Verificar se tem registros vinculados
             $count = $this->db->fetch(
-                "SELECT COUNT(*) as total FROM prestadores_registros 
+                "SELECT COUNT(*) as total FROM visitantes_registros 
                  WHERE cadastro_id = ? AND deleted_at IS NULL",
                 [$id]
             );
@@ -249,12 +249,12 @@ class PreCadastrosPrestadoresController {
             
             // Buscar dados antes de deletar (para auditoria)
             $cadastro = $this->db->fetch(
-                "SELECT nome FROM prestadores_cadastro WHERE id = ? AND deleted_at IS NULL",
+                "SELECT nome FROM visitantes_cadastro WHERE id = ? AND deleted_at IS NULL",
                 [$id]
             );
             
             // Soft delete
-            $sql = "UPDATE prestadores_cadastro 
+            $sql = "UPDATE visitantes_cadastro 
                     SET deleted_at = NOW(), 
                         deletion_reason = 'Excluído pelo usuário',
                         ativo = false
@@ -265,7 +265,7 @@ class PreCadastrosPrestadoresController {
             // Auditoria
             $this->auditService->log(
                 'delete',
-                'pre_cadastros_prestadores',
+                'pre_cadastros_visitantes',
                 $id,
                 ['nome' => $cadastro['nome'] ?? 'N/A'],
                 null
@@ -277,7 +277,7 @@ class PreCadastrosPrestadoresController {
             $_SESSION['flash_error'] = $e->getMessage();
         }
         
-        header('Location: /pre-cadastros/prestadores');
+        header('Location: /pre-cadastros/visitantes');
         exit;
     }
     
@@ -290,7 +290,7 @@ class PreCadastrosPrestadoresController {
         try {
             // Buscar cadastro atual
             $cadastro = $this->db->fetch(
-                "SELECT * FROM prestadores_cadastro WHERE id = ? AND deleted_at IS NULL",
+                "SELECT * FROM visitantes_cadastro WHERE id = ? AND deleted_at IS NULL",
                 [$id]
             );
             
@@ -303,7 +303,7 @@ class PreCadastrosPrestadoresController {
             $newValidUntil = date('Y-m-d', strtotime('+1 year'));
             
             // Atualizar
-            $sql = "UPDATE prestadores_cadastro 
+            $sql = "UPDATE visitantes_cadastro 
                     SET valid_from = ?, valid_until = ?, ativo = true
                     WHERE id = ?";
             
@@ -312,7 +312,7 @@ class PreCadastrosPrestadoresController {
             // Auditoria
             $this->auditService->log(
                 'renovar',
-                'pre_cadastros_prestadores',
+                'pre_cadastros_visitantes',
                 $id,
                 null,
                 ['valid_until' => $newValidUntil]
@@ -325,7 +325,7 @@ class PreCadastrosPrestadoresController {
             $_SESSION['flash_error'] = $e->getMessage();
         }
         
-        header('Location: /pre-cadastros/prestadores');
+        header('Location: /pre-cadastros/visitantes');
         exit;
     }
     
@@ -349,7 +349,7 @@ class PreCadastrosPrestadoresController {
             
             // Buscar cadastro atual
             $cadastro = $this->db->fetch(
-                "SELECT nome FROM prestadores_cadastro WHERE id = ? AND deleted_at IS NULL",
+                "SELECT nome FROM visitantes_cadastro WHERE id = ? AND deleted_at IS NULL",
                 [$id]
             );
             
@@ -362,7 +362,7 @@ class PreCadastrosPrestadoresController {
             $newValidUntil = date('Y-m-d', strtotime('+1 year'));
             
             // Atualizar
-            $sql = "UPDATE prestadores_cadastro 
+            $sql = "UPDATE visitantes_cadastro 
                     SET valid_from = ?, valid_until = ?, ativo = true
                     WHERE id = ?";
             
@@ -371,7 +371,7 @@ class PreCadastrosPrestadoresController {
             // Auditoria
             $this->auditService->log(
                 'renovar',
-                'pre_cadastros_prestadores',
+                'pre_cadastros_visitantes',
                 $id,
                 null,
                 ['valid_until' => $newValidUntil, 'method' => 'ajax']
@@ -411,7 +411,7 @@ class PreCadastrosPrestadoresController {
             ];
             
             $sql = "SELECT status_validade, COUNT(*) as total 
-                    FROM vw_prestadores_cadastro_status 
+                    FROM vw_visitantes_cadastro_status 
                     GROUP BY status_validade";
             
             $results = $this->db->fetchAll($sql);
@@ -460,7 +460,7 @@ class PreCadastrosPrestadoresController {
             $search = $_GET['search'] ?? '';
             
             // Query base
-            $sql = "SELECT * FROM vw_prestadores_cadastro_status WHERE 1=1";
+            $sql = "SELECT * FROM vw_visitantes_cadastro_status WHERE 1=1";
             $params = [];
             
             // Filtro por status
@@ -537,7 +537,7 @@ class PreCadastrosPrestadoresController {
      * Verificar duplicidade
      */
     private function checkDuplicity($doc_type, $doc_number, $excludeId = null) {
-        $sql = "SELECT id, nome FROM prestadores_cadastro 
+        $sql = "SELECT id, nome FROM visitantes_cadastro 
                 WHERE doc_type = ? AND doc_number = ? 
                   AND ativo = true 
                   AND deleted_at IS NULL";
@@ -564,22 +564,22 @@ class PreCadastrosPrestadoresController {
     private function getStats() {
         return [
             'total' => $this->db->fetch(
-                "SELECT COUNT(*) as count FROM prestadores_cadastro 
+                "SELECT COUNT(*) as count FROM visitantes_cadastro 
                  WHERE deleted_at IS NULL AND ativo = true"
             )['count'],
             
             'validos' => $this->db->fetch(
-                "SELECT COUNT(*) as count FROM vw_prestadores_cadastro_status 
+                "SELECT COUNT(*) as count FROM vw_visitantes_cadastro_status 
                  WHERE status_validade = 'valido'"
             )['count'],
             
             'expirando' => $this->db->fetch(
-                "SELECT COUNT(*) as count FROM vw_prestadores_cadastro_status 
+                "SELECT COUNT(*) as count FROM vw_visitantes_cadastro_status 
                  WHERE status_validade = 'expirando'"
             )['count'],
             
             'expirados' => $this->db->fetch(
-                "SELECT COUNT(*) as count FROM vw_prestadores_cadastro_status 
+                "SELECT COUNT(*) as count FROM vw_visitantes_cadastro_status 
                  WHERE status_validade = 'expirado'"
             )['count']
         ];

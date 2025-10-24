@@ -1438,17 +1438,25 @@ class PrestadoresServicoController {
                 throw new Exception('ID é obrigatório');
             }
             
-            $prestador = $this->db->fetch("SELECT nome FROM prestadores_servico WHERE id = ?", [$id]);
-            if (!$prestador) {
+            // Buscar dados do registro para retornar
+            $registro = $this->db->fetch("
+                SELECT r.id, c.nome 
+                FROM prestadores_registros r
+                INNER JOIN prestadores_cadastro c ON r.cadastro_id = c.id
+                WHERE r.id = ?
+            ", [$id]);
+            
+            if (!$registro) {
                 throw new Exception('Registro não encontrado');
             }
             
-            $this->db->query("DELETE FROM prestadores_servico WHERE id = ?", [$id]);
+            // Deletar apenas o registro de entrada/saída
+            $this->db->query("DELETE FROM prestadores_registros WHERE id = ?", [$id]);
             
             echo json_encode([
                 'success' => true,
                 'message' => 'Registro excluído com sucesso',
-                'data' => ['id' => $id, 'nome' => $prestador['nome']]
+                'data' => ['id' => $id, 'nome' => $registro['nome']]
             ]);
             
         } catch (Exception $e) {

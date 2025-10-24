@@ -1105,44 +1105,32 @@ class PrestadoresServicoController {
                     return;
                 }
                 
-                // Buscar o prestador
-                $prestador = $this->db->fetch("SELECT * FROM prestadores_servico WHERE id = ?", [$id]);
+                // Buscar o registro (PRÉ-CADASTROS V2.0.0)
+                $registro = $this->db->fetch("
+                    SELECT r.*, c.nome 
+                    FROM prestadores_registros r
+                    JOIN prestadores_cadastro c ON c.id = r.cadastro_id
+                    WHERE r.id = ? AND c.deleted_at IS NULL
+                ", [$id]);
                 
-                if (!$prestador) {
-                    echo json_encode(['success' => false, 'message' => 'Prestador não encontrado']);
+                if (!$registro) {
+                    echo json_encode(['success' => false, 'message' => 'Registro não encontrado']);
                     return;
                 }
                 
-                // BUG FIX v2.0.0: Atualizar AMBAS as tabelas para manter consistência
-                // 1. Atualizar tabela legacy (prestadores_servico)
+                // Atualizar saída no registro
                 $this->db->query("
-                    UPDATE prestadores_servico 
-                    SET saida = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+                    UPDATE prestadores_registros 
+                    SET saida_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
                     WHERE id = ?
                 ", [$id]);
-                
-                // 2. Atualizar tabela de registro de acesso (se existir)
-                $this->db->query("
-                    UPDATE registro_acesso
-                    SET saida_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
-                    WHERE tipo = 'prestador_servico' 
-                      AND entrada_at = ? 
-                      AND nome = ?
-                      AND COALESCE(doc_number, cpf) = COALESCE(?, ?)
-                      AND saida_at IS NULL
-                ", [
-                    $prestador['entrada'],
-                    $prestador['nome'],
-                    $prestador['doc_number'],
-                    $prestador['cpf']
-                ]);
                 
                 echo json_encode([
                     'success' => true, 
                     'message' => 'Saída registrada com sucesso',
                     'data' => [
                         'id' => $id,
-                        'nome' => $prestador['nome']
+                        'nome' => $registro['nome']
                     ]
                 ]);
             } catch (Exception $e) {

@@ -1193,13 +1193,13 @@ class PrestadoresServicoController {
                     r.saida_at,
                     r.observacao_entrada,
                     r.observacao_saida,
+                    r.setor,
+                    r.funcionario_responsavel,
                     c.nome,
                     c.doc_type,
                     c.doc_number,
                     c.doc_country,
                     c.empresa,
-                    c.setor,
-                    c.funcionario_responsavel,
                     c.placa_veiculo
                 FROM prestadores_registros r
                 INNER JOIN prestadores_cadastro c ON r.cadastro_id = c.id
@@ -1305,16 +1305,6 @@ class PrestadoresServicoController {
                 $updateCadastroParams[] = trim($_POST['empresa']);
             }
             
-            if (isset($_POST['funcionario_responsavel'])) {
-                $updateCadastroFields[] = 'funcionario_responsavel = ?';
-                $updateCadastroParams[] = trim($_POST['funcionario_responsavel']);
-            }
-            
-            if (isset($_POST['setor'])) {
-                $updateCadastroFields[] = 'setor = ?';
-                $updateCadastroParams[] = trim($_POST['setor']);
-            }
-            
             if (isset($_POST['placa_veiculo'])) {
                 $placa = strtoupper(preg_replace('/[^A-Z0-9]/', '', $_POST['placa_veiculo']));
                 $updateCadastroFields[] = 'placa_veiculo = ?';
@@ -1333,6 +1323,16 @@ class PrestadoresServicoController {
             // Atualizar registro se houver campos relacionados
             $updateRegistroFields = [];
             $updateRegistroParams = [];
+            
+            if (isset($_POST['setor'])) {
+                $updateRegistroFields[] = 'setor = ?';
+                $updateRegistroParams[] = trim($_POST['setor']) ?: null;
+            }
+            
+            if (isset($_POST['funcionario_responsavel'])) {
+                $updateRegistroFields[] = 'funcionario_responsavel = ?';
+                $updateRegistroParams[] = trim($_POST['funcionario_responsavel']) ?: null;
+            }
             
             if (isset($_POST['entrada_at'])) {
                 $updateRegistroFields[] = 'entrada_at = ?';
@@ -1376,13 +1376,13 @@ class PrestadoresServicoController {
                     r.saida_at,
                     r.observacao_entrada,
                     r.observacao_saida,
+                    r.setor,
+                    r.funcionario_responsavel,
                     c.nome,
                     c.doc_type,
                     c.doc_number,
                     c.doc_country,
                     c.empresa,
-                    c.setor,
-                    c.funcionario_responsavel,
                     c.placa_veiculo
                 FROM prestadores_registros r
                 INNER JOIN prestadores_cadastro c ON r.cadastro_id = c.id

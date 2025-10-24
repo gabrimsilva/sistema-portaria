@@ -230,10 +230,7 @@ class PreCadastrosPrestadoresController {
      * Desativar pré-cadastro (soft delete)
      */
     public function delete($id) {
-        file_put_contents('/tmp/delete-debug.log', date('Y-m-d H:i:s') . " | 🔐 DELETE() START | ID=$id\n", FILE_APPEND);
-        
         $this->authService->requirePermission('pre_cadastros.delete');
-        file_put_contents('/tmp/delete-debug.log', date('Y-m-d H:i:s') . " | ✅ PERMISSÃO OK\n", FILE_APPEND);
         
         // Detectar se é requisição AJAX
         $isAjax = (
@@ -243,20 +240,16 @@ class PreCadastrosPrestadoresController {
             !empty($_SERVER['HTTP_ACCEPT']) && 
             strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false
         );
-        file_put_contents('/tmp/delete-debug.log', date('Y-m-d H:i:s') . " | 📡 AJAX=" . ($isAjax ? 'true' : 'false') . "\n", FILE_APPEND);
         
         try {
             // Verificar se tem registros vinculados
-            file_put_contents('/tmp/delete-debug.log', date('Y-m-d H:i:s') . " | 🔍 CHECANDO REGISTROS VINCULADOS\n", FILE_APPEND);
             $count = $this->db->fetch(
                 "SELECT COUNT(*) as total FROM prestadores_registros 
                  WHERE cadastro_id = ?",
                 [$id]
             );
-            file_put_contents('/tmp/delete-debug.log', date('Y-m-d H:i:s') . " | 📊 COUNT=" . ($count['total'] ?? 'NULL') . "\n", FILE_APPEND);
             
             if ($count['total'] > 0) {
-                file_put_contents('/tmp/delete-debug.log', date('Y-m-d H:i:s') . " | ❌ TEM REGISTROS VINCULADOS\n", FILE_APPEND);
                 throw new Exception(
                     "Não é possível excluir este cadastro pois existem {$count['total']} " .
                     "entrada(s) vinculada(s). Desative-o ao invés de excluir."
@@ -264,24 +257,20 @@ class PreCadastrosPrestadoresController {
             }
             
             // Buscar dados antes de deletar (para auditoria)
-            file_put_contents('/tmp/delete-debug.log', date('Y-m-d H:i:s') . " | 📝 BUSCANDO CADASTRO\n", FILE_APPEND);
             $cadastro = $this->db->fetch(
                 "SELECT nome FROM prestadores_cadastro WHERE id = ? AND deleted_at IS NULL",
                 [$id]
             );
             
             // Soft delete
-            file_put_contents('/tmp/delete-debug.log', date('Y-m-d H:i:s') . " | 🗑️ EXECUTANDO DELETE\n", FILE_APPEND);
             $sql = "UPDATE prestadores_cadastro 
                     SET deleted_at = NOW(), 
                         ativo = false
                     WHERE id = ?";
             
             $this->db->query($sql, [$id]);
-            file_put_contents('/tmp/delete-debug.log', date('Y-m-d H:i:s') . " | ✅ DELETE EXECUTADO\n", FILE_APPEND);
             
             // Auditoria
-            file_put_contents('/tmp/delete-debug.log', date('Y-m-d H:i:s') . " | 📜 REGISTRANDO AUDITORIA\n", FILE_APPEND);
             $this->auditService->log(
                 'delete',
                 'pre_cadastros_prestadores',
@@ -289,11 +278,9 @@ class PreCadastrosPrestadoresController {
                 ['nome' => $cadastro['nome'] ?? 'N/A'],
                 null
             );
-            file_put_contents('/tmp/delete-debug.log', date('Y-m-d H:i:s') . " | ✅ AUDITORIA OK\n", FILE_APPEND);
             
             // Resposta AJAX ou Redirect
             if ($isAjax) {
-                file_put_contents('/tmp/delete-debug.log', date('Y-m-d H:i:s') . " | 📤 RETORNANDO JSON\n", FILE_APPEND);
                 header('Content-Type: application/json');
                 echo json_encode([
                     'success' => true,
@@ -305,7 +292,6 @@ class PreCadastrosPrestadoresController {
             $_SESSION['flash_success'] = 'Cadastro excluído com sucesso!';
             
         } catch (Exception $e) {
-            file_put_contents('/tmp/delete-debug.log', date('Y-m-d H:i:s') . " | ❌ EXCEPTION: " . $e->getMessage() . "\n", FILE_APPEND);
             // Resposta AJAX ou Redirect
             if ($isAjax) {
                 header('Content-Type: application/json');
@@ -320,7 +306,6 @@ class PreCadastrosPrestadoresController {
             $_SESSION['flash_error'] = $e->getMessage();
         }
         
-        file_put_contents('/tmp/delete-debug.log', date('Y-m-d H:i:s') . " | 🔄 REDIRECT\n", FILE_APPEND);
         header('Location: /pre-cadastros/prestadores');
         exit;
     }

@@ -322,13 +322,18 @@ class DashboardController {
                 ORDER BY hora_entrada DESC
             ") ?? [];
             
-            // Prestadores trabalhando (usando view consolidada - BUG FIX v2.0.0)
+            // Prestadores trabalhando (PRÉ-CADASTROS V2.0.0)
             $prestadoresAtivos = $this->db->fetchAll("
-                SELECT nome, doc_type, doc_number, doc_country, cpf, empresa, setor, 
-                       entrada as hora_entrada, 'Prestador' as tipo, id, placa_veiculo, funcionario_responsavel
-                FROM vw_prestadores_consolidado 
-                WHERE entrada IS NOT NULL AND saida_consolidada IS NULL
-                ORDER BY entrada DESC
+                SELECT c.nome, c.doc_type, c.doc_number, c.doc_country, 
+                       COALESCE(c.doc_number, '') as cpf,
+                       c.empresa, r.setor, 
+                       r.entrada_at as hora_entrada, 'Prestador' as tipo, 
+                       r.id, c.placa_veiculo, r.funcionario_responsavel
+                FROM prestadores_registros r
+                JOIN prestadores_cadastro c ON c.id = r.cadastro_id
+                WHERE r.entrada_at IS NOT NULL AND r.saida_at IS NULL
+                  AND c.deleted_at IS NULL
+                ORDER BY r.entrada_at DESC
             ") ?? [];
             
             // Profissionais que estão na empresa (têm entrada_at ou retorno, mas não saída_final)

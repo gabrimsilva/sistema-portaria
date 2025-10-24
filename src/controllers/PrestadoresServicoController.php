@@ -663,91 +663,17 @@ class PrestadoresServicoController {
                     exit;
                 }
                 
+                // ========== PRÉ-CADASTROS V2.0.0 INTEGRATION ==========
+                $cadastro_id = !empty($_POST['cadastro_id']) ? intval($_POST['cadastro_id']) : null;
+                
                 $nome = trim($_POST['nome'] ?? '');
-                $cpf = trim($_POST['cpf'] ?? '');
-                $doc_type = trim($_POST['doc_type'] ?? '');
-                $doc_number = trim($_POST['doc_number'] ?? '');
-                $doc_country = trim($_POST['doc_country'] ?? 'Brasil');
                 $empresa = trim($_POST['empresa'] ?? '');
                 $funcionario_responsavel = trim($_POST['funcionario_responsavel'] ?? '');
                 $setor = trim($_POST['setor'] ?? '');
-                $observacao = trim($_POST['observacao'] ?? '');
-                $placa_veiculo = trim($_POST['placa_veiculo'] ?? '');
+                $observacao_entrada = trim($_POST['observacao'] ?? '');
                 $entrada_input = trim($_POST['entrada'] ?? '');
                 
-                // ========== SISTEMA MULTI-DOCUMENTO ==========
-                // Lógica: se doc_type está vazio/null, usar modo legado (apenas CPF)
-                // Constraint: doc_type e doc_number devem ser AMBOS NULL ou AMBOS preenchidos
-                
-                if (!empty($doc_type)) {
-                    // Tipo de documento especificado (RG, CNH, Passaporte, etc)
-                    
-                    // Normalizar documento baseado no tipo
-                    if (in_array($doc_type, ['CPF', 'RG', 'CNH'])) {
-                        $doc_number = preg_replace('/\D/', '', $doc_number);
-                    } else {
-                        $doc_number = strtoupper(trim($doc_number));
-                    }
-                    
-                    // Se for CPF, sincronizar com campo legado
-                    if ($doc_type === 'CPF') {
-                        $cpf = $doc_number;
-                    }
-                } else {
-                    // Modo legado: CPF padrão
-                    // Constraint exige: se doc_type é NULL, doc_number também deve ser NULL
-                    $cpf = preg_replace('/\D/', '', $doc_number ?: $cpf);
-                    $doc_type = null;
-                    $doc_number = null; // NULL para respeitar constraint
-                }
-                // ===========================================
-                
-                // Placa: apenas letras e números, maiúscula
-                $placa_veiculo = preg_replace('/[^A-Z0-9]/', '', strtoupper(trim($placa_veiculo)));
-                
-                // Validações obrigatórias
-                if (empty($nome)) {
-                    echo json_encode(['success' => false, 'message' => 'Nome é obrigatório']);
-                    return;
-                }
-                if (empty($setor)) {
-                    echo json_encode(['success' => false, 'message' => 'Setor é obrigatório']);
-                    return;
-                }
-                // Validar documento: se doc_type é NULL (modo legado), validar CPF; senão validar doc_number
-                if ($doc_type === null && empty($cpf)) {
-                    echo json_encode(['success' => false, 'message' => 'CPF é obrigatório']);
-                    return;
-                } elseif ($doc_type !== null && empty($doc_number)) {
-                    echo json_encode(['success' => false, 'message' => 'Número do documento é obrigatório']);
-                    return;
-                }
-                if (empty($placa_veiculo)) {
-                    echo json_encode(['success' => false, 'message' => 'Placa de veículo é obrigatória']);
-                    return;
-                }
-                
-                // Validar CPF se o tipo de documento for CPF ou modo legado (NULL)
-                if ($doc_type === null) {
-                    // Modo legado: validar CPF
-                    $cpfValidation = CpfValidator::validateAndNormalize($cpf);
-                    if (!$cpfValidation['isValid']) {
-                        echo json_encode(['success' => false, 'message' => $cpfValidation['message']]);
-                        return;
-                    }
-                    $cpf = $cpfValidation['normalized'];
-                } elseif ($doc_type === 'CPF') {
-                    // CPF explícito: validar doc_number
-                    $cpfValidation = CpfValidator::validateAndNormalize($doc_number);
-                    if (!$cpfValidation['isValid']) {
-                        echo json_encode(['success' => false, 'message' => $cpfValidation['message']]);
-                        return;
-                    }
-                    $cpf = $cpfValidation['normalized'];
-                    $doc_number = $cpfValidation['normalized'];
-                }
-                
-                // Usar hora especificada ou hora atual se não fornecida
+                // Processar entrada
                 if (!empty($entrada_input)) {
                     $timestamp = strtotime($entrada_input);
                     if ($timestamp === false) {
@@ -759,63 +685,161 @@ class PrestadoresServicoController {
                     $entrada = date('Y-m-d H:i:s');
                 }
                 
-                // ========== VALIDAÇÕES DE DUPLICIDADE ==========
-                // Apenas validar duplicidade de CPF se o tipo de documento for CPF ou modo legado
-                $dadosValidacao = [
-                    'cpf' => ($doc_type === null || $doc_type === 'CPF') ? $cpf : null,
-                    'placa_veiculo' => $placa_veiculo,
-                    'entrada' => $entrada
-                ];
+                // Validações obrigatórias
+                if (empty($nome)) {
+                    echo json_encode(['success' => false, 'message' => 'Nome é obrigatório']);
+                    return;
+                }
+                if (empty($setor)) {
+                    echo json_encode(['success' => false, 'message' => 'Setor é obrigatório']);
+                    return;
+                }
+                if (empty($funcionario_responsavel)) {
+                    echo json_encode(['success' => false, 'message' => 'Funcionário responsável é obrigatório']);
+                    return;
+                }
                 
-                $validacao = $this->duplicityService->validateNewEntry($dadosValidacao, 'prestador');
-                
-                if (!$validacao['isValid']) {
+                // MODO 1: Pré-Cadastro Existente (entrada rápida)
+                if ($cadastro_id) {
+                    $cadastro = $this->db->fetch(
+                        "SELECT * FROM prestadores_cadastro 
+                         WHERE id = ? AND deleted_at IS NULL AND ativo = true",
+                        [$cadastro_id]
+                    );
+                    
+                    if (!$cadastro) {
+                        echo json_encode(['success' => false, 'message' => 'Pré-cadastro não encontrado ou inativo']);
+                        return;
+                    }
+                    
+                    // Verificar validade
+                    if (strtotime($cadastro['valid_until']) < time()) {
+                        echo json_encode(['success' => false, 'message' => 'Pré-cadastro expirado. Por favor, renove o cadastro.']);
+                        return;
+                    }
+                    
+                    // Criar registro de entrada
+                    $this->db->query("
+                        INSERT INTO prestadores_registros 
+                        (cadastro_id, funcionario_responsavel, setor, entrada_at, observacao_entrada, created_at, updated_at)
+                        VALUES (?, ?, ?, ?, ?, NOW(), NOW())
+                    ", [
+                        $cadastro_id,
+                        $funcionario_responsavel,
+                        $setor,
+                        $entrada,
+                        $observacao_entrada
+                    ]);
+                    
+                    $registro_id = $this->db->lastInsertId();
+                    
                     echo json_encode([
-                        'success' => false,
-                        'message' => 'Erro de duplicidade',
-                        'errors' => $validacao['errors']
+                        'success' => true,
+                        'message' => 'Entrada registrada com sucesso (Pré-Cadastro)',
+                        'data' => [
+                            'id' => $registro_id,
+                            'cadastro_id' => $cadastro_id,
+                            'nome' => $cadastro['nome'],
+                            'empresa' => $cadastro['empresa'],
+                            'tipo' => 'Prestador',
+                            'setor' => $setor,
+                            'funcionario_responsavel' => $funcionario_responsavel,
+                            'hora_entrada' => $entrada
+                        ]
                     ]);
                     return;
                 }
-                // ===============================================
+                
+                // MODO 2: Novo Cadastro (criar pré-cadastro automaticamente + registro)
+                $doc_type = trim($_POST['doc_type'] ?? '');
+                $doc_number = trim($_POST['doc_number'] ?? '');
+                $doc_country = trim($_POST['doc_country'] ?? 'Brasil');
+                $placa_veiculo = trim($_POST['placa_veiculo'] ?? '');
+                
+                // Normalização de documento
+                if (!empty($doc_type)) {
+                    if (in_array($doc_type, ['CPF', 'RG', 'CNH'])) {
+                        $doc_number = preg_replace('/\D/', '', $doc_number);
+                    } else {
+                        $doc_number = strtoupper(trim($doc_number));
+                    }
+                }
+                
+                // Validações
+                if (empty($doc_number)) {
+                    echo json_encode(['success' => false, 'message' => 'Número do documento é obrigatório']);
+                    return;
+                }
+                
+                // Verificar duplicidade no pré-cadastro
+                $existingCadastro = $this->db->fetch(
+                    "SELECT id FROM prestadores_cadastro 
+                     WHERE doc_type = ? AND doc_number = ? 
+                       AND deleted_at IS NULL AND ativo = true",
+                    [$doc_type, $doc_number]
+                );
+                
+                if ($existingCadastro) {
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Já existe um pré-cadastro ativo para este documento. Use o autocomplete para encontrá-lo.'
+                    ]);
+                    return;
+                }
+                
+                // Criar novo pré-cadastro (válido por 1 ano)
+                $valid_from = date('Y-m-d');
+                $valid_until = date('Y-m-d', strtotime('+1 year'));
                 
                 $this->db->query("
-                    INSERT INTO prestadores_servico (nome, cpf, doc_type, doc_number, doc_country, empresa, funcionario_responsavel, setor, observacao, placa_veiculo, entrada)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO prestadores_cadastro
+                    (nome, empresa, doc_type, doc_number, doc_country, placa_veiculo, valid_from, valid_until, ativo, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, true, NOW(), NOW())
                 ", [
-                    $nome, $cpf, $doc_type, $doc_number, $doc_country, $empresa, $funcionario_responsavel, $setor, $observacao, $placa_veiculo, $entrada
+                    $nome,
+                    $empresa,
+                    $doc_type,
+                    $doc_number,
+                    $doc_country,
+                    $placa_veiculo,
+                    $valid_from,
+                    $valid_until
                 ]);
                 
-                $id = $this->db->lastInsertId();
+                $novo_cadastro_id = $this->db->lastInsertId();
+                
+                // Criar registro de entrada
+                $this->db->query("
+                    INSERT INTO prestadores_registros
+                    (cadastro_id, funcionario_responsavel, setor, entrada_at, observacao_entrada, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, NOW(), NOW())
+                ", [
+                    $novo_cadastro_id,
+                    $funcionario_responsavel,
+                    $setor,
+                    $entrada,
+                    $observacao_entrada
+                ]);
+                
+                $registro_id = $this->db->lastInsertId();
                 
                 echo json_encode([
-                    'success' => true, 
-                    'message' => 'Prestador cadastrado com sucesso',
+                    'success' => true,
+                    'message' => 'Pré-Cadastro criado e entrada registrada com sucesso!',
                     'data' => [
-                        'id' => $id,
+                        'id' => $registro_id,
+                        'cadastro_id' => $novo_cadastro_id,
                         'nome' => $nome,
-                        'tipo' => 'Prestador',
-                        'cpf' => $cpf,
                         'empresa' => $empresa,
+                        'tipo' => 'Prestador',
                         'setor' => $setor,
                         'funcionario_responsavel' => $funcionario_responsavel,
-                        'placa_veiculo' => $placa_veiculo,
                         'hora_entrada' => $entrada
                     ]
                 ]);
-            } catch (Exception $e) {
-                $errorMessage = $e->getMessage();
                 
-                // Tratar erros específicos do banco de dados para AJAX
-                if (strpos($errorMessage, 'ux_prestadores_cpf_ativo') !== false) {
-                    echo json_encode(['success' => false, 'message' => 'Este CPF já está ativo no sistema. Não é possível registrar duas entradas simultâneas.']);
-                } elseif (strpos($errorMessage, 'ux_prestadores_placa_ativa') !== false) {
-                    echo json_encode(['success' => false, 'message' => 'Esta placa de veículo já está ativa no sistema. Não é possível registrar duas entradas simultâneas.']);
-                } elseif (strpos($errorMessage, 'chk_prestadores_horario_valido') !== false) {
-                    echo json_encode(['success' => false, 'message' => 'A hora de saída não pode ser anterior à hora de entrada.']);
-                } else {
-                    echo json_encode(['success' => false, 'message' => $errorMessage]);
-                }
+            } catch (Exception $e) {
+                echo json_encode(['success' => false, 'message' => $e->getMessage()]);
             }
         } else {
             echo json_encode(['success' => false, 'message' => 'Método não permitido']);

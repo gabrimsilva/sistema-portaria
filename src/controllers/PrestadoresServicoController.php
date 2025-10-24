@@ -1151,6 +1151,78 @@ class PrestadoresServicoController {
     }
     
     /**
+     * Buscar registro por ID (usado para edição inline)
+     * Requer permissão: relatorios.editar_linha
+     */
+    public function getByIdAjax() {
+        header('Content-Type: application/json');
+        
+        if (!isset($_SESSION['user_id'])) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'message' => 'Não autenticado']);
+            exit;
+        }
+        
+        require_once __DIR__ . '/../services/AuthorizationService.php';
+        $authService = new AuthorizationService();
+        
+        if (!$authService->hasPermission('relatorios.editar_linha')) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Você não tem permissão para visualizar este registro']);
+            exit;
+        }
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método não permitido']);
+            exit;
+        }
+        
+        try {
+            $id = $_GET['id'] ?? null;
+            if (!$id) {
+                throw new Exception('ID é obrigatório');
+            }
+            
+            // Buscar registro com dados do cadastro
+            $registro = $this->db->fetch("
+                SELECT 
+                    r.id,
+                    r.cadastro_id,
+                    r.entrada_at,
+                    r.saida_at,
+                    r.observacao_entrada,
+                    r.observacao_saida,
+                    c.nome,
+                    c.doc_type,
+                    c.doc_number,
+                    c.doc_country,
+                    c.empresa,
+                    c.setor,
+                    c.funcionario_responsavel,
+                    c.placa_veiculo
+                FROM prestadores_registros r
+                INNER JOIN prestadores_cadastro c ON r.cadastro_id = c.id
+                WHERE r.id = ?
+            ", [$id]);
+            
+            if (!$registro) {
+                throw new Exception('Registro não encontrado');
+            }
+            
+            echo json_encode([
+                'success' => true,
+                'data' => $registro
+            ]);
+            
+        } catch (Exception $e) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+        exit;
+    }
+    
+    /**
      * Editar registro inline (usado nos relatórios)
      * Requer permissão: relatorios.editar_linha
      */

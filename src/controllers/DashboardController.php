@@ -28,8 +28,10 @@ class DashboardController {
                 case 'prestador':
                     return $this->db->fetch("
                         SELECT COUNT(*) as total 
-                        FROM vw_prestadores_consolidado 
-                        WHERE entrada IS NOT NULL AND saida_consolidada IS NULL
+                        FROM prestadores_registros r
+                        JOIN prestadores_cadastro c ON c.id = r.cadastro_id
+                        WHERE r.entrada_at IS NOT NULL AND r.saida_at IS NULL
+                          AND c.deleted_at IS NULL
                     ")['total'] ?? 0;
                 
                 case 'profissional_renner':
@@ -64,9 +66,11 @@ class DashboardController {
                 case 'prestador':
                     return $this->db->fetch("
                         SELECT COUNT(*) as total 
-                        FROM prestadores_servico 
-                        WHERE entrada >= CURRENT_DATE 
-                          AND entrada < CURRENT_DATE + INTERVAL '1 day'
+                        FROM prestadores_registros r
+                        JOIN prestadores_cadastro c ON c.id = r.cadastro_id
+                        WHERE r.entrada_at >= CURRENT_DATE 
+                          AND r.entrada_at < CURRENT_DATE + INTERVAL '1 day'
+                          AND c.deleted_at IS NULL
                     ")['total'] ?? 0;
                 
                 case 'profissional_renner':

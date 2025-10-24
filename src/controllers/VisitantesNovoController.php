@@ -86,6 +86,9 @@ class VisitantesNovoController {
     }
     
     private function handleReportsIndex() {
+        // Configurar timezone
+        date_default_timezone_set('America/Sao_Paulo');
+        
         // Filtros avançados para relatórios
         $data_inicial = $_GET['data_inicial'] ?? '';
         $data_final = $_GET['data_final'] ?? '';
@@ -99,70 +102,87 @@ class VisitantesNovoController {
         $perPage = 20;
         $offset = ($page - 1) * $perPage;
         
-        // Query base com filtros otimizados
-        $whereConditions = ["hora_entrada IS NOT NULL"];
+        // Query base com filtros otimizados usando nova estrutura Pré-Cadastros v2.0.0
+        $baseQuery = "
+            SELECT 
+                r.id as id,
+                c.nome as nome,
+                c.doc_type as doc_type,
+                c.doc_number as doc_number,
+                c.doc_country as doc_country,
+                c.empresa as empresa,
+                r.funcionario_responsavel as funcionario_responsavel,
+                r.setor as setor,
+                r.placa_veiculo as placa_veiculo,
+                r.entrada_at as hora_entrada,
+                r.saida_at as hora_saida,
+                r.observacao_entrada as observacao_entrada,
+                r.observacao_saida as observacao_saida,
+                c.telefone as telefone,
+                c.email as email,
+                CASE 
+                    WHEN c.valid_until < CURRENT_DATE THEN 'expirado'
+                    WHEN c.valid_until <= CURRENT_DATE + INTERVAL '30 days' THEN 'expirando'
+                    ELSE 'valido'
+                END as validity_status
+            FROM visitantes_registros r
+            JOIN visitantes_cadastro c ON c.id = r.cadastro_id
+            WHERE r.entrada_at IS NOT NULL AND c.deleted_at IS NULL";
+        
+        $whereConditions = [];
         $params = [];
         
         // Filtro por período (data inicial e/ou final)
         if (!empty($data_inicial) && !empty($data_final)) {
-            // Ambas as datas: filtrar entre elas
-            $whereConditions[] = "DATE(hora_entrada) BETWEEN ? AND ?";
+            $whereConditions[] = "DATE(r.entrada_at) BETWEEN ? AND ?";
             $params[] = $data_inicial;
             $params[] = $data_final;
         } elseif (!empty($data_inicial)) {
-            // Apenas data inicial: a partir dela
-            $whereConditions[] = "DATE(hora_entrada) >= ?";
+            $whereConditions[] = "DATE(r.entrada_at) >= ?";
             $params[] = $data_inicial;
         } elseif (!empty($data_final)) {
-            // Apenas data final: até ela
-            $whereConditions[] = "DATE(hora_entrada) <= ?";
+            $whereConditions[] = "DATE(r.entrada_at) <= ?";
             $params[] = $data_final;
         }
         
         // Filtro por empresa
         if (!empty($empresa)) {
-            $whereConditions[] = "empresa ILIKE ?";
+            $whereConditions[] = "c.empresa ILIKE ?";
             $params[] = "%$empresa%";
         }
         
         // Filtro por funcionário responsável
         if (!empty($funcionario_responsavel)) {
-            $whereConditions[] = "funcionario_responsavel ILIKE ?";
+            $whereConditions[] = "r.funcionario_responsavel ILIKE ?";
             $params[] = "%$funcionario_responsavel%";
         }
         
         // Filtro por setor
         if (!empty($setor)) {
-            $whereConditions[] = "setor = ?";
+            $whereConditions[] = "r.setor = ?";
             $params[] = $setor;
         }
         
         // Busca geral
         if (!empty($search)) {
-            $whereConditions[] = "(nome ILIKE ? OR cpf ILIKE ? OR doc_number ILIKE ?)";
+            $whereConditions[] = "(c.nome ILIKE ? OR c.doc_number ILIKE ? OR c.empresa ILIKE ?)";
             $params[] = "%$search%";
             $params[] = "%$search%";
             $params[] = "%$search%";
         }
         
-        $whereClause = implode(" AND ", $whereConditions);
+        // Adicionar condições WHERE se houver filtros
+        if (!empty($whereConditions)) {
+            $baseQuery .= " AND " . implode(" AND ", $whereConditions);
+        }
         
-        // Query para contar total (sem paginação)
-        $countQuery = "SELECT COUNT(*) as total FROM visitantes_novo WHERE $whereClause";
+        // Contar total de registros
+        $countQuery = "SELECT COUNT(*) as total FROM ($baseQuery) as subquery";
         $countResult = $this->db->fetch($countQuery, $params);
         $totalRecords = (int)$countResult['total'];
         
-        // Query principal com paginação e ordenação otimizada
-        $query = "
-            SELECT id, nome, cpf, doc_type, doc_number, doc_country, 
-                   empresa, funcionario_responsavel, setor, 
-                   placa_veiculo, hora_entrada, hora_saida
-            FROM visitantes_novo 
-            WHERE $whereClause 
-            ORDER BY hora_entrada DESC 
-            LIMIT ? OFFSET ?
-        ";
-        
+        // Query principal com paginação
+        $query = $baseQuery . " ORDER BY r.entrada_at DESC LIMIT ? OFFSET ?";
         $params[] = $perPage;
         $params[] = $offset;
         
@@ -243,10 +263,29 @@ class VisitantesNovoController {
             'next_page' => $page < $totalPages ? $page + 1 : null
         ];
         
-        // Buscar dados para filtros
-        $setores = $this->db->fetchAll("SELECT DISTINCT setor FROM visitantes_novo WHERE setor IS NOT NULL ORDER BY setor");
-        $empresas = $this->db->fetchAll("SELECT DISTINCT empresa FROM visitantes_novo WHERE empresa IS NOT NULL AND empresa != '' ORDER BY empresa LIMIT 50");
-        $responsaveis = $this->db->fetchAll("SELECT DISTINCT funcionario_responsavel FROM visitantes_novo WHERE funcionario_responsavel IS NOT NULL AND funcionario_responsavel != '' ORDER BY funcionario_responsavel LIMIT 50");
+        // Buscar dados para filtros usando nova estrutura Pré-Cadastros v2.0.0
+        $setores = $this->db->fetchAll("
+            SELECT DISTINCT r.setor 
+            FROM visitantes_registros r 
+            JOIN visitantes_cadastro c ON c.id = r.cadastro_id
+            WHERE r.setor IS NOT NULL AND c.deleted_at IS NULL 
+            ORDER BY r.setor
+        ");
+        $empresas = $this->db->fetchAll("
+            SELECT DISTINCT c.empresa 
+            FROM visitantes_cadastro c 
+            WHERE c.empresa IS NOT NULL AND c.empresa != '' AND c.deleted_at IS NULL 
+            ORDER BY c.empresa 
+            LIMIT 50
+        ");
+        $responsaveis = $this->db->fetchAll("
+            SELECT DISTINCT r.funcionario_responsavel 
+            FROM visitantes_registros r
+            JOIN visitantes_cadastro c ON c.id = r.cadastro_id 
+            WHERE r.funcionario_responsavel IS NOT NULL AND r.funcionario_responsavel != '' AND c.deleted_at IS NULL 
+            ORDER BY r.funcionario_responsavel 
+            LIMIT 50
+        ");
         
         // Incluir view de relatórios
         include $this->getViewPath('list.php');

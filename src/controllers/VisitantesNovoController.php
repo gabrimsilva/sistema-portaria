@@ -113,13 +113,11 @@ class VisitantesNovoController {
                 c.empresa as empresa,
                 r.funcionario_responsavel as funcionario_responsavel,
                 r.setor as setor,
-                r.placa_veiculo as placa_veiculo,
+                c.placa_veiculo as placa_veiculo,
                 r.entrada_at as hora_entrada,
                 r.saida_at as hora_saida,
                 r.observacao_entrada as observacao_entrada,
                 r.observacao_saida as observacao_saida,
-                c.telefone as telefone,
-                c.email as email,
                 CASE 
                     WHEN c.valid_until < CURRENT_DATE THEN 'expirado'
                     WHEN c.valid_until <= CURRENT_DATE + INTERVAL '30 days' THEN 'expirando'

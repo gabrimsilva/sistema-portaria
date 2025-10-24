@@ -119,7 +119,11 @@ class PrestadoresServicoController {
                 c.doc_number as cpf,
                 r.entrada_at,
                 r.saida_at as saida,
-                (SELECT validity_status FROM vw_prestadores_cadastro_status WHERE id = c.id) as validity_status
+                CASE 
+                    WHEN c.valid_until < CURRENT_DATE THEN 'expirado'
+                    WHEN c.valid_until <= CURRENT_DATE + INTERVAL '30 days' THEN 'expirando'
+                    ELSE 'valido'
+                END as validity_status
             FROM prestadores_registros r
             JOIN prestadores_cadastro c ON c.id = r.cadastro_id
             WHERE r.entrada_at IS NOT NULL AND c.deleted_at IS NULL";

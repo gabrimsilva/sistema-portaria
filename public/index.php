@@ -739,6 +739,18 @@ try {
             $controller->listJson();
             break;
         
+        case 'api/pre-cadastros/prestadores/search':
+            require_once '../src/controllers/PreCadastrosPrestadoresController.php';
+            $controller = new PreCadastrosPrestadoresController();
+            $controller->search();
+            break;
+        
+        case 'api/pre-cadastros/visitantes/search':
+            require_once '../src/controllers/PreCadastrosVisitantesController.php';
+            $controller = new PreCadastrosVisitantesController();
+            $controller->search();
+            break;
+        
         case 'api/pre-cadastros/buscar':
             require_once '../src/controllers/ApiPreCadastrosController.php';
             $controller = new ApiPreCadastrosController();

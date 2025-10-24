@@ -525,6 +525,64 @@ class PreCadastrosVisitantesController {
         exit;
     }
     
+    /**
+     * API: Buscar pré-cadastros para autocomplete (Dashboard)
+     * GET /api/pre-cadastros/visitantes/search?q=termo
+     */
+    public function search() {
+        header('Content-Type: application/json');
+        
+        try {
+            $query = $_GET['q'] ?? '';
+            
+            if (strlen($query) < 2) {
+                echo json_encode([
+                    'success' => true,
+                    'data' => []
+                ]);
+                exit;
+            }
+            
+            // Buscar apenas cadastros VÁLIDOS e ATIVOS
+            $sql = "SELECT 
+                        id,
+                        nome,
+                        empresa,
+                        doc_type,
+                        doc_number,
+                        doc_country,
+                        placa_veiculo,
+                        valid_until
+                    FROM visitantes_cadastro
+                    WHERE deleted_at IS NULL 
+                      AND ativo = true
+                      AND valid_until >= CURRENT_DATE
+                      AND (
+                          nome ILIKE ? 
+                          OR doc_number LIKE ?
+                          OR empresa ILIKE ?
+                      )
+                    ORDER BY nome ASC
+                    LIMIT 10";
+            
+            $searchTerm = "%$query%";
+            $results = $this->db->fetchAll($sql, [$searchTerm, $searchTerm, $searchTerm]);
+            
+            echo json_encode([
+                'success' => true,
+                'data' => $results
+            ]);
+            
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+        exit;
+    }
+    
     // ========================================
     // MÉTODOS AUXILIARES
     // ========================================

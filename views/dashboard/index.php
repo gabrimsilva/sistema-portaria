@@ -483,8 +483,9 @@
                 <div class="modal-body">
                     <form id="formVisitante">
                         <input type="hidden" name="csrf_token" value="<?= CSRFProtection::generateToken() ?>">
+                        <input type="hidden" id="visitante_cadastro_id" name="cadastro_id" value="">
                         <div class="form-group">
-                            <label for="visitante_nome">Nome Completo *</label>
+                            <label for="visitante_nome">Nome Completo * <small class="text-muted">(Digite para buscar pré-cadastro)</small></label>
                             <input type="text" class="form-control" id="visitante_nome" name="nome" required>
                         </div>
                         
@@ -664,10 +665,11 @@
                 <div class="modal-body">
                     <form id="formPrestador">
                         <input type="hidden" name="csrf_token" value="<?= CSRFProtection::generateToken() ?>">
+                        <input type="hidden" id="prestador_cadastro_id" name="cadastro_id" value="">
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="prestador_nome">Nome Completo *</label>
+                                    <label for="prestador_nome">Nome Completo * <small class="text-muted">(Digite para buscar pré-cadastro)</small></label>
                                     <input type="text" class="form-control" id="prestador_nome" name="nome" required>
                                 </div>
                             </div>
@@ -924,6 +926,7 @@
     
     <!-- 🆕 PRÉ-CADASTROS V2.0.0 - Autocomplete -->
     <script src="/assets/js/dashboard-autocomplete.js?v=<?= time() ?>"></script>
+    <script src="/assets/js/dashboard-precadastros-autocomplete.js?v=<?= time() ?>"></script>
     
     <?php
     require_once '../src/services/ErrorHandlerService.php';

@@ -185,6 +185,6 @@ require_once __DIR__ . '/../../partials/header.php';
     </div>
 </div>
 
-<script src="/js/pre-cadastros-form.js"></script>
+<script src="/assets/js/pre-cadastros-form.js"></script>
 
 <?php require_once __DIR__ . '/../../partials/footer.php'; ?>

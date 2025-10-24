@@ -1037,26 +1037,39 @@ class PrestadoresServicoController {
                     return;
                 }
                 
-                // Buscar o prestador
-                $prestador = $this->db->fetch("SELECT * FROM prestadores_servico WHERE id = ?", [$id]);
+                // Buscar o registro (PRÉ-CADASTROS V2.0.0)
+                $registro = $this->db->fetch("
+                    SELECT r.id, r.cadastro_id, r.setor, r.funcionario_responsavel,
+                           r.entrada_at, r.saida_at, r.observacao_entrada, r.observacao_saida,
+                           c.nome, c.doc_type, c.doc_number, c.doc_country, 
+                           c.empresa, c.placa_veiculo
+                    FROM prestadores_registros r
+                    JOIN prestadores_cadastro c ON c.id = r.cadastro_id
+                    WHERE r.id = ? AND c.deleted_at IS NULL
+                ", [$id]);
                 
-                if (!$prestador) {
-                    echo json_encode(['success' => false, 'message' => 'Prestador não encontrado']);
+                if (!$registro) {
+                    echo json_encode(['success' => false, 'message' => 'Registro não encontrado']);
                     return;
                 }
                 
                 echo json_encode([
                     'success' => true, 
                     'data' => [
-                        'id' => $prestador['id'],
-                        'nome' => $prestador['nome'],
-                        'cpf' => $prestador['cpf'],
-                        'empresa' => $prestador['empresa'],
-                        'setor' => $prestador['setor'],
-                        'observacao' => $prestador['observacao'],
-                        'placa_veiculo' => $prestador['placa_veiculo'],
-                        'entrada' => $prestador['entrada'],
-                        'saida' => $prestador['saida']
+                        'id' => $registro['id'],
+                        'cadastro_id' => $registro['cadastro_id'],
+                        'nome' => $registro['nome'],
+                        'cpf' => $registro['doc_number'] ?? '',
+                        'doc_type' => $registro['doc_type'],
+                        'doc_number' => $registro['doc_number'],
+                        'doc_country' => $registro['doc_country'],
+                        'empresa' => $registro['empresa'],
+                        'setor' => $registro['setor'],
+                        'funcionario_responsavel' => $registro['funcionario_responsavel'],
+                        'observacao' => $registro['observacao_entrada'] ?? '',
+                        'placa_veiculo' => $registro['placa_veiculo'],
+                        'entrada' => $registro['entrada_at'],
+                        'saida' => $registro['saida_at']
                     ]
                 ]);
             } catch (Exception $e) {

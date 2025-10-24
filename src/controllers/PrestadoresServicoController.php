@@ -100,91 +100,92 @@ class PrestadoresServicoController {
         $pageSize = 20;
         $offset = ($page - 1) * $pageSize;
         
-        // Query base para relatórios (usando view consolidada - BUG FIX v2.0.0)
+        // Query base para relatórios (PRÉ-CADASTROS V2.0.0)
         $query = "
             SELECT 
-                id,
-                nome,
-                setor,
-                placa_veiculo,
+                r.id,
+                c.nome,
+                r.setor,
+                c.placa_veiculo,
                 CASE 
-                    WHEN placa_veiculo IS NULL OR placa_veiculo = '' OR placa_veiculo = 'APE' THEN 'A pé'
-                    ELSE UPPER(placa_veiculo)
+                    WHEN c.placa_veiculo IS NULL OR c.placa_veiculo = '' OR c.placa_veiculo = 'APE' THEN 'A pé'
+                    ELSE UPPER(c.placa_veiculo)
                 END as placa_ou_ape,
-                empresa,
-                funcionario_responsavel,
-                doc_type,
-                doc_number,
-                doc_country,
-                cpf,
-                entrada as entrada_at,
-                saida_consolidada as saida,
-                validity_status
-            FROM vw_prestadores_consolidado 
-            WHERE entrada IS NOT NULL";
+                c.empresa,
+                r.funcionario_responsavel,
+                c.doc_type,
+                c.doc_number,
+                c.doc_country,
+                c.doc_number as cpf,
+                r.entrada_at,
+                r.saida_at as saida,
+                (SELECT validity_status FROM vw_prestadores_cadastro_status WHERE id = c.id) as validity_status
+            FROM prestadores_registros r
+            JOIN prestadores_cadastro c ON c.id = r.cadastro_id
+            WHERE r.entrada_at IS NOT NULL AND c.deleted_at IS NULL";
         
-        $countQuery = "SELECT COUNT(*) as total FROM vw_prestadores_consolidado WHERE entrada IS NOT NULL";
+        $countQuery = "SELECT COUNT(*) as total FROM prestadores_registros r JOIN prestadores_cadastro c ON c.id = r.cadastro_id WHERE r.entrada_at IS NOT NULL AND c.deleted_at IS NULL";
         $params = [];
         $countParams = [];
         
         // Filtro por período (data inicial e/ou final)
         if (!empty($data_inicial) && !empty($data_final)) {
             // Ambas as datas: filtrar entre elas
-            $query .= " AND DATE(entrada) BETWEEN ? AND ?";
-            $countQuery .= " AND DATE(entrada) BETWEEN ? AND ?";
+            $query .= " AND DATE(r.entrada_at) BETWEEN ? AND ?";
+            $countQuery .= " AND DATE(r.entrada_at) BETWEEN ? AND ?";
             $params[] = $data_inicial;
             $params[] = $data_final;
             $countParams[] = $data_inicial;
             $countParams[] = $data_final;
         } elseif (!empty($data_inicial)) {
             // Apenas data inicial: a partir dela
-            $query .= " AND DATE(entrada) >= ?";
-            $countQuery .= " AND DATE(entrada) >= ?";
+            $query .= " AND DATE(r.entrada_at) >= ?";
+            $countQuery .= " AND DATE(r.entrada_at) >= ?";
             $params[] = $data_inicial;
             $countParams[] = $data_inicial;
         } elseif (!empty($data_final)) {
             // Apenas data final: até ela
-            $query .= " AND DATE(entrada) <= ?";
-            $countQuery .= " AND DATE(entrada) <= ?";
+            $query .= " AND DATE(r.entrada_at) <= ?";
+            $countQuery .= " AND DATE(r.entrada_at) <= ?";
             $params[] = $data_final;
             $countParams[] = $data_final;
         }
         
         // Filtro por setor
         if (!empty($setor)) {
-            $query .= " AND setor = ?";
-            $countQuery .= " AND setor = ?";
+            $query .= " AND r.setor = ?";
+            $countQuery .= " AND r.setor = ?";
             $params[] = $setor;
             $countParams[] = $setor;
         }
         
-        // Filtro por status (usando saida - campo correto para prestadores)
+        // Filtro por status (usando saida_at)
         if ($status === 'aberto') {
-            $query .= " AND saida IS NULL";
-            $countQuery .= " AND saida IS NULL";
+            $query .= " AND r.saida_at IS NULL";
+            $countQuery .= " AND r.saida_at IS NULL";
         } elseif ($status === 'finalizado') {
-            $query .= " AND saida IS NOT NULL";
-            $countQuery .= " AND saida IS NOT NULL";
+            $query .= " AND r.saida_at IS NOT NULL";
+            $countQuery .= " AND r.saida_at IS NOT NULL";
         }
         
         // Filtro por empresa
         if (!empty($empresa)) {
-            $query .= " AND empresa ILIKE ?";
-            $countQuery .= " AND empresa ILIKE ?";
+            $query .= " AND c.empresa ILIKE ?";
+            $countQuery .= " AND c.empresa ILIKE ?";
             $params[] = "%$empresa%";
             $countParams[] = "%$empresa%";
         }
         
         // Filtro por responsável
         if (!empty($responsavel)) {
-            $query .= " AND funcionario_responsavel ILIKE ?";
-            $countQuery .= " AND funcionario_responsavel ILIKE ?";
+            $query .= " AND r.funcionario_responsavel ILIKE ?";
+            $countQuery .= " AND r.funcionario_responsavel ILIKE ?";
             $params[] = "%$responsavel%";
             $countParams[] = "%$responsavel%";
         }
         
         // Ordenação e paginação
-        $query .= " ORDER BY entrada DESC LIMIT ? OFFSET ?";
+        $query .= " ORDER BY r.entrada_at DESC LIMIT ? OFFSET ?";
         $params[] = $pageSize;
         $params[] = $offset;
         
@@ -201,10 +202,10 @@ class PrestadoresServicoController {
             }
         }
         
-        // Dados para filtros
-        $setores = $this->db->fetchAll("SELECT DISTINCT setor FROM prestadores_servico WHERE setor IS NOT NULL ORDER BY setor");
-        $empresas = $this->db->fetchAll("SELECT DISTINCT empresa FROM prestadores_servico WHERE empresa IS NOT NULL ORDER BY empresa");
-        $responsaveis = $this->db->fetchAll("SELECT DISTINCT funcionario_responsavel FROM prestadores_servico WHERE funcionario_responsavel IS NOT NULL ORDER BY funcionario_responsavel");
+        // Dados para filtros (PRÉ-CADASTROS V2.0.0)
+        $setores = $this->db->fetchAll("SELECT DISTINCT r.setor FROM prestadores_registros r JOIN prestadores_cadastro c ON c.id = r.cadastro_id WHERE r.setor IS NOT NULL AND c.deleted_at IS NULL ORDER BY r.setor");
+        $empresas = $this->db->fetchAll("SELECT DISTINCT c.empresa FROM prestadores_registros r JOIN prestadores_cadastro c ON c.id = r.cadastro_id WHERE c.empresa IS NOT NULL AND c.deleted_at IS NULL ORDER BY c.empresa");
+        $responsaveis = $this->db->fetchAll("SELECT DISTINCT r.funcionario_responsavel FROM prestadores_registros r JOIN prestadores_cadastro c ON c.id = r.cadastro_id WHERE r.funcionario_responsavel IS NOT NULL AND c.deleted_at IS NULL ORDER BY r.funcionario_responsavel");
         
         // Dados de paginação
         $totalPages = ceil($total / $pageSize);

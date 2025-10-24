@@ -350,6 +350,128 @@ $canDeleteInline = $authService->hasPermission('relatorios.excluir_linha');
         </div>
     </div>
     
+    <!-- Modal de Edição Inline -->
+    <div class="modal fade" id="modalEditarPrestador" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-white">
+                    <h5 class="modal-title">Editar Prestador de Serviço</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="formEditarPrestador">
+                        <input type="hidden" id="editPrestadorId" name="id">
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Nome Completo *</label>
+                                    <input type="text" class="form-control" id="editNome" name="nome" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Empresa</label>
+                                    <input type="text" class="form-control" id="editEmpresa" name="empresa">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Tipo de Documento</label>
+                                    <select class="form-control" id="editDocType" name="doc_type">
+                                        <option value="">CPF (padrão)</option>
+                                        <option value="CPF">CPF</option>
+                                        <option value="RG">RG</option>
+                                        <option value="CNH">CNH</option>
+                                        <option value="Passaporte">Passaporte</option>
+                                        <option value="RNE">RNE</option>
+                                        <option value="DNI">DNI</option>
+                                        <option value="CI">CI</option>
+                                        <option value="Outros">Outros</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Número do Documento</label>
+                                    <input type="text" class="form-control" id="editDocNumber" name="doc_number">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>País (se estrangeiro)</label>
+                                    <input type="text" class="form-control" id="editDocCountry" name="doc_country" placeholder="Ex: Argentina">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Setor</label>
+                                    <input type="text" class="form-control" id="editSetor" name="setor">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Funcionário Responsável</label>
+                                    <input type="text" class="form-control" id="editFuncionario" name="funcionario_responsavel">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Placa do Veículo</label>
+                                    <input type="text" class="form-control" id="editPlaca" name="placa_veiculo">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Data/Hora Entrada</label>
+                                    <input type="datetime-local" class="form-control" id="editEntrada" name="entrada_at">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Data/Hora Saída</label>
+                                    <input type="datetime-local" class="form-control" id="editSaida" name="saida_at">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Observação Entrada</label>
+                                    <textarea class="form-control" id="editObsEntrada" name="observacao_entrada" rows="2"></textarea>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Observação Saída</label>
+                                    <textarea class="form-control" id="editObsSaida" name="observacao_saida" rows="2"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-warning" id="btnSalvarEdicao">
+                        <i class="fas fa-save"></i> Salvar Alterações
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
@@ -463,10 +585,132 @@ $canDeleteInline = $authService->hasPermission('relatorios.excluir_linha');
             }
         }
         
-        // Botão Editar - Redireciona para página de edição
+        // Botão Editar - Abre modal e carrega dados
         $('.btn-edit-inline').on('click', function() {
             const id = $(this).data('id');
-            window.location.href = '/reports/prestadores-servico?action=edit&id=' + id;
+            
+            // Buscar dados do registro via AJAX
+            $.ajax({
+                url: '/reports/prestadores-servico?action=get_by_id_ajax&id=' + id,
+                method: 'GET',
+                success: function(response) {
+                    if (response.success && response.data) {
+                        const data = response.data;
+                        
+                        // Preencher formulário
+                        $('#editPrestadorId').val(data.id);
+                        $('#editNome').val(data.nome || '');
+                        $('#editEmpresa').val(data.empresa || '');
+                        $('#editDocType').val(data.doc_type || '');
+                        $('#editDocNumber').val(data.doc_number || '');
+                        $('#editDocCountry').val(data.doc_country || '');
+                        $('#editSetor').val(data.setor || '');
+                        $('#editFuncionario').val(data.funcionario_responsavel || '');
+                        $('#editPlaca').val(data.placa_veiculo || '');
+                        
+                        // Converter timestamps para datetime-local format
+                        if (data.entrada_at) {
+                            const entradaDate = new Date(data.entrada_at);
+                            $('#editEntrada').val(entradaDate.toISOString().slice(0, 16));
+                        } else {
+                            $('#editEntrada').val('');
+                        }
+                        
+                        if (data.saida_at) {
+                            const saidaDate = new Date(data.saida_at);
+                            $('#editSaida').val(saidaDate.toISOString().slice(0, 16));
+                        } else {
+                            $('#editSaida').val('');
+                        }
+                        
+                        $('#editObsEntrada').val(data.observacao_entrada || '');
+                        $('#editObsSaida').val(data.observacao_saida || '');
+                        
+                        // Abrir modal
+                        $('#modalEditarPrestador').modal('show');
+                    } else {
+                        alert('Erro ao carregar dados: ' + (response.message || 'Erro desconhecido'));
+                    }
+                },
+                error: function(xhr) {
+                    let message = 'Erro ao carregar dados do registro.';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        message = xhr.responseJSON.message;
+                    }
+                    alert(message);
+                }
+            });
+        });
+        
+        // Salvar edição
+        $('#btnSalvarEdicao').on('click', function() {
+            const $btn = $(this);
+            const $form = $('#formEditarPrestador');
+            
+            // Validação básica
+            if (!$form[0].checkValidity()) {
+                $form[0].reportValidity();
+                return;
+            }
+            
+            $btn.prop('disabled', true);
+            
+            // Coletar dados do formulário
+            const formData = {
+                id: $('#editPrestadorId').val(),
+                nome: $('#editNome').val(),
+                empresa: $('#editEmpresa').val(),
+                doc_type: $('#editDocType').val(),
+                doc_number: $('#editDocNumber').val(),
+                doc_country: $('#editDocCountry').val(),
+                setor: $('#editSetor').val(),
+                funcionario_responsavel: $('#editFuncionario').val(),
+                placa_veiculo: $('#editPlaca').val(),
+                entrada_at: $('#editEntrada').val(),
+                saida_at: $('#editSaida').val(),
+                observacao_entrada: $('#editObsEntrada').val(),
+                observacao_saida: $('#editObsSaida').val(),
+                csrf_token: csrfToken
+            };
+            
+            $.ajax({
+                url: '/reports/prestadores-servico?action=edit_inline_ajax',
+                method: 'POST',
+                data: formData,
+                success: function(response) {
+                    if (response.success) {
+                        // Fechar modal
+                        $('#modalEditarPrestador').modal('hide');
+                        
+                        // Mostrar mensagem de sucesso
+                        const alert = $('<div class="alert alert-success alert-dismissible">' +
+                            '<button type="button" class="close" data-dismiss="alert">&times;</button>' +
+                            '<i class="fas fa-check-circle"></i> ' + response.message +
+                            '</div>');
+                        $('.content-fluid .container-fluid').prepend(alert);
+                        
+                        setTimeout(function() {
+                            alert.fadeOut(300, function() { $(this).remove(); });
+                        }, 5000);
+                        
+                        // Recarregar página para mostrar dados atualizados
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        alert('Erro ao salvar: ' + response.message);
+                        $btn.prop('disabled', false);
+                    }
+                },
+                error: function(xhr) {
+                    let message = 'Erro ao salvar alterações.';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        message = xhr.responseJSON.message;
+                    }
+                    alert(message);
+                    $btn.prop('disabled', false);
+                }
+            });
         });
         
         // Botões inline - Excluir

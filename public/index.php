@@ -293,6 +293,9 @@ try {
                 case 'delete':
                     $controller->delete();
                     break;
+                case 'get_by_id_ajax':
+                    $controller->getByIdAjax();
+                    break;
                 case 'edit_inline_ajax':
                     $controller->editInlineAjax();
                     break;
@@ -346,6 +349,9 @@ try {
                 case 'delete':
                     $controller->delete();
                     break;
+                case 'get_by_id_ajax':
+                    $controller->getByIdAjax();
+                    break;
                 case 'edit_inline_ajax':
                     $controller->editInlineAjax();
                     break;
@@ -395,6 +401,9 @@ try {
                     break;
                 case 'delete':
                     $controller->delete();
+                    break;
+                case 'get_by_id_ajax':
+                    $controller->getByIdAjax();
                     break;
                 case 'edit_inline_ajax':
                     $controller->editInlineAjax();

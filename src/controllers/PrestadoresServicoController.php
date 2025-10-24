@@ -1258,72 +1258,141 @@ class PrestadoresServicoController {
                 throw new Exception('ID é obrigatório');
             }
             
-            $prestador = $this->db->fetch("SELECT * FROM prestadores_servico WHERE id = ?", [$id]);
-            if (!$prestador) {
+            // Buscar registro com cadastro_id
+            $registro = $this->db->fetch("SELECT cadastro_id FROM prestadores_registros WHERE id = ?", [$id]);
+            if (!$registro) {
                 throw new Exception('Registro não encontrado');
             }
             
-            $updateFields = [];
-            $updateParams = [];
+            $cadastroId = $registro['cadastro_id'];
+            
+            // Atualizar cadastro se houver campos relacionados
+            $updateCadastroFields = [];
+            $updateCadastroParams = [];
             
             if (isset($_POST['nome'])) {
-                $updateFields[] = 'nome = ?';
-                $updateParams[] = trim($_POST['nome']);
+                $updateCadastroFields[] = 'nome = ?';
+                $updateCadastroParams[] = trim($_POST['nome']);
             }
             
-            if (isset($_POST['cpf'])) {
-                $cpf = preg_replace('/\D/', '', $_POST['cpf']);
-                $updateFields[] = 'cpf = ?';
-                $updateParams[] = $cpf;
+            if (isset($_POST['doc_type'])) {
+                $updateCadastroFields[] = 'doc_type = ?';
+                $updateCadastroParams[] = $_POST['doc_type'] ?: null;
+            }
+            
+            if (isset($_POST['doc_number'])) {
+                $docNumber = trim($_POST['doc_number']);
+                $docType = $_POST['doc_type'] ?? null;
+                
+                // Normalização baseada no tipo
+                if (in_array($docType, ['CPF', 'RG', 'CNH'])) {
+                    $docNumber = preg_replace('/\D/', '', $docNumber);
+                } else {
+                    $docNumber = strtoupper($docNumber);
+                }
+                
+                $updateCadastroFields[] = 'doc_number = ?';
+                $updateCadastroParams[] = $docNumber ?: null;
+            }
+            
+            if (isset($_POST['doc_country'])) {
+                $updateCadastroFields[] = 'doc_country = ?';
+                $updateCadastroParams[] = trim($_POST['doc_country']) ?: null;
             }
             
             if (isset($_POST['empresa'])) {
-                $updateFields[] = 'empresa = ?';
-                $updateParams[] = trim($_POST['empresa']);
+                $updateCadastroFields[] = 'empresa = ?';
+                $updateCadastroParams[] = trim($_POST['empresa']);
             }
             
             if (isset($_POST['funcionario_responsavel'])) {
-                $updateFields[] = 'funcionario_responsavel = ?';
-                $updateParams[] = trim($_POST['funcionario_responsavel']);
+                $updateCadastroFields[] = 'funcionario_responsavel = ?';
+                $updateCadastroParams[] = trim($_POST['funcionario_responsavel']);
             }
             
             if (isset($_POST['setor'])) {
-                $updateFields[] = 'setor = ?';
-                $updateParams[] = trim($_POST['setor']);
+                $updateCadastroFields[] = 'setor = ?';
+                $updateCadastroParams[] = trim($_POST['setor']);
             }
             
-            if (isset($_POST['placa_ou_ape'])) {
-                $placa = strtoupper(preg_replace('/[^A-Z0-9]/', '', $_POST['placa_ou_ape']));
-                $updateFields[] = 'placa_ou_ape = ?';
-                $updateParams[] = $placa;
+            if (isset($_POST['placa_veiculo'])) {
+                $placa = strtoupper(preg_replace('/[^A-Z0-9]/', '', $_POST['placa_veiculo']));
+                $updateCadastroFields[] = 'placa_veiculo = ?';
+                $updateCadastroParams[] = $placa ?: null;
             }
             
-            if (isset($_POST['entrada'])) {
-                $updateFields[] = 'entrada = ?';
-                $updateParams[] = $_POST['entrada'] ?: null;
+            // Executar update do cadastro se houver campos
+            if (!empty($updateCadastroFields)) {
+                $updateCadastroFields[] = 'updated_at = CURRENT_TIMESTAMP';
+                $updateCadastroParams[] = $cadastroId;
+                
+                $queryCadastro = "UPDATE prestadores_cadastro SET " . implode(', ', $updateCadastroFields) . " WHERE id = ?";
+                $this->db->query($queryCadastro, $updateCadastroParams);
             }
             
-            if (isset($_POST['saida'])) {
-                $updateFields[] = 'saida = ?';
-                $updateParams[] = $_POST['saida'] ?: null;
+            // Atualizar registro se houver campos relacionados
+            $updateRegistroFields = [];
+            $updateRegistroParams = [];
+            
+            if (isset($_POST['entrada_at'])) {
+                $updateRegistroFields[] = 'entrada_at = ?';
+                $updateRegistroParams[] = $_POST['entrada_at'] ?: null;
             }
             
-            if (empty($updateFields)) {
+            if (isset($_POST['saida_at'])) {
+                $updateRegistroFields[] = 'saida_at = ?';
+                $updateRegistroParams[] = $_POST['saida_at'] ?: null;
+            }
+            
+            if (isset($_POST['observacao_entrada'])) {
+                $updateRegistroFields[] = 'observacao_entrada = ?';
+                $updateRegistroParams[] = trim($_POST['observacao_entrada']) ?: null;
+            }
+            
+            if (isset($_POST['observacao_saida'])) {
+                $updateRegistroFields[] = 'observacao_saida = ?';
+                $updateRegistroParams[] = trim($_POST['observacao_saida']) ?: null;
+            }
+            
+            // Executar update do registro se houver campos
+            if (!empty($updateRegistroFields)) {
+                $updateRegistroFields[] = 'updated_at = CURRENT_TIMESTAMP';
+                $updateRegistroParams[] = $id;
+                
+                $queryRegistro = "UPDATE prestadores_registros SET " . implode(', ', $updateRegistroFields) . " WHERE id = ?";
+                $this->db->query($queryRegistro, $updateRegistroParams);
+            }
+            
+            if (empty($updateCadastroFields) && empty($updateRegistroFields)) {
                 throw new Exception('Nenhum campo para atualizar');
             }
             
-            $updateFields[] = 'updated_at = CURRENT_TIMESTAMP';
-            $updateParams[] = $id;
-            
-            $query = "UPDATE prestadores_servico SET " . implode(', ', $updateFields) . " WHERE id = ?";
-            $this->db->query($query, $updateParams);
-            
-            $prestadorAtualizado = $this->db->fetch("SELECT * FROM prestadores_servico WHERE id = ?", [$id]);
+            // Buscar dados atualizados
+            $dadosAtualizados = $this->db->fetch("
+                SELECT 
+                    r.id,
+                    r.cadastro_id,
+                    r.entrada_at,
+                    r.saida_at,
+                    r.observacao_entrada,
+                    r.observacao_saida,
+                    c.nome,
+                    c.doc_type,
+                    c.doc_number,
+                    c.doc_country,
+                    c.empresa,
+                    c.setor,
+                    c.funcionario_responsavel,
+                    c.placa_veiculo
+                FROM prestadores_registros r
+                INNER JOIN prestadores_cadastro c ON r.cadastro_id = c.id
+                WHERE r.id = ?
+            ", [$id]);
             
             echo json_encode([
                 'success' => true,
                 'message' => 'Registro atualizado com sucesso',
-                'data' => $prestadorAtualizado
+                'data' => $dadosAtualizados
             ]);
             
         } catch (Exception $e) {

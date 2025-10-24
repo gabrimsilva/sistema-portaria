@@ -893,6 +893,78 @@ class VisitantesNovoController {
     }
     
     /**
+     * Buscar registro por ID (usado para edição inline)
+     * Requer permissão: relatorios.editar_linha
+     */
+    public function getByIdAjax() {
+        header('Content-Type: application/json');
+        
+        if (!isset($_SESSION['user_id'])) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'message' => 'Não autenticado']);
+            exit;
+        }
+        
+        require_once __DIR__ . '/../services/AuthorizationService.php';
+        $authService = new AuthorizationService();
+        
+        if (!$authService->hasPermission('relatorios.editar_linha')) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Você não tem permissão para visualizar este registro']);
+            exit;
+        }
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método não permitido']);
+            exit;
+        }
+        
+        try {
+            $id = $_GET['id'] ?? null;
+            if (!$id) {
+                throw new Exception('ID é obrigatório');
+            }
+            
+            // Buscar registro com dados do cadastro
+            $registro = $this->db->fetch("
+                SELECT 
+                    r.id,
+                    r.cadastro_id,
+                    r.entrada_at,
+                    r.saida_at,
+                    r.observacao_entrada,
+                    r.observacao_saida,
+                    r.setor,
+                    r.funcionario_responsavel,
+                    c.nome,
+                    c.doc_type,
+                    c.doc_number,
+                    c.doc_country,
+                    c.empresa,
+                    c.placa_veiculo
+                FROM visitantes_registros r
+                INNER JOIN visitantes_cadastro c ON r.cadastro_id = c.id
+                WHERE r.id = ?
+            ", [$id]);
+            
+            if (!$registro) {
+                throw new Exception('Registro não encontrado');
+            }
+            
+            echo json_encode([
+                'success' => true,
+                'data' => $registro
+            ]);
+            
+        } catch (Exception $e) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+        exit;
+    }
+    
+    /**
      * Editar registro inline (usado nos relatórios)
      * Requer permissão: relatorios.editar_linha
      */
@@ -928,72 +1000,141 @@ class VisitantesNovoController {
                 throw new Exception('ID é obrigatório');
             }
             
-            $visitante = $this->db->fetch("SELECT * FROM visitantes_novo WHERE id = ?", [$id]);
-            if (!$visitante) {
+            // Buscar registro com cadastro_id
+            $registro = $this->db->fetch("SELECT cadastro_id FROM visitantes_registros WHERE id = ?", [$id]);
+            if (!$registro) {
                 throw new Exception('Registro não encontrado');
             }
             
-            $updateFields = [];
-            $updateParams = [];
+            $cadastroId = $registro['cadastro_id'];
+            
+            // Atualizar cadastro se houver campos relacionados
+            $updateCadastroFields = [];
+            $updateCadastroParams = [];
             
             if (isset($_POST['nome'])) {
-                $updateFields[] = 'nome = ?';
-                $updateParams[] = trim($_POST['nome']);
+                $updateCadastroFields[] = 'nome = ?';
+                $updateCadastroParams[] = trim($_POST['nome']);
             }
             
-            if (isset($_POST['cpf'])) {
-                $cpf = preg_replace('/\D/', '', $_POST['cpf']);
-                $updateFields[] = 'cpf = ?';
-                $updateParams[] = $cpf;
+            if (isset($_POST['doc_type'])) {
+                $updateCadastroFields[] = 'doc_type = ?';
+                $updateCadastroParams[] = $_POST['doc_type'] ?: null;
+            }
+            
+            if (isset($_POST['doc_number'])) {
+                $docNumber = trim($_POST['doc_number']);
+                $docType = $_POST['doc_type'] ?? null;
+                
+                // Normalização baseada no tipo
+                if (in_array($docType, ['CPF', 'RG', 'CNH'])) {
+                    $docNumber = preg_replace('/\D/', '', $docNumber);
+                } else {
+                    $docNumber = strtoupper($docNumber);
+                }
+                
+                $updateCadastroFields[] = 'doc_number = ?';
+                $updateCadastroParams[] = $docNumber ?: null;
+            }
+            
+            if (isset($_POST['doc_country'])) {
+                $updateCadastroFields[] = 'doc_country = ?';
+                $updateCadastroParams[] = trim($_POST['doc_country']) ?: null;
             }
             
             if (isset($_POST['empresa'])) {
-                $updateFields[] = 'empresa = ?';
-                $updateParams[] = trim($_POST['empresa']);
-            }
-            
-            if (isset($_POST['funcionario_responsavel'])) {
-                $updateFields[] = 'funcionario_responsavel = ?';
-                $updateParams[] = trim($_POST['funcionario_responsavel']);
-            }
-            
-            if (isset($_POST['setor'])) {
-                $updateFields[] = 'setor = ?';
-                $updateParams[] = trim($_POST['setor']);
+                $updateCadastroFields[] = 'empresa = ?';
+                $updateCadastroParams[] = trim($_POST['empresa']);
             }
             
             if (isset($_POST['placa_veiculo'])) {
                 $placa = strtoupper(preg_replace('/[^A-Z0-9]/', '', $_POST['placa_veiculo']));
-                $updateFields[] = 'placa_veiculo = ?';
-                $updateParams[] = $placa;
+                $updateCadastroFields[] = 'placa_veiculo = ?';
+                $updateCadastroParams[] = $placa ?: null;
             }
             
-            if (isset($_POST['hora_entrada'])) {
-                $updateFields[] = 'hora_entrada = ?';
-                $updateParams[] = $_POST['hora_entrada'] ?: null;
+            // Executar update do cadastro se houver campos
+            if (!empty($updateCadastroFields)) {
+                $updateCadastroFields[] = 'updated_at = CURRENT_TIMESTAMP';
+                $updateCadastroParams[] = $cadastroId;
+                
+                $queryCadastro = "UPDATE visitantes_cadastro SET " . implode(', ', $updateCadastroFields) . " WHERE id = ?";
+                $this->db->query($queryCadastro, $updateCadastroParams);
             }
             
-            if (isset($_POST['hora_saida'])) {
-                $updateFields[] = 'hora_saida = ?';
-                $updateParams[] = $_POST['hora_saida'] ?: null;
+            // Atualizar registro se houver campos relacionados
+            $updateRegistroFields = [];
+            $updateRegistroParams = [];
+            
+            if (isset($_POST['setor'])) {
+                $updateRegistroFields[] = 'setor = ?';
+                $updateRegistroParams[] = trim($_POST['setor']) ?: null;
             }
             
-            if (empty($updateFields)) {
+            if (isset($_POST['funcionario_responsavel'])) {
+                $updateRegistroFields[] = 'funcionario_responsavel = ?';
+                $updateRegistroParams[] = trim($_POST['funcionario_responsavel']) ?: null;
+            }
+            
+            if (isset($_POST['entrada_at'])) {
+                $updateRegistroFields[] = 'entrada_at = ?';
+                $updateRegistroParams[] = $_POST['entrada_at'] ?: null;
+            }
+            
+            if (isset($_POST['saida_at'])) {
+                $updateRegistroFields[] = 'saida_at = ?';
+                $updateRegistroParams[] = $_POST['saida_at'] ?: null;
+            }
+            
+            if (isset($_POST['observacao_entrada'])) {
+                $updateRegistroFields[] = 'observacao_entrada = ?';
+                $updateRegistroParams[] = trim($_POST['observacao_entrada']) ?: null;
+            }
+            
+            if (isset($_POST['observacao_saida'])) {
+                $updateRegistroFields[] = 'observacao_saida = ?';
+                $updateRegistroParams[] = trim($_POST['observacao_saida']) ?: null;
+            }
+            
+            // Executar update do registro se houver campos
+            if (!empty($updateRegistroFields)) {
+                $updateRegistroFields[] = 'updated_at = CURRENT_TIMESTAMP';
+                $updateRegistroParams[] = $id;
+                
+                $queryRegistro = "UPDATE visitantes_registros SET " . implode(', ', $updateRegistroFields) . " WHERE id = ?";
+                $this->db->query($queryRegistro, $updateRegistroParams);
+            }
+            
+            if (empty($updateCadastroFields) && empty($updateRegistroFields)) {
                 throw new Exception('Nenhum campo para atualizar');
             }
             
-            $updateFields[] = 'updated_at = CURRENT_TIMESTAMP';
-            $updateParams[] = $id;
-            
-            $query = "UPDATE visitantes_novo SET " . implode(', ', $updateFields) . " WHERE id = ?";
-            $this->db->query($query, $updateParams);
-            
-            $visitanteAtualizado = $this->db->fetch("SELECT * FROM visitantes_novo WHERE id = ?", [$id]);
+            // Buscar dados atualizados
+            $dadosAtualizados = $this->db->fetch("
+                SELECT 
+                    r.id,
+                    r.cadastro_id,
+                    r.entrada_at,
+                    r.saida_at,
+                    r.observacao_entrada,
+                    r.observacao_saida,
+                    r.setor,
+                    r.funcionario_responsavel,
+                    c.nome,
+                    c.doc_type,
+                    c.doc_number,
+                    c.doc_country,
+                    c.empresa,
+                    c.placa_veiculo
+                FROM visitantes_registros r
+                INNER JOIN visitantes_cadastro c ON r.cadastro_id = c.id
+                WHERE r.id = ?
+            ", [$id]);
             
             echo json_encode([
                 'success' => true,
                 'message' => 'Registro atualizado com sucesso',
-                'data' => $visitanteAtualizado
+                'data' => $dadosAtualizados
             ]);
             
         } catch (Exception $e) {
@@ -1039,17 +1180,25 @@ class VisitantesNovoController {
                 throw new Exception('ID é obrigatório');
             }
             
-            $visitante = $this->db->fetch("SELECT nome FROM visitantes_novo WHERE id = ?", [$id]);
-            if (!$visitante) {
+            // Buscar dados do registro para retornar
+            $registro = $this->db->fetch("
+                SELECT r.id, c.nome 
+                FROM visitantes_registros r
+                INNER JOIN visitantes_cadastro c ON r.cadastro_id = c.id
+                WHERE r.id = ?
+            ", [$id]);
+            
+            if (!$registro) {
                 throw new Exception('Registro não encontrado');
             }
             
-            $this->db->query("DELETE FROM visitantes_novo WHERE id = ?", [$id]);
+            // Deletar apenas o registro de entrada/saída
+            $this->db->query("DELETE FROM visitantes_registros WHERE id = ?", [$id]);
             
             echo json_encode([
                 'success' => true,
                 'message' => 'Registro excluído com sucesso',
-                'data' => ['id' => $id, 'nome' => $visitante['nome']]
+                'data' => ['id' => $id, 'nome' => $registro['nome']]
             ]);
             
         } catch (Exception $e) {

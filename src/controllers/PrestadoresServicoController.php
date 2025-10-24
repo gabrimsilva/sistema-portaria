@@ -943,9 +943,15 @@ class PrestadoresServicoController {
                 // Normalizar placa de veículo
                 $placa_veiculo = strtoupper(preg_replace('/[^A-Z0-9]/', '', $placa_veiculo));
                 
-                // Buscar dados atuais do prestador
-                $prestadorAtual = $this->db->fetch("SELECT * FROM prestadores_servico WHERE id = ?", [$id]);
-                if (!$prestadorAtual) {
+                // Buscar registro atual (PRÉ-CADASTROS V2.0.0)
+                $registro = $this->db->fetch("
+                    SELECT r.*, c.* 
+                    FROM prestadores_registros r
+                    JOIN prestadores_cadastro c ON c.id = r.cadastro_id
+                    WHERE r.id = ? AND c.deleted_at IS NULL
+                ", [$id]);
+                
+                if (!$registro) {
                     echo json_encode(['success' => false, 'message' => 'Prestador não encontrado']);
                     return;
                 }
@@ -965,49 +971,35 @@ class PrestadoresServicoController {
                     }
                 }
                 
-                // ========== VALIDAÇÕES DE DUPLICIDADE PARA EDIÇÃO ==========
-                $dadosValidacao = [
-                    'cpf' => $cpf,
-                    'placa_veiculo' => $placa_veiculo,
-                    'entrada' => $prestadorAtual['entrada'],
-                    'saida' => $saida_parsed
-                ];
-                
-                $validacao = $this->duplicityService->validateEditEntry($dadosValidacao, $id, 'prestadores_servico');
-                
-                if (!$validacao['isValid']) {
-                    echo json_encode([
-                        'success' => false,
-                        'message' => 'Erro de duplicidade',
-                        'errors' => $validacao['errors']
-                    ]);
-                    return;
-                }
-                // ==========================================================
-                
+                // Atualizar registro de saída
                 $this->db->query("
-                    UPDATE prestadores_servico 
-                    SET nome = ?, cpf = ?, doc_type = ?, doc_number = ?, doc_country = ?, empresa = ?, funcionario_responsavel = ?, setor = ?, observacao = ?, placa_veiculo = ?, saida = ?
+                    UPDATE prestadores_registros 
+                    SET setor = ?, funcionario_responsavel = ?, saida_at = ?, observacao_saida = ?, updated_at = NOW()
                     WHERE id = ?
-                ", [$nome, $cpf, $doc_type, $doc_number, $doc_country, $empresa, $funcionario_responsavel, $setor, $observacao, $placa_veiculo, $saida_parsed, $id]);
+                ", [$setor, $funcionario_responsavel, $saida_parsed, $observacao, $id]);
                 
                 // Buscar dados atualizados para retornar
-                $prestadorAtualizado = $this->db->fetch("SELECT * FROM prestadores_servico WHERE id = ?", [$id]);
+                $registroAtualizado = $this->db->fetch("
+                    SELECT r.*, c.nome, c.empresa, c.doc_number as cpf, c.placa_veiculo
+                    FROM prestadores_registros r
+                    JOIN prestadores_cadastro c ON c.id = r.cadastro_id
+                    WHERE r.id = ?
+                ", [$id]);
                 
                 echo json_encode([
                     'success' => true, 
                     'message' => 'Prestador atualizado com sucesso',
                     'data' => [
                         'id' => $id,
-                        'nome' => $nome,
+                        'nome' => $registroAtualizado['nome'],
                         'tipo' => 'Prestador',
-                        'cpf' => $cpf,
-                        'empresa' => $empresa,
-                        'setor' => $setor,
-                        'funcionario_responsavel' => '',
-                        'placa_veiculo' => $placa_veiculo,
-                        'hora_entrada' => $prestadorAtualizado['entrada'] ?? null,
-                        'saida' => $prestadorAtualizado['saida'] ?? null
+                        'cpf' => $registroAtualizado['cpf'] ?? '',
+                        'empresa' => $registroAtualizado['empresa'],
+                        'setor' => $registroAtualizado['setor'],
+                        'funcionario_responsavel' => $registroAtualizado['funcionario_responsavel'],
+                        'placa_veiculo' => $registroAtualizado['placa_veiculo'],
+                        'hora_entrada' => $registroAtualizado['entrada_at'] ?? null,
+                        'saida' => $registroAtualizado['saida_at'] ?? null
                     ]
                 ]);
             } catch (Exception $e) {

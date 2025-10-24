@@ -920,6 +920,14 @@ class VisitantesNovoController {
             exit;
         }
         
+        // Verificar CSRF token via query parameter para GET requests
+        $csrfToken = $_GET['csrf_token'] ?? '';
+        if (empty($csrfToken) || !CSRFProtection::validateToken($csrfToken)) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Token CSRF inválido']);
+            exit;
+        }
+        
         try {
             $id = $_GET['id'] ?? null;
             if (!$id) {

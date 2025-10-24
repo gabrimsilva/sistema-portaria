@@ -476,7 +476,7 @@ $canDeleteInline = $authService->hasPermission('relatorios.excluir_linha');
             
             // Buscar dados do registro via AJAX
             $.ajax({
-                url: '/reports/visitantes?action=get_by_id_ajax&id=' + id,
+                url: '/reports/visitantes?action=get_by_id_ajax&id=' + id + '&csrf_token=' + encodeURIComponent(csrfToken),
                 method: 'GET',
                 success: function(response) {
                     if (response.success && response.data) {

@@ -265,7 +265,6 @@ class PreCadastrosVisitantesController {
             // Soft delete
             $sql = "UPDATE visitantes_cadastro 
                     SET deleted_at = NOW(), 
-                        deletion_reason = 'Excluído pelo usuário',
                         ativo = false
                     WHERE id = ?";
             

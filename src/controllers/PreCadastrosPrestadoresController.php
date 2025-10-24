@@ -274,7 +274,6 @@ class PreCadastrosPrestadoresController {
             file_put_contents('/tmp/delete-debug.log', date('Y-m-d H:i:s') . " | 🗑️ EXECUTANDO DELETE\n", FILE_APPEND);
             $sql = "UPDATE prestadores_cadastro 
                     SET deleted_at = NOW(), 
-                        deletion_reason = 'Excluído pelo usuário',
                         ativo = false
                     WHERE id = ?";
             

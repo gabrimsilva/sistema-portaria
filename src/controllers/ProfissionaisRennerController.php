@@ -1259,4 +1259,43 @@ class ProfissionaisRennerController {
         }
         exit;
     }
+    
+    /**
+     * Buscar profissional por placa de veículo (autocomplete)
+     */
+    public function searchByPlaca() {
+        header('Content-Type: application/json');
+        
+        try {
+            $placa = strtoupper(trim($_GET['placa'] ?? ''));
+            
+            if (empty($placa) || strlen($placa) < 2) {
+                echo json_encode(['success' => true, 'data' => []]);
+                exit;
+            }
+            
+            // Buscar último registro de acesso ativo com essa placa
+            $sql = "SELECT DISTINCT ON (r.placa_veiculo)
+                        p.id, p.nome, p.setor, p.fre, p.doc_type, p.doc_number, p.doc_country,
+                        r.placa_veiculo
+                    FROM registro_acesso r
+                    JOIN profissionais_renner p ON p.id = r.profissional_renner_id
+                    WHERE r.tipo = 'profissional_renner' 
+                      AND r.placa_veiculo ILIKE ?
+                      AND r.placa_veiculo IS NOT NULL 
+                      AND r.placa_veiculo != ''
+                    ORDER BY r.placa_veiculo, r.entrada_at DESC
+                    LIMIT 10";
+            
+            $searchTerm = "%{$placa}%";
+            $results = $this->db->fetchAll($sql, [$searchTerm]);
+            
+            echo json_encode(['success' => true, 'data' => $results]);
+            
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Erro ao buscar por placa']);
+        }
+        exit;
+    }
 }

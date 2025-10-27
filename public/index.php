@@ -741,6 +741,24 @@ try {
             $controller->search();
             break;
         
+        case 'api/pre-cadastros/visitantes/search-placa':
+            require_once '../src/controllers/PreCadastrosVisitantesController.php';
+            $controller = new PreCadastrosVisitantesController();
+            $controller->searchByPlaca();
+            break;
+        
+        case 'api/pre-cadastros/prestadores/search-placa':
+            require_once '../src/controllers/PreCadastrosPrestadoresController.php';
+            $controller = new PreCadastrosPrestadoresController();
+            $controller->searchByPlaca();
+            break;
+        
+        case 'api/profissionais-renner/search-placa':
+            require_once '../src/controllers/ProfissionaisRennerController.php';
+            $controller = new ProfissionaisRennerController();
+            $controller->searchByPlaca();
+            break;
+        
         case 'api/pre-cadastros/buscar':
             require_once '../src/controllers/ApiPreCadastrosController.php';
             $controller = new ApiPreCadastrosController();

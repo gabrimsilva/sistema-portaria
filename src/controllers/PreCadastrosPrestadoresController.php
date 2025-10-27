@@ -770,6 +770,45 @@ class PreCadastrosPrestadoresController {
     }
     
     /**
+     * Buscar prestador por placa de veículo (autocomplete)
+     */
+    public function searchByPlaca() {
+        header('Content-Type: application/json');
+        
+        try {
+            $placa = strtoupper(trim($_GET['placa'] ?? ''));
+            
+            if (empty($placa) || strlen($placa) < 2) {
+                echo json_encode(['success' => true, 'data' => []]);
+                exit;
+            }
+            
+            // Buscar últimos cadastros com essa placa
+            $sql = "SELECT DISTINCT ON (c.placa_veiculo)
+                        c.id as cadastro_id, c.nome, c.empresa, c.doc_type, c.doc_number, c.doc_country,
+                        c.placa_veiculo, c.foto_url
+                    FROM prestadores_cadastro c
+                    WHERE c.placa_veiculo ILIKE ?
+                      AND c.placa_veiculo IS NOT NULL 
+                      AND c.placa_veiculo != ''
+                      AND c.deleted_at IS NULL
+                      AND c.ativo = true
+                    ORDER BY c.placa_veiculo, c.created_at DESC
+                    LIMIT 10";
+            
+            $searchTerm = "%{$placa}%";
+            $results = $this->db->fetchAll($sql, [$searchTerm]);
+            
+            echo json_encode(['success' => true, 'data' => $results]);
+            
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Erro ao buscar por placa']);
+        }
+        exit;
+    }
+    
+    /**
      * Obter estatísticas
      */
     private function getStats() {

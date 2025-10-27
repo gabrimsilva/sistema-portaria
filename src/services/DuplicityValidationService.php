@@ -14,7 +14,7 @@ class DuplicityValidationService {
      * 
      * @param string $cpf CPF a verificar
      * @param int|null $excludeId ID do registro a excluir da verificação (para edições)
-     * @param string|null $excludeTable Tabela do registro sendo editado ('visitantes_novo' ou 'prestadores_servico')
+     * @param string|null $excludeTable Tabela do registro sendo editado ('visitantes_registros' ou 'prestadores_servico')
      * @return array ['isValid' => bool, 'message' => string, 'entry' => array|null]
      */
     public function validateCpfNotOpen($cpf, $excludeId = null, $excludeTable = null) {
@@ -25,15 +25,17 @@ class DuplicityValidationService {
         // Normalizar CPF (apenas dígitos)
         $cpf = preg_replace('/\D/', '', $cpf);
         
-        // Verificar visitantes ativos
-        $sql = "SELECT nome, cpf, empresa, hora_entrada, 'Visitante' as tipo 
-                FROM visitantes_novo 
-                WHERE cpf = ? AND hora_entrada IS NOT NULL AND hora_saida IS NULL";
+        // Verificar visitantes ativos (PRÉ-CADASTROS V2.0.0)
+        $sql = "SELECT c.nome, c.doc_number as cpf, c.empresa, r.entrada_at as hora_entrada, 'Visitante' as tipo 
+                FROM visitantes_registros r
+                JOIN visitantes_cadastro c ON c.id = r.cadastro_id
+                WHERE c.doc_number = ? AND r.entrada_at IS NOT NULL AND r.saida_at IS NULL
+                  AND c.deleted_at IS NULL";
         $params = [$cpf];
         
         // Só excluir se estamos editando a mesma tabela
-        if ($excludeId && $excludeTable === 'visitantes_novo') {
-            $sql .= " AND id != ?";
+        if ($excludeId && $excludeTable === 'visitantes_registros') {
+            $sql .= " AND r.id != ?";
             $params[] = $excludeId;
         }
         
@@ -134,14 +136,15 @@ class DuplicityValidationService {
             ];
         }
         
-        // 2. Verificar visitantes com a mesma placa (globalmente única)
-        $sql = "SELECT nome, cpf, empresa, placa_veiculo, hora_entrada, 'Visitante' as tipo 
-                FROM visitantes_novo 
-                WHERE placa_veiculo = ?";
+        // 2. Verificar visitantes com a mesma placa (globalmente única) - PRÉ-CADASTROS V2.0.0
+        $sql = "SELECT c.nome, c.doc_number as cpf, c.empresa, c.placa_veiculo, r.entrada_at as hora_entrada, 'Visitante' as tipo 
+                FROM visitantes_cadastro c
+                LEFT JOIN visitantes_registros r ON r.cadastro_id = c.id
+                WHERE c.placa_veiculo = ? AND c.deleted_at IS NULL";
         $params = [$placa];
         
-        if ($excludeId && $excludeTable === 'visitantes_novo') {
-            $sql .= " AND id != ?";
+        if ($excludeId && $excludeTable === 'visitantes_registros') {
+            $sql .= " AND r.id != ?";
             $params[] = $excludeId;
         }
         
@@ -183,7 +186,7 @@ class DuplicityValidationService {
      * 
      * @param string $placa Placa a verificar
      * @param int|null $excludeId ID do registro a excluir da verificação
-     * @param string|null $excludeTable Tabela do registro sendo editado ('visitantes_novo' ou 'prestadores_servico')
+     * @param string|null $excludeTable Tabela do registro sendo editado ('visitantes_registros' ou 'prestadores_servico')
      * @return array ['isValid' => bool, 'message' => string, 'entry' => array|null]
      */
     public function validatePlacaNotOpen($placa, $excludeId = null, $excludeTable = null) {
@@ -194,15 +197,17 @@ class DuplicityValidationService {
         // Normalizar placa (apenas letras e números, maiúscula)
         $placa = preg_replace('/[^A-Z0-9]/', '', strtoupper(trim($placa)));
         
-        // Verificar visitantes com placa ativa
-        $sql = "SELECT nome, cpf, empresa, placa_veiculo, hora_entrada, 'Visitante' as tipo 
-                FROM visitantes_novo 
-                WHERE placa_veiculo = ? AND hora_entrada IS NOT NULL AND hora_saida IS NULL";
+        // Verificar visitantes com placa ativa (PRÉ-CADASTROS V2.0.0)
+        $sql = "SELECT c.nome, c.doc_number as cpf, c.empresa, c.placa_veiculo, r.entrada_at as hora_entrada, 'Visitante' as tipo 
+                FROM visitantes_registros r
+                JOIN visitantes_cadastro c ON c.id = r.cadastro_id
+                WHERE c.placa_veiculo = ? AND r.entrada_at IS NOT NULL AND r.saida_at IS NULL
+                  AND c.deleted_at IS NULL";
         $params = [$placa];
         
         // Só excluir se estamos editando a mesma tabela
-        if ($excludeId && $excludeTable === 'visitantes_novo') {
-            $sql .= " AND id != ?";
+        if ($excludeId && $excludeTable === 'visitantes_registros') {
+            $sql .= " AND r.id != ?";
             $params[] = $excludeId;
         }
         
@@ -283,17 +288,18 @@ class DuplicityValidationService {
         // Verificar últimos registros nos últimos X segundos
         $timeLimit = date('Y-m-d H:i:s', time() - $debounceSeconds);
         
-        // Buscar em visitantes
-        $sql = "SELECT nome, cpf, placa_veiculo, created_at, 'Visitante' as tipo 
-                FROM visitantes_novo 
-                WHERE cpf = ? AND created_at > ?";
+        // Buscar em visitantes (PRÉ-CADASTROS V2.0.0)
+        $sql = "SELECT c.nome, c.doc_number as cpf, c.placa_veiculo, r.created_at, 'Visitante' as tipo 
+                FROM visitantes_registros r
+                JOIN visitantes_cadastro c ON c.id = r.cadastro_id
+                WHERE c.doc_number = ? AND r.created_at > ? AND c.deleted_at IS NULL";
         $params = [$cpf, $timeLimit];
         
         if ($placa) {
-            $sql .= " AND placa_veiculo = ?";
+            $sql .= " AND c.placa_veiculo = ?";
             $params[] = $placa;
         }
-        $sql .= " ORDER BY created_at DESC LIMIT 1";
+        $sql .= " ORDER BY r.created_at DESC LIMIT 1";
         
         $recentVisitante = $this->db->fetch($sql, $params);
         if ($recentVisitante) {
@@ -337,7 +343,7 @@ class DuplicityValidationService {
      * @param string $novaEntrada Nova data/hora de entrada
      * @param string|null $novaSaida Nova data/hora de saída (opcional)
      * @param int $excludeId ID do registro sendo editado
-     * @param string $tabela Tabela a verificar ('visitantes_novo' ou 'prestadores_servico')
+     * @param string $tabela Tabela a verificar ('visitantes_registros' ou 'prestadores_servico')
      * @return array ['isValid' => bool, 'message' => string, 'conflictingEntry' => array|null]
      */
     public function validateTimeOverlap($cpf, $novaEntrada, $novaSaida, $excludeId, $tabela) {
@@ -356,14 +362,19 @@ class DuplicityValidationService {
             ];
         }
         
-        // Campos específicos por tabela
-        $campoEntrada = ($tabela === 'prestadores_servico') ? 'entrada' : 'hora_entrada';
-        $campoSaida = ($tabela === 'prestadores_servico') ? 'saida' : 'hora_saida';
-        
-        // Buscar registros que possam conflitar
-        $sql = "SELECT nome, cpf, {$campoEntrada} as entrada, {$campoSaida} as saida 
-                FROM {$tabela} 
-                WHERE cpf = ? AND id != ?";
+        // PRÉ-CADASTROS V2.0.0: Campos específicos por tabela
+        if ($tabela === 'visitantes_registros') {
+            $sql = "SELECT c.nome, c.doc_number as cpf, r.entrada_at as entrada, r.saida_at as saida 
+                    FROM visitantes_registros r
+                    JOIN visitantes_cadastro c ON c.id = r.cadastro_id
+                    WHERE c.doc_number = ? AND r.id != ? AND c.deleted_at IS NULL";
+        } else {
+            $campoEntrada = ($tabela === 'prestadores_servico') ? 'entrada' : 'hora_entrada';
+            $campoSaida = ($tabela === 'prestadores_servico') ? 'saida' : 'hora_saida';
+            $sql = "SELECT nome, cpf, {$campoEntrada} as entrada, {$campoSaida} as saida 
+                    FROM {$tabela} 
+                    WHERE cpf = ? AND id != ?";
+        }
         
         $registrosExistentes = $this->db->fetchAll($sql, [$cpf, $excludeId]);
         

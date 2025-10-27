@@ -216,6 +216,9 @@ try {
                 case 'update_ajax':
                     $controller->updateAjax();
                     break;
+                case 'get_data':
+                    $controller->getData();
+                    break;
                 case 'upload_foto':
                     $controller->uploadFoto();
                     break;

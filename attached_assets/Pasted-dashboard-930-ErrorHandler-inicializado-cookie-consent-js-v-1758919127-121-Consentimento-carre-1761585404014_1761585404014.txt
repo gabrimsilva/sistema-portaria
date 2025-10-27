@@ -1,0 +1,67 @@
+dashboard:930 ✅ ErrorHandler inicializado
+cookie-consent.js?v=1758919127:121 📋 Consentimento carregado: {version: '2.1.0', timestamp: '2025-09-26T20:43:59.622Z', essential: true, functional: true, performance: true, …}
+cookie-consent.js?v=1758919127:177 ⚙️ Configurações aplicadas: {version: '2.1.0', timestamp: '2025-09-26T20:43:59.622Z', essential: true, functional: true, performance: true, …}
+cookie-consent.js?v=1758919127:58 ✅ CookieConsent inicializado com sucesso
+dashboard-autocomplete.js?v=1761585351:334 ✅ Dashboard Autocomplete (Pré-Cadastros) inicializado
+dashboard-precadastros-autocomplete.js?v=1761585351:24 ✅ Dashboard Pré-Cadastros Autocomplete inicializado
+dashboard:1779 ✅ Sistema de máscaras carregado (Bootstrap 4.6.2)
+dashboard:2136 🎯 Sistema de máscaras inicializado com Bootstrap 4.6.2!
+dashboard:1538 🔍 Buscando dados do visitante ID: 6
+dashboard:2115 ✅ Máscaras aplicadas ao Modal Editar (placa e documento)
+dashboard:1565  ❌ Erro ao buscar dados: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+    at parse (<anonymous>)
+    at jquery-3.6.0.min.js:2:79470
+    at l (jquery-3.6.0.min.js:2:79587)
+    at XMLHttpRequest.<anonymous> (jquery-3.6.0.min.js:2:82355) <!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="edb8228ee631e90ed67bc325620f4a5c08767f0431d395e1936f6d1c38e75947">
+    <title>Visitantes - Sistema de Controle de Acesso</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="hold-transition sidebar-mini layout-fixed">
+    <div class="wrapper">
+        <!-- Navbar -->
+        <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" data-widget="pushmenu" href="#" role="button">
+                        <i class="fas fa-bars"></i>
+                    </a>
+                </li>
+            </ul>
+            
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item dropdown">
+                    <a class="nav-link" data-toggle="dropdown" href="#">
+                        <i class="far fa-user"></i>
+                        <span class="d-none d-md-inline">Administrador</span>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
+                        <span class="dropdown-item-text">administrador</span>
+                        <div class="dropdown-divider"></div>
+                        <a href="/logout" class="dropdown-item">
+                            <i class="fas fa-sign-out-alt mr-2"></i>Sair
+                        </a>
+                    </div>
+                </li>
+            </ul>
+        </nav>
+        
+        <!-- 🎯 NavigationService: Navegação Unificada -->
+        <aside class="main-sidebar sidebar-dark-primary elevation-4"><a href="/dashboard" class="brand-link"><img src="/assets/logos/logo_68dc075b5504a.png" alt="Renner Logo" class="brand-image img-circle elevation-3 logo-sidebar" style="object-fit: contain;; width: 33px; height: 33px;"><span class="brand-text font-weight-light">Controle Acesso</span></a><div class="sidebar"><nav class="mt-2"><ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu"><li class="nav-item"><a href="/dashboard" class="nav-link"><i class="nav-icon fas fa-tachometer-alt"></i><p style="font-size: 1.05rem; font-weight: 500;">Dashboard</p></a></li><li class="nav-item has-treeview menu-open"><a href="#" class="nav-link active"><i class="nav-icon fas fa-chart-bar"></i><p style="font-size: 1.05rem; font-weight: 500;">Relatórios <i class="fas fa-angle-left right"></i></p></a><ul class="nav nav-treeview"><li class="nav-item"><a href="/reports/profissionais-renner" class="nav-link"><i class="nav-icon fas fa-user-tie" style="font-size: 0.85rem;"></i><p style="font-size: 0.92rem; font-weight: 400; padding-left: 8px;">Profissionais Renner</p></a></li><li class="nav-item"><a href="/reports/visitantes" class="nav-link active"><i class="nav-icon fas fa-users" style="font-size: 0.85rem;"></i><p style="font-size: 0.92rem; font-weight: 400; padding-left: 8px;">Visitantes</p></a></li><li class="nav-item"><a href="/reports/prestadores-servico" class="nav-link"><i class="nav-icon fas fa-tools" style="font-size: 0.85rem;"></i><p style="font-size: 0.92rem; font-weight: 400; padding-left: 8px;">Prestador de Serviços</p></a></li></ul></li><li class="nav-item has-treeview"><a href="#" class="nav-link"><i class="nav-icon fas fa-address-card"></i><p style="font-size: 1.05rem; font-weight: 500;">Pré-Cadastros <i class="fas fa-angle-left right"></i></p></a><ul class="nav nav-treeview"><li class="nav-item"><a href="/pre-cadastros/visitantes" class="nav-link"><i class="nav-icon fas fa-users" style="font-size: 0.85rem;"></i><p style="font-size: 0.92rem; font-weight: 400; padding-left: 8px;">Visitantes</p></a></li><li class="nav-item"><a href="/pre-cadastros/prestadores" class="nav-link"><i class="nav-icon fas fa-tools" style="font-size: 0.85rem;"></i><p style="font-size: 0.92rem; font-weight: 400; padding-left: 8px;">Prestadores de Serviço</p></a></li></ul></li><li class="nav-item"><a href="/brigada" class="nav-link"><i class="nav-icon fas fa-fire-extinguisher"></i><p style="font-size: 1.05rem; font-weight: 500;">Brigada de Incêndio</p></a></li><li class="nav-item"><a href="/ramais" class="nav-link"><i class="nav-icon fas fa-phone-alt"></i><p style="font-size: 1.05rem; font-weight: 500;">Ramais</p></a></li><li class="nav-item"><a href="/importacao" class="nav-link"><i class="nav-icon fas fa-file-import"></i><p style="font-size: 1.05rem; font-weight: 500;">Importação</p></a></li><li class="nav-item"><a href="/privacy" class="nav-link" target="_blank"><i class="nav-icon fas fa-shield-alt"></i><p st
+error @ dashboard:1565
+c @ jquery-3.6.0.min.js:2
+fireWith @ jquery-3.6.0.min.js:2
+l @ jquery-3.6.0.min.js:2
+(anônimo) @ jquery-3.6.0.min.js:2
+XMLHttpRequest.send
+send @ jquery-3.6.0.min.js:2
+ajax @ jquery-3.6.0.min.js:2
+(anônimo) @ dashboard:1539
+dispatch @ jquery-3.6.0.min.js:2
+v.handle @ jquery-3.6.0.min.js:2

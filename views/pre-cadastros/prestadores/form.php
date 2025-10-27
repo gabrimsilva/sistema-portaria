@@ -215,8 +215,9 @@ require_once __DIR__ . '/../../partials/header.php';
             
             const formData = new FormData(form);
             
-            // Enviar formulário principal
-            fetch(form.action, {
+            // Enviar formulário principal (com flag ajax=1)
+            const submitUrl = form.action + (form.action.includes('?') ? '&' : '?') + 'ajax=1';
+            fetch(submitUrl, {
                 method: 'POST',
                 body: formData
             })

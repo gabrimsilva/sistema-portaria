@@ -126,13 +126,42 @@ class PreCadastrosVisitantesController {
                 ]
             );
             
-            // Redirect com sucesso
+            // Verificar se é requisição AJAX (para upload de foto)
+            $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+                      strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+            
+            if ($isAjax || isset($_GET['ajax'])) {
+                // Responder com JSON para upload de foto
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Pré-cadastro criado com sucesso!',
+                    'cadastro_id' => $cadastro_id
+                ]);
+                exit;
+            }
+            
+            // Redirect tradicional
             $_SESSION['flash_success'] = 'Pré-cadastro criado com sucesso! Válido até ' . 
                                           date('d/m/Y', strtotime($valid_until));
             header('Location: /pre-cadastros/visitantes');
             exit;
             
         } catch (Exception $e) {
+            // Verificar se é requisição AJAX
+            $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+                      strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+            
+            if ($isAjax || isset($_GET['ajax'])) {
+                header('Content-Type: application/json');
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ]);
+                exit;
+            }
+            
             $_SESSION['flash_error'] = $e->getMessage();
             header('Location: /pre-cadastros/visitantes?action=new');
             exit;

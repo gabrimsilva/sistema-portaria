@@ -787,37 +787,48 @@ class VisitantesNovoController {
                     $hora_entrada = date('Y-m-d H:i:s');
                 }
                 
-                // ========== VALIDAÇÕES DE DUPLICIDADE ==========
+                // NOVA ESTRUTURA PRÉ-CADASTROS V2.0.0
+                // 1. PRIMEIRO: Verificar se já existe pré-cadastro com esse documento
+                $cadastroExistente = $this->db->fetch("
+                    SELECT id, placa_veiculo FROM visitantes_cadastro 
+                    WHERE doc_type = ? AND doc_number = ? AND deleted_at IS NULL
+                    LIMIT 1
+                ", [$doc_type, $doc_number]);
+                
+                // 2. DEPOIS: Validar duplicidade (ignorando o próprio cadastro se reutilizando)
                 $dadosValidacao = [
                     'cpf' => $cpf,
                     'placa_veiculo' => $placa_veiculo,
                     'hora_entrada' => $hora_entrada
                 ];
                 
-                $validacao = $this->duplicityService->validateNewEntry($dadosValidacao, 'visitante');
-                
-                if (!$validacao['isValid']) {
-                    echo json_encode([
-                        'success' => false,
-                        'message' => 'Erro de duplicidade',
-                        'errors' => $validacao['errors']
-                    ]);
-                    return;
-                }
-                // ===============================================
-                
-                // NOVA ESTRUTURA PRÉ-CADASTROS V2.0.0
-                // 1. Verificar se já existe pré-cadastro com esse documento
-                $cadastroExistente = $this->db->fetch("
-                    SELECT id FROM visitantes_cadastro 
-                    WHERE doc_type = ? AND doc_number = ? AND deleted_at IS NULL
-                    LIMIT 1
-                ", [$doc_type, $doc_number]);
-                
+                // Se está reutilizando cadastro, verificar apenas CPF ativo (não validar placa)
                 if ($cadastroExistente) {
+                    // Validar apenas se CPF não tem entrada em aberto
+                    $cpfValidation = $this->duplicityService->validateCpfNotOpen($cpf);
+                    if (!$cpfValidation['isValid']) {
+                        echo json_encode([
+                            'success' => false,
+                            'message' => $cpfValidation['message']
+                        ]);
+                        return;
+                    }
+                    
                     // Reutilizar cadastro existente
                     $cadastro_id = $cadastroExistente['id'];
                 } else {
+                    // Criar novo cadastro: validar TUDO (CPF, placa, debounce)
+                    $validacao = $this->duplicityService->validateNewEntry($dadosValidacao, 'visitante');
+                    
+                    if (!$validacao['isValid']) {
+                        echo json_encode([
+                            'success' => false,
+                            'message' => 'Erro de duplicidade',
+                            'errors' => $validacao['errors']
+                        ]);
+                        return;
+                    }
+                    
                     // Criar novo pré-cadastro (válido por 1 ano)
                     $this->db->query("
                         INSERT INTO visitantes_cadastro (nome, empresa, doc_type, doc_number, doc_country, placa_veiculo, valid_from, valid_until, ativo)

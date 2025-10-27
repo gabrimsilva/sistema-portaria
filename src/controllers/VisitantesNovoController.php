@@ -881,19 +881,15 @@ class VisitantesNovoController {
             try {
                 CSRFProtection::verifyRequest();
                 $id = trim($_POST['id'] ?? '');
-                $nome = trim($_POST['nome'] ?? '');
-                $doc_type = trim($_POST['doc_type'] ?? '');
-                $doc_number = trim($_POST['doc_number'] ?? '');
-                $doc_country = trim($_POST['doc_country'] ?? '');
-                $cpf = trim($_POST['cpf'] ?? ''); // Compatibilidade
-                $empresa = trim($_POST['empresa'] ?? '');
+                
+                // EDIÇÃO DE REGISTRO (evento) - NÃO edita pré-cadastro
+                // Apenas campos do registro: setor, funcionario_responsavel, saida_at
                 $setor = trim($_POST['setor'] ?? '');
                 $funcionario_responsavel = trim($_POST['funcionario_responsavel'] ?? '');
-                $placa_veiculo = trim($_POST['placa_veiculo'] ?? '');
                 $hora_saida = trim($_POST['hora_saida'] ?? '');
                 
-                if (empty($id) || empty($nome)) {
-                    echo json_encode(['success' => false, 'message' => 'ID e Nome são obrigatórios']);
+                if (empty($id)) {
+                    echo json_encode(['success' => false, 'message' => 'ID é obrigatório']);
                     return;
                 }
                 
@@ -927,37 +923,12 @@ class VisitantesNovoController {
                     $hora_saida_final = $datetime->format('Y-m-d H:i:s');
                 }
                 
-                // ========== VALIDAÇÕES DE DUPLICIDADE PARA EDIÇÃO ==========
-                // Usar doc_number se disponível, senão usar cpf (compatibilidade)
-                $doc_number_final = !empty($doc_number) ? $doc_number : $cpf;
+                // ========== PRÉ-CADASTROS V2.0.0: EDIÇÃO DE REGISTRO ==========
+                // Dashboard SOMENTE edita o REGISTRO (evento de entrada/saída)
+                // Dados do pré-cadastro (nome, doc, empresa, placa) NÃO são alterados aqui
+                // Apenas a página de Pré-Cadastros pode editar dados mestres
                 
-                $dadosValidacao = [
-                    'cpf' => $doc_number_final,
-                    'placa_veiculo' => $placa_veiculo,
-                    'hora_entrada' => $visitanteAtual['hora_entrada'],
-                    'hora_saida' => $hora_saida_final
-                ];
-                
-                $validacao = $this->duplicityService->validateEditEntry($dadosValidacao, $id, 'visitantes_registros');
-                
-                if (!$validacao['isValid']) {
-                    echo json_encode([
-                        'success' => false,
-                        'message' => 'Erro de duplicidade',
-                        'errors' => $validacao['errors']
-                    ]);
-                    return;
-                }
-                // ==========================================================
-                
-                // PRÉ-CADASTROS V2.0.0: Atualizar CADASTRO (dados mestres)
-                $this->db->query("
-                    UPDATE visitantes_cadastro 
-                    SET nome = ?, doc_type = ?, doc_number = ?, doc_country = ?, empresa = ?, placa_veiculo = ?
-                    WHERE id = ?
-                ", [$nome, $doc_type, $doc_number_final, $doc_country, $empresa, $placa_veiculo, $visitanteAtual['cadastro_id']]);
-                
-                // PRÉ-CADASTROS V2.0.0: Atualizar REGISTRO (dados do evento)
+                // Atualizar apenas campos do REGISTRO (dados do evento específico)
                 $this->db->query("
                     UPDATE visitantes_registros 
                     SET setor = ?, funcionario_responsavel = ?, saida_at = ?
@@ -975,19 +946,19 @@ class VisitantesNovoController {
                 
                 echo json_encode([
                     'success' => true, 
-                    'message' => 'Visitante atualizado com sucesso',
+                    'message' => 'Registro atualizado com sucesso',
                     'data' => [
                         'id' => $id,
-                        'nome' => $nome,
+                        'nome' => $visitanteAtualizado['nome'],
                         'tipo' => 'Visitante',
                         'doc_type' => $visitanteAtualizado['doc_type'] ?? null,
                         'doc_number' => $visitanteAtualizado['doc_number'] ?? null,
                         'doc_country' => $visitanteAtualizado['doc_country'] ?? null,
                         'cpf' => $visitanteAtualizado['doc_number'] ?? null, // Compatibilidade
-                        'empresa' => $empresa,
+                        'empresa' => $visitanteAtualizado['empresa'],
                         'setor' => $setor,
                         'funcionario_responsavel' => $funcionario_responsavel,
-                        'placa_veiculo' => $placa_veiculo,
+                        'placa_veiculo' => $visitanteAtualizado['placa_veiculo'],
                         'hora_entrada' => $visitanteAtualizado['hora_entrada'] ?? null,
                         'hora_saida' => $visitanteAtualizado['hora_saida'] ?? null
                     ]

@@ -804,12 +804,14 @@ class VisitantesNovoController {
                 
                 // Se está reutilizando cadastro, validar CPF ativo E placa (excluindo o próprio cadastro)
                 if ($cadastroExistente) {
-                    error_log("🔄 REUTILIZANDO PRÉ-CADASTRO ID: " . $cadastroExistente['id']);
+                    file_put_contents('php://stderr', "🔄 REUTILIZANDO PRÉ-CADASTRO ID: " . $cadastroExistente['id'] . "\n");
+                    file_put_contents('php://stderr', "📋 Placa do cadastro: " . $cadastroExistente['placa_veiculo'] . "\n");
+                    file_put_contents('php://stderr', "📋 Placa recebida: $placa_veiculo\n");
                     
                     // Validar CPF não tem entrada em aberto
                     $cpfValidation = $this->duplicityService->validateCpfNotOpen($cpf);
                     if (!$cpfValidation['isValid']) {
-                        error_log("❌ CPF já tem entrada em aberto");
+                        file_put_contents('php://stderr', "❌ CPF já tem entrada em aberto\n");
                         echo json_encode([
                             'success' => false,
                             'message' => $cpfValidation['message']
@@ -817,10 +819,16 @@ class VisitantesNovoController {
                         return;
                     }
                     
+                    file_put_contents('php://stderr', "✅ CPF validado com sucesso\n");
+                    file_put_contents('php://stderr', "🔍 Validando placa com excludeId={$cadastroExistente['id']}, excludeTable=visitantes_cadastro\n");
+                    
                     // Validar placa única (excluindo o próprio cadastro sendo reutilizado)
                     $placaValidation = $this->duplicityService->validatePlacaUnique($placa_veiculo, $cadastroExistente['id'], 'visitantes_cadastro');
+                    
+                    file_put_contents('php://stderr', "📊 Resultado validação placa: " . json_encode($placaValidation) . "\n");
+                    
                     if (!$placaValidation['isValid']) {
-                        error_log("❌ Placa já em uso por outro cadastro");
+                        file_put_contents('php://stderr', "❌ Placa já em uso por outro cadastro: " . $placaValidation['message'] . "\n");
                         echo json_encode([
                             'success' => false,
                             'message' => $placaValidation['message']
@@ -828,7 +836,7 @@ class VisitantesNovoController {
                         return;
                     }
                     
-                    error_log("✅ Validação OK - criando novo registro");
+                    file_put_contents('php://stderr', "✅ Validação OK - criando novo registro\n");
                     // Reutilizar cadastro existente
                     $cadastro_id = $cadastroExistente['id'];
                 } else {

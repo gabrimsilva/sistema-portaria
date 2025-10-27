@@ -137,7 +137,9 @@ class DuplicityValidationService {
         }
         
         // 2. Verificar visitantes com a mesma placa (globalmente única) - PRÉ-CADASTROS V2.0.0
-        $sql = "SELECT c.nome, c.doc_number as cpf, c.empresa, c.placa_veiculo, r.entrada_at as hora_entrada, 'Visitante' as tipo 
+        error_log("🔍 validatePlacaUnique - Placa: $placa, excludeId: " . ($excludeId ?? 'NULL') . ", excludeTable: " . ($excludeTable ?? 'NULL'));
+        
+        $sql = "SELECT c.id as cadastro_id, c.nome, c.doc_number as cpf, c.empresa, c.placa_veiculo, r.entrada_at as hora_entrada, 'Visitante' as tipo 
                 FROM visitantes_cadastro c
                 LEFT JOIN visitantes_registros r ON r.cadastro_id = c.id
                 WHERE c.placa_veiculo = ? AND c.deleted_at IS NULL";
@@ -145,22 +147,33 @@ class DuplicityValidationService {
         
         // Excluir o próprio cadastro se estamos reutilizando/editando
         if ($excludeId && $excludeTable === 'visitantes_registros') {
+            error_log("🔧 Excluindo registro ID: $excludeId da validação");
             $sql .= " AND r.id != ?";
             $params[] = $excludeId;
         }
         if ($excludeId && $excludeTable === 'visitantes_cadastro') {
+            error_log("🔧 Excluindo cadastro ID: $excludeId da validação");
             $sql .= " AND c.id != ?";
             $params[] = $excludeId;
         }
         
+        error_log("📝 SQL: $sql");
+        error_log("📝 Params: " . json_encode($params));
+        
         $visitanteExistente = $this->db->fetch($sql, $params);
+        
+        error_log("📊 Resultado da query: " . json_encode($visitanteExistente));
+        
         if ($visitanteExistente) {
+            error_log("❌ PLACA JÁ EXISTE - Cadastro ID: " . ($visitanteExistente['cadastro_id'] ?? 'N/A') . " Nome: " . $visitanteExistente['nome']);
             return [
                 'isValid' => false,
                 'message' => "Esta placa já foi cadastrada anteriormente para outro visitante ({$visitanteExistente['nome']}). Placas devem ser únicas no sistema.",
                 'entry' => $visitanteExistente
             ];
         }
+        
+        error_log("✅ Placa disponível para visitantes");
         
         // 3. Verificar prestadores com a mesma placa (globalmente única)
         $sql = "SELECT nome, cpf, empresa, placa_veiculo, entrada, 'Prestador' as tipo 

@@ -386,23 +386,35 @@ class VisitantesNovoController {
                 // ===============================================
                 
                 // NOVA ESTRUTURA PRÉ-CADASTROS V2.0.0
-                // 1. Criar pré-cadastro (válido por 1 ano)
-                $this->db->query("
-                    INSERT INTO visitantes_cadastro (nome, empresa, doc_type, doc_number, doc_country, placa_veiculo, valid_from, valid_until, ativo)
-                    VALUES (?, ?, ?, ?, ?, ?, CURRENT_DATE, CURRENT_DATE + INTERVAL '1 year', true)
-                ", [
-                    $nome,
-                    $empresa,
-                    $doc_type,
-                    $doc_number,
-                    !empty($doc_country) ? $doc_country : null,
-                    $placa_veiculo
-                ]);
+                // 1. Verificar se já existe pré-cadastro com esse documento
+                $cadastroExistente = $this->db->fetch("
+                    SELECT id FROM visitantes_cadastro 
+                    WHERE doc_type = ? AND doc_number = ? AND deleted_at IS NULL
+                    LIMIT 1
+                ", [$doc_type, $doc_number]);
                 
-                // 2. Obter ID do cadastro criado
-                $cadastro_id = $this->db->lastInsertId('visitantes_cadastro_id_seq');
+                if ($cadastroExistente) {
+                    // Reutilizar cadastro existente
+                    $cadastro_id = $cadastroExistente['id'];
+                } else {
+                    // Criar novo pré-cadastro (válido por 1 ano)
+                    $this->db->query("
+                        INSERT INTO visitantes_cadastro (nome, empresa, doc_type, doc_number, doc_country, placa_veiculo, valid_from, valid_until, ativo)
+                        VALUES (?, ?, ?, ?, ?, ?, CURRENT_DATE, CURRENT_DATE + INTERVAL '1 year', true)
+                    ", [
+                        $nome,
+                        $empresa,
+                        $doc_type,
+                        $doc_number,
+                        !empty($doc_country) ? $doc_country : null,
+                        $placa_veiculo
+                    ]);
+                    
+                    // Obter ID do cadastro criado
+                    $cadastro_id = $this->db->lastInsertId('visitantes_cadastro_id_seq');
+                }
                 
-                // 3. Criar registro de entrada/saída
+                // 2. Criar registro de entrada/saída (sempre criar novo registro)
                 $this->db->query("
                     INSERT INTO visitantes_registros (cadastro_id, funcionario_responsavel, setor, entrada_at, saida_at)
                     VALUES (?, ?, ?, ?, ?)
@@ -771,23 +783,35 @@ class VisitantesNovoController {
                 // ===============================================
                 
                 // NOVA ESTRUTURA PRÉ-CADASTROS V2.0.0
-                // 1. Criar pré-cadastro (válido por 1 ano)
-                $this->db->query("
-                    INSERT INTO visitantes_cadastro (nome, empresa, doc_type, doc_number, doc_country, placa_veiculo, valid_from, valid_until, ativo)
-                    VALUES (?, ?, ?, ?, ?, ?, CURRENT_DATE, CURRENT_DATE + INTERVAL '1 year', true)
-                ", [
-                    $nome,
-                    $empresa,
-                    $doc_type,
-                    $doc_number,
-                    !empty($doc_country) ? $doc_country : null,
-                    $placa_veiculo
-                ]);
+                // 1. Verificar se já existe pré-cadastro com esse documento
+                $cadastroExistente = $this->db->fetch("
+                    SELECT id FROM visitantes_cadastro 
+                    WHERE doc_type = ? AND doc_number = ? AND deleted_at IS NULL
+                    LIMIT 1
+                ", [$doc_type, $doc_number]);
                 
-                // 2. Obter ID do cadastro criado
-                $cadastro_id = $this->db->lastInsertId('visitantes_cadastro_id_seq');
+                if ($cadastroExistente) {
+                    // Reutilizar cadastro existente
+                    $cadastro_id = $cadastroExistente['id'];
+                } else {
+                    // Criar novo pré-cadastro (válido por 1 ano)
+                    $this->db->query("
+                        INSERT INTO visitantes_cadastro (nome, empresa, doc_type, doc_number, doc_country, placa_veiculo, valid_from, valid_until, ativo)
+                        VALUES (?, ?, ?, ?, ?, ?, CURRENT_DATE, CURRENT_DATE + INTERVAL '1 year', true)
+                    ", [
+                        $nome,
+                        $empresa,
+                        $doc_type,
+                        $doc_number,
+                        !empty($doc_country) ? $doc_country : null,
+                        $placa_veiculo
+                    ]);
+                    
+                    // Obter ID do cadastro criado
+                    $cadastro_id = $this->db->lastInsertId('visitantes_cadastro_id_seq');
+                }
                 
-                // 3. Criar registro de entrada
+                // 2. Criar registro de entrada (sempre criar novo registro)
                 $this->db->query("
                     INSERT INTO visitantes_registros (cadastro_id, funcionario_responsavel, setor, entrada_at)
                     VALUES (?, ?, ?, ?)

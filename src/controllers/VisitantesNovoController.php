@@ -454,7 +454,15 @@ class VisitantesNovoController {
             exit;
         }
         
-        $visitante = $this->db->fetch("SELECT * FROM visitantes_novo WHERE id = ?", [$id]);
+        // PRÉ-CADASTROS V2.0.0: Buscar da nova estrutura
+        $visitante = $this->db->fetch("
+            SELECT r.*, c.nome, c.doc_type, c.doc_number, c.doc_country, c.empresa, c.placa_veiculo,
+                   r.cadastro_id, r.setor, r.funcionario_responsavel,
+                   r.entrada_at as hora_entrada, r.saida_at as hora_saida
+            FROM visitantes_registros r
+            JOIN visitantes_cadastro c ON c.id = r.cadastro_id
+            WHERE r.id = ? AND c.deleted_at IS NULL
+        ", [$id]);
         if (!$visitante) {
             header('Location: ' . $this->getBaseRoute());
             exit;
@@ -546,19 +554,28 @@ class VisitantesNovoController {
                 
                 // Validação de duplicidade removida para permitir edição livre de saídas
                 
+                // PRÉ-CADASTROS V2.0.0: Buscar cadastro_id
+                $registro = $this->db->fetch("SELECT cadastro_id FROM visitantes_registros WHERE id = ?", [$id]);
+                if (!$registro) {
+                    throw new Exception("Registro não encontrado");
+                }
+                
+                // Atualizar CADASTRO (dados mestres)
                 $this->db->query("
-                    UPDATE visitantes_novo 
-                    SET nome = ?, cpf = ?, empresa = ?, funcionario_responsavel = ?, setor = ?, placa_veiculo = ?, 
-                        hora_entrada = ?, hora_saida = ?, doc_type = ?, doc_number = ?, doc_country = ?, updated_at = CURRENT_TIMESTAMP
+                    UPDATE visitantes_cadastro 
+                    SET nome = ?, doc_type = ?, doc_number = ?, doc_country = ?, empresa = ?, placa_veiculo = ?, updated_at = CURRENT_TIMESTAMP
                     WHERE id = ?
                 ", [
-                    $nome, $cpf, $empresa, $funcionario_responsavel, $setor, $placa_veiculo,
-                    $hora_entrada ?: null,
-                    $hora_saida ?: null,
-                    $doc_type,
-                    $doc_number,
-                    !empty($doc_country) ? $doc_country : null,
-                    $id
+                    $nome, $doc_type, $doc_number, !empty($doc_country) ? $doc_country : null, $empresa, $placa_veiculo, $registro['cadastro_id']
+                ]);
+                
+                // Atualizar REGISTRO (dados do evento)
+                $this->db->query("
+                    UPDATE visitantes_registros 
+                    SET setor = ?, funcionario_responsavel = ?, entrada_at = ?, saida_at = ?, updated_at = CURRENT_TIMESTAMP
+                    WHERE id = ?
+                ", [
+                    $setor, $funcionario_responsavel, $hora_entrada ?: null, $hora_saida ?: null, $id
                 ]);
                 
                 header('Location: ' . $this->getBaseRoute() . '?updated=1');
@@ -577,7 +594,14 @@ class VisitantesNovoController {
                     $error = $errorMessage;
                 }
                 
-                $visitante = $this->db->fetch("SELECT * FROM visitantes_novo WHERE id = ?", [$_POST['id']]);
+                // PRÉ-CADASTROS V2.0.0: Buscar da nova estrutura
+                $visitante = $this->db->fetch("
+                    SELECT r.*, c.nome, c.doc_type, c.doc_number, c.doc_country, c.empresa, c.placa_veiculo,
+                           r.entrada_at as hora_entrada, r.saida_at as hora_saida
+                    FROM visitantes_registros r
+                    JOIN visitantes_cadastro c ON c.id = r.cadastro_id
+                    WHERE r.id = ?
+                ", [$_POST['id']]);
                 include $this->getViewPath('form.php');
             }
         }
@@ -858,7 +882,10 @@ class VisitantesNovoController {
                 CSRFProtection::verifyRequest();
                 $id = trim($_POST['id'] ?? '');
                 $nome = trim($_POST['nome'] ?? '');
-                $cpf = trim($_POST['cpf'] ?? '');
+                $doc_type = trim($_POST['doc_type'] ?? '');
+                $doc_number = trim($_POST['doc_number'] ?? '');
+                $doc_country = trim($_POST['doc_country'] ?? '');
+                $cpf = trim($_POST['cpf'] ?? ''); // Compatibilidade
                 $empresa = trim($_POST['empresa'] ?? '');
                 $setor = trim($_POST['setor'] ?? '');
                 $funcionario_responsavel = trim($_POST['funcionario_responsavel'] ?? '');
@@ -870,8 +897,15 @@ class VisitantesNovoController {
                     return;
                 }
                 
-                // Buscar dados atuais do visitante
-                $visitanteAtual = $this->db->fetch("SELECT * FROM visitantes_novo WHERE id = ?", [$id]);
+                // Buscar dados atuais do visitante (PRÉ-CADASTROS V2.0.0)
+                $visitanteAtual = $this->db->fetch("
+                    SELECT r.*, c.nome, c.doc_type, c.doc_number, c.doc_country, c.empresa, c.placa_veiculo,
+                           r.cadastro_id, r.setor, r.funcionario_responsavel,
+                           r.entrada_at as hora_entrada, r.saida_at as hora_saida
+                    FROM visitantes_registros r
+                    JOIN visitantes_cadastro c ON c.id = r.cadastro_id
+                    WHERE r.id = ? AND c.deleted_at IS NULL
+                ", [$id]);
                 if (!$visitanteAtual) {
                     echo json_encode(['success' => false, 'message' => 'Visitante não encontrado']);
                     return;
@@ -894,14 +928,17 @@ class VisitantesNovoController {
                 }
                 
                 // ========== VALIDAÇÕES DE DUPLICIDADE PARA EDIÇÃO ==========
+                // Usar doc_number se disponível, senão usar cpf (compatibilidade)
+                $doc_number_final = !empty($doc_number) ? $doc_number : $cpf;
+                
                 $dadosValidacao = [
-                    'cpf' => $cpf,
+                    'cpf' => $doc_number_final,
                     'placa_veiculo' => $placa_veiculo,
                     'hora_entrada' => $visitanteAtual['hora_entrada'],
                     'hora_saida' => $hora_saida_final
                 ];
                 
-                $validacao = $this->duplicityService->validateEditEntry($dadosValidacao, $id, 'visitantes_novo');
+                $validacao = $this->duplicityService->validateEditEntry($dadosValidacao, $id, 'visitantes_registros');
                 
                 if (!$validacao['isValid']) {
                     echo json_encode([
@@ -913,14 +950,28 @@ class VisitantesNovoController {
                 }
                 // ==========================================================
                 
+                // PRÉ-CADASTROS V2.0.0: Atualizar CADASTRO (dados mestres)
                 $this->db->query("
-                    UPDATE visitantes_novo 
-                    SET nome = ?, cpf = ?, empresa = ?, setor = ?, funcionario_responsavel = ?, placa_veiculo = ?, hora_saida = ?
+                    UPDATE visitantes_cadastro 
+                    SET nome = ?, doc_type = ?, doc_number = ?, doc_country = ?, empresa = ?, placa_veiculo = ?
                     WHERE id = ?
-                ", [$nome, $cpf, $empresa, $setor, $funcionario_responsavel, $placa_veiculo, $hora_saida_final, $id]);
+                ", [$nome, $doc_type, $doc_number_final, $doc_country, $empresa, $placa_veiculo, $visitanteAtual['cadastro_id']]);
+                
+                // PRÉ-CADASTROS V2.0.0: Atualizar REGISTRO (dados do evento)
+                $this->db->query("
+                    UPDATE visitantes_registros 
+                    SET setor = ?, funcionario_responsavel = ?, saida_at = ?
+                    WHERE id = ?
+                ", [$setor, $funcionario_responsavel, $hora_saida_final, $id]);
                 
                 // Buscar dados atualizados para retornar
-                $visitanteAtualizado = $this->db->fetch("SELECT * FROM visitantes_novo WHERE id = ?", [$id]);
+                $visitanteAtualizado = $this->db->fetch("
+                    SELECT r.*, c.nome, c.doc_type, c.doc_number, c.doc_country, c.empresa, c.placa_veiculo,
+                           r.entrada_at as hora_entrada, r.saida_at as hora_saida
+                    FROM visitantes_registros r
+                    JOIN visitantes_cadastro c ON c.id = r.cadastro_id
+                    WHERE r.id = ?
+                ", [$id]);
                 
                 echo json_encode([
                     'success' => true, 
@@ -929,7 +980,10 @@ class VisitantesNovoController {
                         'id' => $id,
                         'nome' => $nome,
                         'tipo' => 'Visitante',
-                        'cpf' => $cpf,
+                        'doc_type' => $visitanteAtualizado['doc_type'] ?? null,
+                        'doc_number' => $visitanteAtualizado['doc_number'] ?? null,
+                        'doc_country' => $visitanteAtualizado['doc_country'] ?? null,
+                        'cpf' => $visitanteAtualizado['doc_number'] ?? null, // Compatibilidade
                         'empresa' => $empresa,
                         'setor' => $setor,
                         'funcionario_responsavel' => $funcionario_responsavel,
@@ -959,8 +1013,14 @@ class VisitantesNovoController {
                     return;
                 }
                 
-                // Buscar o visitante
-                $visitante = $this->db->fetch("SELECT * FROM visitantes_novo WHERE id = ?", [$id]);
+                // Buscar o visitante (PRÉ-CADASTROS V2.0.0)
+                $visitante = $this->db->fetch("
+                    SELECT r.*, c.nome, c.doc_type, c.doc_number, c.doc_country, c.empresa, c.placa_veiculo,
+                           r.entrada_at as hora_entrada, r.saida_at as hora_saida
+                    FROM visitantes_registros r
+                    JOIN visitantes_cadastro c ON c.id = r.cadastro_id
+                    WHERE r.id = ? AND c.deleted_at IS NULL
+                ", [$id]);
                 
                 if (!$visitante) {
                     echo json_encode(['success' => false, 'message' => 'Visitante não encontrado']);
@@ -972,7 +1032,10 @@ class VisitantesNovoController {
                     'data' => [
                         'id' => $visitante['id'],
                         'nome' => $visitante['nome'],
-                        'cpf' => $visitante['cpf'],
+                        'doc_type' => $visitante['doc_type'] ?? null,
+                        'doc_number' => $visitante['doc_number'] ?? null,
+                        'doc_country' => $visitante['doc_country'] ?? null,
+                        'cpf' => $visitante['doc_number'] ?? null, // Compatibilidade
                         'empresa' => $visitante['empresa'],
                         'setor' => $visitante['setor'],
                         'funcionario_responsavel' => $visitante['funcionario_responsavel'],

@@ -385,16 +385,33 @@ class VisitantesNovoController {
                 }
                 // ===============================================
                 
+                // NOVA ESTRUTURA PRÉ-CADASTROS V2.0.0
+                // 1. Criar pré-cadastro (válido por 1 ano)
                 $this->db->query("
-                    INSERT INTO visitantes_novo (nome, cpf, empresa, funcionario_responsavel, setor, placa_veiculo, hora_entrada, hora_saida, doc_type, doc_number, doc_country)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO visitantes_cadastro (nome, empresa, doc_type, doc_number, doc_country, placa_veiculo, valid_from, valid_until, ativo)
+                    VALUES (?, ?, ?, ?, ?, ?, CURRENT_DATE, CURRENT_DATE + INTERVAL '1 year', true)
                 ", [
-                    $nome, $cpf, $empresa, $funcionario_responsavel, $setor, $placa_veiculo,
-                    $hora_entrada,
-                    $hora_saida ?: null,
+                    $nome,
+                    $empresa,
                     $doc_type,
                     $doc_number,
-                    !empty($doc_country) ? $doc_country : null
+                    !empty($doc_country) ? $doc_country : null,
+                    $placa_veiculo
+                ]);
+                
+                // 2. Obter ID do cadastro criado
+                $cadastro_id = $this->db->lastInsertId('visitantes_cadastro_id_seq');
+                
+                // 3. Criar registro de entrada/saída
+                $this->db->query("
+                    INSERT INTO visitantes_registros (cadastro_id, funcionario_responsavel, setor, entrada_at, saida_at)
+                    VALUES (?, ?, ?, ?, ?)
+                ", [
+                    $cadastro_id,
+                    $funcionario_responsavel,
+                    $setor,
+                    $hora_entrada,
+                    $hora_saida ?: null
                 ]);
                 
                 header('Location: ' . $this->getBaseRoute() . '?success=1');
@@ -753,26 +770,46 @@ class VisitantesNovoController {
                 }
                 // ===============================================
                 
+                // NOVA ESTRUTURA PRÉ-CADASTROS V2.0.0
+                // 1. Criar pré-cadastro (válido por 1 ano)
                 $this->db->query("
-                    INSERT INTO visitantes_novo (nome, cpf, empresa, funcionario_responsavel, setor, placa_veiculo, hora_entrada, doc_type, doc_number, doc_country)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO visitantes_cadastro (nome, empresa, doc_type, doc_number, doc_country, placa_veiculo, valid_from, valid_until, ativo)
+                    VALUES (?, ?, ?, ?, ?, ?, CURRENT_DATE, CURRENT_DATE + INTERVAL '1 year', true)
                 ", [
-                    $nome, $cpf, $empresa, $funcionario_responsavel, $setor, $placa_veiculo, $hora_entrada,
+                    $nome,
+                    $empresa,
                     $doc_type,
                     $doc_number,
-                    !empty($doc_country) ? $doc_country : null
+                    !empty($doc_country) ? $doc_country : null,
+                    $placa_veiculo
                 ]);
                 
-                $id = $this->db->lastInsertId();
+                // 2. Obter ID do cadastro criado
+                $cadastro_id = $this->db->lastInsertId('visitantes_cadastro_id_seq');
+                
+                // 3. Criar registro de entrada
+                $this->db->query("
+                    INSERT INTO visitantes_registros (cadastro_id, funcionario_responsavel, setor, entrada_at)
+                    VALUES (?, ?, ?, ?)
+                ", [
+                    $cadastro_id,
+                    $funcionario_responsavel,
+                    $setor,
+                    $hora_entrada
+                ]);
+                
+                // 4. Obter ID do registro criado
+                $registro_id = $this->db->lastInsertId('visitantes_registros_id_seq');
                 
                 echo json_encode([
                     'success' => true, 
                     'message' => 'Visitante cadastrado com sucesso',
                     'data' => [
-                        'id' => $id,
+                        'id' => $registro_id,
+                        'cadastro_id' => $cadastro_id,
                         'nome' => $nome,
                         'tipo' => 'Visitante',
-                        'cpf' => $cpf,
+                        'doc_number' => $doc_number,
                         'empresa' => $empresa,
                         'setor' => $setor,
                         'funcionario_responsavel' => $funcionario_responsavel,

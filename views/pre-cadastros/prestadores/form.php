@@ -154,6 +154,19 @@ require_once __DIR__ . '/../../partials/header.php';
                                       rows="3" placeholder="Informações adicionais..."></textarea>
                         </div>
 
+                        <!-- Captura de Foto (Opcional) -->
+                        <h5 class="mb-3 mt-4">
+                            <i class="fas fa-camera me-2"></i>
+                            Foto para Identificação (Opcional)
+                        </h5>
+
+                        <div class="mb-3">
+                            <div id="prestador-photo-capture-container"></div>
+                            <small class="form-text text-muted">
+                                A foto será exibida durante o registro de entrada no Dashboard, facilitando a identificação.
+                            </small>
+                        </div>
+
                         <!-- Botões -->
                         <div class="d-flex justify-content-end gap-2 mt-4">
                             <a href="/pre-cadastros/prestadores" class="btn btn-secondary">
@@ -186,5 +199,55 @@ require_once __DIR__ . '/../../partials/header.php';
 </div>
 
 <script src="/assets/js/pre-cadastros-form.js"></script>
+
+<!-- Photo Capture Component -->
+<script src="/assets/js/photo-capture.js?v=<?= time() ?>"></script>
+<script>
+    // Inicializar captura de foto para prestador
+    document.addEventListener('DOMContentLoaded', function() {
+        const photoCapture = new PhotoCapture('prestador-photo-capture-container');
+        
+        // Interceptar submit do formulário para fazer upload da foto
+        const form = document.getElementById('form-pre-cadastro');
+        
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(form);
+            
+            // Enviar formulário principal
+            fetch(form.action, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.cadastro_id) {
+                    // Se sucesso e tem foto capturada, fazer upload
+                    if (photoCapture.capturedPhoto) {
+                        return photoCapture.uploadPhoto(data.cadastro_id, 'prestador')
+                            .then(() => {
+                                window.location.href = '/pre-cadastros/prestadores?success=1';
+                            })
+                            .catch((error) => {
+                                console.warn('Foto não foi salva:', error);
+                                window.location.href = '/pre-cadastros/prestadores?success=1&photo_warning=1';
+                            });
+                    } else {
+                        // Sem foto, redirecionar normalmente
+                        window.location.href = '/pre-cadastros/prestadores?success=1';
+                    }
+                } else {
+                    // Erro no cadastro
+                    alert(data.message || 'Erro ao salvar cadastro');
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                alert('Erro ao processar solicitação');
+            });
+        });
+    });
+</script>
 
 <?php require_once __DIR__ . '/../../partials/footer.php'; ?>

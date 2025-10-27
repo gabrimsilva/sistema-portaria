@@ -570,6 +570,13 @@
                             <input type="datetime-local" class="form-control" id="visitante_hora_entrada" name="hora_entrada" required>
                             <small class="form-text text-muted">Hora atual preenchida automaticamente, mas pode ser editada</small>
                         </div>
+                        
+                        <!-- Captura de Foto (Opcional) -->
+                        <div class="form-group">
+                            <label>📸 Foto (Opcional)</label>
+                            <div id="visitante-photo-capture-container"></div>
+                            <small class="form-text text-muted">Capture uma foto para identificação do visitante</small>
+                        </div>
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -752,6 +759,13 @@
                             <input type="datetime-local" class="form-control" id="prestador_entrada" name="entrada" required>
                             <small class="form-text text-muted">Hora atual preenchida automaticamente, mas pode ser editada</small>
                         </div>
+                        
+                        <!-- Captura de Foto (Opcional) -->
+                        <div class="form-group">
+                            <label>📸 Foto (Opcional)</label>
+                            <div id="prestador-photo-capture-container"></div>
+                            <small class="form-text text-muted">Capture uma foto para identificação do prestador</small>
+                        </div>
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -927,6 +941,10 @@
     <!-- 🆕 PRÉ-CADASTROS V2.0.0 - Autocomplete -->
     <script src="/assets/js/dashboard-autocomplete.js?v=<?= time() ?>"></script>
     <script src="/assets/js/dashboard-precadastros-autocomplete.js?v=<?= time() ?>"></script>
+    
+    <!-- 📸 Photo Capture Component -->
+    <script src="/assets/js/photo-capture.js?v=<?= time() ?>"></script>
+    <script src="/assets/js/dashboard-photo-integration.js?v=<?= time() ?>"></script>
     
     <?php
     require_once '../src/services/ErrorHandlerService.php';

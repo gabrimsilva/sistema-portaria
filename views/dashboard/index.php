@@ -1165,12 +1165,14 @@
                 data: formData,
                 dataType: 'json',
                 success: function(response) {
+                    console.log('📊 Resposta do servidor:', response);
                     if (response.success) {
                         showToast('Visitante cadastrado com sucesso!');
                         $('#modalVisitante').modal('hide');
                         limparFormulario('formVisitante');
                         setTimeout(() => window.location.reload(), 500);
                     } else {
+                        console.log('❌ Erro:', response.message, response.errors);
                         // Tratamento melhorado para erros de duplicidade
                         if (response.errors && Array.isArray(response.errors)) {
                             const mensagens = response.errors.join('<br>');

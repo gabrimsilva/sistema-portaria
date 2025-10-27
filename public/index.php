@@ -216,6 +216,9 @@ try {
                 case 'update_ajax':
                     $controller->updateAjax();
                     break;
+                case 'upload_foto':
+                    $controller->uploadFoto();
+                    break;
                 default:
                     // Outras ações redirecionam para relatório
                     header('Location: /reports/visitantes');
@@ -257,6 +260,9 @@ try {
                     break;
                 case 'delete':
                     $controller->delete();
+                    break;
+                case 'upload_foto':
+                    $controller->uploadFoto();
                     break;
                 default:
                     $controller->index();

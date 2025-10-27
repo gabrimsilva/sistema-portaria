@@ -1610,4 +1610,116 @@ class PrestadoresServicoController {
         fclose($output);
         exit;
     }
+    
+    /**
+     * Upload de foto do prestador (pré-cadastro)
+     */
+    public function uploadFoto() {
+        header('Content-Type: application/json; charset=utf-8');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'error' => 'Método não permitido']);
+            return;
+        }
+        
+        try {
+            CSRFProtection::verifyRequest();
+            
+            $cadastroId = (int)($_POST['cadastro_id'] ?? 0);
+            
+            if ($cadastroId <= 0) {
+                throw new Exception("ID do cadastro inválido");
+            }
+            
+            // Verificar se o arquivo foi enviado
+            if (!isset($_FILES['photo']) || $_FILES['photo']['error'] !== UPLOAD_ERR_OK) {
+                throw new Exception("Nenhuma foto foi enviada");
+            }
+            
+            $file = $_FILES['photo'];
+            
+            // Validar tamanho (2MB)
+            if ($file['size'] > 2 * 1024 * 1024) {
+                throw new Exception("A foto deve ter no máximo 2MB");
+            }
+            
+            // Validar tipo MIME
+            $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $mimeType = finfo_file($finfo, $file['tmp_name']);
+            finfo_close($finfo);
+            
+            if (!in_array($mimeType, $allowedTypes)) {
+                throw new Exception("Tipo de arquivo não permitido. Use JPG, PNG ou WEBP");
+            }
+            
+            // Gerar nome único para o arquivo
+            $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+            $fileName = 'prestador_' . $cadastroId . '_' . time() . '.' . $extension;
+            
+            // Diretório de destino
+            $uploadDir = __DIR__ . '/../../public/uploads/prestadores/';
+            
+            // Criar diretório se não existir
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0755, true);
+            }
+            
+            $targetPath = $uploadDir . $fileName;
+            
+            // Remover foto anterior se existir
+            $oldPhoto = $this->db->fetch("
+                SELECT foto_url FROM prestadores_cadastro WHERE id = ?
+            ", [$cadastroId]);
+            
+            if ($oldPhoto && !empty($oldPhoto['foto_url'])) {
+                $oldPath = __DIR__ . '/../../public/uploads/' . $oldPhoto['foto_url'];
+                if (file_exists($oldPath)) {
+                    unlink($oldPath);
+                }
+            }
+            
+            // Mover arquivo
+            if (!move_uploaded_file($file['tmp_name'], $targetPath)) {
+                throw new Exception("Erro ao salvar a foto");
+            }
+            
+            // Atualizar banco de dados
+            $fotoUrl = 'prestadores/' . $fileName;
+            $this->db->query("
+                UPDATE prestadores_cadastro 
+                SET foto_url = ?, updated_at = NOW()
+                WHERE id = ?
+            ", [$fotoUrl, $cadastroId]);
+            
+            // Buscar nome para auditoria
+            $cadastro = $this->db->fetch("
+                SELECT nome FROM prestadores_cadastro WHERE id = ?
+            ", [$cadastroId]);
+            
+            // Auditoria
+            AuditService::log(
+                'prestadores',
+                'update',
+                $cadastroId,
+                ['foto_url' => $fotoUrl],
+                "Atualizou foto do prestador {$cadastro['nome']}"
+            );
+            
+            echo json_encode([
+                'success' => true,
+                'foto_url' => $fotoUrl,
+                'message' => 'Foto atualizada com sucesso'
+            ]);
+            
+        } catch (Exception $e) {
+            error_log("Erro ao fazer upload de foto: " . $e->getMessage());
+            http_response_code(400);
+            echo json_encode([
+                'success' => false,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
 }

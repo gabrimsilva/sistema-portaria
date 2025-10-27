@@ -1565,11 +1565,13 @@
                 $('#edit_funcionario_responsavel').val(funcionario || '');
                 
                 // Buscar dados completos do visitante para preencher hora de saída e foto
+                console.log('🔍 Buscando dados do visitante ID:', id);
                 $.ajax({
                     url: `/visitantes?action=get_data&id=${id}`,
                     method: 'GET',
                     dataType: 'json',
                     success: function(response) {
+                        console.log('📦 Resposta recebida:', response);
                         if (response.success) {
                             if (response.data.hora_saida) {
                                 // Formatar data para datetime-local sem conversão de timezone
@@ -1578,15 +1580,19 @@
                             }
                             
                             // 📸 Exibir foto se disponível
+                            console.log('🖼️ foto_url:', response.data.foto_url);
                             if (response.data.foto_url) {
+                                console.log('✅ Exibindo foto:', response.data.foto_url);
                                 $('#edit-foto-preview').attr('src', response.data.foto_url);
                                 $('#edit-photo-display').show();
                             } else {
+                                console.log('❌ Sem foto_url, escondendo display');
                                 $('#edit-photo-display').hide();
                             }
                         }
                     },
-                    error: function() {
+                    error: function(xhr, status, error) {
+                        console.error('❌ Erro ao buscar dados:', error, xhr.responseText);
                         // Em caso de erro, deixa o campo vazio
                         $('#edit_hora_saida').val('');
                         $('#edit-photo-display').hide();

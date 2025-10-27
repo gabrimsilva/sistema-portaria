@@ -21,8 +21,10 @@ class DashboardController {
                 case 'visitante':
                     return $this->db->fetch("
                         SELECT COUNT(*) as total 
-                        FROM visitantes_novo 
-                        WHERE hora_entrada IS NOT NULL AND hora_saida IS NULL
+                        FROM visitantes_registros r
+                        JOIN visitantes_cadastro c ON c.id = r.cadastro_id
+                        WHERE r.entrada_at IS NOT NULL AND r.saida_at IS NULL
+                          AND c.deleted_at IS NULL
                     ")['total'] ?? 0;
                 
                 case 'prestador':
@@ -58,9 +60,11 @@ class DashboardController {
                 case 'visitante':
                     return $this->db->fetch("
                         SELECT COUNT(*) as total 
-                        FROM visitantes_novo 
-                        WHERE hora_entrada >= CURRENT_DATE 
-                          AND hora_entrada < CURRENT_DATE + INTERVAL '1 day'
+                        FROM visitantes_registros r
+                        JOIN visitantes_cadastro c ON c.id = r.cadastro_id
+                        WHERE r.entrada_at >= CURRENT_DATE 
+                          AND r.entrada_at < CURRENT_DATE + INTERVAL '1 day'
+                          AND c.deleted_at IS NULL
                     ")['total'] ?? 0;
                 
                 case 'prestador':
@@ -95,14 +99,20 @@ class DashboardController {
         try {
             // Estatísticas dos novos módulos
             $totalProfissionais = $this->db->fetch("SELECT COUNT(*) as total FROM profissionais_renner")['total'] ?? 0;
-            $totalVisitantes = $this->db->fetch("SELECT COUNT(*) as total FROM visitantes_novo")['total'] ?? 0;
+            $totalVisitantes = $this->db->fetch("
+                SELECT COUNT(*) as total 
+                FROM visitantes_cadastro 
+                WHERE deleted_at IS NULL
+            ")['total'] ?? 0;
             $totalPrestadores = $this->db->fetch("SELECT COUNT(*) as total FROM prestadores_servico")['total'] ?? 0;
             
             // Visitantes ativos na empresa
             $visitantesAtivos = $this->db->fetch("
                 SELECT COUNT(*) as total 
-                FROM visitantes_novo 
-                WHERE hora_entrada IS NOT NULL AND hora_saida IS NULL
+                FROM visitantes_registros r
+                JOIN visitantes_cadastro c ON c.id = r.cadastro_id
+                WHERE r.entrada_at IS NOT NULL AND r.saida_at IS NULL
+                  AND c.deleted_at IS NULL
             ")['total'] ?? 0;
             
             // Prestadores trabalhando
@@ -197,12 +207,14 @@ class DashboardController {
     private function getMovimentacaoHoje() {
         $result = ['visitantes' => 0, 'prestadores' => 0, 'profissionais' => 0];
         
-        // Entradas de visitantes hoje (usando range predicates)
+        // Entradas de visitantes hoje (PRÉ-CADASTROS V2.0.0)
         try {
             $visitantesHoje = $this->db->fetch("
                 SELECT COUNT(*) as total 
-                FROM visitantes_novo 
-                WHERE hora_entrada >= CURRENT_DATE AND hora_entrada < CURRENT_DATE + INTERVAL '1 day'
+                FROM visitantes_registros r
+                JOIN visitantes_cadastro c ON c.id = r.cadastro_id
+                WHERE r.entrada_at >= CURRENT_DATE AND r.entrada_at < CURRENT_DATE + INTERVAL '1 day'
+                  AND c.deleted_at IS NULL
             ")['total'] ?? 0;
             $result['visitantes'] = $visitantesHoje;
         } catch (Exception $e) {
@@ -241,12 +253,14 @@ class DashboardController {
     private function getSaidasHoje() {
         $totalSaidas = 0;
         
-        // Saídas de visitantes hoje
+        // Saídas de visitantes hoje (PRÉ-CADASTROS V2.0.0)
         try {
             $visitantesSaidas = $this->db->fetch("
                 SELECT COUNT(*) as total 
-                FROM visitantes_novo 
-                WHERE hora_saida >= CURRENT_DATE AND hora_saida < CURRENT_DATE + INTERVAL '1 day'
+                FROM visitantes_registros r
+                JOIN visitantes_cadastro c ON c.id = r.cadastro_id
+                WHERE r.saida_at >= CURRENT_DATE AND r.saida_at < CURRENT_DATE + INTERVAL '1 day'
+                  AND c.deleted_at IS NULL
             ")['total'] ?? 0;
             $totalSaidas += $visitantesSaidas;
         } catch (Exception $e) {
@@ -286,10 +300,12 @@ class DashboardController {
             $query = "
                 SELECT setor, SUM(total) as total_movimentacao
                 FROM (
-                    (SELECT setor, COUNT(*) as total
-                     FROM visitantes_novo 
-                     WHERE setor IS NOT NULL AND hora_entrada >= CURRENT_DATE - INTERVAL '7 days'
-                     GROUP BY setor)
+                    (SELECT r.setor, COUNT(*) as total
+                     FROM visitantes_registros r
+                     JOIN visitantes_cadastro c ON c.id = r.cadastro_id
+                     WHERE r.setor IS NOT NULL AND r.entrada_at >= CURRENT_DATE - INTERVAL '7 days'
+                       AND c.deleted_at IS NULL
+                     GROUP BY r.setor)
                     UNION ALL
                     (SELECT setor, COUNT(*) as total
                      FROM prestadores_servico 
@@ -317,13 +333,18 @@ class DashboardController {
         try {
             $pessoas = [];
             
-            // Visitantes na empresa (entraram mas não saíram)
+            // Visitantes na empresa (PRÉ-CADASTROS V2.0.0 - entraram mas não saíram)
             $visitantesAtivos = $this->db->fetchAll("
-                SELECT nome, cpf, doc_type, doc_number, doc_country, empresa, setor, 
-                       hora_entrada, 'Visitante' as tipo, id, placa_veiculo, funcionario_responsavel
-                FROM visitantes_novo 
-                WHERE hora_entrada IS NOT NULL AND hora_saida IS NULL
-                ORDER BY hora_entrada DESC
+                SELECT c.nome, c.doc_type, c.doc_number, c.doc_country, 
+                       COALESCE(c.doc_number, '') as cpf,
+                       c.empresa, r.setor, 
+                       r.entrada_at as hora_entrada, 'Visitante' as tipo, 
+                       r.id, c.placa_veiculo, r.funcionario_responsavel
+                FROM visitantes_registros r
+                JOIN visitantes_cadastro c ON c.id = r.cadastro_id
+                WHERE r.entrada_at IS NOT NULL AND r.saida_at IS NULL
+                  AND c.deleted_at IS NULL
+                ORDER BY r.entrada_at DESC
             ") ?? [];
             
             // Prestadores trabalhando (PRÉ-CADASTROS V2.0.0)
@@ -388,15 +409,14 @@ class DashboardController {
                 'prestadores' => []
             ];
             
-            // Visitantes expirando (próximos 30 dias)
+            // Visitantes expirando (próximos 30 dias) - PRÉ-CADASTROS V2.0.0
             $data['visitantes'] = $this->db->fetchAll("
                 SELECT id, nome, doc_type, doc_number, empresa, 
                        valid_until as data_validade, validity_status,
-                       DATE(valid_until) - CURRENT_DATE as dias_restantes
-                FROM visitantes_novo
-                WHERE valid_until IS NOT NULL 
-                  AND validity_status IN ('ativo', 'expirando')
-                  AND DATE(valid_until) BETWEEN CURRENT_DATE AND (CURRENT_DATE + INTERVAL '30 days')
+                       dias_restantes
+                FROM vw_visitantes_cadastro_status
+                WHERE validity_status IN ('valid', 'expiring')
+                  AND dias_restantes <= 30
                 ORDER BY valid_until ASC
                 LIMIT 10
             ") ?? [];

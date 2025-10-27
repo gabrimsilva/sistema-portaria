@@ -802,11 +802,14 @@ class VisitantesNovoController {
                     'hora_entrada' => $hora_entrada
                 ];
                 
-                // Se está reutilizando cadastro, verificar apenas CPF ativo (não validar placa)
+                // Se está reutilizando cadastro, validar CPF ativo E placa (excluindo o próprio cadastro)
                 if ($cadastroExistente) {
-                    // Validar apenas se CPF não tem entrada em aberto
+                    error_log("🔄 REUTILIZANDO PRÉ-CADASTRO ID: " . $cadastroExistente['id']);
+                    
+                    // Validar CPF não tem entrada em aberto
                     $cpfValidation = $this->duplicityService->validateCpfNotOpen($cpf);
                     if (!$cpfValidation['isValid']) {
+                        error_log("❌ CPF já tem entrada em aberto");
                         echo json_encode([
                             'success' => false,
                             'message' => $cpfValidation['message']
@@ -814,6 +817,18 @@ class VisitantesNovoController {
                         return;
                     }
                     
+                    // Validar placa única (excluindo o próprio cadastro sendo reutilizado)
+                    $placaValidation = $this->duplicityService->validatePlacaUnique($placa_veiculo, $cadastroExistente['id'], 'visitantes_cadastro');
+                    if (!$placaValidation['isValid']) {
+                        error_log("❌ Placa já em uso por outro cadastro");
+                        echo json_encode([
+                            'success' => false,
+                            'message' => $placaValidation['message']
+                        ]);
+                        return;
+                    }
+                    
+                    error_log("✅ Validação OK - criando novo registro");
                     // Reutilizar cadastro existente
                     $cadastro_id = $cadastroExistente['id'];
                 } else {

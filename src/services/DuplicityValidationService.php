@@ -143,8 +143,13 @@ class DuplicityValidationService {
                 WHERE c.placa_veiculo = ? AND c.deleted_at IS NULL";
         $params = [$placa];
         
+        // Excluir o próprio cadastro se estamos reutilizando/editando
         if ($excludeId && $excludeTable === 'visitantes_registros') {
             $sql .= " AND r.id != ?";
+            $params[] = $excludeId;
+        }
+        if ($excludeId && $excludeTable === 'visitantes_cadastro') {
+            $sql .= " AND c.id != ?";
             $params[] = $excludeId;
         }
         

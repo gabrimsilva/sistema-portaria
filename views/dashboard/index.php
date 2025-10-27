@@ -571,11 +571,13 @@
                             <small class="form-text text-muted">Hora atual preenchida automaticamente, mas pode ser editada</small>
                         </div>
                         
-                        <!-- Captura de Foto (Opcional) -->
-                        <div class="form-group">
-                            <label>📸 Foto (Opcional)</label>
-                            <div id="visitante-photo-capture-container"></div>
-                            <small class="form-text text-muted">Capture uma foto para identificação do visitante</small>
+                        <!-- Visualização de Foto (se cadastrado) -->
+                        <div class="form-group" id="visitante-photo-display" style="display: none;">
+                            <label>📸 Foto do Cadastro</label>
+                            <div class="text-center">
+                                <img id="visitante-foto-preview" src="" alt="Foto do visitante" class="img-thumbnail" style="max-width: 200px; max-height: 200px;">
+                            </div>
+                            <small class="form-text text-muted">Foto capturada no pré-cadastro</small>
                         </div>
                     </form>
                 </div>
@@ -760,11 +762,13 @@
                             <small class="form-text text-muted">Hora atual preenchida automaticamente, mas pode ser editada</small>
                         </div>
                         
-                        <!-- Captura de Foto (Opcional) -->
-                        <div class="form-group">
-                            <label>📸 Foto (Opcional)</label>
-                            <div id="prestador-photo-capture-container"></div>
-                            <small class="form-text text-muted">Capture uma foto para identificação do prestador</small>
+                        <!-- Visualização de Foto (se cadastrado) -->
+                        <div class="form-group" id="prestador-photo-display" style="display: none;">
+                            <label>📸 Foto do Cadastro</label>
+                            <div class="text-center">
+                                <img id="prestador-foto-preview" src="" alt="Foto do prestador" class="img-thumbnail" style="max-width: 200px; max-height: 200px;">
+                            </div>
+                            <small class="form-text text-muted">Foto capturada no pré-cadastro</small>
                         </div>
                     </form>
                 </div>
@@ -943,8 +947,6 @@
     <script src="/assets/js/dashboard-precadastros-autocomplete.js?v=<?= time() ?>"></script>
     
     <!-- 📸 Photo Capture Component -->
-    <script src="/assets/js/photo-capture.js?v=<?= time() ?>"></script>
-    <script src="/assets/js/dashboard-photo-integration.js?v=<?= time() ?>"></script>
     
     <?php
     require_once '../src/services/ErrorHandlerService.php';
@@ -1185,29 +1187,10 @@
                 success: function(response) {
                     console.log('📊 Resposta do servidor:', response);
                     if (response.success) {
-                        // Fazer upload da foto se houver
-                        if (typeof window.uploadPhotoIfNeeded === 'function' && response.cadastro_id) {
-                            window.uploadPhotoIfNeeded(response.cadastro_id, 'visitante')
-                                .then(() => {
-                                    showToast('Visitante cadastrado com sucesso!');
-                                    $('#modalVisitante').modal('hide');
-                                    limparFormulario('formVisitante');
-                                    setTimeout(() => window.location.reload(), 500);
-                                })
-                                .catch((error) => {
-                                    console.warn('⚠️ Foto não foi salva:', error);
-                                    showToast('Visitante cadastrado, mas a foto não foi salva', 'warning');
-                                    $('#modalVisitante').modal('hide');
-                                    limparFormulario('formVisitante');
-                                    setTimeout(() => window.location.reload(), 1000);
-                                });
-                        } else {
-                            // Sem foto, continuar normalmente
-                            showToast('Visitante cadastrado com sucesso!');
-                            $('#modalVisitante').modal('hide');
-                            limparFormulario('formVisitante');
-                            setTimeout(() => window.location.reload(), 500);
-                        }
+                        showToast('Visitante cadastrado com sucesso!');
+                        $('#modalVisitante').modal('hide');
+                        limparFormulario('formVisitante');
+                        setTimeout(() => window.location.reload(), 500);
                     } else {
                         console.log('❌ Erro:', response.message, response.errors);
                         // Tratamento melhorado para erros de duplicidade
@@ -1303,29 +1286,10 @@
                 dataType: 'json',
                 success: function(response) {
                     if (response.success) {
-                        // Fazer upload da foto se houver
-                        if (typeof window.uploadPhotoIfNeeded === 'function' && response.cadastro_id) {
-                            window.uploadPhotoIfNeeded(response.cadastro_id, 'prestador')
-                                .then(() => {
-                                    showToast('Prestador cadastrado com sucesso!');
-                                    $('#modalPrestador').modal('hide');
-                                    limparFormulario('formPrestador');
-                                    setTimeout(() => window.location.reload(), 500);
-                                })
-                                .catch((error) => {
-                                    console.warn('⚠️ Foto não foi salva:', error);
-                                    showToast('Prestador cadastrado, mas a foto não foi salva', 'warning');
-                                    $('#modalPrestador').modal('hide');
-                                    limparFormulario('formPrestador');
-                                    setTimeout(() => window.location.reload(), 1000);
-                                });
-                        } else {
-                            // Sem foto, continuar normalmente
-                            showToast('Prestador cadastrado com sucesso!');
-                            $('#modalPrestador').modal('hide');
-                            limparFormulario('formPrestador');
-                            setTimeout(() => window.location.reload(), 500);
-                        }
+                        showToast('Prestador cadastrado com sucesso!');
+                        $('#modalPrestador').modal('hide');
+                        limparFormulario('formPrestador');
+                        setTimeout(() => window.location.reload(), 500);
                     } else {
                         // Tratamento melhorado para erros de duplicidade
                         if (response.errors && Array.isArray(response.errors)) {

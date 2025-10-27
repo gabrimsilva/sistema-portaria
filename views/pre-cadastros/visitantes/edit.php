@@ -160,6 +160,26 @@ require_once __DIR__ . '/../../partials/header.php';
                                       rows="3" placeholder="Informações adicionais..."><?= htmlspecialchars($cadastro['observacoes'] ?? '') ?></textarea>
                         </div>
 
+                        <!-- Foto de Identificação -->
+                        <?php if (!empty($cadastro['foto_url'])): ?>
+                        <h5 class="mb-3 mt-4">
+                            <i class="fas fa-camera me-2"></i>
+                            Foto de Identificação
+                        </h5>
+
+                        <div class="mb-3">
+                            <div class="text-center">
+                                <img src="<?= htmlspecialchars($cadastro['foto_url']) ?>" 
+                                     alt="Foto do visitante" 
+                                     class="img-thumbnail" 
+                                     style="max-width: 300px; max-height: 300px;">
+                            </div>
+                            <small class="form-text text-muted d-block text-center mt-2">
+                                Foto capturada durante o cadastro
+                            </small>
+                        </div>
+                        <?php endif; ?>
+
                         <!-- Botões -->
                         <div class="d-flex justify-content-end gap-2 mt-4">
                             <a href="/pre-cadastros/visitantes" class="btn btn-secondary">

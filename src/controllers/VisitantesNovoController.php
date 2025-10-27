@@ -842,6 +842,15 @@ class VisitantesNovoController {
                     file_put_contents('php://stderr', "✅ Validação OK - criando novo registro\n");
                     // Reutilizar cadastro existente
                     $cadastro_id = $cadastroExistente['id'];
+                    
+                    // Atualizar placa no cadastro se fornecida
+                    if (!empty($placa_veiculo)) {
+                        $this->db->query("
+                            UPDATE visitantes_cadastro 
+                            SET placa_veiculo = ?, updated_at = NOW()
+                            WHERE id = ?
+                        ", [$placa_veiculo, $cadastro_id]);
+                    }
                 } else {
                     // Criar novo cadastro: validar TUDO (CPF, placa, debounce)
                     $validacao = $this->duplicityService->validateNewEntry($dadosValidacao, 'visitante');

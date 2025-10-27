@@ -677,6 +677,7 @@ class PrestadoresServicoController {
                 $setor = trim($_POST['setor'] ?? '');
                 $observacao_entrada = trim($_POST['observacao'] ?? '');
                 $entrada_input = trim($_POST['entrada'] ?? '');
+                $placa_veiculo = trim($_POST['placa_veiculo'] ?? '');
                 
                 // Processar entrada
                 if (!empty($entrada_input)) {
@@ -721,6 +722,15 @@ class PrestadoresServicoController {
                     if (strtotime($cadastro['valid_until']) < time()) {
                         echo json_encode(['success' => false, 'message' => 'Pré-cadastro expirado. Por favor, renove o cadastro.']);
                         return;
+                    }
+                    
+                    // Atualizar placa no cadastro se fornecida
+                    if (!empty($placa_veiculo)) {
+                        $this->db->query("
+                            UPDATE prestadores_cadastro 
+                            SET placa_veiculo = ?, updated_at = NOW()
+                            WHERE id = ?
+                        ", [$placa_veiculo, $cadastro_id]);
                     }
                     
                     // Criar registro de entrada

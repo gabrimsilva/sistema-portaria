@@ -676,6 +676,100 @@ class PreCadastrosVisitantesController {
     }
     
     /**
+     * Upload de foto do pré-cadastro
+     * POST /pre-cadastros/visitantes?action=upload_foto
+     */
+    public function uploadFoto() {
+        header('Content-Type: application/json');
+        
+        try {
+            // Validação CSRF
+            require_once __DIR__ . '/../../config/csrf.php';
+            CSRFProtection::verifyRequest();
+            
+            $cadastro_id = $_POST['cadastro_id'] ?? null;
+            $photo_data = $_POST['photo'] ?? null;
+            
+            if (!$cadastro_id || !$photo_data) {
+                throw new Exception('Dados inválidos');
+            }
+            
+            // Verificar se cadastro existe
+            $cadastro = $this->db->fetch(
+                "SELECT id FROM visitantes_cadastro WHERE id = ? AND deleted_at IS NULL",
+                [$cadastro_id]
+            );
+            
+            if (!$cadastro) {
+                throw new Exception('Cadastro não encontrado');
+            }
+            
+            // Validar base64
+            if (!preg_match('/^data:image\/(jpeg|jpg|png|webp);base64,/', $photo_data)) {
+                throw new Exception('Formato de imagem inválido');
+            }
+            
+            // Extrair dados da imagem
+            list($type, $data) = explode(';', $photo_data);
+            list(, $data) = explode(',', $data);
+            $data = base64_decode($data);
+            
+            // Validar tamanho (2MB)
+            if (strlen($data) > 2 * 1024 * 1024) {
+                throw new Exception('Imagem muito grande (máximo 2MB)');
+            }
+            
+            // Determinar extensão
+            $extension = 'jpg';
+            if (strpos($type, 'png') !== false) $extension = 'png';
+            if (strpos($type, 'webp') !== false) $extension = 'webp';
+            
+            // Criar diretório se não existir
+            $uploadDir = __DIR__ . '/../../public/uploads/visitantes/';
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0755, true);
+            }
+            
+            // Nome do arquivo
+            $filename = 'visitante_' . $cadastro_id . '_' . time() . '.' . $extension;
+            $filepath = $uploadDir . $filename;
+            
+            // Salvar arquivo
+            file_put_contents($filepath, $data);
+            
+            // Atualizar banco de dados
+            $foto_url = '/uploads/visitantes/' . $filename;
+            $this->db->query(
+                "UPDATE visitantes_cadastro SET foto_url = ? WHERE id = ?",
+                [$foto_url, $cadastro_id]
+            );
+            
+            // Auditoria
+            $this->auditService->log(
+                'upload_foto',
+                'pre_cadastros_visitantes',
+                $cadastro_id,
+                null,
+                ['foto_url' => $foto_url]
+            );
+            
+            echo json_encode([
+                'success' => true,
+                'message' => 'Foto salva com sucesso',
+                'foto_url' => $foto_url
+            ]);
+            
+        } catch (Exception $e) {
+            http_response_code(400);
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+        exit;
+    }
+    
+    /**
      * Obter estatísticas
      */
     private function getStats() {

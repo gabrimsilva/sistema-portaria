@@ -219,9 +219,29 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const placaInput = document.getElementById('placa_veiculo');
     
-    placaInput.addEventListener('input', function(e) {
-        e.target.value = e.target.value.toUpperCase();
-    });
+    if (placaInput) {
+        placaInput.addEventListener('input', function(e) {
+            let placa = this.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+            placa = placa.substring(0, 7); // Máximo 7 caracteres
+            
+            // Detecta formato e aplica formatação
+            if (placa.length >= 4) {
+                const letras = placa.substring(0, 3);
+                const resto = placa.substring(3);
+                
+                // Se primeiros 3 são letras
+                if (/^[A-Z]{3}$/.test(letras)) {
+                    // Se resto são só números = formato antigo ABC-1234
+                    if (/^[0-9]+$/.test(resto)) {
+                        placa = letras + '-' + resto;
+                    }
+                    // Senão = formato Mercosul ABC1D23 (sem formatação extra)
+                }
+            }
+            
+            this.value = placa;
+        });
+    }
     
     // ========================================
     // VALIDAÇÃO DO FORMULÁRIO

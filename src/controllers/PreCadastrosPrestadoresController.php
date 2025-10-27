@@ -552,7 +552,8 @@ class PreCadastrosPrestadoresController {
                         doc_number,
                         doc_country,
                         placa_veiculo,
-                        valid_until
+                        valid_until,
+                        foto_url
                     FROM prestadores_cadastro
                     WHERE deleted_at IS NULL 
                       AND ativo = true

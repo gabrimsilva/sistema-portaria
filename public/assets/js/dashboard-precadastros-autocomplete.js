@@ -108,6 +108,14 @@ const DashboardPreCadastrosAutocomplete = {
         $('#prestador_doc_country').val(cadastro.doc_country || 'Brasil');
         $('#prestador_placa_veiculo').val(cadastro.placa_veiculo || '');
         
+        // Exibir foto se disponível
+        if (cadastro.foto_url) {
+            $('#prestador-foto-preview').attr('src', cadastro.foto_url);
+            $('#prestador-photo-display').show();
+        } else {
+            $('#prestador-photo-display').hide();
+        }
+        
         $('#formPrestador').prepend(`
             <div class="alert alert-info alert-dismissible fade show">
                 <i class="fas fa-info-circle"></i> 
@@ -133,6 +141,14 @@ const DashboardPreCadastrosAutocomplete = {
         $('#visitante_doc_number').val(cadastro.doc_number || '');
         $('#visitante_doc_country').val(cadastro.doc_country || 'Brasil');
         $('#visitante_placa_veiculo').val(cadastro.placa_veiculo || '');
+        
+        // Exibir foto se disponível
+        if (cadastro.foto_url) {
+            $('#visitante-foto-preview').attr('src', cadastro.foto_url);
+            $('#visitante-photo-display').show();
+        } else {
+            $('#visitante-photo-display').hide();
+        }
         
         $('#formVisitante').prepend(`
             <div class="alert alert-info alert-dismissible fade show">
@@ -177,6 +193,10 @@ const DashboardPreCadastrosAutocomplete = {
         $('#prestador_cadastro_id').val('');
         $('#visitante_cadastro_id').val('');
         $('.alert-info').remove();
+        
+        // Esconder fotos
+        $('#prestador-photo-display').hide();
+        $('#visitante-photo-display').hide();
     }
 };
 

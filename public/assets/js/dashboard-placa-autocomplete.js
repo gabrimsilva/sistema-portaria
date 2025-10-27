@@ -148,25 +148,6 @@
         // Autocomplete de placa para Profissional Renner (Dashboard)
         setupPlacaAutocomplete('#profissional_placa_veiculo', 'profissional');
         
-        // Autocomplete de placa para formulários de pré-cadastro
-        // (usando ID genérico #placa_veiculo presente nos forms)
-        if ($('#placa_veiculo').length) {
-            // Detectar tipo pelo URL
-            const path = window.location.pathname;
-            let tipo = null;
-            
-            if (path.includes('/pre-cadastros/visitantes')) {
-                tipo = 'visitante';
-            } else if (path.includes('/pre-cadastros/prestadores')) {
-                tipo = 'prestador';
-            }
-            
-            if (tipo) {
-                setupPlacaAutocomplete('#placa_veiculo', tipo);
-                console.log(`✅ Placa Autocomplete inicializado para pré-cadastro (${tipo})`);
-            }
-        }
-        
         console.log('✅ Dashboard Placa Autocomplete inicializado');
     });
     

@@ -789,9 +789,12 @@ class VisitantesNovoController {
                 
                 // NOVA ESTRUTURA PRÉ-CADASTROS V2.0.0
                 // 1. PRIMEIRO: Verificar se já existe pré-cadastro com esse documento
+                // Buscar usando REPLACE para remover máscaras (tanto no DB quanto no input)
                 $cadastroExistente = $this->db->fetch("
                     SELECT id, placa_veiculo FROM visitantes_cadastro 
-                    WHERE doc_type = ? AND doc_number = ? AND deleted_at IS NULL
+                    WHERE doc_type = ? 
+                      AND REPLACE(REPLACE(REPLACE(doc_number, '.', ''), '-', ''), '/', '') = ? 
+                      AND deleted_at IS NULL
                     LIMIT 1
                 ", [$doc_type, $doc_number]);
                 

@@ -1185,10 +1185,29 @@
                 success: function(response) {
                     console.log('📊 Resposta do servidor:', response);
                     if (response.success) {
-                        showToast('Visitante cadastrado com sucesso!');
-                        $('#modalVisitante').modal('hide');
-                        limparFormulario('formVisitante');
-                        setTimeout(() => window.location.reload(), 500);
+                        // Fazer upload da foto se houver
+                        if (typeof window.uploadPhotoIfNeeded === 'function' && response.cadastro_id) {
+                            window.uploadPhotoIfNeeded(response.cadastro_id, 'visitante')
+                                .then(() => {
+                                    showToast('Visitante cadastrado com sucesso!');
+                                    $('#modalVisitante').modal('hide');
+                                    limparFormulario('formVisitante');
+                                    setTimeout(() => window.location.reload(), 500);
+                                })
+                                .catch((error) => {
+                                    console.warn('⚠️ Foto não foi salva:', error);
+                                    showToast('Visitante cadastrado, mas a foto não foi salva', 'warning');
+                                    $('#modalVisitante').modal('hide');
+                                    limparFormulario('formVisitante');
+                                    setTimeout(() => window.location.reload(), 1000);
+                                });
+                        } else {
+                            // Sem foto, continuar normalmente
+                            showToast('Visitante cadastrado com sucesso!');
+                            $('#modalVisitante').modal('hide');
+                            limparFormulario('formVisitante');
+                            setTimeout(() => window.location.reload(), 500);
+                        }
                     } else {
                         console.log('❌ Erro:', response.message, response.errors);
                         // Tratamento melhorado para erros de duplicidade
@@ -1284,10 +1303,29 @@
                 dataType: 'json',
                 success: function(response) {
                     if (response.success) {
-                        showToast('Prestador cadastrado com sucesso!');
-                        $('#modalPrestador').modal('hide');
-                        limparFormulario('formPrestador');
-                        setTimeout(() => window.location.reload(), 500);
+                        // Fazer upload da foto se houver
+                        if (typeof window.uploadPhotoIfNeeded === 'function' && response.cadastro_id) {
+                            window.uploadPhotoIfNeeded(response.cadastro_id, 'prestador')
+                                .then(() => {
+                                    showToast('Prestador cadastrado com sucesso!');
+                                    $('#modalPrestador').modal('hide');
+                                    limparFormulario('formPrestador');
+                                    setTimeout(() => window.location.reload(), 500);
+                                })
+                                .catch((error) => {
+                                    console.warn('⚠️ Foto não foi salva:', error);
+                                    showToast('Prestador cadastrado, mas a foto não foi salva', 'warning');
+                                    $('#modalPrestador').modal('hide');
+                                    limparFormulario('formPrestador');
+                                    setTimeout(() => window.location.reload(), 1000);
+                                });
+                        } else {
+                            // Sem foto, continuar normalmente
+                            showToast('Prestador cadastrado com sucesso!');
+                            $('#modalPrestador').modal('hide');
+                            limparFormulario('formPrestador');
+                            setTimeout(() => window.location.reload(), 500);
+                        }
                     } else {
                         // Tratamento melhorado para erros de duplicidade
                         if (response.errors && Array.isArray(response.errors)) {

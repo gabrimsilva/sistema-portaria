@@ -7,15 +7,16 @@
  * @version 1.0.0
  */
 
+// Variáveis globais para os componentes de captura
+window.visitantePhotoCapture = null;
+window.prestadorPhotoCapture = null;
+
 $(document).ready(function() {
-    let visitantePhotoCapture = null;
-    let prestadorPhotoCapture = null;
-    
     // Inicializar componentes de captura quando modais são abertos
     $('#modalVisitante').on('shown.bs.modal', function() {
-        if (!visitantePhotoCapture) {
+        if (!window.visitantePhotoCapture) {
             try {
-                visitantePhotoCapture = new PhotoCapture('visitante-photo-capture-container', {
+                window.visitantePhotoCapture = new PhotoCapture('visitante-photo-capture-container', {
                     width: 640,
                     height: 480,
                     onCapture: function(dataUrl) {
@@ -33,9 +34,9 @@ $(document).ready(function() {
     });
     
     $('#modalPrestador').on('shown.bs.modal', function() {
-        if (!prestadorPhotoCapture) {
+        if (!window.prestadorPhotoCapture) {
             try {
-                prestadorPhotoCapture = new PhotoCapture('prestador-photo-capture-container', {
+                window.prestadorPhotoCapture = new PhotoCapture('prestador-photo-capture-container', {
                     width: 640,
                     height: 480,
                     onCapture: function(dataUrl) {
@@ -54,20 +55,32 @@ $(document).ready(function() {
     
     // Resetar componentes quando modais são fechados
     $('#modalVisitante').on('hidden.bs.modal', function() {
-        if (visitantePhotoCapture) {
-            visitantePhotoCapture.reset();
+        if (window.visitantePhotoCapture) {
+            window.visitantePhotoCapture.reset();
         }
     });
     
     $('#modalPrestador').on('hidden.bs.modal', function() {
-        if (prestadorPhotoCapture) {
-            prestadorPhotoCapture.reset();
+        if (window.prestadorPhotoCapture) {
+            window.prestadorPhotoCapture.reset();
         }
     });
     
-    // Função para fazer upload da foto
-    function uploadPhoto(cadastroId, photoDataUrl, tipo) {
+    
+    /**
+     * Função global helper para fazer upload de foto
+     * Pode ser chamada pelo código existente após cadastro bem-sucedido
+     * 
+     * @param {number} cadastroId - ID do cadastro criado
+     * @param {string} tipo - 'visitante' ou 'prestador'
+     * @returns {Promise}
+     */
+    window.uploadPhotoIfNeeded = function(cadastroId, tipo) {
+        const photoCapture = tipo === 'visitante' ? window.visitantePhotoCapture : window.prestadorPhotoCapture;
+        const photoDataUrl = photoCapture ? photoCapture.getCapturedImage() : null;
+        
         if (!photoDataUrl) {
+            console.log(`ℹ️ Nenhuma foto capturada para ${tipo}`);
             return Promise.resolve({ success: true, skipped: true });
         }
         
@@ -109,153 +122,7 @@ $(document).ready(function() {
                     reject(error);
                 });
         });
-    }
-    
-    // Modificar submit de visitante para incluir upload de foto
-    const originalVisitanteSubmit = $('#btnSalvarVisitante').off('click');
-    $('#btnSalvarVisitante').on('click', function(e) {
-        e.preventDefault();
-        
-        const form = $('#formVisitante')[0];
-        if (!form.checkValidity()) {
-            form.reportValidity();
-            return;
-        }
-        
-        const btn = $(this);
-        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Salvando...');
-        
-        const formData = new FormData(form);
-        const data = {};
-        formData.forEach((value, key) => {
-            data[key] = value;
-        });
-        
-        // Primeiro salvar o cadastro/registro
-        $.ajax({
-            url: '/visitantes?action=save_ajax',
-            method: 'POST',
-            headers: {
-                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
-            },
-            contentType: 'application/json',
-            data: JSON.stringify(data),
-            success: function(response) {
-                if (response.success) {
-                    const cadastroId = response.cadastro_id;
-                    const photo = visitantePhotoCapture ? visitantePhotoCapture.getCapturedImage() : null;
-                    
-                    // Depois fazer upload da foto (se houver)
-                    uploadPhoto(cadastroId, photo, 'visitante')
-                        .then(() => {
-                            showToast('Visitante cadastrado com sucesso!', 'success');
-                            $('#modalVisitante').modal('hide');
-                            limparFormulario('formVisitante');
-                            setTimeout(() => window.location.reload(), 500);
-                        })
-                        .catch(photoError => {
-                            // Cadastro foi salvo mas foto falhou - avisar usuário
-                            console.warn('⚠️ Foto não foi salva:', photoError);
-                            showToast('Visitante cadastrado, mas a foto não foi salva', 'warning');
-                            $('#modalVisitante').modal('hide');
-                            limparFormulario('formVisitante');
-                            setTimeout(() => window.location.reload(), 1000);
-                        });
-                } else {
-                    console.log('❌ Erro:', response.message, response.errors);
-                    if (Array.isArray(response.errors) && response.errors.length > 0) {
-                        response.errors.forEach(err => showToast(err, 'error'));
-                    } else {
-                        showToast(response.message || 'Erro ao cadastrar visitante', 'error');
-                    }
-                    btn.prop('disabled', false).html('<i class="fas fa-save"></i> Cadastrar Visitante');
-                }
-            },
-            error: function(xhr, status, error) {
-                if (xhr.status === 401) {
-                    showToast('Sessão expirada. Faça login novamente.', 'error');
-                    setTimeout(() => window.location.href = '/login', 2000);
-                } else {
-                    const errorMsg = xhr.responseJSON?.message || 'Erro ao conectar com o servidor';
-                    showToast(errorMsg, 'error');
-                }
-                btn.prop('disabled', false).html('<i class="fas fa-save"></i> Cadastrar Visitante');
-            }
-        });
-    });
-    
-    // Modificar submit de prestador para incluir upload de foto
-    const originalPrestadorSubmit = $('#btnSalvarPrestador').off('click');
-    $('#btnSalvarPrestador').on('click', function(e) {
-        e.preventDefault();
-        
-        const form = $('#formPrestador')[0];
-        if (!form.checkValidity()) {
-            form.reportValidity();
-            return;
-        }
-        
-        const btn = $(this);
-        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Salvando...');
-        
-        const formData = new FormData(form);
-        const data = {};
-        formData.forEach((value, key) => {
-            data[key] = value;
-        });
-        
-        // Primeiro salvar o cadastro/registro
-        $.ajax({
-            url: '/prestadores-servico?action=save_ajax',
-            method: 'POST',
-            headers: {
-                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
-            },
-            contentType: 'application/json',
-            data: JSON.stringify(data),
-            success: function(response) {
-                if (response.success) {
-                    const cadastroId = response.cadastro_id;
-                    const photo = prestadorPhotoCapture ? prestadorPhotoCapture.getCapturedImage() : null;
-                    
-                    // Depois fazer upload da foto (se houver)
-                    uploadPhoto(cadastroId, photo, 'prestador')
-                        .then(() => {
-                            showToast('Prestador cadastrado com sucesso!', 'success');
-                            $('#modalPrestador').modal('hide');
-                            limparFormulario('formPrestador');
-                            setTimeout(() => window.location.reload(), 500);
-                        })
-                        .catch(photoError => {
-                            // Cadastro foi salvo mas foto falhou - avisar usuário
-                            console.warn('⚠️ Foto não foi salva:', photoError);
-                            showToast('Prestador cadastrado, mas a foto não foi salva', 'warning');
-                            $('#modalPrestador').modal('hide');
-                            limparFormulario('formPrestador');
-                            setTimeout(() => window.location.reload(), 1000);
-                        });
-                } else {
-                    console.log('❌ Erro:', response.message, response.errors);
-                    if (Array.isArray(response.errors) && response.errors.length > 0) {
-                        response.errors.forEach(err => showToast(err, 'error'));
-                    } else {
-                        showToast(response.message || 'Erro ao cadastrar prestador', 'error');
-                    }
-                    btn.prop('disabled', false).html('<i class="fas fa-save"></i> Cadastrar Prestador');
-                }
-            },
-            error: function(xhr, status, error) {
-                if (xhr.status === 401) {
-                    showToast('Sessão expirada. Faça login novamente.', 'error');
-                    setTimeout(() => window.location.href = '/login', 2000);
-                } else {
-                    const errorMsg = xhr.responseJSON?.message || 'Erro ao conectar com o servidor';
-                    showToast(errorMsg, 'error');
-                }
-                btn.prop('disabled', false).html('<i class="fas fa-save"></i> Cadastrar Prestador');
-            }
-        });
-    });
+    };
     
     console.log('✅ Dashboard Photo Integration inicializado');
 });

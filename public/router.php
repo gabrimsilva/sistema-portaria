@@ -127,26 +127,38 @@ function requirePanelAuth(): void {
 $uri = $_SERVER['REQUEST_URI'] ?? '';
 $path = parse_url($uri, PHP_URL_PATH) ?? '';
 
-// ✅ EXCEÇÃO: Permitir acesso a fotos de profissionais (não são dados biométricos sensíveis)
+// ✅ EXCEÇÃO: Permitir acesso a fotos não-biométricas
 // 🔒 VALIDAÇÃO CANÔNICA: Prevenir traversal (../, %2e%2e, etc)
-$isProfissionaisPath = false;
-if (strpos($path, '/uploads/profissionais/') !== false) {
-    // Construir path absoluto e resolver canonicamente
-    $requestedFile = __DIR__ . $path;
-    $canonicalPath = realpath($requestedFile);
-    $allowedBase = realpath(__DIR__ . '/uploads/profissionais');
-    
-    // Verificar se arquivo existe E está dentro do diretório permitido
-    if ($canonicalPath !== false && 
-        $allowedBase !== false &&
-        strpos($canonicalPath, $allowedBase . DIRECTORY_SEPARATOR) === 0 &&
-        is_file($canonicalPath)) {
-        $isProfissionaisPath = true;
+$allowedUploadDirs = [
+    '/uploads/profissionais/',  // Fotos corporativas (não biométricas)
+    '/uploads/visitantes/',     // Fotos de pré-cadastro (identificação visual)
+    '/uploads/prestadores/'     // Fotos de prestadores (identificação visual)
+];
+
+$isAllowedUpload = false;
+foreach ($allowedUploadDirs as $allowedDir) {
+    if (strpos($path, $allowedDir) !== false) {
+        // Extrair nome do diretório sem barras
+        $dirName = trim($allowedDir, '/');
+        
+        // Construir path absoluto e resolver canonicamente
+        $requestedFile = __DIR__ . $path;
+        $canonicalPath = realpath($requestedFile);
+        $allowedBase = realpath(__DIR__ . '/' . $dirName);
+        
+        // Verificar se arquivo existe E está dentro do diretório permitido
+        if ($canonicalPath !== false && 
+            $allowedBase !== false &&
+            strpos($canonicalPath, $allowedBase . DIRECTORY_SEPARATOR) === 0 &&
+            is_file($canonicalPath)) {
+            $isAllowedUpload = true;
+            break;
+        }
     }
 }
 
-// Verificar se é tentativa de acesso a uploads (exceto /profissionais/ validado)
-if (strpos($path, '/uploads/') !== false && !$isProfissionaisPath) {
+// Verificar se é tentativa de acesso a uploads (exceto diretórios permitidos)
+if (strpos($path, '/uploads/') !== false && !$isAllowedUpload) {
     http_response_code(403);
     header('Content-Type: application/json');
     die(json_encode([

@@ -224,22 +224,43 @@ require_once __DIR__ . '/../../partials/header.php';
             .then(response => response.json())
             .then(data => {
                 if (data.success && data.cadastro_id) {
-                    // Se sucesso e tem foto capturada, fazer upload
-                    if (photoCapture.capturedPhoto) {
-                        return photoCapture.uploadPhoto(data.cadastro_id, 'prestador')
-                            .then(() => {
+                    console.log('✅ Cadastro salvo com ID:', data.cadastro_id);
+                    
+                    // Verificar se tem foto capturada
+                    const capturedImage = photoCapture.getCapturedImage();
+                    
+                    if (capturedImage) {
+                        console.log('📸 Foto capturada, fazendo upload...');
+                        
+                        // Fazer upload da foto
+                        const photoData = new FormData();
+                        photoData.append('cadastro_id', data.cadastro_id);
+                        photoData.append('photo', capturedImage);
+                        photoData.append('csrf_token', document.querySelector('input[name="csrf_token"]').value);
+                        
+                        fetch('/pre-cadastros/prestadores?action=upload_foto', {
+                            method: 'POST',
+                            body: photoData
+                        })
+                        .then(response => response.json())
+                        .then(photoResult => {
+                            if (photoResult.success) {
+                                console.log('✅ Foto salva com sucesso!');
                                 window.location.href = '/pre-cadastros/prestadores?success=1';
-                            })
-                            .catch((error) => {
-                                console.warn('Foto não foi salva:', error);
+                            } else {
+                                console.warn('⚠️ Foto não foi salva:', photoResult.message);
                                 window.location.href = '/pre-cadastros/prestadores?success=1&photo_warning=1';
-                            });
+                            }
+                        })
+                        .catch(error => {
+                            console.error('❌ Erro ao salvar foto:', error);
+                            window.location.href = '/pre-cadastros/prestadores?success=1&photo_warning=1';
+                        });
                     } else {
-                        // Sem foto, redirecionar normalmente
+                        console.log('ℹ️ Sem foto capturada, redirecionando...');
                         window.location.href = '/pre-cadastros/prestadores?success=1';
                     }
                 } else {
-                    // Erro no cadastro
                     alert(data.message || 'Erro ao salvar cadastro');
                 }
             })

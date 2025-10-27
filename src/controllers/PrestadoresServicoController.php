@@ -1039,7 +1039,7 @@ class PrestadoresServicoController {
                     SELECT r.id, r.cadastro_id, r.setor, r.funcionario_responsavel,
                            r.entrada_at, r.saida_at, r.observacao_entrada, r.observacao_saida,
                            c.nome, c.doc_type, c.doc_number, c.doc_country, 
-                           c.empresa, c.placa_veiculo
+                           c.empresa, c.placa_veiculo, c.foto_url
                     FROM prestadores_registros r
                     JOIN prestadores_cadastro c ON c.id = r.cadastro_id
                     WHERE r.id = ? AND c.deleted_at IS NULL
@@ -1066,7 +1066,8 @@ class PrestadoresServicoController {
                         'observacao' => $registro['observacao_entrada'] ?? '',
                         'placa_veiculo' => $registro['placa_veiculo'],
                         'entrada' => $registro['entrada_at'],
-                        'saida' => $registro['saida_at']
+                        'saida' => $registro['saida_at'],
+                        'foto_url' => $registro['foto_url'] ?? null
                     ]
                 ]);
             } catch (Exception $e) {

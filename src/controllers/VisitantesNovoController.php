@@ -1023,7 +1023,7 @@ class VisitantesNovoController {
                 
                 // Buscar o visitante (PRÉ-CADASTROS V2.0.0)
                 $visitante = $this->db->fetch("
-                    SELECT r.*, c.nome, c.doc_type, c.doc_number, c.doc_country, c.empresa, c.placa_veiculo,
+                    SELECT r.*, c.nome, c.doc_type, c.doc_number, c.doc_country, c.empresa, c.placa_veiculo, c.foto_url,
                            r.entrada_at as hora_entrada, r.saida_at as hora_saida
                     FROM visitantes_registros r
                     JOIN visitantes_cadastro c ON c.id = r.cadastro_id
@@ -1049,7 +1049,8 @@ class VisitantesNovoController {
                         'funcionario_responsavel' => $visitante['funcionario_responsavel'],
                         'placa_veiculo' => $visitante['placa_veiculo'],
                         'hora_entrada' => $visitante['hora_entrada'],
-                        'hora_saida' => $visitante['hora_saida']
+                        'hora_saida' => $visitante['hora_saida'],
+                        'foto_url' => $visitante['foto_url'] ?? null
                     ]
                 ]);
             } catch (Exception $e) {

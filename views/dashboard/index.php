@@ -922,6 +922,14 @@
                             <textarea class="form-control" id="edit_observacao" name="observacao" rows="3"></textarea>
                         </div>
                         
+                        <!-- 📸 Visualização de Foto (Visitantes e Prestadores) -->
+                        <div class="form-group" id="edit-photo-display" style="display: none;">
+                            <label>📸 Foto do Cadastro</label>
+                            <div class="text-center">
+                                <img id="edit-foto-preview" src="" alt="Foto" class="img-thumbnail" style="max-width: 300px; max-height: 300px;">
+                            </div>
+                            <small class="form-text text-muted">Foto capturada no pré-cadastro</small>
+                        </div>
 
                     </form>
                 </div>
@@ -1556,21 +1564,32 @@
                 // Preencher campos específicos do visitante
                 $('#edit_funcionario_responsavel').val(funcionario || '');
                 
-                // Buscar dados completos do visitante para preencher hora de saída
+                // Buscar dados completos do visitante para preencher hora de saída e foto
                 $.ajax({
                     url: `/visitantes?action=get_data&id=${id}`,
                     method: 'GET',
                     dataType: 'json',
                     success: function(response) {
-                        if (response.success && response.data.hora_saida) {
-                            // Formatar data para datetime-local sem conversão de timezone
-                            const horaSaidaFormatada = response.data.hora_saida.replace(' ', 'T').slice(0, 16);
-                            $('#edit_hora_saida').val(horaSaidaFormatada);
+                        if (response.success) {
+                            if (response.data.hora_saida) {
+                                // Formatar data para datetime-local sem conversão de timezone
+                                const horaSaidaFormatada = response.data.hora_saida.replace(' ', 'T').slice(0, 16);
+                                $('#edit_hora_saida').val(horaSaidaFormatada);
+                            }
+                            
+                            // 📸 Exibir foto se disponível
+                            if (response.data.foto_url) {
+                                $('#edit-foto-preview').attr('src', response.data.foto_url);
+                                $('#edit-photo-display').show();
+                            } else {
+                                $('#edit-photo-display').hide();
+                            }
                         }
                     },
                     error: function() {
                         // Em caso de erro, deixa o campo vazio
                         $('#edit_hora_saida').val('');
+                        $('#edit-photo-display').hide();
                     }
                 });
             } else if (tipo === 'Prestador') {
@@ -1586,18 +1605,29 @@
                     method: 'GET',
                     dataType: 'json',
                     success: function(response) {
-                        if (response.success && response.data.saida) {
-                            // Formatar data para datetime-local sem conversão de timezone
-                            const saidaFormatada = response.data.saida.replace(' ', 'T').slice(0, 16);
-                            $('#edit_hora_saida').val(saidaFormatada);
-                        }
-                        if (response.data.observacao) {
-                            $('#edit_observacao').val(response.data.observacao);
+                        if (response.success) {
+                            if (response.data.saida) {
+                                // Formatar data para datetime-local sem conversão de timezone
+                                const saidaFormatada = response.data.saida.replace(' ', 'T').slice(0, 16);
+                                $('#edit_hora_saida').val(saidaFormatada);
+                            }
+                            if (response.data.observacao) {
+                                $('#edit_observacao').val(response.data.observacao);
+                            }
+                            
+                            // 📸 Exibir foto se disponível
+                            if (response.data.foto_url) {
+                                $('#edit-foto-preview').attr('src', response.data.foto_url);
+                                $('#edit-photo-display').show();
+                            } else {
+                                $('#edit-photo-display').hide();
+                            }
                         }
                     },
                     error: function() {
                         // Em caso de erro, deixa o campo vazio
                         $('#edit_hora_saida').val('');
+                        $('#edit-photo-display').hide();
                     }
                 });
             } else if (tipo === 'Profissional Renner') {
@@ -1764,7 +1794,8 @@
         // Limpar formulário de edição ao fechar modal
         $('#modalEditar').on('hidden.bs.modal', function() {
             $('#formEditar')[0].reset();
-            $('#campo_funcionario_responsavel, #campo_hora_saida, #campo_observacao, #campos_profissional_renner').hide();
+            $('#campo_funcionario_responsavel, #campo_hora_saida, #campo_observacao, #campos_profissional_renner, #edit-photo-display').hide();
+            $('#edit-foto-preview').attr('src', '');
         });
 
         // ==================== MÁSCARAS DE ENTRADA - BOOTSTRAP 4.6.2 COMPATÍVEL ====================

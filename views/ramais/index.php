@@ -1,204 +1,334 @@
 <?php
-// ================================================
-// VIEW: CONSULTA DE RAMAIS
-// Versão: 2.0.0
-// ================================================
-
-// IMPORTANTE: Este é um DRAFT - NÃO copiar para views/ sem aprovação!
-
-$pageTitle = 'Consulta de Ramais';
-$currentPage = 'ramais';
-
-// Layout header
-ob_start();
+require_once __DIR__ . '/../../src/services/NavigationService.php';
 ?>
-
-<div class="container-fluid py-4">
-    <!-- Header -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h2 class="mb-1">
-                        <i class="bi bi-telephone-fill text-primary me-2"></i>
-                        Consulta de Ramais
-                    </h2>
-                    <p class="text-muted mb-0">Encontre ramais de profissionais e brigadistas</p>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista Telefônica - Ramais</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        .ramal-card {
+            border-left: 4px solid #007bff;
+            transition: all 0.3s;
+        }
+        .ramal-card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        .area-section {
+            margin-bottom: 2rem;
+        }
+        .badge-interno {
+            background-color: #28a745;
+        }
+        .badge-externo {
+            background-color: #17a2b8;
+        }
+        .ramal-numero {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .search-box {
+            margin-bottom: 1.5rem;
+        }
+        .stats-card {
+            border-top: 3px solid #007bff;
+        }
+    </style>
+</head>
+<body class="hold-transition sidebar-mini">
+<div class="wrapper">
+    
+    <?= NavigationService::renderSidebar() ?>
+    
+    <div class="content-wrapper">
+        <section class="content-header">
+            <div class="container-fluid">
+                <div class="row mb-2">
+                    <div class="col-sm-6">
+                        <h1><i class="fas fa-phone"></i> Lista Telefônica</h1>
+                    </div>
+                    <div class="col-sm-6">
+                        <ol class="breadcrumb float-sm-right">
+                            <li class="breadcrumb-item"><a href="/">Home</a></li>
+                            <li class="breadcrumb-item active">Ramais</li>
+                        </ol>
+                    </div>
                 </div>
-                <?php if ($authService->hasPermission('brigada.manage')): ?>
-                <div>
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalAdicionarRamal">
-                        <i class="bi bi-plus-circle me-1"></i>
-                        Adicionar Ramal
-                    </button>
-                    <button class="btn btn-outline-secondary" id="btnExportarRamais">
-                        <i class="bi bi-download me-1"></i>
-                        Exportar CSV
-                    </button>
-                </div>
-                <?php endif; ?>
             </div>
-        </div>
-    </div>
-
-    <!-- Filtros -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-5">
-                            <label class="form-label">Buscar</label>
-                            <div class="input-group">
-                                <span class="input-group-text">
-                                    <i class="bi bi-search"></i>
-                                </span>
-                                <input type="text" class="form-control" id="inputBuscaRamal" 
-                                       placeholder="Nome, setor ou ramal...">
+        </section>
+        
+        <section class="content">
+            <div class="container-fluid">
+                
+                <?php if (isset($_SESSION['success'])): ?>
+                    <div class="alert alert-success alert-dismissible fade show">
+                        <button type="button" class="close" data-dismiss="alert">&times;</button>
+                        <i class="fas fa-check-circle"></i> <?= $_SESSION['success'] ?>
+                    </div>
+                    <?php unset($_SESSION['success']); ?>
+                <?php endif; ?>
+                
+                <?php if (isset($_SESSION['error'])): ?>
+                    <div class="alert alert-danger alert-dismissible fade show">
+                        <button type="button" class="close" data-dismiss="alert">&times;</button>
+                        <i class="fas fa-exclamation-triangle"></i> <?= $_SESSION['error'] ?>
+                    </div>
+                    <?php unset($_SESSION['error']); ?>
+                <?php endif; ?>
+                
+                <?php if (isset($_SESSION['warning'])): ?>
+                    <div class="alert alert-warning alert-dismissible fade show">
+                        <button type="button" class="close" data-dismiss="alert">&times;</button>
+                        <i class="fas fa-exclamation-circle"></i> <?= $_SESSION['warning'] ?>
+                    </div>
+                    <?php unset($_SESSION['warning']); ?>
+                <?php endif; ?>
+                
+                <!-- Estatísticas -->
+                <div class="row mb-4">
+                    <div class="col-lg-3 col-6">
+                        <div class="small-box bg-info stats-card">
+                            <div class="inner">
+                                <h3><?= $stats['total'] ?></h3>
+                                <p>Total de Ramais</p>
+                            </div>
+                            <div class="icon">
+                                <i class="fas fa-phone"></i>
                             </div>
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Filtrar por Setor</label>
-                            <select class="form-select" id="selectSetorFiltro">
-                                <option value="">Todos os setores</option>
-                            </select>
+                    </div>
+                    <div class="col-lg-3 col-6">
+                        <div class="small-box bg-success stats-card">
+                            <div class="inner">
+                                <h3><?= $stats['internos'] ?></h3>
+                                <p>Ramais Internos</p>
+                            </div>
+                            <div class="icon">
+                                <i class="fas fa-building"></i>
+                            </div>
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Tipo</label>
-                            <select class="form-select" id="selectTipoFiltro">
-                                <option value="">Todos</option>
-                                <option value="brigadista">Brigadistas</option>
-                                <option value="outros">Outros</option>
-                            </select>
+                    </div>
+                    <div class="col-lg-3 col-6">
+                        <div class="small-box bg-primary stats-card">
+                            <div class="inner">
+                                <h3><?= $stats['externos'] ?></h3>
+                                <p>Telefones Externos</p>
+                            </div>
+                            <div class="icon">
+                                <i class="fas fa-mobile-alt"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-6">
+                        <div class="small-box bg-warning stats-card">
+                            <div class="inner">
+                                <h3><?= $stats['areas'] ?></h3>
+                                <p>Áreas/Setores</p>
+                            </div>
+                            <div class="icon">
+                                <i class="fas fa-sitemap"></i>
+                            </div>
                         </div>
                     </div>
                 </div>
+                
+                <!-- Barra de Ações e Busca -->
+                <div class="row mb-3">
+                    <div class="col-md-8">
+                        <div class="input-group search-box">
+                            <input type="text" class="form-control" id="searchInput" placeholder="Buscar por nome, área ou ramal...">
+                            <div class="input-group-append">
+                                <span class="input-group-text">
+                                    <i class="fas fa-search"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <?php if ($canEdit): ?>
+                    <div class="col-md-4 text-right">
+                        <a href="/ramais/novo" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Novo Ramal
+                        </a>
+                        <a href="/ramais/importar" class="btn btn-success">
+                            <i class="fas fa-file-excel"></i> Importar Excel
+                        </a>
+                    </div>
+                    <?php endif; ?>
+                </div>
+                
+                <!-- Lista de Ramais Agrupados por Área -->
+                <?php if (empty($ramaisPorArea)): ?>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> Nenhum ramal cadastrado ainda.
+                        <?php if ($canEdit): ?>
+                            <a href="/ramais/importar" class="alert-link">Importe um arquivo Excel</a> para começar.
+                        <?php endif; ?>
+                    </div>
+                <?php else: ?>
+                    <?php foreach ($ramaisPorArea as $area => $ramais): ?>
+                    <div class="area-section" data-area="<?= htmlspecialchars($area) ?>">
+                        <h4 class="mb-3">
+                            <i class="fas fa-building text-primary"></i> 
+                            <strong><?= htmlspecialchars($area) ?></strong>
+                            <span class="badge badge-secondary"><?= count($ramais) ?></span>
+                        </h4>
+                        
+                        <div class="row">
+                            <?php foreach ($ramais as $ramal): ?>
+                            <div class="col-md-6 col-lg-4 mb-3 ramal-item" 
+                                 data-nome="<?= htmlspecialchars(strtolower($ramal['nome'])) ?>"
+                                 data-ramal="<?= htmlspecialchars($ramal['ramal']) ?>">
+                                <div class="card ramal-card">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div class="flex-grow-1">
+                                                <h5 class="card-title mb-2">
+                                                    <i class="fas fa-user text-muted"></i> 
+                                                    <?= htmlspecialchars($ramal['nome']) ?>
+                                                </h5>
+                                                <p class="ramal-numero mb-2">
+                                                    <i class="fas fa-phone-alt"></i> 
+                                                    <?= htmlspecialchars($ramal['ramal']) ?>
+                                                </p>
+                                                <span class="badge badge-<?= $ramal['tipo'] === 'interno' ? 'interno' : 'externo' ?>">
+                                                    <?= $ramal['tipo'] === 'interno' ? 'Ramal Interno' : 'Telefone Externo' ?>
+                                                </span>
+                                                <?php if (!empty($ramal['observacoes'])): ?>
+                                                <p class="text-muted small mt-2 mb-0">
+                                                    <i class="fas fa-info-circle"></i> 
+                                                    <?= htmlspecialchars($ramal['observacoes']) ?>
+                                                </p>
+                                                <?php endif; ?>
+                                            </div>
+                                            <?php if ($canEdit): ?>
+                                            <div class="btn-group-vertical">
+                                                <a href="/ramais/editar?id=<?= $ramal['id'] ?>" 
+                                                   class="btn btn-sm btn-warning" 
+                                                   title="Editar">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <button type="button" 
+                                                        class="btn btn-sm btn-danger btn-delete" 
+                                                        data-id="<?= $ramal['id'] ?>"
+                                                        data-nome="<?= htmlspecialchars($ramal['nome']) ?>"
+                                                        title="Excluir">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+                
             </div>
-        </div>
+        </section>
     </div>
-
-    <!-- Resultados -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0">
-                        <span id="totalRamais">0</span> ramais encontrados
-                    </h5>
-                </div>
-                <div class="card-body p-0">
-                    <div id="loadingRamais" class="text-center py-5">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Carregando...</span>
-                        </div>
-                        <p class="mt-2 text-muted">Carregando ramais...</p>
-                    </div>
-                    
-                    <div id="listaRamais" class="table-responsive d-none">
-                        <table class="table table-hover mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th width="35%">Nome</th>
-                                    <th width="20%">Setor</th>
-                                    <th width="20%">Empresa</th>
-                                    <th width="15%">Ramal</th>
-                                    <th width="10%" class="text-center">Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tbodyRamais">
-                                <!-- Preenchido via JavaScript -->
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div id="nenhumRamalEncontrado" class="text-center py-5 d-none">
-                        <i class="bi bi-telephone-x display-1 text-muted"></i>
-                        <p class="mt-3 text-muted">Nenhum ramal encontrado</p>
-                    </div>
-                </div>
-            </div>
+    
+    <footer class="main-footer">
+        <div class="float-right d-none d-sm-inline">
+            Sistema de Controle de Acesso
         </div>
-    </div>
+        <strong>&copy; 2025</strong> Todos os direitos reservados.
+    </footer>
 </div>
 
-<!-- Modal: Adicionar Ramal -->
-<div class="modal fade" id="modalAdicionarRamal" tabindex="-1">
+<?php if ($canEdit): ?>
+<!-- Modal de Confirmação de Exclusão -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="bi bi-telephone-plus me-2"></i>
-                    Adicionar Ramal
+            <div class="modal-header bg-danger">
+                <h5 class="modal-title text-white">
+                    <i class="fas fa-exclamation-triangle"></i> Confirmar Exclusão
                 </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
             </div>
             <div class="modal-body">
-                <form id="formAdicionarRamal">
-                    <div class="mb-3">
-                        <label class="form-label">Profissional *</label>
-                        <select class="form-select" id="selectProfissional" required>
-                            <option value="">Selecione...</option>
-                        </select>
-                        <div class="form-text">Selecione o profissional para adicionar ramal</div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Ramal *</label>
-                        <input type="text" class="form-control" id="inputRamal" 
-                               placeholder="Ex: 1234" maxlength="10" required>
-                        <div class="form-text">Apenas números</div>
-                    </div>
-                </form>
+                <p>Tem certeza que deseja excluir o ramal de <strong id="deleteNome"></strong>?</p>
+                <p class="text-muted small">Esta ação não pode ser desfeita.</p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" id="btnSalvarRamal">
-                    <i class="bi bi-check-circle me-1"></i>
-                    Salvar
-                </button>
+                <form method="POST" action="/ramais/excluir" id="deleteForm">
+                    <input type="hidden" name="csrf_token" value="<?= CSRFProtection::generateToken() ?>">
+                    <input type="hidden" name="id" id="deleteId">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> Excluir
+                    </button>
+                </form>
             </div>
         </div>
     </div>
 </div>
+<?php endif; ?>
 
-<!-- Modal: Editar Ramal -->
-<div class="modal fade" id="modalEditarRamal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="bi bi-pencil me-2"></i>
-                    Editar Ramal
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="formEditarRamal">
-                    <input type="hidden" id="editProfissionalId">
-                    <div class="mb-3">
-                        <label class="form-label">Profissional</label>
-                        <input type="text" class="form-control" id="editNomeProfissional" readonly>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Ramal *</label>
-                        <input type="text" class="form-control" id="editRamal" 
-                               placeholder="Ex: 1234" maxlength="10" required>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" id="btnAtualizarRamal">
-                    <i class="bi bi-check-circle me-1"></i>
-                    Atualizar
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
 
-<script src="/assets/js/ramais.js"></script>
+<script>
+$(document).ready(function() {
+    // Busca em tempo real
+    $('#searchInput').on('keyup', function() {
+        const searchTerm = $(this).val().toLowerCase();
+        
+        if (searchTerm.length === 0) {
+            $('.ramal-item').show();
+            $('.area-section').show();
+            return;
+        }
+        
+        $('.ramal-item').each(function() {
+            const nome = $(this).data('nome');
+            const ramal = $(this).data('ramal').toString().toLowerCase();
+            const area = $(this).closest('.area-section').data('area').toString().toLowerCase();
+            
+            if (nome.includes(searchTerm) || ramal.includes(searchTerm) || area.includes(searchTerm)) {
+                $(this).show();
+            } else {
+                $(this).hide();
+            }
+        });
+        
+        // Ocultar áreas sem resultados
+        $('.area-section').each(function() {
+            const visibleItems = $(this).find('.ramal-item:visible').length;
+            if (visibleItems === 0) {
+                $(this).hide();
+            } else {
+                $(this).show();
+            }
+        });
+    });
+    
+    <?php if ($canEdit): ?>
+    // Confirmação de exclusão
+    $('.btn-delete').on('click', function() {
+        const id = $(this).data('id');
+        const nome = $(this).data('nome');
+        
+        $('#deleteId').val(id);
+        $('#deleteNome').text(nome);
+        $('#deleteModal').modal('show');
+    });
+    <?php endif; ?>
+});
+</script>
 
-<?php
-$content = ob_get_clean();
-require_once __DIR__ . '/../layouts/main.php';
-?>
+</body>
+</html>

@@ -1,7 +1,7 @@
 <?php
 
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../services/CSRFProtection.php';
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../config/csrf.php';
 require_once __DIR__ . '/../services/AuthorizationService.php';
 require_once __DIR__ . '/../services/AuditService.php';
 
@@ -15,9 +15,9 @@ class RamaisController {
     private $auditService;
     
     public function __construct() {
-        $this->db = Database::getInstance()->getConnection();
+        $this->db = new Database();
         $this->authService = new AuthorizationService();
-        $this->auditService = new AuditService($this->db);
+        $this->auditService = new AuditService();
     }
     
     /**

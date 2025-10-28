@@ -70,13 +70,6 @@ class RamaisController {
             // Verificar se usuário pode editar (permissão RH)
             $canEdit = $this->authService->hasPermission('ramais.write');
             
-            // DEBUG TEMPORÁRIO - Remover depois
-            error_log("=== DEBUG RAMAIS ===");
-            error_log("User ID: " . ($_SESSION['user_id'] ?? 'NÃO DEFINIDO'));
-            error_log("User Profile: " . ($_SESSION['user_profile'] ?? 'NÃO DEFINIDO'));
-            error_log("Can Edit: " . ($canEdit ? 'TRUE' : 'FALSE'));
-            error_log("===================");
-            
             include __DIR__ . '/../../views/ramais/index.php';
             
         } catch (Exception $e) {

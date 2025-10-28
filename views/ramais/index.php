@@ -99,15 +99,6 @@ require_once __DIR__ . '/../../src/services/NavigationService.php';
         <section class="content">
             <div class="container-fluid">
                 
-                <!-- DEBUG TEMPORÁRIO -->
-                <div class="alert alert-info" style="background-color: #fff3cd; border-color: #ffc107;">
-                    <strong>🔍 DEBUG:</strong><br>
-                    User ID: <?= $_SESSION['user_id'] ?? 'NÃO DEFINIDO' ?><br>
-                    User Profile: <?= $_SESSION['user_profile'] ?? 'NÃO DEFINIDO' ?><br>
-                    Can Edit: <?= isset($canEdit) ? ($canEdit ? 'TRUE' : 'FALSE') : 'VARIÁVEL NÃO DEFINIDA' ?>
-                </div>
-                <!-- FIM DEBUG -->
-                
                 <?php if (isset($_SESSION['success'])): ?>
                     <div class="alert alert-success alert-dismissible fade show">
                         <button type="button" class="close" data-dismiss="alert">&times;</button>

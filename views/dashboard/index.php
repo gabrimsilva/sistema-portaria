@@ -899,12 +899,19 @@
                                 </div>
                             </div>
                             
-                            <!-- Campo de Observação para Entrada Retroativa -->
+                            <!-- Campo de Observação Editável -->
+                            <div class="form-group">
+                                <label for="edit_profissional_observacao_geral">Observações</label>
+                                <textarea class="form-control" id="edit_profissional_observacao_geral" name="observacao" rows="3" placeholder="Informações adicionais sobre o registro"></textarea>
+                                <small class="form-text text-muted">Observações gerais sobre o acesso do profissional</small>
+                            </div>
+                            
+                            <!-- Campo de Observação para Entrada Retroativa (somente leitura) -->
                             <div class="form-group" id="edit_profissional_observacao_container" style="display: none;">
                                 <div class="alert alert-warning">
                                     <i class="fas fa-exclamation-triangle"></i> <strong>Entrada Retroativa</strong>
                                 </div>
-                                <label for="edit_profissional_observacao">Observação/Justificativa</label>
+                                <label for="edit_profissional_observacao">Justificativa da Entrada Retroativa</label>
                                 <textarea class="form-control" id="edit_profissional_observacao" name="observacao_retroativa" rows="3" readonly></textarea>
                                 <small class="form-text text-muted">Registro da justificativa da entrada retroativa</small>
                             </div>
@@ -1999,13 +2006,14 @@
             // Controle de tipo de documento e máscaras dinâmicas
             function togglePrestadorCountryField() {
                 const docType = $('#prestador_doc_type').val();
-                const internationalDocs = ['PASSAPORTE', 'RNE', 'DNI', 'CI', 'OUTROS'];
+                const internationalDocs = ['Passaporte', 'RNE', 'DNI', 'CI', 'Outros'];
                 
                 if (internationalDocs.includes(docType)) {
                     $('#prestador_country_container').show();
+                    $('#prestador_doc_country').attr('required', 'required');
                 } else {
                     $('#prestador_country_container').hide();
-                    $('#prestador_doc_country').val('Brasil');
+                    $('#prestador_doc_country').val('Brasil').removeAttr('required');
                 }
             }
             

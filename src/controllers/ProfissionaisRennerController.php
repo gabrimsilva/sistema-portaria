@@ -51,7 +51,7 @@ class ProfissionaisRennerController {
         $isReport = strpos($_SERVER['REQUEST_URI'] ?? '', '/reports/') !== false;
         
         if ($isReport) {
-            $query = "SELECT r.id, p.nome, p.setor, r.placa_veiculo, r.entrada_at as data_entrada, r.saida_at as saida, r.retorno, r.saida_final 
+            $query = "SELECT r.id, p.nome, p.setor, r.placa_veiculo, r.entrada_at as data_entrada, r.saida_at as saida, r.retorno, r.saida_final, r.observacao 
                       FROM registro_acesso r 
                       JOIN profissionais_renner p ON p.id = r.profissional_renner_id 
                       WHERE r.tipo = 'profissional_renner'";
@@ -542,6 +542,18 @@ class ProfissionaisRennerController {
                 
                 $placa_veiculo = strtoupper(preg_replace('/[^A-Z0-9]/', '', $placa_veiculo));
                 
+                // VALIDAÇÃO 1: Verificar se profissional já está na empresa (CPF duplicado)
+                $profissional = $this->db->fetch("SELECT id, cpf FROM profissionais_renner WHERE nome = ? AND setor = ?", [$nome, $setor]);
+                
+                if ($profissional && !empty($profissional['cpf'])) {
+                    $cpfValidation = $this->duplicityService->validateCpfNotOpen($profissional['cpf'], null, 'registro_acesso');
+                    if (!$cpfValidation['isValid']) {
+                        echo json_encode(['success' => false, 'message' => $cpfValidation['message']]);
+                        return;
+                    }
+                }
+                
+                // VALIDAÇÃO 2: Verificar se placa já está em uso
                 if (!empty($placa_veiculo) && $placa_veiculo !== 'APE') {
                     $placaValidation = $this->duplicityService->validatePlacaNotOpen($placa_veiculo, null, 'registro_acesso');
                     if (!$placaValidation['isValid']) {
@@ -576,8 +588,6 @@ class ProfissionaisRennerController {
                 }
                 
                 $this->db->beginTransaction();
-                
-                $profissional = $this->db->fetch("SELECT id FROM profissionais_renner WHERE nome = ? AND setor = ?", [$nome, $setor]);
                 
                 if ($profissional) {
                     $profissional_id = $profissional['id'];

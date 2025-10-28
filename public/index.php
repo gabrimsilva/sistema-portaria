@@ -53,7 +53,7 @@ if (strpos($path, 'prestadores') !== false) {
 
 // Check if user is authenticated
 $isAuthenticated = isset($_SESSION['user_id']);
-$publicRoutes = ['login', 'assets', 'reset-password', 'forgot-password', 'api', 'privacy'];
+$publicRoutes = ['login', 'assets', 'reset-password', 'forgot-password', 'api', 'privacy', 'ramais'];
 
 // Handle authentication for non-public routes
 if (!$isAuthenticated && !in_array(explode('/', $path)[0], $publicRoutes)) {

@@ -57,7 +57,25 @@ class AuthorizationService {
             'pre_cadastros.read',
             'pre_cadastros.create',
             'pre_cadastros.update',
-            'pre_cadastros.renovar'
+            'pre_cadastros.renovar',
+            // Ramais (Read-only)
+            'ramais.read'
+        ],
+        'seguranca' => [
+            'registro_acesso.create',
+            'registro_acesso.read',
+            'registro_acesso.update',
+            'registro_acesso.edit_basic_fields',
+            // Ramais (Read-only)
+            'ramais.read'
+        ],
+        'recepcao' => [
+            'registro_acesso.create',
+            'registro_acesso.read',
+            'registro_acesso.update',
+            'registro_acesso.edit_basic_fields',
+            // Ramais (Read-only)
+            'ramais.read'
         ]
     ];
     

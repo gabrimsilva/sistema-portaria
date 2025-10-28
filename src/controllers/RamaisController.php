@@ -48,7 +48,7 @@ class RamaisController {
             $ramaisPorArea = [];
             foreach ($areas as $area) {
                 $ramais = $this->db->fetchAll("
-                    SELECT id, area, nome, ramal, tipo, observacoes
+                    SELECT id, area, nome, ramal_celular as ramal, tipo, observacoes
                     FROM ramais
                     WHERE area = ? AND ativo = true
                     ORDER BY nome ASC
@@ -124,7 +124,7 @@ class RamaisController {
             
             // Inserir
             $this->db->query("
-                INSERT INTO ramais (area, nome, ramal, tipo, observacoes, created_by)
+                INSERT INTO ramais (area, nome, ramal_celular, tipo, observacoes, created_by)
                 VALUES (?, ?, ?, ?, ?, ?)
             ", [$area, $nome, $ramal, $tipo, $observacoes ?: null, $_SESSION['user_id'] ?? null]);
             
@@ -160,7 +160,7 @@ class RamaisController {
             exit;
         }
         
-        $ramal = $this->db->fetch("SELECT * FROM ramais WHERE id = ?", [$id]);
+        $ramal = $this->db->fetch("SELECT id, area, nome, ramal_celular as ramal, tipo, observacoes, ativo, created_at, updated_at FROM ramais WHERE id = ?", [$id]);
         
         if (!$ramal) {
             $_SESSION['error'] = 'Ramal não encontrado';
@@ -204,7 +204,7 @@ class RamaisController {
             // Atualizar
             $this->db->query("
                 UPDATE ramais 
-                SET area = ?, nome = ?, ramal = ?, tipo = ?, observacoes = ?, 
+                SET area = ?, nome = ?, ramal_celular = ?, tipo = ?, observacoes = ?, 
                     updated_at = CURRENT_TIMESTAMP, updated_by = ?
                 WHERE id = ?
             ", [$area, $nome, $ramal, $tipo, $observacoes ?: null, $_SESSION['user_id'] ?? null, $id]);
@@ -250,7 +250,7 @@ class RamaisController {
             }
             
             // Buscar dados para auditoria
-            $ramal = $this->db->fetch("SELECT * FROM ramais WHERE id = ?", [$id]);
+            $ramal = $this->db->fetch("SELECT id, area, nome, ramal_celular as ramal, tipo, observacoes, ativo, created_at, updated_at FROM ramais WHERE id = ?", [$id]);
             
             if (!$ramal) {
                 throw new Exception('Ramal não encontrado');
@@ -360,7 +360,7 @@ class RamaisController {
                     
                     // Inserir
                     $this->db->query("
-                        INSERT INTO ramais (area, nome, ramal, tipo, created_by)
+                        INSERT INTO ramais (area, nome, ramal_celular, tipo, created_by)
                         VALUES (?, ?, ?, ?, ?)
                     ", [$area, $nome, $ramal, $tipo, $_SESSION['user_id'] ?? null]);
                     
@@ -418,10 +418,10 @@ class RamaisController {
                 exit;
             }
             
-            $sql = "SELECT id, area, nome, ramal, tipo
+            $sql = "SELECT id, area, nome, ramal_celular as ramal, tipo
                     FROM ramais 
                     WHERE ativo = true 
-                      AND (nome ILIKE ? OR area ILIKE ? OR ramal ILIKE ?)
+                      AND (nome ILIKE ? OR area ILIKE ? OR ramal_celular ILIKE ?)
                     ORDER BY area ASC, nome ASC
                     LIMIT 20";
             

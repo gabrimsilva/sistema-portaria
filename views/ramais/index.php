@@ -13,32 +13,64 @@ require_once __DIR__ . '/../../src/services/NavigationService.php';
     
     <style>
         .ramal-card {
-            border-left: 4px solid #007bff;
-            transition: all 0.3s;
+            border-left: 3px solid #007bff;
+            transition: all 0.2s;
         }
         .ramal-card:hover {
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            transform: translateY(-2px);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            transform: translateY(-1px);
+        }
+        .ramal-card .card-body {
+            padding: 0.75rem;
         }
         .area-section {
-            margin-bottom: 2rem;
+            margin-bottom: 1.25rem;
+        }
+        .area-section h4 {
+            font-size: 1rem;
+            margin-bottom: 0.75rem !important;
         }
         .badge-interno {
             background-color: #28a745;
+            font-size: 0.7rem;
+            padding: 0.2rem 0.4rem;
         }
         .badge-externo {
             background-color: #17a2b8;
+            font-size: 0.7rem;
+            padding: 0.2rem 0.4rem;
         }
         .ramal-numero {
-            font-size: 1.2rem;
+            font-size: 0.95rem;
             font-weight: bold;
             color: #007bff;
+            margin-bottom: 0.4rem !important;
+        }
+        .card-title {
+            font-size: 0.9rem !important;
+            margin-bottom: 0.4rem !important;
         }
         .search-box {
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem;
         }
         .stats-card {
-            border-top: 3px solid #007bff;
+            border-top: 2px solid #007bff;
+        }
+        .small-box {
+            margin-bottom: 1rem;
+        }
+        .small-box .inner h3 {
+            font-size: 2rem;
+        }
+        .small-box .inner p {
+            font-size: 0.85rem;
+        }
+        .btn-group-vertical .btn {
+            padding: 0.2rem 0.4rem;
+            font-size: 0.75rem;
+        }
+        .content-header h1 {
+            font-size: 1.5rem;
         }
     </style>
 </head>
@@ -92,7 +124,7 @@ require_once __DIR__ . '/../../src/services/NavigationService.php';
                 <?php endif; ?>
                 
                 <!-- Estatísticas -->
-                <div class="row mb-4">
+                <div class="row mb-3">
                     <div class="col-lg-3 col-6">
                         <div class="small-box bg-info stats-card">
                             <div class="inner">
@@ -182,7 +214,7 @@ require_once __DIR__ . '/../../src/services/NavigationService.php';
                         
                         <div class="row">
                             <?php foreach ($ramais as $ramal): ?>
-                            <div class="col-md-6 col-lg-4 mb-3 ramal-item" 
+                            <div class="col-md-4 col-lg-3 col-xl-2 mb-2 ramal-item" 
                                  data-nome="<?= htmlspecialchars(strtolower($ramal['nome'])) ?>"
                                  data-ramal="<?= htmlspecialchars($ramal['ramal']) ?>">
                                 <div class="card ramal-card">

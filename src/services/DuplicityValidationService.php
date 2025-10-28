@@ -261,10 +261,10 @@ class DuplicityValidationService {
             ];
         }
         
-        // Verificar registros unificados com placa ativa
+        // Verificar registros unificados com placa ativa (só está aberto se saida_final é NULL)
         $sql = "SELECT nome, cpf, empresa, placa_veiculo, entrada_at, tipo, 'Registro' as categoria 
                 FROM registro_acesso 
-                WHERE placa_veiculo = ? AND entrada_at IS NOT NULL AND saida_at IS NULL";
+                WHERE placa_veiculo = ? AND entrada_at IS NOT NULL AND saida_final IS NULL";
         $params = [$placa];
         
         // Só excluir se estamos editando a mesma tabela

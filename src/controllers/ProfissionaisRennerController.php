@@ -1298,4 +1298,51 @@ class ProfissionaisRennerController {
         }
         exit;
     }
+    
+    /**
+     * Buscar profissional por CPF (autocomplete)
+     */
+    public function searchByDocumento() {
+        header('Content-Type: application/json');
+        
+        try {
+            $documento = trim($_GET['documento'] ?? '');
+            
+            if (empty($documento) || strlen($documento) < 3) {
+                echo json_encode(['success' => true, 'data' => []]);
+                exit;
+            }
+            
+            // Normalizar busca (remover pontuação)
+            $docNormalizado = preg_replace('/[^0-9]/', '', $documento);
+            
+            // Buscar profissionais com esse CPF
+            $sql = "SELECT DISTINCT ON (p.cpf)
+                        p.id, p.nome, p.setor, p.fre, p.cpf,
+                        r.placa_veiculo
+                    FROM profissionais_renner p
+                    LEFT JOIN LATERAL (
+                        SELECT placa_veiculo 
+                        FROM registro_acesso 
+                        WHERE profissional_renner_id = p.id 
+                          AND tipo = 'profissional_renner'
+                          AND placa_veiculo IS NOT NULL
+                        ORDER BY entrada_at DESC 
+                        LIMIT 1
+                    ) r ON true
+                    WHERE REPLACE(REPLACE(REPLACE(p.cpf, '.', ''), '-', ''), '/', '') ILIKE ?
+                    ORDER BY p.cpf, p.created_at DESC
+                    LIMIT 10";
+            
+            $searchTerm = "%{$docNormalizado}%";
+            $results = $this->db->fetchAll($sql, [$searchTerm]);
+            
+            echo json_encode(['success' => true, 'data' => $results]);
+            
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Erro ao buscar por CPF']);
+        }
+        exit;
+    }
 }

@@ -954,6 +954,7 @@
     <script src="/assets/js/dashboard-autocomplete.js?v=<?= time() ?>"></script>
     <script src="/assets/js/dashboard-precadastros-autocomplete.js?v=<?= time() ?>"></script>
     <script src="/assets/js/dashboard-placa-autocomplete.js?v=<?= time() ?>"></script>
+    <script src="/assets/js/dashboard-documento-autocomplete.js?v=<?= time() ?>"></script>
     
     <!-- 📸 Photo Capture Component -->
     

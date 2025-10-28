@@ -613,6 +613,46 @@ class PreCadastrosVisitantesController {
         exit;
     }
     
+    /**
+     * Buscar visitante por documento (autocomplete)
+     */
+    public function searchByDocumento() {
+        header('Content-Type: application/json');
+        
+        try {
+            $documento = trim($_GET['documento'] ?? '');
+            
+            if (empty($documento) || strlen($documento) < 3) {
+                echo json_encode(['success' => true, 'data' => []]);
+                exit;
+            }
+            
+            // Normalizar busca (remover pontuação)
+            $docNormalizado = preg_replace('/[^A-Z0-9]/i', '', $documento);
+            
+            // Buscar cadastros válidos com esse documento
+            $sql = "SELECT DISTINCT ON (c.doc_number)
+                        c.id as cadastro_id, c.nome, c.empresa, c.doc_type, c.doc_number, c.doc_country,
+                        c.placa_veiculo, c.foto_url
+                    FROM visitantes_cadastro c
+                    WHERE REPLACE(REPLACE(REPLACE(c.doc_number, '.', ''), '-', ''), '/', '') ILIKE ?
+                      AND c.deleted_at IS NULL
+                      AND c.ativo = true
+                    ORDER BY c.doc_number, c.created_at DESC
+                    LIMIT 10";
+            
+            $searchTerm = "%{$docNormalizado}%";
+            $results = $this->db->fetchAll($sql, [$searchTerm]);
+            
+            echo json_encode(['success' => true, 'data' => $results]);
+            
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Erro ao buscar por documento']);
+        }
+        exit;
+    }
+    
     // ========================================
     // MÉTODOS AUXILIARES
     // ========================================

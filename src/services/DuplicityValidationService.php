@@ -10,6 +10,46 @@ class DuplicityValidationService {
     }
     
     /**
+     * Verifica se um profissional Renner já tem entrada em aberto na tabela registro_acesso
+     * 
+     * @param int $profissionalId ID do profissional
+     * @param int|null $excludeId ID do registro a excluir da verificação (para edições)
+     * @return array ['isValid' => bool, 'message' => string, 'entry' => array|null]
+     */
+    public function validateProfissionalNotOpen($profissionalId, $excludeId = null) {
+        if (empty($profissionalId)) {
+            return ['isValid' => true, 'message' => '', 'entry' => null];
+        }
+        
+        $sql = "SELECT r.id, r.nome, r.entrada_at, r.placa_veiculo 
+                FROM registro_acesso r 
+                WHERE r.profissional_renner_id = ? 
+                  AND r.entrada_at IS NOT NULL 
+                  AND r.saida_final IS NULL
+                  AND r.tipo = 'profissional_renner'";
+        $params = [$profissionalId];
+        
+        if ($excludeId) {
+            $sql .= " AND r.id != ?";
+            $params[] = $excludeId;
+        }
+        
+        $entradaAberta = $this->db->fetch($sql, $params);
+        
+        if ($entradaAberta) {
+            $horarioFormatado = date('H:i', strtotime($entradaAberta['entrada_at']));
+            $dataFormatada = date('d/m/Y', strtotime($entradaAberta['entrada_at']));
+            return [
+                'isValid' => false,
+                'message' => "Este profissional já tem uma entrada em aberto desde {$dataFormatada} às {$horarioFormatado}. Por favor, registre a saída antes de criar uma nova entrada.",
+                'entry' => $entradaAberta
+            ];
+        }
+        
+        return ['isValid' => true, 'message' => '', 'entry' => null];
+    }
+    
+    /**
      * Verifica se CPF já tem entrada em aberto (sem saída)
      * 
      * @param string $cpf CPF a verificar

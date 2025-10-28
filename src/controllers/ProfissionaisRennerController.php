@@ -542,18 +542,19 @@ class ProfissionaisRennerController {
                 
                 $placa_veiculo = strtoupper(preg_replace('/[^A-Z0-9]/', '', $placa_veiculo));
                 
-                // VALIDAÇÃO 1: Verificar se profissional já está na empresa (CPF duplicado)
+                // VALIDAÇÃO 1: Buscar profissional por nome e setor
                 $profissional = $this->db->fetch("SELECT id, cpf FROM profissionais_renner WHERE nome = ? AND setor = ?", [$nome, $setor]);
                 
-                if ($profissional && !empty($profissional['cpf'])) {
-                    $cpfValidation = $this->duplicityService->validateCpfNotOpen($profissional['cpf'], null, 'registro_acesso');
-                    if (!$cpfValidation['isValid']) {
-                        echo json_encode(['success' => false, 'message' => $cpfValidation['message']]);
+                // VALIDAÇÃO 2: Verificar se profissional já está na empresa (entrada em aberto)
+                if ($profissional) {
+                    $profissionalValidation = $this->duplicityService->validateProfissionalNotOpen($profissional['id'], null);
+                    if (!$profissionalValidation['isValid']) {
+                        echo json_encode(['success' => false, 'message' => $profissionalValidation['message']]);
                         return;
                     }
                 }
                 
-                // VALIDAÇÃO 2: Verificar se placa já está em uso
+                // VALIDAÇÃO 3: Verificar se placa já está em uso
                 if (!empty($placa_veiculo) && $placa_veiculo !== 'APE') {
                     $placaValidation = $this->duplicityService->validatePlacaNotOpen($placa_veiculo, null, 'registro_acesso');
                     if (!$placaValidation['isValid']) {

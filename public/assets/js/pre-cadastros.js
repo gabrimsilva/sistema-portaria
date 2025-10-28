@@ -326,24 +326,41 @@ const PreCadastros = {
         
         console.log('✅ Usuário confirmou - Executando exclusão');
         
-        // SOLUÇÃO: Usar AJAX com fallback para redirect tradicional
+        // AJAX para exclusão
         const url = `/pre-cadastros/${this.getEndpointSegment()}?action=delete&id=${id}`;
         console.log('🚀 URL de exclusão:', url);
         
-        // Tentar via AJAX primeiro
         $.ajax({
             url: url,
             method: 'GET',
+            dataType: 'json',
             timeout: 5000,
             success: function(response) {
                 console.log('✅ Resposta do servidor:', response);
-                alert('Cadastro excluído com sucesso!');
-                self.loadCadastros(); // Recarregar lista
+                if (response.success) {
+                    alert(response.message || 'Cadastro excluído com sucesso!');
+                    self.loadCadastros(); // Recarregar lista
+                } else {
+                    alert('Erro: ' + (response.message || 'Não foi possível excluir'));
+                }
             },
             error: function(xhr, status, error) {
-                console.log('⚠️ AJAX falhou, redirecionando diretamente...', status, error);
-                // Fallback: redirect direto
-                window.location.href = url;
+                console.log('❌ Erro ao excluir:', xhr.responseText);
+                
+                // Tentar parsear JSON do erro
+                let errorMessage = 'Erro ao excluir cadastro';
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    errorMessage = response.message || errorMessage;
+                } catch (e) {
+                    // Se não for JSON, usar mensagem padrão
+                    if (xhr.responseText && xhr.responseText.includes('vinculada')) {
+                        errorMessage = xhr.responseText;
+                    }
+                }
+                
+                alert(errorMessage);
+                console.error('Detalhes do erro:', status, error);
             }
         });
     }

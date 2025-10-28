@@ -25,7 +25,15 @@ class AuthorizationService {
             'pre_cadastros.create',
             'pre_cadastros.update',
             'pre_cadastros.delete',
-            'pre_cadastros.renovar'
+            'pre_cadastros.renovar',
+            // Ramais (Full Access)
+            'ramais.read',
+            'ramais.write'
+        ],
+        'rh' => [
+            // RH tem acesso completo a ramais
+            'ramais.read',
+            'ramais.write'
         ],
         'seguranca' => [
             'registro_acesso.create',

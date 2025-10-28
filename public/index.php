@@ -669,6 +669,61 @@ try {
             $controller->update();
             break;
             
+        // Ramais - Lista Telefônica
+        case 'ramais':
+            require_once '../src/controllers/RamaisController.php';
+            $controller = new RamaisController();
+            $controller->index();
+            break;
+        
+        case 'ramais/novo':
+            require_once '../src/controllers/RamaisController.php';
+            $controller = new RamaisController();
+            $controller->create();
+            break;
+        
+        case 'ramais/salvar':
+            require_once '../src/controllers/RamaisController.php';
+            $controller = new RamaisController();
+            $controller->store();
+            break;
+        
+        case 'ramais/editar':
+            require_once '../src/controllers/RamaisController.php';
+            $controller = new RamaisController();
+            $controller->edit();
+            break;
+        
+        case 'ramais/atualizar':
+            require_once '../src/controllers/RamaisController.php';
+            $controller = new RamaisController();
+            $controller->update();
+            break;
+        
+        case 'ramais/excluir':
+            require_once '../src/controllers/RamaisController.php';
+            $controller = new RamaisController();
+            $controller->delete();
+            break;
+        
+        case 'ramais/importar':
+            require_once '../src/controllers/RamaisController.php';
+            $controller = new RamaisController();
+            $controller->import();
+            break;
+        
+        case 'ramais/processar-importacao':
+            require_once '../src/controllers/RamaisController.php';
+            $controller = new RamaisController();
+            $controller->processImport();
+            break;
+        
+        case 'api/ramais/search':
+            require_once '../src/controllers/RamaisController.php';
+            $controller = new RamaisController();
+            $controller->search();
+            break;
+            
         case 'brigada/upload-foto':
             require_once '../src/controllers/BrigadaController.php';
             $controller = new BrigadaController();

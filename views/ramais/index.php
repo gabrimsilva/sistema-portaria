@@ -45,6 +45,17 @@ require_once __DIR__ . '/../../src/services/NavigationService.php';
             font-weight: bold;
             color: #007bff;
             margin-bottom: 0.4rem !important;
+            white-space: nowrap;
+        }
+        .ramal-card {
+            min-height: 120px;
+        }
+        .ramal-card .card-body {
+            padding: 0.75rem;
+        }
+        .ramal-card .card-title {
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
         .card-title {
             font-size: 0.9rem !important;
@@ -214,7 +225,7 @@ require_once __DIR__ . '/../../src/services/NavigationService.php';
                         
                         <div class="row">
                             <?php foreach ($ramais as $ramal): ?>
-                            <div class="col-md-4 col-lg-3 col-xl-2 mb-2 ramal-item" 
+                            <div class="col-md-4 col-lg-4 col-xl-3 mb-3 ramal-item" 
                                  data-nome="<?= htmlspecialchars(strtolower($ramal['nome'])) ?>"
                                  data-ramal="<?= htmlspecialchars($ramal['ramal']) ?>">
                                 <div class="card ramal-card">

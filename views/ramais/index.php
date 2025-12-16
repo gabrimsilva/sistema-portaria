@@ -48,10 +48,10 @@ require_once __DIR__ . '/../../src/services/NavigationService.php';
             white-space: nowrap;
         }
         .ramal-card {
-            min-height: 120px;
+            min-height: 80px;
         }
         .ramal-card .card-body {
-            padding: 0.75rem;
+            padding: 0.5rem 0.75rem;
         }
         .ramal-card .card-title {
             word-wrap: break-word;

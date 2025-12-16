@@ -1,4 +1,4 @@
-modules = ["nodejs-20", "php-8.2", "php-8.3", "postgresql-16", "python-3.11"]
+modules = ["nodejs-20", "php-8.2", "php-8.3", "python-3.11", "postgresql-16"]
 [agent]
 expertMode = true
 integrations = ["python_database:1.0.0", "replitmail:1.0.0"]

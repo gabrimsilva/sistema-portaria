@@ -235,8 +235,189 @@ class NavigationService
         
         $html .= '</ul>';
         $html .= '</nav>';
+        
+        // Calendário e Relógio
+        $html .= self::renderSidebarCalendarClock();
+        
         $html .= '</div>';
         $html .= '</aside>';
+        
+        return $html;
+    }
+    
+    /**
+     * Renderiza o calendário e relógio no sidebar
+     * 
+     * @return string HTML do calendário e relógio
+     */
+    private static function renderSidebarCalendarClock()
+    {
+        $html = '
+        <div class="sidebar-calendar-clock mt-3 px-3 pb-3">
+            <!-- Relógio Digital -->
+            <div class="sidebar-clock text-center mb-2">
+                <div id="sidebar-clock" class="clock-display">
+                    <span class="clock-time">--:--:--</span>
+                </div>
+                <div class="clock-date text-muted small" id="sidebar-date">--/--/----</div>
+            </div>
+            
+            <!-- Mini Calendário -->
+            <div class="sidebar-mini-calendar">
+                <div class="calendar-header d-flex justify-content-between align-items-center mb-2">
+                    <button type="button" class="btn btn-xs btn-outline-light" id="cal-prev"><i class="fas fa-chevron-left"></i></button>
+                    <span class="calendar-month-year text-white font-weight-bold" id="cal-month-year"></span>
+                    <button type="button" class="btn btn-xs btn-outline-light" id="cal-next"><i class="fas fa-chevron-right"></i></button>
+                </div>
+                <table class="calendar-table w-100 text-center">
+                    <thead>
+                        <tr class="text-muted small">
+                            <th>D</th><th>S</th><th>T</th><th>Q</th><th>Q</th><th>S</th><th>S</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cal-body"></tbody>
+                </table>
+            </div>
+        </div>
+        
+        <style>
+            .sidebar-calendar-clock {
+                border-top: 1px solid rgba(255,255,255,0.1);
+                margin-top: auto;
+            }
+            .clock-display {
+                background: linear-gradient(135deg, #1a73e8, #0d47a1);
+                border-radius: 8px;
+                padding: 10px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            }
+            .clock-time {
+                font-size: 1.8rem;
+                font-weight: bold;
+                color: #fff;
+                font-family: "Courier New", monospace;
+                letter-spacing: 2px;
+            }
+            .clock-date {
+                color: rgba(255,255,255,0.7) !important;
+            }
+            .sidebar-mini-calendar {
+                background: rgba(255,255,255,0.05);
+                border-radius: 8px;
+                padding: 10px;
+            }
+            .calendar-table th, .calendar-table td {
+                padding: 3px;
+                font-size: 0.75rem;
+            }
+            .calendar-table td {
+                color: rgba(255,255,255,0.8);
+                cursor: default;
+            }
+            .calendar-table td.today {
+                background: #1a73e8;
+                border-radius: 50%;
+                color: #fff;
+                font-weight: bold;
+            }
+            .calendar-table td.other-month {
+                color: rgba(255,255,255,0.3);
+            }
+            #cal-prev, #cal-next {
+                padding: 2px 6px;
+                font-size: 0.7rem;
+            }
+            .calendar-month-year {
+                font-size: 0.85rem;
+            }
+        </style>
+        
+        <script>
+            (function() {
+                // Relógio
+                function updateClock() {
+                    const now = new Date();
+                    const timeStr = now.toLocaleTimeString("pt-BR", {hour: "2-digit", minute: "2-digit", second: "2-digit"});
+                    const dateStr = now.toLocaleDateString("pt-BR", {weekday: "long", day: "2-digit", month: "long", year: "numeric"});
+                    
+                    const clockEl = document.querySelector("#sidebar-clock .clock-time");
+                    const dateEl = document.getElementById("sidebar-date");
+                    
+                    if (clockEl) clockEl.textContent = timeStr;
+                    if (dateEl) dateEl.textContent = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
+                }
+                
+                // Calendário
+                let currentDate = new Date();
+                
+                function renderCalendar(date) {
+                    const year = date.getFullYear();
+                    const month = date.getMonth();
+                    const today = new Date();
+                    
+                    const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", 
+                                        "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+                    
+                    const monthYearEl = document.getElementById("cal-month-year");
+                    if (monthYearEl) monthYearEl.textContent = monthNames[month] + " " + year;
+                    
+                    const firstDay = new Date(year, month, 1).getDay();
+                    const daysInMonth = new Date(year, month + 1, 0).getDate();
+                    const daysInPrevMonth = new Date(year, month, 0).getDate();
+                    
+                    let html = "";
+                    let day = 1;
+                    let nextMonthDay = 1;
+                    
+                    for (let i = 0; i < 6; i++) {
+                        html += "<tr>";
+                        for (let j = 0; j < 7; j++) {
+                            if (i === 0 && j < firstDay) {
+                                const prevDay = daysInPrevMonth - firstDay + j + 1;
+                                html += "<td class=\"other-month\">" + prevDay + "</td>";
+                            } else if (day > daysInMonth) {
+                                html += "<td class=\"other-month\">" + nextMonthDay++ + "</td>";
+                            } else {
+                                const isToday = day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+                                html += "<td class=\"" + (isToday ? "today" : "") + "\">" + day++ + "</td>";
+                            }
+                        }
+                        html += "</tr>";
+                        if (day > daysInMonth && nextMonthDay > 1) break;
+                    }
+                    
+                    const calBody = document.getElementById("cal-body");
+                    if (calBody) calBody.innerHTML = html;
+                }
+                
+                // Inicializar
+                document.addEventListener("DOMContentLoaded", function() {
+                    updateClock();
+                    setInterval(updateClock, 1000);
+                    
+                    renderCalendar(currentDate);
+                    
+                    const prevBtn = document.getElementById("cal-prev");
+                    const nextBtn = document.getElementById("cal-next");
+                    
+                    if (prevBtn) {
+                        prevBtn.addEventListener("click", function(e) {
+                            e.preventDefault();
+                            currentDate.setMonth(currentDate.getMonth() - 1);
+                            renderCalendar(currentDate);
+                        });
+                    }
+                    
+                    if (nextBtn) {
+                        nextBtn.addEventListener("click", function(e) {
+                            e.preventDefault();
+                            currentDate.setMonth(currentDate.getMonth() + 1);
+                            renderCalendar(currentDate);
+                        });
+                    }
+                });
+            })();
+        </script>';
         
         return $html;
     }

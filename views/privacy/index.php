@@ -234,7 +234,7 @@
                         <strong>Renner Coatings</strong> - Sistema de Controle de Acesso
                     </div>
                     <div class="col-sm-6 text-right">
-                        <strong>LGPD Compliant</strong> - Versão 1.0
+                        <strong>LGPD Compliant</strong> - Versão 1.1.0
                     </div>
                 </div>
             </div>

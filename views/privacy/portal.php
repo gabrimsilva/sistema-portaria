@@ -334,7 +334,7 @@
                         <strong>Renner Coatings</strong> - Portal do Titular LGPD
                     </div>
                     <div class="col-sm-6 text-right">
-                        <strong>Seus direitos protegidos</strong> - Versão 1.0
+                        <strong>Seus direitos protegidos</strong> - Versão 1.1.0
                     </div>
                 </div>
             </div>

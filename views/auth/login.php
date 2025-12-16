@@ -282,7 +282,7 @@
                 </div>
                 <div class="system-info">
                     <h1 class="system-title">Sistema de Controle de Acesso</h1>
-                    <p class="system-version">Versão 1.0.0</p>
+                    <p class="system-version">Versão 1.1.0</p>
                 </div>
             </div>
             

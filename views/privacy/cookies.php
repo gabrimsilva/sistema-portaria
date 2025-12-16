@@ -380,7 +380,7 @@
                         <strong>Renner Coatings</strong> - Gestão de Cookies
                     </div>
                     <div class="col-sm-6 text-right">
-                        <strong>Sua privacidade é importante</strong> - Versão 1.0
+                        <strong>Sua privacidade é importante</strong> - Versão 1.1.0
                     </div>
                 </div>
             </div>

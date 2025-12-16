@@ -285,16 +285,7 @@ class NavigationService
                 border-top: 1px solid rgba(255,255,255,0.1);
                 background: #343a40;
                 padding-top: 15px;
-                position: fixed;
-                bottom: 0;
-                left: 0;
-                width: 250px;
-                z-index: 1000;
-            }
-            @media (max-width: 991.98px) {
-                .sidebar-calendar-clock {
-                    display: none;
-                }
+                margin-top: 30px;
             }
             .clock-display {
                 background: linear-gradient(135deg, #1a73e8, #0d47a1);

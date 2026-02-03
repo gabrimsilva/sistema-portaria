@@ -1,389 +1,269 @@
-# 🚀 Sistema de Controle de Acesso - Deploy Docker
+# Sistema de Controle de Acesso
 
-**Versão:** 1.0.0  
-**Stack:** PHP 8.2 + Apache + PostgreSQL 15  
+**Versao:** 2.0.0 (Build 1.1.0)  
+**Stack:** PHP 8.2 + PostgreSQL 15  
 **Empresa:** Renner Coatings
 
 ---
 
-## 📋 Requisitos
+## Sobre o Sistema
 
-- **Sistema Operacional:** Ubuntu 20.04+ (Desktop ou Server)
-- **Docker:** 20.10+
-- **Docker Compose:** 1.29+
-- **RAM:** 2GB mínimo
-- **Disco:** 10GB disponível
-- **Portas:** 8080 e 5432 livres
+Sistema completo de controle de acesso corporativo para gestao de entrada e saida de profissionais, visitantes e prestadores de servico. Desenvolvido com foco em seguranca, conformidade LGPD e facilidade de uso.
 
 ---
 
-## ⚡ Deploy Rápido (5 minutos)
+## Funcionalidades Principais
 
-### **Passo 1: Atualizar sistema**
-```bash
-sudo apt update && sudo apt upgrade -y
-```
+### Modulos de Acesso
+- **Profissionais Renner** - Registro de funcionarios com foto, CPF e validacao de duplicidade
+- **Visitantes** - Cadastro e controle de visitantes com pre-cadastro valido por 1 ano
+- **Prestadores de Servico** - Gestao de terceirizados com documentacao internacional
 
-### **Passo 2: Instalar Docker + Docker Compose**
-```bash
-# Instalar Docker
-sudo apt install -y docker.io docker-compose
+### Pre-Cadastros v2.0
+- Sistema de pre-registro com validade de 1 ano
+- Renovacao automatica para visitantes/prestadores recorrentes
+- Separacao entre dados cadastrais e eventos de acesso
+- Validacao de duplicidade em tempo real
 
-# Habilitar Docker
-sudo systemctl enable docker
-sudo systemctl start docker
+### Modulo Ramais
+- Lista telefonica interna completa
+- Importacao via Excel/CSV
+- Interface publica somente leitura
+- Edicao restrita a RH/Administradores
 
-# Adicionar usuário ao grupo docker (opcional, evita usar sudo)
-sudo usermod -aG docker $USER
-newgrp docker
-```
+### Dashboard
+- Visao geral de acessos ativos
+- Cards coloridos por categoria
+- Identificacao visual de brigadistas
+- Calendario e relogio em tempo real
 
-### **Passo 3: Descompactar aplicação**
-```bash
-unzip controle-portaria.zip -d /opt/controle-portaria
-cd /opt/controle-portaria
-```
+### Relatorios
+- Exportacao CSV com protecao contra injecao de formulas
+- Filtros avancados por periodo, tipo e pessoa
+- Mascaramento LGPD para dados sensiveis
+- Campo de observacoes para todos os tipos de entrada
 
-### **Passo 4: Subir containers**
-```bash
-sudo docker-compose up -d --build
-```
-
-⏳ **Aguarde ~2-3 minutos** para build e inicialização completa.
-
-### **Passo 5: Verificar status**
-```bash
-sudo docker ps
-```
-
-**✅ Saída esperada:**
-```
-CONTAINER ID   IMAGE                        STATUS          PORTS
-xxxxx          controle-portaria-app        Up (healthy)    0.0.0.0:8080->80/tcp
-xxxxx          postgres:15-alpine           Up (healthy)    0.0.0.0:5432->5432/tcp
-```
-
-### **Passo 6: Acessar aplicação**
-
-**Localhost:**
-```
-http://localhost:8080
-```
-
-**IP da VM:**
-```
-http://<IP-DA-VM>:8080
-```
-
-### **Passo 7: Login inicial**
-```
-📧 Email: gmsilva@rennercoatings.com
-🔑 Senha: rhsa@2019
-```
-
-⚠️ **IMPORTANTE: ALTERE A SENHA IMEDIATAMENTE APÓS PRIMEIRO LOGIN!**
+### Seguranca
+- Autenticacao por email e senha com hash
+- RBAC (Role-Based Access Control)
+- Protecao CSRF em todos os formularios
+- Log de auditoria completo
+- Conformidade LGPD
 
 ---
 
-## 🔧 Comandos Úteis
+## Requisitos do Sistema
 
-### Ver logs em tempo real
+### Servidor
+- **PHP:** 8.0 ou superior
+- **PostgreSQL:** 12 ou superior
+- **Extensoes PHP:** pdo_pgsql, mbstring, json, session
+- **Memoria:** 2GB RAM minimo
+- **Disco:** 10GB disponivel
+
+### Opcional (Docker)
+- Docker 20.10+
+- Docker Compose 1.29+
+
+---
+
+## Instalacao
+
+### Opcao 1: Instalacao Direta
+
 ```bash
-# Aplicação
-sudo docker logs -f controle-portaria-app
+# Clonar repositorio
+git clone https://github.com/gabrimsilva/sistema-portaria.git
+cd sistema-portaria
 
-# Banco de dados
-sudo docker logs -f controle-portaria-db
+# Configurar banco de dados
+cp config/database.example.php config/database.php
+nano config/database.php
 
-# Ambos
-sudo docker-compose logs -f
+# Executar migracoes
+php scripts/migrate.php
+
+# Configurar permissoes
+chmod -R 755 public/
+chmod -R 777 uploads/
 ```
 
-### Reiniciar serviços
+### Opcao 2: Docker
+
 ```bash
-# Reiniciar todos
-sudo docker-compose restart
+# Subir containers
+docker-compose up -d --build
 
-# Reiniciar apenas app
-sudo docker-compose restart app
-
-# Reiniciar apenas banco
-sudo docker-compose restart db
-```
-
-### Parar aplicação
-```bash
-sudo docker-compose down
-```
-
-### Parar e remover volumes (CUIDADO: apaga banco!)
-```bash
-sudo docker-compose down -v
-```
-
-### Atualizar aplicação
-```bash
-# Parar containers
-sudo docker-compose down
-
-# Rebuild com novas mudanças
-sudo docker-compose up -d --build
+# Aguardar inicializacao
+docker ps
 ```
 
 ---
 
-## 💾 Backup e Restauração
+## Configuracao do Servidor Web
 
-### Backup do banco
-```bash
-# Criar backup com timestamp
-sudo docker exec controle-portaria-db pg_dump -U postgres access_control > backup_$(date +%Y%m%d_%H%M%S).sql
-
-# Backup compactado
-sudo docker exec controle-portaria-db pg_dump -U postgres access_control | gzip > backup_$(date +%Y%m%d_%H%M%S).sql.gz
+### Apache
+```apache
+<VirtualHost *:80>
+    ServerName seu-dominio.com
+    DocumentRoot /var/www/sistema-portaria/public
+    
+    <Directory /var/www/sistema-portaria/public>
+        AllowOverride All
+        Require all granted
+    </Directory>
+</VirtualHost>
 ```
 
-### Restaurar backup
-```bash
-# De arquivo SQL
-cat backup.sql | sudo docker exec -i controle-portaria-db psql -U postgres access_control
-
-# De arquivo compactado
-gunzip -c backup.sql.gz | sudo docker exec -i controle-portaria-db psql -U postgres access_control
-```
-
-### Backup de uploads (fotos)
-```bash
-tar -czf uploads_backup_$(date +%Y%m%d_%H%M%S).tar.gz uploads/
-```
-
----
-
-## 🛡️ Segurança
-
-### Alterar senha do banco
-1. Edite `docker-compose.yml`:
-```yaml
-environment:
-  - PGPASSWORD=SUA_NOVA_SENHA_FORTE
-  - POSTGRES_PASSWORD=SUA_NOVA_SENHA_FORTE
-```
-
-2. Recrie containers:
-```bash
-sudo docker-compose down
-sudo docker-compose up -d --force-recreate
-```
-
-### Configurar Firewall (UFW)
-```bash
-# Permitir apenas porta 8080
-sudo ufw allow 8080/tcp
-sudo ufw enable
-
-# Verificar status
-sudo ufw status
-```
-
-### SSL/HTTPS com Nginx Reverse Proxy
-```bash
-# Instalar Nginx
-sudo apt install -y nginx certbot python3-certbot-nginx
-
-# Configurar proxy reverso
-sudo nano /etc/nginx/sites-available/controle-portaria
-
-# Conteúdo:
+### Nginx
+```nginx
 server {
     listen 80;
     server_name seu-dominio.com;
-
+    root /var/www/sistema-portaria/public;
+    index index.php;
+    
     location / {
-        proxy_pass http://localhost:8080;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
+        try_files $uri $uri/ /router.php?$query_string;
+    }
+    
+    location ~ \.php$ {
+        fastcgi_pass unix:/var/run/php/php8.0-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        include fastcgi_params;
     }
 }
-
-# Ativar site
-sudo ln -s /etc/nginx/sites-available/controle-portaria /etc/nginx/sites-enabled/
-sudo nginx -t
-sudo systemctl restart nginx
-
-# Obter certificado SSL
-sudo certbot --nginx -d seu-dominio.com
 ```
 
 ---
 
-## 📊 Monitoramento
+## Credenciais Padrao
 
-### Status dos containers
-```bash
-sudo docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+| Campo | Valor |
+|-------|-------|
+| **Email** | admin@sistema.com |
+| **Senha** | admin123 |
+
+**IMPORTANTE:** Altere a senha apos o primeiro login!
+
+---
+
+## Estrutura do Projeto
+
 ```
-
-### Uso de recursos
-```bash
-# Em tempo real
-sudo docker stats
-
-# Disco usado
-sudo docker system df
-```
-
-### Verificar saúde (healthcheck)
-```bash
-sudo docker inspect controle-portaria-app | grep -A 10 Health
-sudo docker inspect controle-portaria-db | grep -A 10 Health
+/
+├── config/               # Configuracoes do sistema
+│   ├── database.php      # Conexao com banco
+│   ├── config.php        # Configuracoes gerais
+│   └── migrations/       # Scripts de migracao
+├── public/               # Arquivos publicos (DocumentRoot)
+│   ├── router.php        # Roteador principal
+│   ├── api/              # Endpoints da API
+│   ├── assets/           # CSS, JS, imagens
+│   └── uploads/          # Fotos capturadas
+├── src/                  # Codigo fonte
+│   ├── controllers/      # Controladores MVC
+│   ├── models/           # Modelos de dados
+│   └── services/         # Servicos do sistema
+├── views/                # Templates PHP
+│   ├── dashboard/        # Tela principal
+│   ├── reports/          # Relatorios
+│   ├── ramais/           # Modulo de ramais
+│   └── privacy/          # Portal LGPD
+├── scripts/              # Scripts utilitarios
+│   └── migrate.php       # Migracao de banco
+├── DEPLOY_GUIDE.md       # Guia de deploy
+└── README.md             # Este arquivo
 ```
 
 ---
 
-## ❌ Troubleshooting
+## Novidades da Versao 2.0
 
-### Porta 8080 já em uso
+### Funcionalidades
+- Pre-Cadastros v2.0 com validade de 1 ano
+- Modulo Ramais com importacao Excel
+- Validacao de duplicidade para profissionais
+- Campo de observacoes em todos os registros
+- Suporte a 8 tipos de documentos internacionais
+- Calendario e relogio no sidebar
+
+### Melhorias Tecnicas
+- Separacao de tabelas cadastro/registro
+- 18 indices especializados para performance
+- Sistema de higiene UX (prevencao de memory leaks)
+- Exportacao CSV com protecao contra formulas
+- Log de auditoria com campos adicionais
+
+### Seguranca
+- Deteccao de entradas retroativas
+- Justificativa obrigatoria para retroativos
+- Mascaramento LGPD em exportacoes
+- Validacao de documentos por tipo
+
+---
+
+## Backup e Restauracao
+
+### Backup do Banco
 ```bash
-# Identificar processo
-sudo lsof -i :8080
-
-# Matar processo
-sudo kill -9 <PID>
+pg_dump -U usuario -h localhost banco > backup_$(date +%Y%m%d).sql
 ```
 
-### Banco não inicializa
+### Backup de Uploads
 ```bash
-# Ver logs detalhados
-sudo docker logs controle-portaria-db
-
-# Resetar banco (CUIDADO: apaga dados!)
-sudo docker-compose down -v
-sudo docker-compose up -d
+tar -czvf uploads_backup.tar.gz uploads/
 ```
 
-### Permissões de arquivo
+### Restaurar Backup
 ```bash
-sudo chown -R www-data:www-data uploads storage logs
-sudo chmod -R 775 uploads storage logs
-```
-
-### Rebuild completo (limpar cache)
-```bash
-sudo docker-compose down
-sudo docker system prune -a
-sudo docker-compose up -d --build
-```
-
-### App não responde
-```bash
-# Verificar logs
-sudo docker logs controle-portaria-app
-
-# Entrar no container
-sudo docker exec -it controle-portaria-app bash
-
-# Testar internamente
-curl http://localhost/login
+psql -U usuario -h localhost banco < backup.sql
+tar -xzvf uploads_backup.tar.gz
 ```
 
 ---
 
-## 🔍 Acessar Shell dos Containers
+## Atualizacao do Sistema
 
-### Container da aplicação
 ```bash
-sudo docker exec -it controle-portaria-app bash
-```
-
-### Container do banco
-```bash
-# Shell bash
-sudo docker exec -it controle-portaria-db sh
-
-# Acesso direto ao PostgreSQL
-sudo docker exec -it controle-portaria-db psql -U postgres access_control
+# No servidor
+cd /var/www/sistema-portaria
+git pull origin main
+php scripts/migrate.php
 ```
 
 ---
 
-## 🎯 Próximos Passos
+## Suporte
 
-1. ✅ Alterar senha padrão do admin
-2. ✅ Configurar backup automático (cron)
-3. ✅ Configurar SSL/HTTPS
-4. ✅ Configurar domínio customizado
-5. ✅ Implementar monitoramento (Prometheus/Grafana)
-6. ✅ Configurar notificações de erro
+### Logs do Sistema
+- **PHP:** /var/log/php/error.log
+- **Apache:** /var/log/apache2/error.log
+- **Aplicacao:** logs/app.log
 
----
-
-## 📁 Estrutura do Projeto
-
-```
-/opt/controle-portaria/
-├── docker/
-│   ├── init.sql              # Schema do banco (28 tabelas)
-│   ├── seed.sql              # Dados iniciais (admin)
-│   └── apache-config.conf    # Configuração Apache
-├── public/                   # DocumentRoot
-├── src/                      # Código PHP
-├── config/                   # Configurações
-├── views/                    # Templates
-├── storage/                  # Arquivos temporários
-├── uploads/                  # Fotos (LGPD protegido)
-├── logs/                     # Logs da aplicação
-├── Dockerfile
-├── docker-compose.yml
-└── README.md
-```
+### Verificacoes
+1. Conexao com banco de dados
+2. Permissoes de diretorios
+3. Extensoes PHP instaladas
+4. Configuracao do servidor web
 
 ---
 
-## 📞 Informações Técnicas
+## Tecnologias
 
-- **PHP:** 8.2 com PDO PostgreSQL
-- **Servidor Web:** Apache 2.4 com mod_rewrite
+- **Backend:** PHP 8.2 com PDO
 - **Banco de Dados:** PostgreSQL 15
-- **Timezone:** America/Sao_Paulo
-- **Locale:** pt_BR
-- **Logs:** `/var/log/apache2/` (container)
+- **Frontend:** AdminLTE 3, Bootstrap 4, jQuery
+- **Bibliotecas:** PhpSpreadsheet, jQuery UI
+- **Seguranca:** Password hashing, CSRF, XSS protection
 
 ---
 
-## 📖 Documentação Adicional
+## Licenca
 
-- **LGPD Compliance:** Proteção de dados biométricos implementada
-- **Auditoria:** Todos os acessos registrados em `audit_log`
-- **RBAC:** Sistema completo de permissões por perfil
-- **Backup:** Retenção de dados configurável
+Sistema proprietario - Renner Coatings  
+Todos os direitos reservados.
 
 ---
 
-## ⚙️ Variáveis de Ambiente
-
-### Aplicação (docker-compose.yml)
-```yaml
-TZ=America/Sao_Paulo          # Timezone
-PGHOST=db                      # Host do banco
-PGPORT=5432                    # Porta do banco
-PGDATABASE=access_control      # Nome do banco
-PGUSER=postgres                # Usuário do banco
-PGPASSWORD=renner@postgres2024 # Senha do banco
-```
-
----
-
-## 🆘 Suporte
-
-**Sistema:** Controle de Acesso v1.0.0  
-**Empresa:** Renner Coatings  
-**Documentação completa:** `/docs`
-
-Em caso de problemas críticos:
-1. Verifique os logs: `sudo docker-compose logs`
-2. Consulte a seção Troubleshooting
-3. Entre em contato com o suporte técnico
-
----
-
-**✅ Sistema pronto para produção!**
+**Versao 2.0.0** - Sistema pronto para producao!

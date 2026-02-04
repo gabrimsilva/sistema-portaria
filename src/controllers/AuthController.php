@@ -35,7 +35,7 @@ class AuthController {
             } else {
                 try {
                     $user = $this->db->fetch(
-                        "SELECT u.*, r.name as role_name FROM usuarios u 
+                        "SELECT u.*, r.nome as role_name FROM usuarios u 
                          LEFT JOIN roles r ON u.role_id = r.id 
                          WHERE u.email = ? AND u.ativo = TRUE",
                         [$email]

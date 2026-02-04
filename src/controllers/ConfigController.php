@@ -824,7 +824,7 @@ class ConfigController {
             // Buscar usuários
             $users = $this->db->fetchAll(
                 "SELECT u.id, u.nome, u.email, u.perfil, u.ativo, u.data_criacao, u.ultimo_login, u.role_id,
-                        r.name as role_name, r.description as role_description
+                        r.nome as role_name, r.descricao as role_description
                  FROM usuarios u 
                  LEFT JOIN roles r ON u.role_id = r.id 
                  ORDER BY u.id"

@@ -1,0 +1,75 @@
+super@RHSA330:/var/www/sistema-portar# Verificar se existe arquivo de autoloadde autoload
+ls -la /var/www/sistema-portaria/config/
+cat /var/www/sistema-portaria/config/config.php | head -50
+total 40
+drwxr-xr-x  3 www-data www-data 4096 Feb  4 14:27 .
+drwxr-xr-x 23 www-data www-data 4096 Feb  4 14:30 ..
+-rw-r--r--  1 www-data www-data 3080 Feb  4 14:19 config.php
+-rw-r--r--  1 www-data www-data 2374 Feb  4 14:19 csrf.php
+-rw-r--r--  1 www-data www-data  412 Feb  4 14:19 database.example.php
+-rw-r--r--  1 www-data www-data  407 Feb  4 14:27 database.php
+-rw-r--r--  1 www-data www-data   53 Feb  4 14:19 feature_flags.php
+-rw-r--r--  1 www-data www-data 1458 Feb  4 14:19 install.php
+drwxr-xr-x  2 www-data www-data 4096 Feb  4 14:19 migrations
+-rw-r--r--  1 www-data www-data 2336 Feb  4 14:19 schema.sql
+<?php
+
+// Environment configuration
+$_ENV = array_merge($_ENV, $_SERVER);
+
+// Application configuration - evitar redefinições
+if (!defined('BASE_PATH')) {
+    define('BASE_PATH', dirname(__DIR__));
+}
+if (!defined('PUBLIC_PATH')) {
+    define('PUBLIC_PATH', BASE_PATH . '/public');
+}
+if (!defined('UPLOAD_PATH')) {
+    define('UPLOAD_PATH', PUBLIC_PATH . '/uploads');
+}
+if (!defined('BASE_URL')) {
+    define('BASE_URL', '/');
+}
+
+// Session configuration with security
+ini_set('session.cookie_lifetime', 86400); // 24 hours
+ini_set('session.gc_maxlifetime', 86400);
+ini_set('session.cookie_httponly', 1);
+ini_set('session.cookie_samesite', 'Lax'); // Permite AJAX requests no mesmo domínio
+ini_set('session.use_strict_mode', 1);
+
+// Detectar HTTPS corretamente (incluindo proxies como Replit)
+$isHttps = (
+    (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ||
+    (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') ||
+    (isset($_SERVER['HTTP_X_FORWARDED_SSL']) && $_SERVER['HTTP_X_FORWARDED_SSL'] === 'on')
+);
+
+if ($isHttps) {
+    ini_set('session.cookie_secure', 1);
+}
+
+// Configuração adicional para produção Replit
+if (isset($_SERVER['REPL_SLUG'])) {
+    ini_set('session.cookie_domain', '');
+    ini_set('session.cookie_path', '/');
+}
+
+session_start();
+
+// Error reporting - secure for production
+error_reporting(E_ALL);
+ini_set('log_errors', 1);
+ini_set('error_log', BASE_PATH . '/logs/error.log');
+
+super@RHSA330:/var/www/sistema-portaria/public$ # Verificar estrutura de classes
+ls -la /var/www/sistema-portaria/src/
+total 32
+drwxr-xr-x  7 www-data www-data 4096 Feb  4 14:19 .
+drwxr-xr-x 23 www-data www-data 4096 Feb  4 14:30 ..
+drwxr-xr-x  2 www-data www-data 4096 Feb  4 14:19 controllers
+-rw-r--r--  1 www-data www-data 3949 Feb  4 14:19 index.ts
+drwxr-xr-x  2 www-data www-data 4096 Feb  4 14:19 middleware
+drwxr-xr-x  2 www-data www-data 4096 Feb  4 14:19 schemas
+drwxr-xr-x  2 www-data www-data 4096 Feb  4 14:19 services
+drwxr-xr-x  2 www-data www-data 4096 Feb  4 14:19 utils

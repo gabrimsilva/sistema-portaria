@@ -1,11 +1,11 @@
 <?php
 /**
- * Configuração de Banco de Dados - EXEMPLO
+ * Configuração de Banco de Dados - LOCAL
  * 
- * Copie este arquivo para database.php e configure com suas credenciais:
- * cp config/database.example.php config/database.php
+ * Copie este arquivo para database.local.php e configure com suas credenciais:
+ * cp config/database.example.php config/database.local.php
  * 
- * Ou configure via variável de ambiente DATABASE_URL
+ * Este arquivo é usado apenas em servidores externos (não Replit)
  */
 
 return [

@@ -13,6 +13,19 @@ class Database {
     private $pdo = null;
     
     public function __construct() {
+        // Primeiro, tentar carregar configuração local (para servidores externos)
+        $localConfig = __DIR__ . '/database.local.php';
+        if (file_exists($localConfig)) {
+            $config = require $localConfig;
+            $this->host = $config['host'] ?? 'localhost';
+            $this->port = $config['port'] ?? 5432;
+            $this->dbname = $config['database'] ?? 'sistema_acesso';
+            $this->username = $config['username'] ?? 'postgres';
+            $this->password = $config['password'] ?? '';
+            $this->queryParams = '';
+            return;
+        }
+        
         // Parse DATABASE_URL from environment
         $databaseUrl = $_ENV['DATABASE_URL'] ?? '';
         if ($databaseUrl) {

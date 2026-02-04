@@ -15,9 +15,10 @@ echo "===========================================\n\n";
 $databaseUrl = getenv('DATABASE_URL');
 
 if (!$databaseUrl) {
-    $configFile = __DIR__ . '/../config/database.php';
-    if (file_exists($configFile)) {
-        $config = require $configFile;
+    // Primeiro tentar database.local.php (para servidores externos)
+    $localConfigFile = __DIR__ . '/../config/database.local.php';
+    if (file_exists($localConfigFile)) {
+        $config = require $localConfigFile;
         $databaseUrl = sprintf(
             "pgsql:host=%s;port=%s;dbname=%s",
             $config['host'],
@@ -27,7 +28,7 @@ if (!$databaseUrl) {
         $username = $config['username'];
         $password = $config['password'];
     } else {
-        die("ERRO: Configure DATABASE_URL ou crie config/database.php\n");
+        die("ERRO: Configure DATABASE_URL ou crie config/database.local.php\n");
     }
 } else {
     $parsed = parse_url($databaseUrl);

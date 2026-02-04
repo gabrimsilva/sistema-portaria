@@ -326,10 +326,10 @@ class RbacService {
     public function getAllUsersByRoles() {
         $users = $this->db->fetchAll(
             "SELECT u.id, u.nome, u.email, u.ativo, u.ultimo_login, u.role_id,
-                    r.nome as role_name, r.descricao as role_description
+                    r.name as role_name, r.description as role_description
              FROM usuarios u 
              LEFT JOIN roles r ON u.role_id = r.id 
-             ORDER BY r.nome, u.nome"
+             ORDER BY r.name, u.nome"
         );
         
         // Agrupar por role

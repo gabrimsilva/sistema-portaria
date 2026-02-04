@@ -56,11 +56,12 @@ $migrations = [
     // Tabela de roles (precisa ser criada primeiro)
     "CREATE TABLE IF NOT EXISTS roles (
         id SERIAL PRIMARY KEY,
-        nome VARCHAR(100) NOT NULL UNIQUE,
-        descricao TEXT,
-        permissoes JSONB DEFAULT '{}',
-        ativo BOOLEAN DEFAULT true,
-        data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        name VARCHAR(100) NOT NULL UNIQUE,
+        description TEXT,
+        system_role BOOLEAN DEFAULT false,
+        active BOOLEAN DEFAULT true,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP
     )",
     
     // Tabela de configurações da organização
@@ -241,7 +242,7 @@ echo "===========================================\n";
 $stmt = $pdo->query("SELECT COUNT(*) FROM roles");
 if ($stmt->fetchColumn() == 0) {
     echo "\nCriando roles padrão...\n";
-    $pdo->exec("INSERT INTO roles (id, nome, descricao) VALUES 
+    $pdo->exec("INSERT INTO roles (id, name, description) VALUES 
         (1, 'Administrador', 'Acesso total ao sistema'),
         (2, 'RH', 'Gestão de colaboradores'),
         (3, 'Operador', 'Registro de acessos'),

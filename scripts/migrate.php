@@ -53,6 +53,26 @@ try {
 
 // Lista de migrações
 $migrations = [
+    // Tabela de roles (precisa ser criada primeiro)
+    "CREATE TABLE IF NOT EXISTS roles (
+        id SERIAL PRIMARY KEY,
+        nome VARCHAR(100) NOT NULL UNIQUE,
+        descricao TEXT,
+        permissoes JSONB DEFAULT '{}',
+        ativo BOOLEAN DEFAULT true,
+        data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )",
+    
+    // Tabela de configurações da organização
+    "CREATE TABLE IF NOT EXISTS organization_settings (
+        id SERIAL PRIMARY KEY,
+        nome_empresa VARCHAR(255) DEFAULT 'Sistema de Controle de Acesso',
+        logo_path VARCHAR(255),
+        cor_primaria VARCHAR(20) DEFAULT '#0d6efd',
+        cor_secundaria VARCHAR(20) DEFAULT '#6c757d',
+        data_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )",
+    
     // Tabela de usuários
     "CREATE TABLE IF NOT EXISTS usuarios (
         id SERIAL PRIMARY KEY,
@@ -217,13 +237,34 @@ echo "Migrações concluídas!\n";
 echo "Sucesso: $success | Erros: $errors\n";
 echo "===========================================\n";
 
+// Criar roles padrão
+$stmt = $pdo->query("SELECT COUNT(*) FROM roles");
+if ($stmt->fetchColumn() == 0) {
+    echo "\nCriando roles padrão...\n";
+    $pdo->exec("INSERT INTO roles (id, nome, descricao) VALUES 
+        (1, 'Administrador', 'Acesso total ao sistema'),
+        (2, 'RH', 'Gestão de colaboradores'),
+        (3, 'Operador', 'Registro de acessos'),
+        (4, 'Visualizador', 'Apenas visualização')
+        ON CONFLICT DO NOTHING");
+    echo "[OK] Roles padrão criadas\n";
+}
+
+// Criar configuração inicial
+$stmt = $pdo->query("SELECT COUNT(*) FROM organization_settings");
+if ($stmt->fetchColumn() == 0) {
+    echo "Criando configuração inicial...\n";
+    $pdo->exec("INSERT INTO organization_settings (nome_empresa) VALUES ('Sistema de Controle de Acesso')");
+    echo "[OK] Configuração inicial criada\n";
+}
+
 // Verificar se usuário admin existe
 $stmt = $pdo->query("SELECT COUNT(*) FROM usuarios WHERE email = 'admin@sistema.com'");
 if ($stmt->fetchColumn() == 0) {
     echo "\nCriando usuário administrador padrão...\n";
     $hash = password_hash('admin123', PASSWORD_DEFAULT);
-    $pdo->exec("INSERT INTO usuarios (nome, email, senha_hash, perfil, ativo) 
-                VALUES ('Administrador', 'admin@sistema.com', '$hash', 'administrador', true)");
+    $pdo->exec("INSERT INTO usuarios (nome, email, senha_hash, perfil, ativo, role_id) 
+                VALUES ('Administrador', 'admin@sistema.com', '$hash', 'administrador', true, 1)");
     echo "[OK] Usuário admin@sistema.com criado (senha: admin123)\n";
 }
 

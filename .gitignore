@@ -1,13 +1,41 @@
-node_modules
+node_modules/
+
 # Keep environment variables out of version control
 .env
+.env.*
 
 /src/generated/prisma
 
+# PHP dependencies (instalar via composer install no servidor)
 vendor/
 composer.lock
+
+# Uploads e fotos
 uploads/temp/
+uploads/profissionais/
+uploads/visitantes/
+uploads/prestadores/
 
 # Logs e arquivos temporários
 logs/
 *.log
+
+# Configuração local de banco de dados (produção)
+config/database.local.php
+
+# Cache e sessões PHP
+*.cache
+sessions/
+
+# IDE e sistema
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Arquivos de build temporários
+/tmp/
+*.tmp

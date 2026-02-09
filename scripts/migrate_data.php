@@ -94,26 +94,26 @@ function migrateTable(PDO $oldDb, PDO $newDb, string $oldTable, string $newTable
             
             if (isset($defaults[$col])) {
                 if (is_callable($defaults[$col])) {
-                    $values[":{$col}"] = $defaults[$col]($row);
+                    $val = $defaults[$col]($row);
                 } else {
-                    $values[":{$col}"] = $defaults[$col];
+                    $val = $defaults[$col];
                 }
-            } elseif (isset($row[$sourceCol])) {
-                $values[":{$col}"] = $row[$sourceCol];
-            } elseif (isset($row[$col])) {
-                $values[":{$col}"] = $row[$col];
+            } elseif (array_key_exists($sourceCol, $row)) {
+                $val = $row[$sourceCol];
+            } elseif (array_key_exists($col, $row)) {
+                $val = $row[$col];
             } else {
-                $values[":{$col}"] = null;
+                $val = null;
             }
             
-            $val = $values[":{$col}"];
-            if ($val === '') {
-                $values[":{$col}"] = null;
-            } elseif ($val === 't' || $val === 'true') {
-                $values[":{$col}"] = true;
-            } elseif ($val === 'f' || $val === 'false') {
-                $values[":{$col}"] = false;
+            if ($val === '' || $val === null) {
+                $val = null;
+            } elseif ($val === 't' || $val === 'true' || $val === true) {
+                $val = 't';
+            } elseif ($val === 'f' || $val === 'false' || $val === false) {
+                $val = 'f';
             }
+            $values[":{$col}"] = $val;
         }
         
         $colList = implode(', ', $commonCols);

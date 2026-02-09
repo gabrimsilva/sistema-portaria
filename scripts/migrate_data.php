@@ -133,15 +133,17 @@ try {
     $oldPerms = $oldDb->query("SELECT * FROM permissions ORDER BY id")->fetchAll();
     $permCount = 0;
     foreach ($oldPerms as $perm) {
+        $existing = $newDb->prepare("SELECT id FROM permissions WHERE key = :key");
+        $existing->execute([':key' => $perm['key']]);
+        if ($existing->fetch()) {
+            $permCount++;
+            continue;
+        }
         $stmt = $newDb->prepare("
-            INSERT INTO permissions (id, key, description, module, created_at)
-            VALUES (:id, :key, :description, :module, :created_at)
-            ON CONFLICT (key) DO UPDATE SET
-                description = EXCLUDED.description,
-                module = EXCLUDED.module
+            INSERT INTO permissions (key, description, module, created_at)
+            VALUES (:key, :description, :module, :created_at)
         ");
         $stmt->execute([
-            ':id' => $perm['id'],
             ':key' => $perm['key'],
             ':description' => $perm['description'],
             ':module' => $perm['module'],

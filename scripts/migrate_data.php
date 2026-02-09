@@ -127,9 +127,35 @@ try {
     echo "   [OK] {$stats['usuarios']} usuários migrados\n\n";
 
     // ========================================
-    // 3. MIGRAR ROLE_PERMISSIONS
+    // 3a. MIGRAR PERMISSIONS
     // ========================================
-    echo "--- 3. Migrando ROLE_PERMISSIONS ---\n";
+    echo "--- 3a. Migrando PERMISSIONS ---\n";
+    $oldPerms = $oldDb->query("SELECT * FROM permissions ORDER BY id")->fetchAll();
+    $permCount = 0;
+    foreach ($oldPerms as $perm) {
+        $stmt = $newDb->prepare("
+            INSERT INTO permissions (id, key, description, module, created_at)
+            VALUES (:id, :key, :description, :module, :created_at)
+            ON CONFLICT (id) DO UPDATE SET
+                key = EXCLUDED.key,
+                description = EXCLUDED.description,
+                module = EXCLUDED.module
+        ");
+        $stmt->execute([
+            ':id' => $perm['id'],
+            ':key' => $perm['key'],
+            ':description' => $perm['description'],
+            ':module' => $perm['module'],
+            ':created_at' => $perm['created_at']
+        ]);
+        $permCount++;
+    }
+    echo "   [OK] {$permCount} permissões migradas\n\n";
+
+    // ========================================
+    // 3b. MIGRAR ROLE_PERMISSIONS
+    // ========================================
+    echo "--- 3b. Migrando ROLE_PERMISSIONS ---\n";
     $oldRolePerms = $oldDb->query("SELECT * FROM role_permissions ORDER BY role_id, permission_id")->fetchAll();
     foreach ($oldRolePerms as $rp) {
         $stmt = $newDb->prepare("

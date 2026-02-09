@@ -136,8 +136,7 @@ try {
         $stmt = $newDb->prepare("
             INSERT INTO permissions (id, key, description, module, created_at)
             VALUES (:id, :key, :description, :module, :created_at)
-            ON CONFLICT (id) DO UPDATE SET
-                key = EXCLUDED.key,
+            ON CONFLICT (key) DO UPDATE SET
                 description = EXCLUDED.description,
                 module = EXCLUDED.module
         ");
@@ -152,12 +151,30 @@ try {
     }
     echo "   [OK] {$permCount} permissões migradas\n\n";
 
+    $oldPermIdToKey = [];
+    foreach ($oldPerms as $p) {
+        $oldPermIdToKey[$p['id']] = $p['key'];
+    }
+    $newKeyToPermId = [];
+    $newPermsAll = $newDb->query("SELECT id, key FROM permissions")->fetchAll();
+    foreach ($newPermsAll as $p) {
+        $newKeyToPermId[$p['key']] = $p['id'];
+    }
+
     // ========================================
     // 3b. MIGRAR ROLE_PERMISSIONS
     // ========================================
     echo "--- 3b. Migrando ROLE_PERMISSIONS ---\n";
     $oldRolePerms = $oldDb->query("SELECT * FROM role_permissions ORDER BY role_id, permission_id")->fetchAll();
+    $skipped = 0;
     foreach ($oldRolePerms as $rp) {
+        $oldKey = $oldPermIdToKey[$rp['permission_id']] ?? null;
+        if (!$oldKey || !isset($newKeyToPermId[$oldKey])) {
+            $skipped++;
+            continue;
+        }
+        $newPermId = $newKeyToPermId[$oldKey];
+        
         $stmt = $newDb->prepare("
             INSERT INTO role_permissions (role_id, permission_id, created_at)
             VALUES (:role_id, :permission_id, :created_at)
@@ -165,10 +182,13 @@ try {
         ");
         $stmt->execute([
             ':role_id' => $rp['role_id'],
-            ':permission_id' => $rp['permission_id'],
+            ':permission_id' => $newPermId,
             ':created_at' => $rp['created_at']
         ]);
         $stats['role_permissions']++;
+    }
+    if ($skipped > 0) {
+        echo "   [AVISO] {$skipped} permissões ignoradas (não encontradas no banco novo)\n";
     }
     echo "   [OK] {$stats['role_permissions']} permissões de roles migradas\n\n";
 

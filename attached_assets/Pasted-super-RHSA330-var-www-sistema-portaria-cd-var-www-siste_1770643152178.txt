@@ -1,0 +1,36 @@
+super@RHSA330:/var/www/sistema-portaria$ cd /var/www/sistema-portaria
+sudo git pull origin main
+sudo systemctl restart apache2
+grep -n "brigada/presentes" public/index.php
+remote: Enumerating objects: 42, done.
+remote: Counting objects: 100% (42/42), done.
+remote: Compressing objects: 100% (10/10), done.
+remote: Total 38 (delta 28), reused 38 (delta 28), pack-reused 0 (from 0)
+Unpacking objects: 100% (38/38), 670.60 KiB | 4.93 MiB/s, done.
+From https://github.com/gabrimsilva/sistema-portaria
+ * branch            main       -> FETCH_HEAD
+   8444c9e..bb45cc8  main       -> origin/main
+Updating 8444c9e..bb45cc8
+Fast-forward
+ attached_assets/Pasted-CONFLICT-modify-delete-vendor-phpoffice-phpspreadsheet-_1770641554818.txt | 2020 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ attached_assets/Pasted-Continue-as-root-super-user-yes-yes-sudo-composer-insta_1770641159613.txt |   47 ++
+ attached_assets/Pasted-super-RHSA330-var-www-sistema-portaria-cd-var-www-siste_1770641463648.txt |   84 ++++
+ attached_assets/Pasted-super-RHSA330-var-www-sistema-portaria-cd-var-www-siste_1770641653079.txt | 1169 +++++++++++++++++++++++++++++++++++++++++++++
+ attached_assets/Pasted-super-RHSA330-var-www-sistema-portaria-sudo-apt-install_1770641202257.txt |   62 +++
+ attached_assets/image_1770641314240.png                                                          |  Bin 0 -> 52591 bytes
+ attached_assets/image_1770641344825.png                                                          |  Bin 0 -> 115463 bytes
+ attached_assets/image_1770641424865.png                                                          |  Bin 0 -> 266398 bytes
+ attached_assets/image_1770642916429.png                                                          |  Bin 0 -> 225772 bytes
+ public/index.php                                                                                 |    1 +
+ 10 files changed, 3383 insertions(+)
+ create mode 100644 attached_assets/Pasted-CONFLICT-modify-delete-vendor-phpoffice-phpspreadsheet-_1770641554818.txt
+ create mode 100644 attached_assets/Pasted-Continue-as-root-super-user-yes-yes-sudo-composer-insta_1770641159613.txt
+ create mode 100644 attached_assets/Pasted-super-RHSA330-var-www-sistema-portaria-cd-var-www-siste_1770641463648.txt
+ create mode 100644 attached_assets/Pasted-super-RHSA330-var-www-sistema-portaria-cd-var-www-siste_1770641653079.txt
+ create mode 100644 attached_assets/Pasted-super-RHSA330-var-www-sistema-portaria-sudo-apt-install_1770641202257.txt
+ create mode 100644 attached_assets/image_1770641314240.png
+ create mode 100644 attached_assets/image_1770641344825.png
+ create mode 100644 attached_assets/image_1770641424865.png
+ create mode 100644 attached_assets/image_1770642916429.png
+757:        case 'api/brigada/presentes':
+super@RHSA330:/var/www/sistema-portaria$ 

@@ -754,6 +754,7 @@ try {
             break;
         
         case 'api/painel/brigada':
+        case 'api/brigada/presentes':
             require_once '../src/controllers/PainelBrigadaController.php';
             $controller = new PainelBrigadaController();
             $controller->api();

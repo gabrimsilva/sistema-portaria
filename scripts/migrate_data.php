@@ -5,6 +5,9 @@
  * Migra dados do banco antigo (10.3.1.135, Docker PostgreSQL 15)
  * para o banco novo (10.3.1.130, PostgreSQL 16)
  * 
+ * Detecta automaticamente as colunas de cada tabela para lidar
+ * com diferenças de schema entre os dois bancos.
+ * 
  * Uso: php scripts/migrate_data.php
  * Executar NO SERVIDOR NOVO (10.3.1.130)
  */
@@ -50,9 +53,83 @@ try {
     die("ERRO ao conectar banco NOVO: " . $e->getMessage() . "\n");
 }
 
+function getTableColumns(PDO $db, string $table): array {
+    $stmt = $db->prepare("SELECT column_name FROM information_schema.columns WHERE table_name = :table ORDER BY ordinal_position");
+    $stmt->execute([':table' => $table]);
+    return $stmt->fetchAll(PDO::FETCH_COLUMN);
+}
+
+function migrateTable(PDO $oldDb, PDO $newDb, string $oldTable, string $newTable, array $columnMap = [], array $defaults = [], string $conflictCol = 'id', int $logEvery = 500): int {
+    $oldCols = getTableColumns($oldDb, $oldTable);
+    $newCols = getTableColumns($newDb, $newTable);
+    
+    echo "   Colunas origem ({$oldTable}): " . implode(', ', $oldCols) . "\n";
+    echo "   Colunas destino ({$newTable}): " . implode(', ', $newCols) . "\n";
+    
+    $commonCols = array_intersect($oldCols, $newCols);
+    
+    foreach ($columnMap as $oldCol => $newCol) {
+        if (in_array($oldCol, $oldCols) && in_array($newCol, $newCols)) {
+            $commonCols[] = $newCol;
+        }
+    }
+    $commonCols = array_unique(array_values($commonCols));
+    
+    foreach ($defaults as $col => $val) {
+        if (in_array($col, $newCols) && !in_array($col, $commonCols)) {
+            $commonCols[] = $col;
+        }
+    }
+    
+    echo "   Colunas a migrar: " . implode(', ', $commonCols) . "\n";
+    
+    $oldRows = $oldDb->query("SELECT * FROM {$oldTable} ORDER BY id")->fetchAll();
+    $count = 0;
+    
+    foreach ($oldRows as $row) {
+        $values = [];
+        foreach ($commonCols as $col) {
+            $reverseMap = array_flip($columnMap);
+            $sourceCol = $reverseMap[$col] ?? $col;
+            
+            if (isset($defaults[$col])) {
+                if (is_callable($defaults[$col])) {
+                    $values[":{$col}"] = $defaults[$col]($row);
+                } else {
+                    $values[":{$col}"] = $defaults[$col];
+                }
+            } elseif (isset($row[$sourceCol])) {
+                $values[":{$col}"] = $row[$sourceCol];
+            } elseif (isset($row[$col])) {
+                $values[":{$col}"] = $row[$col];
+            } else {
+                $values[":{$col}"] = null;
+            }
+        }
+        
+        $colList = implode(', ', $commonCols);
+        $paramList = implode(', ', array_map(fn($c) => ":{$c}", $commonCols));
+        
+        $stmt = $newDb->prepare("
+            INSERT INTO {$newTable} ({$colList})
+            VALUES ({$paramList})
+            ON CONFLICT ({$conflictCol}) DO NOTHING
+        ");
+        $stmt->execute($values);
+        $count++;
+        
+        if ($logEvery > 0 && $count % $logEvery === 0) {
+            echo "   ... {$count} registros processados\n";
+        }
+    }
+    
+    return $count;
+}
+
 $stats = [
-    'usuarios' => 0,
     'roles' => 0,
+    'usuarios' => 0,
+    'permissions' => 0,
     'role_permissions' => 0,
     'profissionais_renner' => 0,
     'registro_acesso' => 0,
@@ -69,61 +146,14 @@ try {
     // 1. MIGRAR ROLES
     // ========================================
     echo "--- 1. Migrando ROLES ---\n";
-    $oldRoles = $oldDb->query("SELECT * FROM roles ORDER BY id")->fetchAll();
-    foreach ($oldRoles as $role) {
-        $stmt = $newDb->prepare("
-            INSERT INTO roles (id, name, description, system_role, active, created_at, updated_at)
-            VALUES (:id, :name, :description, :system_role, :active, :created_at, :updated_at)
-            ON CONFLICT (id) DO UPDATE SET
-                name = EXCLUDED.name,
-                description = EXCLUDED.description,
-                system_role = EXCLUDED.system_role,
-                active = EXCLUDED.active
-        ");
-        $stmt->execute([
-            ':id' => $role['id'],
-            ':name' => $role['name'],
-            ':description' => $role['description'],
-            ':system_role' => $role['system_role'] ? 'true' : 'false',
-            ':active' => $role['active'] ? 'true' : 'false',
-            ':created_at' => $role['created_at'],
-            ':updated_at' => $role['updated_at']
-        ]);
-        $stats['roles']++;
-    }
+    $stats['roles'] = migrateTable($oldDb, $newDb, 'roles', 'roles');
     echo "   [OK] {$stats['roles']} roles migrados\n\n";
 
     // ========================================
     // 2. MIGRAR USUARIOS
     // ========================================
     echo "--- 2. Migrando USUARIOS ---\n";
-    $oldUsers = $oldDb->query("SELECT * FROM usuarios ORDER BY id")->fetchAll();
-    foreach ($oldUsers as $user) {
-        $stmt = $newDb->prepare("
-            INSERT INTO usuarios (id, nome, email, senha_hash, perfil, ativo, data_criacao, ultimo_login, role_id, anonymized_at)
-            VALUES (:id, :nome, :email, :senha_hash, :perfil, :ativo, :data_criacao, :ultimo_login, :role_id, :anonymized_at)
-            ON CONFLICT (id) DO UPDATE SET
-                nome = EXCLUDED.nome,
-                email = EXCLUDED.email,
-                senha_hash = EXCLUDED.senha_hash,
-                perfil = EXCLUDED.perfil,
-                ativo = EXCLUDED.ativo,
-                role_id = EXCLUDED.role_id
-        ");
-        $stmt->execute([
-            ':id' => $user['id'],
-            ':nome' => $user['nome'],
-            ':email' => $user['email'],
-            ':senha_hash' => $user['senha_hash'],
-            ':perfil' => $user['perfil'],
-            ':ativo' => $user['ativo'] ? 'true' : 'false',
-            ':data_criacao' => $user['data_criacao'],
-            ':ultimo_login' => $user['ultimo_login'],
-            ':role_id' => $user['role_id'],
-            ':anonymized_at' => $user['anonymized_at']
-        ]);
-        $stats['usuarios']++;
-    }
+    $stats['usuarios'] = migrateTable($oldDb, $newDb, 'usuarios', 'usuarios');
     echo "   [OK] {$stats['usuarios']} usuários migrados\n\n";
 
     // ========================================
@@ -139,20 +169,30 @@ try {
             $permCount++;
             continue;
         }
-        $stmt = $newDb->prepare("
-            INSERT INTO permissions (key, description, module, created_at)
-            VALUES (:key, :description, :module, :created_at)
-        ");
-        $stmt->execute([
-            ':key' => $perm['key'],
-            ':description' => $perm['description'],
-            ':module' => $perm['module'],
-            ':created_at' => $perm['created_at']
-        ]);
+        $newCols = getTableColumns($newDb, 'permissions');
+        $insertCols = [];
+        $insertParams = [];
+        $insertValues = [];
+        foreach (['key', 'description', 'module', 'created_at'] as $col) {
+            if (in_array($col, $newCols) && isset($perm[$col])) {
+                $insertCols[] = $col;
+                $insertParams[] = ":{$col}";
+                $insertValues[":{$col}"] = $perm[$col];
+            }
+        }
+        $colStr = implode(', ', $insertCols);
+        $paramStr = implode(', ', $insertParams);
+        $stmt = $newDb->prepare("INSERT INTO permissions ({$colStr}) VALUES ({$paramStr})");
+        $stmt->execute($insertValues);
         $permCount++;
     }
+    $stats['permissions'] = $permCount;
     echo "   [OK] {$permCount} permissões migradas\n\n";
 
+    // ========================================
+    // 3b. MIGRAR ROLE_PERMISSIONS (com mapeamento de IDs)
+    // ========================================
+    echo "--- 3b. Migrando ROLE_PERMISSIONS ---\n";
     $oldPermIdToKey = [];
     foreach ($oldPerms as $p) {
         $oldPermIdToKey[$p['id']] = $p['key'];
@@ -163,10 +203,6 @@ try {
         $newKeyToPermId[$p['key']] = $p['id'];
     }
 
-    // ========================================
-    // 3b. MIGRAR ROLE_PERMISSIONS
-    // ========================================
-    echo "--- 3b. Migrando ROLE_PERMISSIONS ---\n";
     $oldRolePerms = $oldDb->query("SELECT * FROM role_permissions ORDER BY role_id, permission_id")->fetchAll();
     $skipped = 0;
     foreach ($oldRolePerms as $rp) {
@@ -182,11 +218,12 @@ try {
             VALUES (:role_id, :permission_id, :created_at)
             ON CONFLICT DO NOTHING
         ");
-        $stmt->execute([
+        $params = [
             ':role_id' => $rp['role_id'],
             ':permission_id' => $newPermId,
-            ':created_at' => $rp['created_at']
-        ]);
+        ];
+        $params[':created_at'] = $rp['created_at'] ?? date('Y-m-d H:i:s');
+        $stmt->execute($params);
         $stats['role_permissions']++;
     }
     if ($skipped > 0) {
@@ -198,42 +235,7 @@ try {
     // 4. MIGRAR PROFISSIONAIS RENNER
     // ========================================
     echo "--- 4. Migrando PROFISSIONAIS RENNER ---\n";
-    $oldProfs = $oldDb->query("SELECT * FROM profissionais_renner ORDER BY id")->fetchAll();
-    foreach ($oldProfs as $prof) {
-        $stmt = $newDb->prepare("
-            INSERT INTO profissionais_renner (id, nome, cpf, setor, empresa, fre, data_admissao, data_entrada, saida, retorno, saida_final, placa_veiculo, created_at, updated_at)
-            VALUES (:id, :nome, :cpf, :setor, :empresa, :fre, :data_admissao, :data_entrada, :saida, :retorno, :saida_final, :placa_veiculo, :created_at, :updated_at)
-            ON CONFLICT (id) DO UPDATE SET
-                nome = EXCLUDED.nome,
-                cpf = EXCLUDED.cpf,
-                setor = EXCLUDED.setor,
-                empresa = EXCLUDED.empresa,
-                fre = EXCLUDED.fre,
-                data_admissao = EXCLUDED.data_admissao,
-                data_entrada = EXCLUDED.data_entrada,
-                saida = EXCLUDED.saida,
-                retorno = EXCLUDED.retorno,
-                saida_final = EXCLUDED.saida_final,
-                placa_veiculo = EXCLUDED.placa_veiculo
-        ");
-        $stmt->execute([
-            ':id' => $prof['id'],
-            ':nome' => $prof['nome'],
-            ':cpf' => $prof['cpf'],
-            ':setor' => $prof['setor'],
-            ':empresa' => $prof['empresa'],
-            ':fre' => $prof['fre'],
-            ':data_admissao' => $prof['data_admissao'],
-            ':data_entrada' => $prof['data_entrada'],
-            ':saida' => $prof['saida'],
-            ':retorno' => $prof['retorno'],
-            ':saida_final' => $prof['saida_final'],
-            ':placa_veiculo' => $prof['placa_veiculo'],
-            ':created_at' => $prof['created_at'],
-            ':updated_at' => $prof['updated_at']
-        ]);
-        $stats['profissionais_renner']++;
-    }
+    $stats['profissionais_renner'] = migrateTable($oldDb, $newDb, 'profissionais_renner', 'profissionais_renner');
     echo "   [OK] {$stats['profissionais_renner']} profissionais migrados\n\n";
 
     // ========================================
@@ -241,155 +243,214 @@ try {
     // ========================================
     echo "--- 5. Migrando REGISTRO DE ACESSO ---\n";
     
-    $oldAcessos = $oldDb->query("SELECT * FROM registro_acesso ORDER BY id")->fetchAll();
-    $batchCount = 0;
-    foreach ($oldAcessos as $acesso) {
-        $stmt = $newDb->prepare("
-            INSERT INTO registro_acesso (id, tipo, nome, cpf, empresa, setor, placa_veiculo, funcionario_responsavel, observacao, entrada_at, saida_at, created_by, updated_by, created_at, updated_at, profissional_renner_id, retorno, saida_final)
-            VALUES (:id, :tipo, :nome, :cpf, :empresa, :setor, :placa_veiculo, :funcionario_responsavel, :observacao, :entrada_at, :saida_at, :created_by, :updated_by, :created_at, :updated_at, :profissional_renner_id, :retorno, :saida_final)
-            ON CONFLICT (id) DO NOTHING
-        ");
-        $stmt->execute([
-            ':id' => $acesso['id'],
-            ':tipo' => $acesso['tipo'],
-            ':nome' => $acesso['nome'],
-            ':cpf' => $acesso['cpf'],
-            ':empresa' => $acesso['empresa'],
-            ':setor' => $acesso['setor'],
-            ':placa_veiculo' => $acesso['placa_veiculo'],
-            ':funcionario_responsavel' => $acesso['funcionario_responsavel'],
-            ':observacao' => $acesso['observacao'],
-            ':entrada_at' => $acesso['entrada_at'],
-            ':saida_at' => $acesso['saida_at'],
-            ':created_by' => $acesso['created_by'],
-            ':updated_by' => $acesso['updated_by'],
-            ':created_at' => $acesso['created_at'],
-            ':updated_at' => $acesso['updated_at'],
-            ':profissional_renner_id' => $acesso['profissional_renner_id'],
-            ':retorno' => $acesso['retorno'],
-            ':saida_final' => $acesso['saida_final']
-        ]);
-        $stats['registro_acesso']++;
-        $batchCount++;
-        if ($batchCount % 1000 === 0) {
-            echo "   ... {$batchCount} registros processados\n";
-        }
+    $oldRegCols = getTableColumns($oldDb, 'registro_acesso');
+    $newRegCols = getTableColumns($newDb, 'registro_acesso');
+    
+    $colMapping = [];
+    if (in_array('data_entrada', $oldRegCols) && !in_array('data_entrada', $newRegCols) && in_array('entrada_at', $newRegCols)) {
+        $colMapping['data_entrada'] = 'entrada_at';
     }
+    if (in_array('data_saida', $oldRegCols) && !in_array('data_saida', $newRegCols) && in_array('saida_at', $newRegCols)) {
+        $colMapping['data_saida'] = 'saida_at';
+    }
+    if (in_array('entrada_at', $oldRegCols) && !in_array('entrada_at', $newRegCols) && in_array('data_entrada', $newRegCols)) {
+        $colMapping['entrada_at'] = 'data_entrada';
+    }
+    if (in_array('saida_at', $oldRegCols) && !in_array('saida_at', $newRegCols) && in_array('data_saida', $newRegCols)) {
+        $colMapping['saida_at'] = 'data_saida';
+    }
+    
+    $defaults = [];
+    if (in_array('data_entrada', $newRegCols) && in_array('entrada_at', $newRegCols)) {
+        $defaults['data_entrada'] = function($row) {
+            return $row['data_entrada'] ?? $row['entrada_at'] ?? null;
+        };
+    }
+    if (in_array('data_saida', $newRegCols) && in_array('saida_at', $newRegCols)) {
+        $defaults['data_saida'] = function($row) {
+            return $row['data_saida'] ?? $row['saida_at'] ?? null;
+        };
+    }
+    
+    $stats['registro_acesso'] = migrateTable($oldDb, $newDb, 'registro_acesso', 'registro_acesso', $colMapping, $defaults, 'id', 1000);
     echo "   [OK] {$stats['registro_acesso']} registros de acesso migrados\n\n";
 
     // ========================================
     // 6. MIGRAR PRESTADORES DE SERVIÇO
     // ========================================
     echo "--- 6. Migrando PRESTADORES DE SERVIÇO ---\n";
-    echo "   Separando em: prestadores_cadastro + prestadores_registros\n";
-
-    $oldPrestadores = $oldDb->query("SELECT * FROM prestadores_servico ORDER BY id")->fetchAll();
     
-    $cadastroMap = [];
+    $oldHasPrestadores = !empty(getTableColumns($oldDb, 'prestadores_servico'));
+    $newHasCadastro = !empty(getTableColumns($newDb, 'prestadores_cadastro'));
+    $newHasRegistros = !empty(getTableColumns($newDb, 'prestadores_registros'));
     
-    foreach ($oldPrestadores as $prest) {
-        $cpfKey = trim($prest['cpf'] ?? '');
-        $nomeKey = trim(strtolower($prest['nome'] ?? ''));
-        $lookupKey = !empty($cpfKey) ? $cpfKey : $nomeKey;
+    if ($oldHasPrestadores && $newHasCadastro && $newHasRegistros) {
+        echo "   Separando em: prestadores_cadastro + prestadores_registros\n";
         
-        if (!isset($cadastroMap[$lookupKey])) {
-            $stmt = $newDb->prepare("
-                INSERT INTO prestadores_cadastro (nome, empresa, doc_type, doc_number, doc_country, placa_veiculo, observacoes, valid_from, valid_until, ativo, created_at)
-                VALUES (:nome, :empresa, :doc_type, :doc_number, 'BR', :placa_veiculo, NULL, :valid_from, :valid_until, true, :created_at)
-                RETURNING id
-            ");
-            $stmt->execute([
-                ':nome' => $prest['nome'],
-                ':empresa' => $prest['empresa'],
-                ':doc_type' => !empty($cpfKey) ? 'CPF' : null,
-                ':doc_number' => !empty($cpfKey) ? $cpfKey : null,
-                ':placa_veiculo' => $prest['placa_veiculo'],
-                ':valid_from' => date('Y-m-d', strtotime($prest['created_at'] ?? 'now')),
-                ':valid_until' => date('Y-m-d', strtotime('+1 year')),
-                ':created_at' => $prest['created_at'] ?? date('Y-m-d H:i:s')
-            ]);
-            $cadastroId = $stmt->fetchColumn();
-            $cadastroMap[$lookupKey] = $cadastroId;
-            $stats['prestadores_cadastro']++;
+        $newCadCols = getTableColumns($newDb, 'prestadores_cadastro');
+        $newRegCols = getTableColumns($newDb, 'prestadores_registros');
+        echo "   Colunas cadastro: " . implode(', ', $newCadCols) . "\n";
+        echo "   Colunas registros: " . implode(', ', $newRegCols) . "\n";
+        
+        $oldPrestadores = $oldDb->query("SELECT * FROM prestadores_servico ORDER BY id")->fetchAll();
+        $cadastroMap = [];
+        
+        foreach ($oldPrestadores as $prest) {
+            $cpfKey = trim($prest['cpf'] ?? '');
+            $nomeKey = trim(strtolower($prest['nome'] ?? ''));
+            $lookupKey = !empty($cpfKey) ? $cpfKey : $nomeKey;
+            
+            if (!isset($cadastroMap[$lookupKey])) {
+                $cadValues = [
+                    ':nome' => $prest['nome'],
+                    ':empresa' => $prest['empresa'] ?? null,
+                ];
+                $cadCols = ['nome', 'empresa'];
+                
+                if (in_array('doc_type', $newCadCols)) {
+                    $cadCols[] = 'doc_type';
+                    $cadValues[':doc_type'] = !empty($cpfKey) ? 'CPF' : null;
+                }
+                if (in_array('doc_number', $newCadCols)) {
+                    $cadCols[] = 'doc_number';
+                    $cadValues[':doc_number'] = !empty($cpfKey) ? $cpfKey : null;
+                }
+                if (in_array('doc_country', $newCadCols)) {
+                    $cadCols[] = 'doc_country';
+                    $cadValues[':doc_country'] = 'BR';
+                }
+                if (in_array('placa_veiculo', $newCadCols)) {
+                    $cadCols[] = 'placa_veiculo';
+                    $cadValues[':placa_veiculo'] = $prest['placa_veiculo'] ?? null;
+                }
+                if (in_array('valid_from', $newCadCols)) {
+                    $cadCols[] = 'valid_from';
+                    $cadValues[':valid_from'] = date('Y-m-d', strtotime($prest['created_at'] ?? 'now'));
+                }
+                if (in_array('valid_until', $newCadCols)) {
+                    $cadCols[] = 'valid_until';
+                    $cadValues[':valid_until'] = date('Y-m-d', strtotime('+1 year'));
+                }
+                if (in_array('ativo', $newCadCols)) {
+                    $cadCols[] = 'ativo';
+                    $cadValues[':ativo'] = true;
+                }
+                if (in_array('created_at', $newCadCols)) {
+                    $cadCols[] = 'created_at';
+                    $cadValues[':created_at'] = $prest['created_at'] ?? date('Y-m-d H:i:s');
+                }
+                if (in_array('data_cadastro', $newCadCols)) {
+                    $cadCols[] = 'data_cadastro';
+                    $cadValues[':data_cadastro'] = $prest['created_at'] ?? date('Y-m-d H:i:s');
+                }
+                
+                $colStr = implode(', ', $cadCols);
+                $paramStr = implode(', ', array_map(fn($c) => ":{$c}", $cadCols));
+                
+                $stmt = $newDb->prepare("INSERT INTO prestadores_cadastro ({$colStr}) VALUES ({$paramStr}) RETURNING id");
+                $stmt->execute($cadValues);
+                $cadastroId = $stmt->fetchColumn();
+                $cadastroMap[$lookupKey] = $cadastroId;
+                $stats['prestadores_cadastro']++;
+            }
+            
+            $cadastroId = $cadastroMap[$lookupKey];
+            
+            $regValues = [':cadastro_id' => $cadastroId];
+            $regCols = ['cadastro_id'];
+            
+            if (in_array('funcionario_responsavel', $newRegCols)) {
+                $regCols[] = 'funcionario_responsavel';
+                $regValues[':funcionario_responsavel'] = $prest['funcionario_responsavel'] ?? null;
+            }
+            if (in_array('setor', $newRegCols)) {
+                $regCols[] = 'setor';
+                $regValues[':setor'] = $prest['setor'] ?? null;
+            }
+            if (in_array('entrada_at', $newRegCols)) {
+                $regCols[] = 'entrada_at';
+                $regValues[':entrada_at'] = $prest['entrada'] ?? $prest['entrada_at'] ?? null;
+            }
+            if (in_array('data_entrada', $newRegCols)) {
+                $regCols[] = 'data_entrada';
+                $regValues[':data_entrada'] = $prest['entrada'] ?? $prest['data_entrada'] ?? null;
+            }
+            if (in_array('saida_at', $newRegCols)) {
+                $regCols[] = 'saida_at';
+                $regValues[':saida_at'] = $prest['saida'] ?? $prest['saida_at'] ?? null;
+            }
+            if (in_array('data_saida', $newRegCols)) {
+                $regCols[] = 'data_saida';
+                $regValues[':data_saida'] = $prest['saida'] ?? $prest['data_saida'] ?? null;
+            }
+            if (in_array('observacao_entrada', $newRegCols)) {
+                $regCols[] = 'observacao_entrada';
+                $regValues[':observacao_entrada'] = $prest['observacao'] ?? null;
+            }
+            if (in_array('observacao', $newRegCols)) {
+                $regCols[] = 'observacao';
+                $regValues[':observacao'] = $prest['observacao'] ?? null;
+            }
+            if (in_array('created_at', $newRegCols)) {
+                $regCols[] = 'created_at';
+                $regValues[':created_at'] = $prest['created_at'] ?? date('Y-m-d H:i:s');
+            }
+            
+            $colStr = implode(', ', $regCols);
+            $paramStr = implode(', ', array_map(fn($c) => ":{$c}", $regCols));
+            
+            $stmt = $newDb->prepare("INSERT INTO prestadores_registros ({$colStr}) VALUES ({$paramStr})");
+            $stmt->execute($regValues);
+            $stats['prestadores_registros']++;
+            
+            if ($stats['prestadores_registros'] % 500 === 0) {
+                echo "   ... {$stats['prestadores_registros']} registros processados\n";
+            }
         }
-        
-        $cadastroId = $cadastroMap[$lookupKey];
-        
-        $stmt = $newDb->prepare("
-            INSERT INTO prestadores_registros (cadastro_id, funcionario_responsavel, setor, entrada_at, saida_at, observacao_entrada, observacao_saida, created_at)
-            VALUES (:cadastro_id, :funcionario_responsavel, :setor, :entrada_at, :saida_at, :obs_entrada, NULL, :created_at)
-        ");
-        $stmt->execute([
-            ':cadastro_id' => $cadastroId,
-            ':funcionario_responsavel' => $prest['funcionario_responsavel'],
-            ':setor' => $prest['setor'],
-            ':entrada_at' => $prest['entrada'],
-            ':saida_at' => $prest['saida'],
-            ':obs_entrada' => $prest['observacao'],
-            ':created_at' => $prest['created_at'] ?? date('Y-m-d H:i:s')
-        ]);
-        $stats['prestadores_registros']++;
-        
-        if ($stats['prestadores_registros'] % 500 === 0) {
-            echo "   ... {$stats['prestadores_registros']} registros processados\n";
-        }
+        echo "   [OK] {$stats['prestadores_cadastro']} cadastros únicos criados\n";
+        echo "   [OK] {$stats['prestadores_registros']} registros de acesso de prestadores migrados\n\n";
+    } else {
+        echo "   [PULADO] Tabelas de prestadores não encontradas em ambos os bancos\n\n";
     }
-    echo "   [OK] {$stats['prestadores_cadastro']} cadastros únicos criados\n";
-    echo "   [OK] {$stats['prestadores_registros']} registros de acesso de prestadores migrados\n\n";
 
     // ========================================
     // 7. MIGRAR AUDIT LOG
     // ========================================
     echo "--- 7. Migrando AUDIT LOG ---\n";
-    $oldLogs = $oldDb->query("SELECT * FROM audit_log ORDER BY id")->fetchAll();
-    $batchCount = 0;
-    foreach ($oldLogs as $log) {
-        $stmt = $newDb->prepare("
-            INSERT INTO audit_log (id, user_id, acao, entidade, entidade_id, dados_antes, dados_depois, ip_address, user_agent, timestamp, severidade, modulo, resultado)
-            VALUES (:id, :user_id, :acao, :entidade, :entidade_id, :dados_antes, :dados_depois, :ip_address, :user_agent, :timestamp, :severidade, :modulo, :resultado)
-            ON CONFLICT (id) DO NOTHING
-        ");
-        $stmt->execute([
-            ':id' => $log['id'],
-            ':user_id' => $log['user_id'],
-            ':acao' => $log['acao'],
-            ':entidade' => $log['entidade'],
-            ':entidade_id' => $log['entidade_id'],
-            ':dados_antes' => $log['dados_antes'],
-            ':dados_depois' => $log['dados_depois'],
-            ':ip_address' => $log['ip_address'],
-            ':user_agent' => $log['user_agent'],
-            ':timestamp' => $log['timestamp'],
-            ':severidade' => $log['severidade'] ?? 'info',
-            ':modulo' => $log['modulo'],
-            ':resultado' => $log['resultado'] ?? 'sucesso'
-        ]);
-        $stats['audit_log']++;
-        $batchCount++;
-        if ($batchCount % 1000 === 0) {
-            echo "   ... {$batchCount} logs processados\n";
-        }
+    $oldHasAudit = !empty(getTableColumns($oldDb, 'audit_log'));
+    $newHasAudit = !empty(getTableColumns($newDb, 'audit_log'));
+    
+    if ($oldHasAudit && $newHasAudit) {
+        $stats['audit_log'] = migrateTable($oldDb, $newDb, 'audit_log', 'audit_log', [], [], 'id', 1000);
+        echo "   [OK] {$stats['audit_log']} logs de auditoria migrados\n\n";
+    } else {
+        echo "   [PULADO] Tabela audit_log não encontrada em ambos os bancos\n\n";
     }
-    echo "   [OK] {$stats['audit_log']} logs de auditoria migrados\n\n";
 
     // ========================================
-    // 8. AJUSTAR SEQUENCES
+    // 8. MIGRAR RAMAIS
     // ========================================
-    echo "--- 8. Ajustando SEQUENCES (auto-increment) ---\n";
-    $sequences = [
-        "SELECT setval('usuarios_id_seq', COALESCE((SELECT MAX(id) FROM usuarios), 1))",
-        "SELECT setval('profissionais_renner_id_seq', COALESCE((SELECT MAX(id) FROM profissionais_renner), 1))",
-        "SELECT setval('registro_acesso_id_seq', COALESCE((SELECT MAX(id) FROM registro_acesso), 1))",
-        "SELECT setval('prestadores_cadastro_id_seq', COALESCE((SELECT MAX(id) FROM prestadores_cadastro), 1))",
-        "SELECT setval('prestadores_registros_id_seq', COALESCE((SELECT MAX(id) FROM prestadores_registros), 1))",
-        "SELECT setval('audit_log_id_seq', COALESCE((SELECT MAX(id) FROM audit_log), 1))",
-        "SELECT setval('roles_id_seq', COALESCE((SELECT MAX(id) FROM roles), 1))",
-    ];
-    foreach ($sequences as $sql) {
+    echo "--- 8. Migrando RAMAIS ---\n";
+    $oldHasRamais = !empty(getTableColumns($oldDb, 'ramais'));
+    $newHasRamais = !empty(getTableColumns($newDb, 'ramais'));
+    
+    if ($oldHasRamais && $newHasRamais) {
+        $stats['ramais'] = migrateTable($oldDb, $newDb, 'ramais', 'ramais', [], [], 'id');
+        echo "   [OK] {$stats['ramais']} ramais migrados\n\n";
+    } else {
+        echo "   [PULADO] Tabela ramais não encontrada em ambos os bancos\n\n";
+    }
+
+    // ========================================
+    // 9. AJUSTAR SEQUENCES
+    // ========================================
+    echo "--- 9. Ajustando SEQUENCES (auto-increment) ---\n";
+    $seqTables = ['usuarios', 'profissionais_renner', 'registro_acesso', 'prestadores_cadastro', 'prestadores_registros', 'audit_log', 'roles', 'permissions', 'ramais'];
+    foreach ($seqTables as $tbl) {
         try {
-            $newDb->exec($sql);
+            $newDb->exec("SELECT setval(pg_get_serial_sequence('{$tbl}', 'id'), COALESCE((SELECT MAX(id) FROM {$tbl}), 1))");
         } catch (PDOException $e) {
-            echo "   [AVISO] Sequence: " . $e->getMessage() . "\n";
+            echo "   [AVISO] Sequence {$tbl}: " . $e->getMessage() . "\n";
         }
     }
     echo "   [OK] Sequences ajustadas\n\n";
@@ -403,14 +464,9 @@ try {
     echo "  MIGRAÇÃO CONCLUÍDA COM SUCESSO!\n";
     echo "=====================================================\n\n";
     echo "Resumo:\n";
-    echo "  - Roles:                  {$stats['roles']}\n";
-    echo "  - Usuários:               {$stats['usuarios']}\n";
-    echo "  - Permissões de roles:    {$stats['role_permissions']}\n";
-    echo "  - Profissionais Renner:   {$stats['profissionais_renner']}\n";
-    echo "  - Registros de acesso:    {$stats['registro_acesso']}\n";
-    echo "  - Prestadores (cadastro): {$stats['prestadores_cadastro']}\n";
-    echo "  - Prestadores (registros):{$stats['prestadores_registros']}\n";
-    echo "  - Audit log:              {$stats['audit_log']}\n";
+    foreach ($stats as $key => $val) {
+        echo "  - " . str_pad($key, 25) . ": {$val}\n";
+    }
     echo "\nTotal de registros migrados: " . array_sum($stats) . "\n";
 
 } catch (Exception $e) {

@@ -105,6 +105,15 @@ function migrateTable(PDO $oldDb, PDO $newDb, string $oldTable, string $newTable
             } else {
                 $values[":{$col}"] = null;
             }
+            
+            $val = $values[":{$col}"];
+            if ($val === '') {
+                $values[":{$col}"] = null;
+            } elseif ($val === 't' || $val === 'true') {
+                $values[":{$col}"] = true;
+            } elseif ($val === 'f' || $val === 'false') {
+                $values[":{$col}"] = false;
+            }
         }
         
         $colList = implode(', ', $commonCols);

@@ -39,3 +39,9 @@ Thumbs.db
 # Arquivos de build temporários
 /tmp/
 *.tmp
+
+# Arquivos anexados do Replit (conversas)
+attached_assets/
+
+# Drafts e rascunhos de features
+feature_*/

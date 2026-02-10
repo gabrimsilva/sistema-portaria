@@ -3,7 +3,10 @@
 # Bloquear acesso direto a arquivos de upload MESMO no servidor PHP
 RewriteEngine On
 
-# CRÍTICO: Bloquear /uploads/ independentemente do servidor
+# Permitir acesso a fotos de profissionais, visitantes e prestadores
+RewriteCond %{REQUEST_URI} !^/uploads/profissionais/.*\.(jpg|jpeg|png|gif|webp)$ [NC]
+RewriteCond %{REQUEST_URI} !^/uploads/visitantes/.*\.(jpg|jpeg|png|gif|webp)$ [NC]
+RewriteCond %{REQUEST_URI} !^/uploads/prestadores/.*\.(jpg|jpeg|png|gif|webp)$ [NC]
 RewriteRule ^uploads/.*$ - [F,L]
 
 # Bloquear arquivos sensíveis

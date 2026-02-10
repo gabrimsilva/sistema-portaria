@@ -7,13 +7,15 @@
 SetEnvIf Request_URI "\.\." path_traversal_detected
 SetEnvIf Request_URI "%2[eE]" path_traversal_detected
 SetEnvIf Request_URI "%5[cC]" path_traversal_detected
-SetEnvIf Request_URI "^/uploads/profissionais/[^/]+\.(jpg|jpeg|png|gif|webp)$" allow_profissionais
+SetEnvIf Request_URI "^/uploads/profissionais/[^/]+\.(jpg|jpeg|png|gif|webp)$" allow_photos
+SetEnvIf Request_URI "^/uploads/visitantes/[^/]+\.(jpg|jpeg|png|gif|webp)$" allow_photos
+SetEnvIf Request_URI "^/uploads/prestadores/[^/]+\.(jpg|jpeg|png|gif|webp)$" allow_photos
 
-# ❌ NEGAR ACESSO A TODOS OS ARQUIVOS NESTE DIRETÓRIO (exceto profissionais)
+# ❌ NEGAR ACESSO A TODOS OS ARQUIVOS NESTE DIRETÓRIO (exceto fotos autorizadas)
 Order deny,allow
 Deny from all
 Deny from env=path_traversal_detected
-Allow from env=allow_profissionais
+Allow from env=allow_photos
 
 # ❌ Bloquear execução de qualquer script
 <FilesMatch "\.(php|phtml|pl|py|jsp|asp|sh|cgi|js|html|htm)$">
@@ -27,7 +29,7 @@ Allow from env=allow_profissionais
     Order deny,allow
     Deny from all
     Deny from env=path_traversal_detected
-    Allow from env=allow_profissionais
+    Allow from env=allow_photos
 </FilesMatch>
 
 # ❌ Não permitir listagem de diretório

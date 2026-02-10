@@ -1,0 +1,19 @@
+Order allow,deny
+Allow from all
+
+<FilesMatch "\.(php|phtml|pl|py|jsp|asp|sh|cgi|js|html|htm)$">
+    Order deny,allow
+    Deny from all
+</FilesMatch>
+
+<FilesMatch "\.(jpg|jpeg|png|gif|webp)$">
+    Order allow,deny
+    Allow from all
+</FilesMatch>
+
+<IfModule mod_headers.c>
+    Header set Cache-Control "public, max-age=86400"
+    Header set X-Content-Type-Options "nosniff"
+</IfModule>
+
+Options -Indexes

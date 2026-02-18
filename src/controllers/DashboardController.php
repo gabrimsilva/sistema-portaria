@@ -104,7 +104,7 @@ class DashboardController {
                 FROM visitantes_cadastro 
                 WHERE deleted_at IS NULL
             ")['total'] ?? 0;
-            $totalPrestadores = $this->db->fetch("SELECT COUNT(*) as total FROM prestadores_servico")['total'] ?? 0;
+            $totalPrestadores = $this->db->fetch("SELECT COUNT(*) as total FROM prestadores_cadastro WHERE deleted_at IS NULL")['total'] ?? 0;
             
             // Visitantes ativos na empresa
             $visitantesAtivos = $this->db->fetch("
@@ -118,8 +118,10 @@ class DashboardController {
             // Prestadores trabalhando
             $prestadoresTrabalhando = $this->db->fetch("
                 SELECT COUNT(*) as total 
-                FROM prestadores_servico 
-                WHERE entrada IS NOT NULL AND saida IS NULL
+                FROM prestadores_registros r
+                JOIN prestadores_cadastro c ON c.id = r.cadastro_id
+                WHERE r.entrada_at IS NOT NULL AND r.saida_at IS NULL
+                  AND c.deleted_at IS NULL
             ")['total'] ?? 0;
             
             // Profissionais que saíram hoje e ainda não retornaram
@@ -225,8 +227,10 @@ class DashboardController {
         try {
             $prestadoresHoje = $this->db->fetch("
                 SELECT COUNT(*) as total 
-                FROM prestadores_servico 
-                WHERE entrada >= CURRENT_DATE AND entrada < CURRENT_DATE + INTERVAL '1 day'
+                FROM prestadores_registros r
+                JOIN prestadores_cadastro c ON c.id = r.cadastro_id
+                WHERE r.entrada_at >= CURRENT_DATE AND r.entrada_at < CURRENT_DATE + INTERVAL '1 day'
+                  AND c.deleted_at IS NULL
             ")['total'] ?? 0;
             $result['prestadores'] = $prestadoresHoje;
         } catch (Exception $e) {
@@ -271,8 +275,10 @@ class DashboardController {
         try {
             $prestadoresSaidas = $this->db->fetch("
                 SELECT COUNT(*) as total 
-                FROM prestadores_servico 
-                WHERE saida >= CURRENT_DATE AND saida < CURRENT_DATE + INTERVAL '1 day'
+                FROM prestadores_registros r
+                JOIN prestadores_cadastro c ON c.id = r.cadastro_id
+                WHERE r.saida_at >= CURRENT_DATE AND r.saida_at < CURRENT_DATE + INTERVAL '1 day'
+                  AND c.deleted_at IS NULL
             ")['total'] ?? 0;
             $totalSaidas += $prestadoresSaidas;
         } catch (Exception $e) {
@@ -307,10 +313,12 @@ class DashboardController {
                        AND c.deleted_at IS NULL
                      GROUP BY r.setor)
                     UNION ALL
-                    (SELECT setor, COUNT(*) as total
-                     FROM prestadores_servico 
-                     WHERE setor IS NOT NULL AND entrada >= CURRENT_DATE - INTERVAL '7 days'
-                     GROUP BY setor)
+                    (SELECT r.setor, COUNT(*) as total
+                     FROM prestadores_registros r
+                     JOIN prestadores_cadastro c ON c.id = r.cadastro_id
+                     WHERE r.setor IS NOT NULL AND r.entrada_at >= CURRENT_DATE - INTERVAL '7 days'
+                       AND c.deleted_at IS NULL
+                     GROUP BY r.setor)
                     UNION ALL
                     (SELECT p.setor, COUNT(*) as total
                      FROM registro_acesso r

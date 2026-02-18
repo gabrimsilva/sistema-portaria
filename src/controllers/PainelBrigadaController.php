@@ -45,10 +45,14 @@ class PainelBrigadaController {
                 pr.empresa,
                 pr.foto_url,
                 b.ramal,
-                b.note
+                b.note,
+                r.entrada_at
             FROM brigadistas b
             INNER JOIN profissionais_renner pr ON pr.id = b.professional_id
+            INNER JOIN registro_acesso r ON r.profissional_renner_id = pr.id
             WHERE b.active = true
+              AND r.saida_at IS NULL
+              AND r.tipo = 'profissional_renner'
             ORDER BY pr.nome
         ";
         

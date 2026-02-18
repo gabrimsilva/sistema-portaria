@@ -52,6 +52,8 @@ class PainelBrigadaController {
             INNER JOIN registro_acesso r ON r.profissional_renner_id = pr.id
             WHERE b.active = true
               AND r.saida_at IS NULL
+              AND r.data_saida IS NULL
+              AND r.saida_final IS NULL
               AND r.tipo = 'profissional_renner'
             ORDER BY pr.nome
         ";

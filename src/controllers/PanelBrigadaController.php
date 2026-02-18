@@ -47,6 +47,8 @@ class PanelBrigadaController {
                 JOIN brigadistas b ON b.professional_id = p.id
                 WHERE r.tipo = 'profissional_renner'
                   AND r.saida_at IS NULL
+                  AND r.data_saida IS NULL
+                  AND r.saida_final IS NULL
                   AND b.active = TRUE
                 ORDER BY desde DESC
             ") ?? [];

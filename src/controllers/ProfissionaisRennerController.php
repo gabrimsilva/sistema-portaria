@@ -377,11 +377,9 @@ class ProfissionaisRennerController {
                 if ($registro_id) {
                     $this->db->query("
                         UPDATE registro_acesso 
-                        SET nome = ?, setor = ?, placa_veiculo = ?, entrada_at = ?, saida_at = ?, retorno = ?, saida_final = ?, updated_by = ?, updated_at = CURRENT_TIMESTAMP
+                        SET placa_veiculo = ?, entrada_at = ?, saida_at = ?, retorno = ?, saida_final = ?, updated_by = ?, updated_at = CURRENT_TIMESTAMP
                         WHERE id = ?
                     ", [
-                        $nome,
-                        $setor,
                         $placa_veiculo,
                         $data_entrada ?: $registroAtual['entrada_at'],
                         $saida ?: null,
@@ -764,9 +762,9 @@ class ProfissionaisRennerController {
                 
                 $this->db->query("
                     UPDATE registro_acesso 
-                    SET nome = ?, setor = ?, placa_veiculo = ?, saida_at = ?, retorno = ?, saida_final = ?, updated_by = ?, updated_at = CURRENT_TIMESTAMP
+                    SET placa_veiculo = ?, saida_at = ?, retorno = ?, saida_final = ?, updated_by = ?, updated_at = CURRENT_TIMESTAMP
                     WHERE id = ?
-                ", [$nome, $setor, $placa_veiculo, $saida_parsed, $retorno_parsed, $saida_final_parsed, $_SESSION['user_id'] ?? null, $id]);
+                ", [$placa_veiculo, $saida_parsed, $retorno_parsed, $saida_final_parsed, $_SESSION['user_id'] ?? null, $id]);
                 
                 $this->db->commit();
                 

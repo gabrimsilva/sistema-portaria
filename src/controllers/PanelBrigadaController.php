@@ -39,13 +39,14 @@ class PanelBrigadaController {
                     r.profissional_renner_id as professional_id,
                     COALESCE(r.retorno, r.entrada_at) as desde,
                     b.active,
-                    b.ramal
+                    b.ramal,
+                    r.saida_at,
+                    r.entrada_at
                 FROM registro_acesso r
                 JOIN profissionais_renner p ON p.id = r.profissional_renner_id
                 JOIN brigadistas b ON b.professional_id = p.id
                 WHERE r.tipo = 'profissional_renner'
-                  AND r.saida_final IS NULL
-                  AND (r.saida_at IS NULL OR r.retorno IS NOT NULL)
+                  AND r.saida_at IS NULL
                   AND b.active = TRUE
                 ORDER BY desde DESC
             ") ?? [];

@@ -248,19 +248,17 @@ class ProfissionaisRennerController {
                 }
                 
                 $this->db->query("
-                    INSERT INTO registro_acesso (tipo, nome, setor, placa_veiculo, entrada_at, saida_at, retorno, saida_final, profissional_renner_id, created_by)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO registro_acesso (tipo, nome, placa_veiculo, entrada_at, saida_at, retorno, saida_final, profissional_renner_id)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 ", [
                     'profissional_renner',
                     $nome,
-                    $setor,
                     $placa_veiculo,
                     $data_entrada,
                     $saida ?: null,
                     $retorno ?: null,
                     $saida_final ?: null,
-                    $profissional_id,
-                    $_SESSION['user_id'] ?? null
+                    $profissional_id
                 ]);
                 
                 $this->db->commit();
@@ -596,16 +594,14 @@ class ProfissionaisRennerController {
                 
                 // Inserir com doc_type e doc_number explicitamente NULL para evitar defaults que violam constraint
                 $this->db->query("
-                    INSERT INTO registro_acesso (tipo, nome, setor, placa_veiculo, entrada_at, profissional_renner_id, created_by, doc_type, doc_number)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, NULL, NULL)
+                    INSERT INTO registro_acesso (tipo, nome, placa_veiculo, entrada_at, profissional_renner_id)
+                    VALUES (?, ?, ?, ?, ?)
                 ", [
                     'profissional_renner',
                     $nome,
-                    $setor,
                     $placa_veiculo,
                     $data_entrada,
-                    $profissional_id,
-                    $_SESSION['user_id'] ?? null
+                    $profissional_id
                 ]);
                 
                 $registro_id = $this->db->lastInsertId();

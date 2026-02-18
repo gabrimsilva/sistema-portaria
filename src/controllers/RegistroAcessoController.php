@@ -44,19 +44,16 @@ class RegistroAcessoController {
             
             // Inserir registro
             $this->db->query(
-                "INSERT INTO registro_acesso (tipo, nome, cpf, empresa, setor, placa_veiculo, funcionario_responsavel, observacao, entrada_at, created_by) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                "INSERT INTO registro_acesso (tipo, nome, cpf, empresa, placa_veiculo, observacao, entrada_at) 
+                 VALUES (?, ?, ?, ?, ?, ?, ?)",
                 [
                     $data['tipo'],
                     $data['nome'],
                     $data['cpf'],
                     $data['empresa'],
-                    $data['setor'],
                     $data['placa_veiculo'],
-                    $data['funcionario_responsavel'],
                     $data['observacao'],
-                    $data['entrada_at'],
-                    $_SESSION['user_id']
+                    $data['entrada_at']
                 ]
             );
             

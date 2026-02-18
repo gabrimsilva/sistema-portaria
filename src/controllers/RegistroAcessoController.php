@@ -141,8 +141,8 @@ class RegistroAcessoController {
             
             // Atualizar registro
             $this->db->query(
-                "UPDATE registro_acesso SET saida_at = ?, updated_by = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-                [$saida_at, $_SESSION['user_id'], $id]
+                "UPDATE registro_acesso SET saida_at = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+                [$saida_at, $id]
             );
             
             $registroAtualizado = $this->db->fetch("SELECT * FROM registro_acesso WHERE id = ?", [$id]);

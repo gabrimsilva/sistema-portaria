@@ -377,7 +377,7 @@ class ProfissionaisRennerController {
                 if ($registro_id) {
                     $this->db->query("
                         UPDATE registro_acesso 
-                        SET placa_veiculo = ?, entrada_at = ?, saida_at = ?, retorno = ?, saida_final = ?, updated_at = CURRENT_TIMESTAMP
+                        SET placa_veiculo = ?, entrada_at = ?, saida_at = ?, retorno = ?, saida_final = ?
                         WHERE id = ?
                     ", [
                         $placa_veiculo,
@@ -761,7 +761,7 @@ class ProfissionaisRennerController {
                 
                 $this->db->query("
                     UPDATE registro_acesso 
-                    SET placa_veiculo = ?, saida_at = ?, retorno = ?, saida_final = ?, updated_at = CURRENT_TIMESTAMP
+                    SET placa_veiculo = ?, saida_at = ?, retorno = ?, saida_final = ?
                     WHERE id = ?
                 ", [$placa_veiculo, $saida_parsed, $retorno_parsed, $saida_final_parsed, $id]);
                 
@@ -889,9 +889,9 @@ class ProfissionaisRennerController {
                 
                 $this->db->query("
                     UPDATE registro_acesso 
-                    SET saida_final = CURRENT_TIMESTAMP, updated_by = ?, updated_at = CURRENT_TIMESTAMP
+                    SET saida_final = CURRENT_TIMESTAMP
                     WHERE id = ?
-                ", [$_SESSION['user_id'] ?? null, $id]);
+                ", [$id]);
                 
                 echo json_encode([
                     'success' => true, 
@@ -1021,9 +1021,6 @@ class ProfissionaisRennerController {
                 $this->db->query($query, $updateProfissionalParams);
             }
             
-            $updateRegistroFields[] = 'updated_by = ?';
-            $updateRegistroParams[] = $_SESSION['user_id'] ?? null;
-            $updateRegistroFields[] = 'updated_at = CURRENT_TIMESTAMP';
             $updateRegistroParams[] = $id;
             
             $query = "UPDATE registro_acesso SET " . implode(', ', $updateRegistroFields) . " WHERE id = ?";

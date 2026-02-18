@@ -141,7 +141,7 @@ class RegistroAcessoController {
             
             // Atualizar registro
             $this->db->query(
-                "UPDATE registro_acesso SET saida_at = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+                "UPDATE registro_acesso SET saida_at = ? WHERE id = ?",
                 [$saida_at, $id]
             );
             
@@ -263,9 +263,6 @@ class RegistroAcessoController {
                 $params[] = $value;
             }
             
-            $setClauses[] = "updated_by = ?";
-            $setClauses[] = "updated_at = CURRENT_TIMESTAMP";
-            $params[] = $_SESSION['user_id'];
             $params[] = $id;
             
             $sql = "UPDATE registro_acesso SET " . implode(', ', $setClauses) . " WHERE id = ?";

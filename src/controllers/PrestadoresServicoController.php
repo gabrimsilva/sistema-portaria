@@ -736,8 +736,8 @@ class PrestadoresServicoController {
                     // Criar registro de entrada
                     $this->db->query("
                         INSERT INTO prestadores_registros 
-                        (cadastro_id, funcionario_responsavel, setor, entrada_at, observacao_entrada, created_at, updated_at)
-                        VALUES (?, ?, ?, ?, ?, NOW(), NOW())
+                        (cadastro_id, funcionario_responsavel, setor, entrada_at, observacao_entrada)
+                        VALUES (?, ?, ?, ?, ?)
                     ", [
                         $cadastro_id,
                         $funcionario_responsavel,
@@ -826,8 +826,8 @@ class PrestadoresServicoController {
                 // Criar registro de entrada
                 $this->db->query("
                     INSERT INTO prestadores_registros
-                    (cadastro_id, funcionario_responsavel, setor, entrada_at, observacao_entrada, created_at, updated_at)
-                    VALUES (?, ?, ?, ?, ?, NOW(), NOW())
+                    (cadastro_id, funcionario_responsavel, setor, entrada_at, observacao_entrada)
+                    VALUES (?, ?, ?, ?, ?)
                 ", [
                     $novo_cadastro_id,
                     $funcionario_responsavel,

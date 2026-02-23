@@ -53,6 +53,21 @@ class AuthController {
                         // Usar role RBAC se disponível, senão fallback para perfil legacy
                         $_SESSION['user_profile'] = $user['role_name'] ?? $user['perfil'];
                         
+                        // Carregar permissões RBAC na sessão
+                        $permissions = [];
+                        if (!empty($user['role_id'])) {
+                            $perms = $this->db->fetchAll(
+                                "SELECT p.name FROM permissions p
+                                 JOIN role_permissions rp ON rp.permission_id = p.id
+                                 WHERE rp.role_id = ?",
+                                [$user['role_id']]
+                            );
+                            foreach ($perms as $p) {
+                                $permissions[] = $p['name'];
+                            }
+                        }
+                        $_SESSION['user_permissions'] = $permissions;
+                        
                         // Update last login
                         $this->db->query(
                             "UPDATE usuarios SET ultimo_login = CURRENT_TIMESTAMP WHERE id = ?",

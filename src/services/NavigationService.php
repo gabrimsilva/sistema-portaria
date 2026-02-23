@@ -74,7 +74,7 @@ class NavigationService
             'label' => 'Brigada de Incêndio',
             'url' => '/brigada',
             'icon' => 'fas fa-fire-extinguisher',
-            'permission' => ['administrador', 'seguranca', 'rh'],
+            'permission' => ['administrador', 'seguranca', 'rh', 'porteiro'],
             'children' => []
         ],
         [

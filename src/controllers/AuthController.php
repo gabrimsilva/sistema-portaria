@@ -56,14 +56,18 @@ class AuthController {
                         // Carregar permissões RBAC na sessão
                         $permissions = [];
                         if (!empty($user['role_id'])) {
-                            $perms = $this->db->fetchAll(
-                                "SELECT p.name FROM permissions p
-                                 JOIN role_permissions rp ON rp.permission_id = p.id
-                                 WHERE rp.role_id = ?",
-                                [$user['role_id']]
-                            );
-                            foreach ($perms as $p) {
-                                $permissions[] = $p['name'];
+                            try {
+                                $perms = $this->db->fetchAll(
+                                    "SELECT p.name FROM permissions p
+                                     JOIN role_permissions rp ON rp.permission_id = p.id
+                                     WHERE rp.role_id = ?",
+                                    [$user['role_id']]
+                                );
+                                foreach ($perms as $p) {
+                                    $permissions[] = $p['name'];
+                                }
+                            } catch (Exception $e) {
+                                error_log("RBAC permissions load failed: " . $e->getMessage());
                             }
                         }
                         $_SESSION['user_permissions'] = $permissions;

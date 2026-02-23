@@ -380,10 +380,10 @@ class DuplicityValidationService {
         $timeLimit = date('Y-m-d H:i:s', time() - $debounceSeconds);
         
         // Buscar em visitantes (PRÉ-CADASTROS V2.0.0)
-        $sql = "SELECT c.nome, c.doc_number as cpf, c.placa_veiculo, r.created_at, 'Visitante' as tipo 
+        $sql = "SELECT c.nome, c.doc_number as cpf, c.placa_veiculo, r.entrada_at as created_at, 'Visitante' as tipo 
                 FROM visitantes_registros r
                 JOIN visitantes_cadastro c ON c.id = r.cadastro_id
-                WHERE c.doc_number = ? AND r.created_at > ? AND c.deleted_at IS NULL";
+                WHERE c.doc_number = ? AND r.entrada_at > ? AND c.deleted_at IS NULL";
         $params = [$cpf, $timeLimit];
         
         if ($placa) {

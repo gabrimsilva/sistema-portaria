@@ -400,6 +400,48 @@ echo "\nSincronizando permissões...\n";
     echo "[OK] Permissões do Administrador configuradas\n";
 }
 
+echo "\n--- Criando Views de Status ---\n";
+
+$pdo->exec("
+CREATE OR REPLACE VIEW vw_visitantes_cadastro_status AS
+SELECT 
+    vc.*,
+    CASE 
+        WHEN vc.valid_until < CURRENT_DATE THEN 'expirado'
+        WHEN vc.valid_until <= CURRENT_DATE + INTERVAL '30 days' THEN 'expirando'
+        ELSE 'valido'
+    END AS status_validade,
+    GREATEST(0, (vc.valid_until - CURRENT_DATE)) AS dias_restantes,
+    CASE 
+        WHEN vc.valid_until < CURRENT_DATE THEN (CURRENT_DATE - vc.valid_until)
+        ELSE 0
+    END AS dias_expirado,
+    (SELECT COUNT(*) FROM visitantes_registros vr WHERE vr.cadastro_id = vc.id) AS total_entradas
+FROM visitantes_cadastro vc
+WHERE vc.deleted_at IS NULL AND vc.ativo = true
+");
+echo "[OK] View vw_visitantes_cadastro_status criada\n";
+
+$pdo->exec("
+CREATE OR REPLACE VIEW vw_prestadores_cadastro_status AS
+SELECT 
+    pc.*,
+    CASE 
+        WHEN pc.valid_until < CURRENT_DATE THEN 'expirado'
+        WHEN pc.valid_until <= CURRENT_DATE + INTERVAL '30 days' THEN 'expirando'
+        ELSE 'valido'
+    END AS status_validade,
+    GREATEST(0, (pc.valid_until - CURRENT_DATE)) AS dias_restantes,
+    CASE 
+        WHEN pc.valid_until < CURRENT_DATE THEN (CURRENT_DATE - pc.valid_until)
+        ELSE 0
+    END AS dias_expirado,
+    (SELECT COUNT(*) FROM prestadores_registros pr WHERE pr.cadastro_id = pc.id) AS total_entradas
+FROM prestadores_cadastro pc
+WHERE pc.deleted_at IS NULL AND pc.ativo = true
+");
+echo "[OK] View vw_prestadores_cadastro_status criada\n";
+
 $stmt = $pdo->query("SELECT COUNT(*) FROM organization_settings");
 if ($stmt->fetchColumn() == 0) {
     echo "Criando configuração inicial...\n";

@@ -390,7 +390,7 @@ class DuplicityValidationService {
             $sql .= " AND c.placa_veiculo = ?";
             $params[] = $placa;
         }
-        $sql .= " ORDER BY r.created_at DESC LIMIT 1";
+        $sql .= " ORDER BY r.entrada_at DESC LIMIT 1";
         
         $recentVisitante = $this->db->fetch($sql, $params);
         if ($recentVisitante) {

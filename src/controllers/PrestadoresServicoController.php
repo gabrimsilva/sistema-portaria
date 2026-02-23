@@ -808,8 +808,8 @@ class PrestadoresServicoController {
                 
                 $this->db->query("
                     INSERT INTO prestadores_cadastro
-                    (nome, empresa, doc_type, doc_number, doc_country, placa_veiculo, valid_from, valid_until, ativo, created_at, updated_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, true, NOW(), NOW())
+                    (nome, empresa, doc_type, doc_number, doc_country, placa_veiculo, valid_from, valid_until, ativo)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, true)
                 ", [
                     $nome,
                     $empresa,
@@ -984,7 +984,7 @@ class PrestadoresServicoController {
                 // Atualizar registro de saída
                 $this->db->query("
                     UPDATE prestadores_registros 
-                    SET setor = ?, funcionario_responsavel = ?, saida_at = ?, observacao_saida = ?, updated_at = NOW()
+                    SET setor = ?, funcionario_responsavel = ?, saida_at = ?, observacao_saida = ?
                     WHERE id = ?
                 ", [$setor, $funcionario_responsavel, $saida_parsed, $observacao, $id]);
                 
@@ -1129,7 +1129,7 @@ class PrestadoresServicoController {
                 // Atualizar saída no registro
                 $this->db->query("
                     UPDATE prestadores_registros 
-                    SET saida_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+                    SET saida_at = CURRENT_TIMESTAMP
                     WHERE id = ?
                 ", [$id]);
                 
@@ -1366,7 +1366,6 @@ class PrestadoresServicoController {
             
             // Executar update do registro se houver campos
             if (!empty($updateRegistroFields)) {
-                $updateRegistroFields[] = 'updated_at = CURRENT_TIMESTAMP';
                 $updateRegistroParams[] = $id;
                 
                 $queryRegistro = "UPDATE prestadores_registros SET " . implode(', ', $updateRegistroFields) . " WHERE id = ?";

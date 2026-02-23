@@ -535,7 +535,7 @@ class PreCadastrosPrestadoresController {
             }
             
             // Ordenação
-            $sql .= " ORDER BY created_at DESC";
+            $sql .= " ORDER BY nome ASC";
             
             $cadastros = $this->db->fetchAll($sql, $params);
             

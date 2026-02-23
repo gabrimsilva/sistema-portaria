@@ -337,7 +337,7 @@ $(document).ready(function() {
         }
         
         $('.ramal-item').each(function() {
-            const nome = $(this).data('nome');
+            const nome = $(this).data('nome').toString().toLowerCase();
             const ramal = $(this).data('ramal').toString().toLowerCase();
             const area = $(this).closest('.area-section').data('area').toString().toLowerCase();
             

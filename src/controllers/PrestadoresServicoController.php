@@ -728,7 +728,7 @@ class PrestadoresServicoController {
                     if (!empty($placa_veiculo)) {
                         $this->db->query("
                             UPDATE prestadores_cadastro 
-                            SET placa_veiculo = ?, updated_at = NOW()
+                            SET placa_veiculo = ?
                             WHERE id = ?
                         ", [$placa_veiculo, $cadastro_id]);
                     }
@@ -1324,7 +1324,6 @@ class PrestadoresServicoController {
             
             // Executar update do cadastro se houver campos
             if (!empty($updateCadastroFields)) {
-                $updateCadastroFields[] = 'updated_at = CURRENT_TIMESTAMP';
                 $updateCadastroParams[] = $cadastroId;
                 
                 $queryCadastro = "UPDATE prestadores_cadastro SET " . implode(', ', $updateCadastroFields) . " WHERE id = ?";
@@ -1700,7 +1699,7 @@ class PrestadoresServicoController {
             $fotoUrl = 'prestadores/' . $fileName;
             $this->db->query("
                 UPDATE prestadores_cadastro 
-                SET foto_url = ?, updated_at = NOW()
+                SET foto_url = ?
                 WHERE id = ?
             ", [$fotoUrl, $cadastroId]);
             

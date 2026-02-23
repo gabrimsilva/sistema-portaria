@@ -4,9 +4,44 @@ require_once __DIR__ . '/../../config/database.php';
 
 class DuplicityValidationService {
     private $db;
+    private $hasPrestadoresServico = null;
     
     public function __construct() {
         $this->db = new Database();
+    }
+    
+    private function hasPrestadoresServicoTable() {
+        if ($this->hasPrestadoresServico === null) {
+            try {
+                $result = $this->db->fetch("SELECT to_regclass('public.prestadores_servico') as exists_check");
+                $this->hasPrestadoresServico = !empty($result['exists_check']);
+            } catch (Exception $e) {
+                $this->hasPrestadoresServico = false;
+            }
+        }
+        return $this->hasPrestadoresServico;
+    }
+    
+    private function queryPrestadores($sql, $params = []) {
+        if (!$this->hasPrestadoresServicoTable()) {
+            return null;
+        }
+        try {
+            return $this->db->fetch($sql, $params);
+        } catch (Exception $e) {
+            return null;
+        }
+    }
+    
+    private function queryAllPrestadores($sql, $params = []) {
+        if (!$this->hasPrestadoresServicoTable()) {
+            return [];
+        }
+        try {
+            return $this->db->fetchAll($sql, $params) ?? [];
+        } catch (Exception $e) {
+            return [];
+        }
     }
     
     /**
@@ -95,13 +130,12 @@ class DuplicityValidationService {
                 WHERE cpf = ? AND entrada IS NOT NULL AND saida IS NULL";
         $params = [$cpf];
         
-        // Só excluir se estamos editando a mesma tabela
         if ($excludeId && $excludeTable === 'prestadores_servico') {
             $sql .= " AND id != ?";
             $params[] = $excludeId;
         }
         
-        $prestadorAtivo = $this->db->fetch($sql, $params);
+        $prestadorAtivo = $this->queryPrestadores($sql, $params);
         if ($prestadorAtivo) {
             $horarioFormatado = date('H:i', strtotime($prestadorAtivo['entrada']));
             return [
@@ -226,7 +260,7 @@ class DuplicityValidationService {
             $params[] = $excludeId;
         }
         
-        $prestadorExistente = $this->db->fetch($sql, $params);
+        $prestadorExistente = $this->queryPrestadores($sql, $params);
         if ($prestadorExistente) {
             return [
                 'isValid' => false,
@@ -285,13 +319,12 @@ class DuplicityValidationService {
                 WHERE placa_veiculo = ? AND entrada IS NOT NULL AND saida IS NULL";
         $params = [$placa];
         
-        // Só excluir se estamos editando a mesma tabela
         if ($excludeId && $excludeTable === 'prestadores_servico') {
             $sql .= " AND id != ?";
             $params[] = $excludeId;
         }
         
-        $prestadorAtivo = $this->db->fetch($sql, $params);
+        $prestadorAtivo = $this->queryPrestadores($sql, $params);
         if ($prestadorAtivo) {
             $horarioFormatado = date('H:i', strtotime($prestadorAtivo['entrada']));
             return [
@@ -381,7 +414,7 @@ class DuplicityValidationService {
         }
         $sql .= " ORDER BY created_at DESC LIMIT 1";
         
-        $recentPrestador = $this->db->fetch($sql, $params);
+        $recentPrestador = $this->queryPrestadores($sql, $params);
         if ($recentPrestador) {
             $segundosRestantes = $debounceSeconds - (time() - strtotime($recentPrestador['created_at']));
             return [
@@ -426,15 +459,18 @@ class DuplicityValidationService {
                     FROM visitantes_registros r
                     JOIN visitantes_cadastro c ON c.id = r.cadastro_id
                     WHERE c.doc_number = ? AND r.id != ? AND c.deleted_at IS NULL";
+            $registrosExistentes = $this->db->fetchAll($sql, [$cpf, $excludeId]);
+        } elseif ($tabela === 'prestadores_servico') {
+            $sql = "SELECT nome, cpf, entrada as entrada, saida as saida 
+                    FROM prestadores_servico 
+                    WHERE cpf = ? AND id != ?";
+            $registrosExistentes = $this->queryAllPrestadores($sql, [$cpf, $excludeId]);
         } else {
-            $campoEntrada = ($tabela === 'prestadores_servico') ? 'entrada' : 'hora_entrada';
-            $campoSaida = ($tabela === 'prestadores_servico') ? 'saida' : 'hora_saida';
-            $sql = "SELECT nome, cpf, {$campoEntrada} as entrada, {$campoSaida} as saida 
+            $sql = "SELECT nome, cpf, hora_entrada as entrada, hora_saida as saida 
                     FROM {$tabela} 
                     WHERE cpf = ? AND id != ?";
+            $registrosExistentes = $this->db->fetchAll($sql, [$cpf, $excludeId]);
         }
-        
-        $registrosExistentes = $this->db->fetchAll($sql, [$cpf, $excludeId]);
         
         foreach ($registrosExistentes as $registro) {
             $entradaExistente = $registro['entrada'];

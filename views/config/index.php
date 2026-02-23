@@ -1046,10 +1046,15 @@
             'config': 'fas fa-cogs',
             'reports': 'fas fa-chart-bar',
             'access': 'fas fa-sign-in-alt',
+            'acesso': 'fas fa-clock',
             'audit': 'fas fa-history',
             'users': 'fas fa-users',
             'privacy': 'fas fa-shield-alt',
-            'importacao': 'fas fa-file-import'
+            'brigada': 'fas fa-fire-extinguisher',
+            'documentos': 'fas fa-passport',
+            'importacao': 'fas fa-file-import',
+            'ramais': 'fas fa-phone',
+            'validade': 'fas fa-calendar-check'
         };
         return icons[module] || 'fas fa-circle';
     }
@@ -1060,10 +1065,15 @@
             'config': 'CONFIGURAÇÕES',
             'reports': 'RELATÓRIOS',
             'access': 'CONTROLE DE ACESSO',
+            'acesso': 'ACESSO',
             'audit': 'AUDITORIA',
             'users': 'GESTÃO DE USUÁRIOS', 
             'privacy': 'PRIVACIDADE (LGPD)',
-            'importacao': 'IMPORTAÇÃO'
+            'brigada': 'BRIGADA',
+            'documentos': 'DOCUMENTOS',
+            'importacao': 'IMPORTAÇÃO',
+            'ramais': 'RAMAIS',
+            'validade': 'VALIDADE'
         };
         return names[module] || module.toUpperCase();
     }

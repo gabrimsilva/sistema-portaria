@@ -314,28 +314,24 @@ if ($stmt->fetchColumn() == 0) {
 echo "\nSincronizando permissões...\n";
 {
     $permissionsSQL = "INSERT INTO permissions (key, description, module) VALUES
-        ('config.write', 'Editar configurações gerais', 'config'),
-        ('config.auth.write', 'Gerenciar autenticação', 'config'),
-        ('config.rbac.write', 'Gerenciar permissões RBAC', 'config'),
-        ('config.rbac.read', 'Visualizar permissões RBAC', 'config'),
+        ('config.write', 'Alterar configurações do sistema', 'config'),
+        ('config.read', 'Visualizar configurações do sistema', 'config'),
+        ('config.auth.write', 'Configurar políticas de autenticação', 'config'),
+        ('config.rbac.write', 'Gerenciar permissões de usuário', 'config'),
         ('config.manage', 'Gerenciar configurações do sistema', 'config'),
+        ('config.organization.write', 'Editar dados da organização', 'config'),
+        ('config.sites.write', 'Gerenciar locais e setores', 'config'),
         ('config.retention.write', 'Gerenciar políticas de retenção', 'config'),
         ('config.retention.delete', 'Excluir políticas de retenção', 'config'),
         ('config.retention.restore', 'Restaurar dados retidos', 'config'),
         ('config.retention.anonymize', 'Anonimizar dados', 'config'),
-        ('registro_acesso.create', 'Criar registro de acesso', 'access'),
-        ('registro_acesso.read', 'Visualizar registros de acesso', 'access'),
+        ('admin.system.manage', 'Administração avançada do sistema', 'config'),
+        ('registro_acesso.create', 'Registrar entradas e saídas', 'access'),
+        ('registro_acesso.read', 'Consultar registros de acesso', 'access'),
         ('registro_acesso.update', 'Editar registros de acesso', 'access'),
         ('registro_acesso.delete', 'Excluir registros de acesso', 'access'),
         ('registro_acesso.edit_all_fields', 'Editar todos os campos', 'access'),
-        ('entrada.retroativa', 'Registrar entradas retroativas (alterar histórico)', 'access'),
-        ('acesso.retroativo', 'Permite registrar entradas retroativas (datas passadas)', 'access'),
         ('acesso.aprovar_retroativo', 'Aprovar entrada retroativa', 'access'),
-        ('audit_log.read', 'Visualizar logs de auditoria', 'audit'),
-        ('audit_log.export', 'Exportar logs de auditoria', 'audit'),
-        ('users.*', 'Gestão completa de usuários', 'users'),
-        ('users.update', 'Editar usuários existentes', 'users'),
-        ('usuarios.manage', 'Gerenciar usuários', 'users'),
         ('pre_cadastros.read', 'Visualizar pré-cadastros', 'access'),
         ('pre_cadastros.create', 'Criar pré-cadastros', 'access'),
         ('pre_cadastros.update', 'Editar pré-cadastros', 'access'),
@@ -343,16 +339,18 @@ echo "\nSincronizando permissões...\n";
         ('pre_cadastros.renovar', 'Renovar pré-cadastros', 'access'),
         ('ramais.read', 'Visualizar ramais', 'access'),
         ('ramais.write', 'Gerenciar ramais', 'access'),
-        ('ramais.manage', 'Gerenciar ramais corporativos (CRUD)', 'access'),
-        ('brigada.read', 'Visualizar brigadistas', 'access'),
-        ('brigada.write', 'Gerenciar brigadistas (adicionar/remover)', 'access'),
         ('brigada.manage', 'Administrar brigada', 'access'),
-        ('importacao.visualizar', 'Visualizar menu de importação de funcionários', 'access'),
-        ('relatorios.editar_linha', 'Editar linha em relatórios', 'reports'),
-        ('relatorios.excluir_linha', 'Excluir linha em relatórios', 'reports'),
-        ('relatorios.exportar', 'Exportar relatórios', 'reports'),
-        ('documentos.manage', 'Gerenciar documentos internacionais (Passaporte, RNE, DNI, CI)', 'access'),
         ('profissionais_renner.excluir', 'Excluir profissionais', 'access'),
+        ('access_log.bulk_delete', 'Excluir registros de acesso em lote', 'access'),
+        ('access_log.edit_history', 'Ver/editar histórico de alterações de registros', 'access'),
+        ('acesso.retroativo', 'Permite registrar entradas retroativas (datas passadas)', 'acesso'),
+        ('entrada.retroativa', 'Registrar entradas retroativas (alterar histórico)', 'acesso'),
+        ('audit_log.read', 'Visualizar logs de auditoria', 'audit'),
+        ('audit_log.export', 'Exportar logs de auditoria', 'audit'),
+        ('brigada.read', 'Visualizar brigadistas', 'brigada'),
+        ('brigada.write', 'Gerenciar brigadistas (adicionar/remover)', 'brigada'),
+        ('documentos.manage', 'Gerenciar documentos internacionais (Passaporte, RNE, DNI, CI)', 'documentos'),
+        ('importacao.visualizar', 'Visualizar menu de importação de funcionários', 'importacao'),
         ('person.cpf.view_unmasked', 'Ver CPF sem máscara (dados completos)', 'privacy'),
         ('privacy.*', 'Gestão de LGPD e privacidade', 'privacy'),
         ('privacy.delete', 'Solicitar exclusão de dados (LGPD)', 'privacy'),
@@ -361,11 +359,38 @@ echo "\nSincronizando permissões...\n";
         ('biometric.store', 'Armazenar biometria', 'privacy'),
         ('biometric.read', 'Visualizar biometria', 'privacy'),
         ('biometric.delete', 'Excluir biometria', 'privacy'),
-        ('validade.manage', 'Gerenciar validade de cadastros (renovar/bloquear)', 'access'),
-        ('admin.system.manage', 'Administração avançada do sistema', 'config')
+        ('ramais.manage', 'Gerenciar ramais corporativos (CRUD)', 'ramais'),
+        ('relatorios.editar_linha', 'Editar registros inline nos relatórios', 'reports'),
+        ('relatorios.excluir_linha', 'Excluir registros inline nos relatórios', 'reports'),
+        ('relatorios.exportar', 'Exportar relatórios', 'reports'),
+        ('reports.read', 'Visualizar relatórios', 'reports'),
+        ('reports.export', 'Exportar relatórios', 'reports'),
+        ('reports.profissionais', 'Relatórios de profissionais', 'reports'),
+        ('reports.visitantes', 'Relatórios de visitantes', 'reports'),
+        ('reports.prestadores', 'Relatórios de prestadores', 'reports'),
+        ('reports.advanced_filters', 'Usar filtros avançados em relatórios (tipo doc, país, validade)', 'reports'),
+        ('users.create', 'Criar novos usuários', 'users'),
+        ('users.read', 'Visualizar usuários', 'users'),
+        ('users.update', 'Editar usuários existentes', 'users'),
+        ('users.delete', 'Remover usuários', 'users'),
+        ('usuarios.manage', 'Gerenciar usuários', 'users'),
+        ('validade.manage', 'Gerenciar validade de cadastros (renovar/bloquear)', 'validade')
         ON CONFLICT (key) DO NOTHING";
     $pdo->exec($permissionsSQL);
-    echo "[OK] Permissões sincronizadas\n";
+    echo "[OK] Permissões inseridas\n";
+
+    $moduleUpdates = [
+        "UPDATE permissions SET module = 'acesso' WHERE key IN ('acesso.retroativo', 'entrada.retroativa') AND module != 'acesso'",
+        "UPDATE permissions SET module = 'brigada' WHERE key IN ('brigada.read', 'brigada.write') AND module != 'brigada'",
+        "UPDATE permissions SET module = 'documentos' WHERE key = 'documentos.manage' AND module != 'documentos'",
+        "UPDATE permissions SET module = 'importacao' WHERE key = 'importacao.visualizar' AND module != 'importacao'",
+        "UPDATE permissions SET module = 'ramais' WHERE key = 'ramais.manage' AND module != 'ramais'",
+        "UPDATE permissions SET module = 'validade' WHERE key = 'validade.manage' AND module != 'validade'"
+    ];
+    foreach ($moduleUpdates as $sql) {
+        $pdo->exec($sql);
+    }
+    echo "[OK] Módulos das permissões corrigidos\n";
     
     echo "Garantindo permissões do Administrador...\n";
     $pdo->exec("INSERT INTO role_permissions (role_id, permission_id) 

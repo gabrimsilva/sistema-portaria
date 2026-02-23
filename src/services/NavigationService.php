@@ -190,10 +190,13 @@ class NavigationService
     public static function hasPermission($item)
     {
         if (isset($item['rbac_permission'])) {
-            $rbacPerm = $item['rbac_permission'];
-            $userPermissions = $_SESSION['user_permissions'] ?? [];
-            if (!in_array($rbacPerm, $userPermissions)) {
-                return false;
+            $userProfile = $_SESSION['user_profile'] ?? 'porteiro';
+            if ($userProfile !== 'administrador') {
+                $rbacPerm = $item['rbac_permission'];
+                $userPermissions = $_SESSION['user_permissions'] ?? [];
+                if (!in_array($rbacPerm, $userPermissions)) {
+                    return false;
+                }
             }
         }
 

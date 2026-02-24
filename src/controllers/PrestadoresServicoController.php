@@ -765,93 +765,12 @@ class PrestadoresServicoController {
                     return;
                 }
                 
-                // MODO 2: Novo Cadastro (criar pré-cadastro automaticamente + registro)
-                $doc_type = trim($_POST['doc_type'] ?? '');
-                $doc_number = trim($_POST['doc_number'] ?? '');
-                $doc_country = trim($_POST['doc_country'] ?? 'Brasil');
-                $placa_veiculo = trim($_POST['placa_veiculo'] ?? '');
-                
-                // Normalização de documento
-                if (!empty($doc_type)) {
-                    if (in_array($doc_type, ['CPF', 'RG', 'CNH'])) {
-                        $doc_number = preg_replace('/\D/', '', $doc_number);
-                    } else {
-                        $doc_number = strtoupper(trim($doc_number));
-                    }
-                }
-                
-                // Validações
-                if (empty($doc_number)) {
-                    echo json_encode(['success' => false, 'message' => 'Número do documento é obrigatório']);
-                    return;
-                }
-                
-                // Verificar duplicidade no pré-cadastro
-                $existingCadastro = $this->db->fetch(
-                    "SELECT id FROM prestadores_cadastro 
-                     WHERE doc_type = ? AND doc_number = ? 
-                       AND deleted_at IS NULL AND ativo = true",
-                    [$doc_type, $doc_number]
-                );
-                
-                if ($existingCadastro) {
-                    echo json_encode([
-                        'success' => false,
-                        'message' => 'Já existe um pré-cadastro ativo para este documento. Use o autocomplete para encontrá-lo.'
-                    ]);
-                    return;
-                }
-                
-                // Criar novo pré-cadastro (válido por 1 ano)
-                $valid_from = date('Y-m-d');
-                $valid_until = date('Y-m-d', strtotime('+1 year'));
-                
-                $this->db->query("
-                    INSERT INTO prestadores_cadastro
-                    (nome, empresa, doc_type, doc_number, doc_country, placa_veiculo, valid_from, valid_until, ativo)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, true)
-                ", [
-                    $nome,
-                    $empresa,
-                    $doc_type,
-                    $doc_number,
-                    $doc_country,
-                    $placa_veiculo,
-                    $valid_from,
-                    $valid_until
-                ]);
-                
-                $novo_cadastro_id = $this->db->lastInsertId();
-                
-                // Criar registro de entrada
-                $this->db->query("
-                    INSERT INTO prestadores_registros
-                    (cadastro_id, funcionario_responsavel, setor, entrada_at, observacao_entrada)
-                    VALUES (?, ?, ?, ?, ?)
-                ", [
-                    $novo_cadastro_id,
-                    $funcionario_responsavel,
-                    $setor,
-                    $entrada,
-                    $observacao_entrada
-                ]);
-                
-                $registro_id = $this->db->lastInsertId();
-                
+                // MODO 2: Sem pré-cadastro — bloquear entrada direta
                 echo json_encode([
-                    'success' => true,
-                    'message' => 'Pré-Cadastro criado e entrada registrada com sucesso!',
-                    'data' => [
-                        'id' => $registro_id,
-                        'cadastro_id' => $novo_cadastro_id,
-                        'nome' => $nome,
-                        'empresa' => $empresa,
-                        'tipo' => 'Prestador',
-                        'setor' => $setor,
-                        'funcionario_responsavel' => $funcionario_responsavel,
-                        'hora_entrada' => $entrada
-                    ]
+                    'success' => false,
+                    'message' => 'É necessário ter um pré-cadastro para registrar entrada de prestador de serviço. Acesse Pré-Cadastros > Prestadores de Serviço para criar um cadastro primeiro, ou use o campo de busca acima para localizar um pré-cadastro existente.'
                 ]);
+                return;
                 
             } catch (Exception $e) {
                 echo json_encode(['success' => false, 'message' => $e->getMessage()]);

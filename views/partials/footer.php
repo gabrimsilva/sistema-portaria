@@ -17,18 +17,23 @@
     <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
     <script>
     $(document).ready(function() {
-        $('.nav-sidebar .has-treeview > .nav-link').on('click', function(e) {
-            if ($(this).attr('href') === '#') {
-                e.preventDefault();
-            }
-            var $parent = $(this).parent();
-            if ($parent.hasClass('menu-open')) {
-                $parent.removeClass('menu-open menu-is-opening');
-                $parent.find('> .nav-treeview').slideUp(200);
+        setTimeout(function() {
+            try { $('[data-widget="treeview"]').Treeview('init'); } catch(e) {}
+        }, 100);
+        
+        $(document).on('click', '.nav-sidebar .has-treeview > .nav-link', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var $li = $(this).parent('.has-treeview');
+            var $sub = $li.find('> .nav-treeview');
+            if ($li.hasClass('menu-open')) {
+                $li.removeClass('menu-open menu-is-opening');
+                $sub.css('display', 'none');
             } else {
-                $parent.addClass('menu-is-opening menu-open');
-                $parent.find('> .nav-treeview').slideDown(200);
+                $li.addClass('menu-is-opening menu-open');
+                $sub.css('display', 'block');
             }
+            return false;
         });
     });
     </script>

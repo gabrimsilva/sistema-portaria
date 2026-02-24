@@ -244,11 +244,32 @@ class PreCadastrosPrestadoresController {
                 ['nome' => $nome, 'doc_type' => $doc_type]
             );
             
+            $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) || 
+                      (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false) ||
+                      (isset($_SERVER['HTTP_SEC_FETCH_MODE']) && $_SERVER['HTTP_SEC_FETCH_MODE'] === 'cors');
+            
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => true, 'id' => $id]);
+                exit;
+            }
+            
             $_SESSION['flash_success'] = 'Pré-cadastro atualizado com sucesso!';
             header('Location: /pre-cadastros/prestadores');
             exit;
             
         } catch (Exception $e) {
+            $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) || 
+                      (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false) ||
+                      (isset($_SERVER['HTTP_SEC_FETCH_MODE']) && $_SERVER['HTTP_SEC_FETCH_MODE'] === 'cors');
+            
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+                exit;
+            }
+            
             $_SESSION['flash_error'] = $e->getMessage();
             header('Location: /pre-cadastros/prestadores?action=edit&id=' . $id);
             exit;

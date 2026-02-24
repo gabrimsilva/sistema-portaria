@@ -161,21 +161,44 @@ require_once __DIR__ . '/../../partials/header.php';
                         </div>
 
                         <!-- Foto de Identificação -->
-                        <?php if (!empty($cadastro['foto_url'])): ?>
                         <h5 class="mb-3 mt-4">
                             <i class="fas fa-camera me-2"></i>
                             Foto de Identificação
                         </h5>
 
+                        <?php if (!empty($cadastro['foto_url'])): ?>
                         <div class="mb-3">
                             <div class="text-center">
                                 <img src="<?= htmlspecialchars($cadastro['foto_url']) ?>" 
                                      alt="Foto do prestador" 
                                      class="img-thumbnail" 
-                                     style="max-width: 300px; max-height: 300px;">
+                                     style="max-width: 300px; max-height: 300px;"
+                                     id="foto-atual">
                             </div>
                             <small class="form-text text-muted d-block text-center mt-2">
-                                Foto capturada durante o cadastro
+                                Foto atual do cadastro
+                            </small>
+                            <div class="text-center mt-2">
+                                <button type="button" class="btn btn-outline-warning btn-sm" id="btn-trocar-foto">
+                                    <i class="fas fa-sync-alt me-1"></i> Trocar Foto
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mb-3" id="photo-capture-area" style="display: none;">
+                            <div id="prestador-photo-capture-container"></div>
+                            <small class="form-text text-muted">
+                                Capture uma nova foto para substituir a atual.
+                            </small>
+                        </div>
+                        <?php else: ?>
+                        <div class="mb-3" id="photo-capture-area">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Nenhuma foto registrada. Capture uma foto abaixo.
+                            </div>
+                            <div id="prestador-photo-capture-container"></div>
+                            <small class="form-text text-muted">
+                                A foto facilita a identificação durante o registro de entrada.
                             </small>
                         </div>
                         <?php endif; ?>
@@ -211,5 +234,60 @@ require_once __DIR__ . '/../../partials/header.php';
 </div>
 
 <script src="/assets/js/pre-cadastros-form.js"></script>
+<script src="/assets/js/photo-capture.js?v=<?= time() ?>"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var photoCapture = new PhotoCapture('prestador-photo-capture-container');
+    var btnTrocar = document.getElementById('btn-trocar-foto');
+    if (btnTrocar) {
+        btnTrocar.addEventListener('click', function() {
+            document.getElementById('photo-capture-area').style.display = 'block';
+            this.style.display = 'none';
+        });
+    }
+
+    var form = document.getElementById('form-pre-cadastro');
+    var originalAction = form.action;
+    
+    form.addEventListener('submit', function(e) {
+        var capturedImage = photoCapture.getCapturedImage();
+        if (capturedImage) {
+            e.preventDefault();
+            var formData = new FormData(form);
+            
+            fetch(originalAction, {
+                method: 'POST',
+                body: formData
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    var cadastroId = document.querySelector('input[name="id"]').value;
+                    var photoData = new FormData();
+                    photoData.append('cadastro_id', cadastroId);
+                    photoData.append('photo', capturedImage);
+                    photoData.append('csrf_token', document.querySelector('input[name="csrf_token"]').value);
+                    
+                    fetch('/pre-cadastros/prestadores?action=upload_foto', {
+                        method: 'POST',
+                        body: photoData
+                    })
+                    .then(function() {
+                        window.location.href = '/pre-cadastros/prestadores?success=updated';
+                    })
+                    .catch(function() {
+                        window.location.href = '/pre-cadastros/prestadores?success=updated&photo_warning=1';
+                    });
+                } else {
+                    alert(data.message || 'Erro ao atualizar cadastro');
+                }
+            })
+            .catch(function() {
+                form.submit();
+            });
+        }
+    });
+});
+</script>
 
 <?php require_once __DIR__ . '/../../partials/footer.php'; ?>

@@ -95,8 +95,8 @@ class PreCadastrosPrestadoresController {
             // Inserir no banco
             $sql = "INSERT INTO prestadores_cadastro 
                     (nome, empresa, doc_type, doc_number, doc_country, placa_veiculo, 
-                     valid_from, valid_until, observacoes) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                     valid_from, valid_until, observacoes, ativo) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, true)
                     RETURNING id";
             
             $result = $this->db->fetch($sql, [
@@ -538,25 +538,51 @@ class PreCadastrosPrestadoresController {
             $status = $_GET['status'] ?? 'all'; // all, valido, expirando, expirado
             $search = $_GET['search'] ?? '';
             
-            // Query base
-            $sql = "SELECT * FROM vw_prestadores_cadastro_status WHERE 1=1";
             $params = [];
             
-            // Filtro por status
-            if ($status !== 'all') {
-                $sql .= " AND status_validade = ?";
-                $params[] = $status;
-            }
+            // Verificar se a view existe
+            $viewExists = $this->db->fetch(
+                "SELECT to_regclass('public.vw_prestadores_cadastro_status') as exists_check"
+            );
+            $useView = !empty($viewExists['exists_check']);
             
-            // Busca por nome/documento
-            if (!empty($search)) {
-                $sql .= " AND (nome ILIKE ? OR doc_number LIKE ?)";
-                $params[] = "%$search%";
-                $params[] = "%$search%";
+            if ($useView) {
+                $sql = "SELECT * FROM vw_prestadores_cadastro_status WHERE 1=1";
+                if ($status !== 'all') {
+                    $sql .= " AND status_validade = ?";
+                    $params[] = $status;
+                }
+                if (!empty($search)) {
+                    $sql .= " AND (nome ILIKE ? OR doc_number LIKE ?)";
+                    $params[] = "%$search%";
+                    $params[] = "%$search%";
+                }
+                $sql .= " ORDER BY nome ASC";
+            } else {
+                // Fallback: query direta sem view
+                $sql = "SELECT pc.*,
+                            CASE 
+                                WHEN pc.valid_until < CURRENT_DATE THEN 'expirado'
+                                WHEN pc.valid_until <= CURRENT_DATE + INTERVAL '30 days' THEN 'expirando'
+                                ELSE 'valido'
+                            END AS status_validade,
+                            GREATEST(0, (pc.valid_until - CURRENT_DATE)) AS dias_restantes,
+                            (SELECT COUNT(*) FROM prestadores_registros pr WHERE pr.cadastro_id = pc.id) AS total_entradas
+                        FROM prestadores_cadastro pc
+                        WHERE pc.deleted_at IS NULL AND pc.ativo = true";
+                if ($status !== 'all') {
+                    $statusMap = ['valido' => '> CURRENT_DATE + INTERVAL \'30 days\'', 'expirando' => 'BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL \'30 days\'', 'expirado' => '< CURRENT_DATE'];
+                    if (isset($statusMap[$status])) {
+                        $sql .= " AND pc.valid_until " . $statusMap[$status];
+                    }
+                }
+                if (!empty($search)) {
+                    $sql .= " AND (pc.nome ILIKE ? OR pc.doc_number LIKE ?)";
+                    $params[] = "%$search%";
+                    $params[] = "%$search%";
+                }
+                $sql .= " ORDER BY pc.nome ASC";
             }
-            
-            // Ordenação
-            $sql .= " ORDER BY nome ASC";
             
             $cadastros = $this->db->fetchAll($sql, $params);
             

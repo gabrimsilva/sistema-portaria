@@ -577,11 +577,7 @@ class ProfissionaisRennerController {
                 $diferenca_tempo = $agora - $timestamp_entrada;
                 $is_retroativa = $diferenca_tempo > $tolerancia_segundos;
                 
-                // Validar observação obrigatória para entradas retroativas
-                if ($is_retroativa && empty($observacao)) {
-                    echo json_encode(['success' => false, 'message' => 'Observação/justificativa é obrigatória para entradas retroativas']);
-                    return;
-                }
+                // Observação opcional para entradas retroativas
                 
                 $this->db->beginTransaction();
                 

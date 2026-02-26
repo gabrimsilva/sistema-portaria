@@ -551,7 +551,7 @@ class PrestadoresServicoController {
                 $this->db->query("
                     UPDATE prestadores_servico 
                     SET nome = ?, cpf = ?, empresa = ?, funcionario_responsavel = ?, setor = ?, observacao = ?, placa_veiculo = ?, 
-                        entrada = ?, saida = ?, doc_type = ?, doc_number = ?, doc_country = ?, updated_at = CURRENT_TIMESTAMP
+                        entrada = ?, saida = ?, doc_type = ?, doc_number = ?, doc_country = ?
                     WHERE id = ?
                 ", [
                     $nome, 

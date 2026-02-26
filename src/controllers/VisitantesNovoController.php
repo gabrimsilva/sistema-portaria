@@ -563,7 +563,7 @@ class VisitantesNovoController {
                 // Atualizar CADASTRO (dados mestres)
                 $this->db->query("
                     UPDATE visitantes_cadastro 
-                    SET nome = ?, doc_type = ?, doc_number = ?, doc_country = ?, empresa = ?, placa_veiculo = ?, updated_at = CURRENT_TIMESTAMP
+                    SET nome = ?, doc_type = ?, doc_number = ?, doc_country = ?, empresa = ?, placa_veiculo = ?
                     WHERE id = ?
                 ", [
                     $nome, $doc_type, $doc_number, !empty($doc_country) ? $doc_country : null, $empresa, $placa_veiculo, $registro['cadastro_id']
@@ -572,7 +572,7 @@ class VisitantesNovoController {
                 // Atualizar REGISTRO (dados do evento)
                 $this->db->query("
                     UPDATE visitantes_registros 
-                    SET setor = ?, funcionario_responsavel = ?, entrada_at = ?, saida_at = ?, updated_at = CURRENT_TIMESTAMP
+                    SET setor = ?, funcionario_responsavel = ?, entrada_at = ?, saida_at = ?
                     WHERE id = ?
                 ", [
                     $setor, $funcionario_responsavel, $hora_entrada ?: null, $hora_saida ?: null, $id
@@ -669,7 +669,7 @@ class VisitantesNovoController {
                 // Registrar saída
                 $this->db->query("
                     UPDATE visitantes_novo 
-                    SET hora_saida = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+                    SET hora_saida = CURRENT_TIMESTAMP
                     WHERE id = ?
                 ", [$id]);
                 
@@ -847,7 +847,7 @@ class VisitantesNovoController {
                     if (!empty($placa_veiculo)) {
                         $this->db->query("
                             UPDATE visitantes_cadastro 
-                            SET placa_veiculo = ?, updated_at = NOW()
+                            SET placa_veiculo = ?
                             WHERE id = ?
                         ", [$placa_veiculo, $cadastro_id]);
                     }
@@ -1242,7 +1242,6 @@ class VisitantesNovoController {
             
             // Executar update do cadastro se houver campos
             if (!empty($updateCadastroFields)) {
-                $updateCadastroFields[] = 'updated_at = CURRENT_TIMESTAMP';
                 $updateCadastroParams[] = $cadastroId;
                 
                 $queryCadastro = "UPDATE visitantes_cadastro SET " . implode(', ', $updateCadastroFields) . " WHERE id = ?";
@@ -1285,7 +1284,6 @@ class VisitantesNovoController {
             
             // Executar update do registro se houver campos
             if (!empty($updateRegistroFields)) {
-                $updateRegistroFields[] = 'updated_at = CURRENT_TIMESTAMP';
                 $updateRegistroParams[] = $id;
                 
                 $queryRegistro = "UPDATE visitantes_registros SET " . implode(', ', $updateRegistroFields) . " WHERE id = ?";
@@ -1631,7 +1629,7 @@ class VisitantesNovoController {
             $fotoUrl = 'visitantes/' . $fileName;
             $this->db->query("
                 UPDATE visitantes_cadastro 
-                SET foto_url = ?, updated_at = NOW()
+                SET foto_url = ?
                 WHERE id = ?
             ", [$fotoUrl, $cadastroId]);
             
